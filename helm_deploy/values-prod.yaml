@@ -1,11 +1,4 @@
 ---
-# Per environment values which override defaults in hmpps-prisoner-search-indexer/values.yaml
-
 generic-service:
   ingress:
     host: hmpps-prisoner-search-indexer.hmpps.service.justice.gov.uk
-
-# CloudPlatform AlertManager receiver to route prometheus alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
-generic-prometheus-alerts:
-  alertSeverity: digital-prison-service

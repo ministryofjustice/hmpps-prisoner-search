@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonersearchindexer.integration
+package uk.gov.justice.digital.hmpps.prisonersearchindexer.integration
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest

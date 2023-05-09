@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppsprisonersearchindexer
+package uk.gov.justice.digital.hmpps.prisonersearchindexer
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
