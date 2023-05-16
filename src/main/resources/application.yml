@@ -13,6 +13,36 @@ spring:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${api.base.url.oauth}/.well-known/jwks.json
+
+      client:
+        registration:
+          prison-api:
+            provider: hmpps-auth
+            client-id: ${prison-api.client.id}
+            client-secret: ${prison-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
+          restricted-patients-api:
+            provider: hmpps-auth
+            client-id: ${restricted-patients.client.id}
+            client-secret: ${restricted-patients.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
+          incentives-api:
+            provider: hmpps-auth
+            client-id: ${incentives.client.id}
+            client-secret: ${incentives.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
+        provider:
+          hmpps-auth:
+            token-uri: ${api.base.url.oauth}/oauth/token
+
   profiles:
     group:
       test:
