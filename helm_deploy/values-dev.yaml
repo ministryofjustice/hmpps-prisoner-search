@@ -20,3 +20,4 @@ generic-service:
 generic-prometheus-alerts:
   rdsAlertsDatabases:
     cloud-platform-99ebbe3b76dc9264: "prisoner search indexer"
+  businessHoursOnly: true
