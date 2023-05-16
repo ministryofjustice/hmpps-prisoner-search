@@ -1,9 +1,8 @@
 server:
   shutdown: immediate
 
-management.endpoint:
-  health.cache.time-to-live: 0
-  info.cache.time-to-live: 0
+aws:
+  provider: localstack
 
 api:
   base:
@@ -13,17 +12,25 @@ api:
       restricted-patients: http://localhost:8095
       incentives: http://localhost:8096
 
+prison-api:
+  client:
+    id: prisoner-offender-search-client
+    secret: clientsecret
+
 restricted-patients:
   client:
     id: prisoner-search-to-restricted-patients-api
-    secret: clientsecret
-
-prison-api:
-  client:
-    id: prison-api
     secret: clientsecret
 
 incentives:
   client:
     id: incentives-api
     secret: clientsecret
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: classpath:local-public-key.pub
+

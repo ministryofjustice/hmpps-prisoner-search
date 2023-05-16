@@ -6,6 +6,6 @@
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://hmpps-prisoner-search-indexer-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html?configUrl=/v3/api-docs)
 
 The purpose of this service is to:
-* Keep the Opensearch (OS) prison index up to date with changes from Prison systems (NOMIS)
+* Keep the OpenSearch (OS) prison index up to date with changes from Prison systems (NOMIS)
 * Rebuild the index when required without an outage
 
