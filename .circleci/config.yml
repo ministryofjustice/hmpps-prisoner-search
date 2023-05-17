@@ -14,10 +14,29 @@ parameters:
 jobs:
   validate:
     executor:
-      name: hmpps/java
-      tag: "19.0"
+      name: hmpps/localstack
+      jdk_tag: "19.0"
+      localstack_tag: "2.0"
+      localstack_type: "localstack"
+      services: "opensearch"
     steps:
+      - run:
+          command: |
+            while true; do
+              sleep 5
+              ps auxwwf
+              echo "======"
+            done
+          background: true
       - checkout
+      - hmpps/install_aws_cli
+      - hmpps/wait_till_ready
+      - run:
+          name: Set up opensearch domain
+          command: src/test/resources/localstack/setup-opensearch.sh
+      - hmpps/wait_till_ready:
+          port: 4566
+          host: os01.eu-west-2.opensearch.localhost.localstack.cloud
       - restore_cache:
           keys:
             - gradle-{{ checksum "build.gradle.kts" }}
