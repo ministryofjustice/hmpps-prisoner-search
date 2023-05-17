@@ -34,3 +34,5 @@ spring:
         jwt:
           public-key-location: classpath:local-public-key.pub
 
+opensearch:
+  uris: http://localhost:9200

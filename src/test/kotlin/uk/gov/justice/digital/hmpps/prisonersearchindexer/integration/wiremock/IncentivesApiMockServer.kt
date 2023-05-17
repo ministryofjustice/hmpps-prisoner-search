@@ -70,6 +70,6 @@ class IncentivesApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCa
   }
 
   override fun beforeAll(context: ExtensionContext): Unit = incentivesApi.start()
-  override fun beforeEach(context: ExtensionContext): Unit = incentivesApi.resetRequests()
+  override fun beforeEach(context: ExtensionContext): Unit = incentivesApi.resetAll()
   override fun afterAll(context: ExtensionContext): Unit = incentivesApi.stop()
 }

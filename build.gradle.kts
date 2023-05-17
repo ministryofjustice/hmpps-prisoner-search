@@ -11,7 +11,7 @@ configurations {
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-//  implementation("org.opensearch.client:spring-data-opensearch-starter:1.1.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.1.0")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")

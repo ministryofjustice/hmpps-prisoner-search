@@ -1,0 +1,19 @@
+version: "3"
+services:
+  opensearch:
+    container_name: opensearch
+    image: opensearchproject/opensearch:2.5.0
+    networks:
+      - hmpps
+    environment:
+      - node.name=opensearch
+      - cluster.name=prisoner-search-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - plugins.security.disabled=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+
+networks:
+  hmpps:

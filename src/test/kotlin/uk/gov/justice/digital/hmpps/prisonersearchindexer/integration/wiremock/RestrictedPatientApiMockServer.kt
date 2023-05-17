@@ -33,6 +33,6 @@ class RestrictedPatientsApiExtension : BeforeAllCallback, AfterAllCallback, Befo
   }
 
   override fun beforeAll(context: ExtensionContext): Unit = restrictedPatientsApi.start()
-  override fun beforeEach(context: ExtensionContext): Unit = restrictedPatientsApi.resetRequests()
+  override fun beforeEach(context: ExtensionContext): Unit = restrictedPatientsApi.resetAll()
   override fun afterAll(context: ExtensionContext): Unit = restrictedPatientsApi.stop()
 }
