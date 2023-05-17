@@ -27,6 +27,6 @@ class PrisonApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallba
   }
 
   override fun beforeAll(context: ExtensionContext): Unit = prisonApi.start()
-  override fun beforeEach(context: ExtensionContext): Unit = prisonApi.resetRequests()
+  override fun beforeEach(context: ExtensionContext): Unit = prisonApi.resetAll()
   override fun afterAll(context: ExtensionContext): Unit = prisonApi.stop()
 }
