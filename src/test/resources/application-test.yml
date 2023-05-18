@@ -27,3 +27,6 @@ incentives:
   client:
     id: incentives-api
     secret: clientsecret
+
+opensearch:
+  uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566

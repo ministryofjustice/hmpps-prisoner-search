@@ -1,19 +1,17 @@
 version: "3"
 services:
-  opensearch:
-    container_name: opensearch
-    image: opensearchproject/opensearch:2.5.0
+  localstack:
+    image: localstack/localstack:2.0
     networks:
       - hmpps
-    environment:
-      - node.name=opensearch
-      - cluster.name=prisoner-search-cluster
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - plugins.security.disabled=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    container_name: localstack-psi
     ports:
-      - "9200:9200"
+      - "4566:4566"
+    environment:
+      - SERVICES=opensearch
+    volumes:
+      - "$PWD/src/test/resources/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
 networks:
   hmpps:
