@@ -1,17 +1,99 @@
 version: "3"
 services:
   hmpps-prisoner-search-indexer:
-    build:
-      context: .
-    network_mode: "host"
+    image: quay.io/hmpps/hmpps-prisoner-search-indexer:latest
+    networks:
+      - hmpps
     container_name: hmpps-prisoner-search-indexer
+    depends_on:
+      - localstack
+      - prisonapi
+      - hmpps-auth
     ports:
-      - "8081:8080"
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+      - API_BASE_URL_OAUTH=http://oauth:8080/auth
+      - API_BASE_URL_NOMIS=http://prisonapi:8080
+      - SQS_ENDPOINT_URL=http://localstack:4566
+      - OAUTH_CLIENT_ID=prisoner-offender-search-client
+      - OAUTH_CLIENT_SECRET=clientsecret
+
+  prisonapi:
+    image: quay.io/hmpps/prison-api:latest
+    networks:
+      - hmpps
+    container_name: prisonapi
+    depends_on:
+      - hmpps-auth
+    ports:
+      - "8093:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=nomis-hsqldb
+
+  restricted-patients:
+    image: quay.io/hmpps/hmpps-restricted-patients-api:latest
+    networks:
+      - hmpps
+    container_name: restricted-patients
+    depends_on:
+      - hmpps-auth
+      - prisonapi
+    ports:
+      - "8095:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+      - PRISON_API_ENDPOINT_URL=http://prisonapi:8093
+
+  hmpps-auth:
+    image: quay.io/hmpps/hmpps-auth:latest
+    networks:
+      - hmpps
+    container_name: hmpps-auth
+    ports:
+      - "8090:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+
+  hmpps-incentives-api:
+    image: quay.io/hmpps/hmpps-incentives-api:latest
+    networks:
+      - hmpps
+    container_name: hmpps-incentives-api
+    depends_on:
+      - hmpps-auth
+    ports:
+      - "8096:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
+
+  localstack:
+    image: localstack/localstack:2.0
+    networks:
+      - hmpps
+    container_name: localstack-psi
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=opensearch
+    volumes:
+      - "$PWD/src/test/resources/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
 networks:
   hmpps:
