@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -11,15 +9,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
-interface RestrictedPatientService {
-  fun getRestrictedPatient(prisonerNumber: String): RestrictedPatientDto?
-}
-
-@Service
-@ConditionalOnProperty(value = ["api.base.url.restricted-patients"])
-class RestrictedPatientServiceImpl(@Qualifier("restrictedPatientsWebClient") private val webClient: WebClient) :
-  RestrictedPatientService {
-  override fun getRestrictedPatient(prisonerNumber: String): RestrictedPatientDto? =
+class RestrictedPatientService(@Qualifier("restrictedPatientsWebClient") private val webClient: WebClient) {
+  fun getRestrictedPatient(prisonerNumber: String): RestrictedPatientDto? =
     try {
       webClient.get().uri("/restricted-patient/prison-number/$prisonerNumber")
         .retrieve()
@@ -29,12 +20,6 @@ class RestrictedPatientServiceImpl(@Qualifier("restrictedPatientsWebClient") pri
       if (e.statusCode != HttpStatus.NOT_FOUND) throw e
       null
     }
-}
-
-@Service
-@ConditionalOnExpression("T(org.apache.commons.lang3.StringUtils).isBlank('\${api.base.url.restricted-patients:}')")
-class StubRestrictedPatientService : RestrictedPatientService {
-  override fun getRestrictedPatient(prisonerNumber: String): RestrictedPatientDto? = null
 }
 
 data class RestrictivePatient(
