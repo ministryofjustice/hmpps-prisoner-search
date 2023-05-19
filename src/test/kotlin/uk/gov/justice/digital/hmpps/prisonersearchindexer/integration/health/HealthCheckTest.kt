@@ -85,6 +85,16 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("status").isEqualTo("UP")
   }
 
+  @Test
+  fun `health check reports opensearch status`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get().uri("/health")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().jsonPath("components.openSearch.status").isEqualTo("UP")
+  }
+
   private fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
     restrictedPatientsApi.stubHealthPing(status)
