@@ -22,7 +22,7 @@ class RestrictedPatientService(@Qualifier("restrictedPatientsWebClient") private
     }
 }
 
-data class RestrictivePatient(
+data class RestrictedPatient(
   var supportingPrisonId: String?,
   val dischargedHospital: Agency?,
   val dischargeDate: LocalDate,

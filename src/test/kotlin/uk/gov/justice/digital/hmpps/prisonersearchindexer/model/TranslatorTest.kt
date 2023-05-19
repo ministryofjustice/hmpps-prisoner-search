@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.Agency
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.RestrictivePatient
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.PhysicalAttributes
@@ -238,11 +238,11 @@ class TranslatorTest {
   }
 
   @Test
-  internal fun `restrictive patient data is mapped`() {
+  internal fun `restricted patient data is mapped`() {
     val prisoner = PrisonerA(
       aBooking().copy(locationDescription = "OUT"),
       incentiveLevel = null,
-      restrictedPatientData = RestrictivePatient(
+      restrictedPatientData = RestrictedPatient(
         supportingPrisonId = "MDI",
         dischargedHospital = Agency(
           agencyId = "HAZLWD",
@@ -265,7 +265,7 @@ class TranslatorTest {
   }
 
   @Test
-  internal fun `restrictive patient data can be null`() {
+  internal fun `restricted patient data can be null`() {
     val prisoner = PrisonerA(
       aBooking().copy(locationDescription = "OUT"),
       incentiveLevel = null,

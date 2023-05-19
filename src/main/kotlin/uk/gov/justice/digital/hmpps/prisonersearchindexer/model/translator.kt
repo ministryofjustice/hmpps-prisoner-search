@@ -3,22 +3,22 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.model
 
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.RestrictivePatient
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCNumberLong
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
 
-fun PrisonerA(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictivePatient?) =
+fun PrisonerA(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) =
   PrisonerA().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
-fun PrisonerA(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictivePatient?) =
+fun PrisonerA(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?) =
   PrisonerA().apply { this.translate(existingPrisoner, ob, incentiveLevel, restrictedPatientData) }
 
-fun PrisonerB(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictivePatient?) =
+fun PrisonerB(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) =
   PrisonerB().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
-fun PrisonerB(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictivePatient?) =
+fun PrisonerB(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?) =
   PrisonerB().apply { this.translate(existingPrisoner, ob, incentiveLevel, restrictedPatientData) }
 
-fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictivePatient?) {
+fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?) {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()
