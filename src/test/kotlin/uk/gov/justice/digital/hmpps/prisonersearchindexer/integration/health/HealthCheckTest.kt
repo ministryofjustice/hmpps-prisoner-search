@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
-import uk.gov.justice.digital.hmpps.prisonersearch.integration.wiremock.PrisonApiExtension.Companion.prisonApi
-import uk.gov.justice.digital.hmpps.prisonersearch.integration.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.IncentivesApiExtension.Companion.incentivesApi
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Consumer

@@ -7,10 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.prisonersearch.integration.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.integration.wiremock.PrisonApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.integration.wiremock.RestrictedPatientsApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.RestrictedPatientsApiExtension
 
 @ExtendWith(
   IncentivesApiExtension::class,
