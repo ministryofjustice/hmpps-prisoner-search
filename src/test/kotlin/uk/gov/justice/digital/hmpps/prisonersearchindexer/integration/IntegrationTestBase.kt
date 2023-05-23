@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.H
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.RestrictedPatientsApiExtension
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.MissingQueueException
 
 @ExtendWith(
   IncentivesApiExtension::class,
@@ -26,4 +28,14 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var webTestClient: WebTestClient
+
+  @SpyBean
+  lateinit var hmppsQueueService: HmppsQueueService
+
+  protected val indexQueue by lazy { hmppsQueueService.findByQueueId("indexqueue") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
+  protected val hmppsEventTopic by lazy { hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingQueueException("HmppsTopic hmpps event topic not found") }
+
+  val indexQueueName by lazy { indexQueue.queueName }
+  val indexDlqName by lazy { indexQueue.dlqName as String }
+  val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
 }

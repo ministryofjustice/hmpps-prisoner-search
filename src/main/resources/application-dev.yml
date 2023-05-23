@@ -36,3 +36,17 @@ spring:
 
 opensearch:
   uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
+
+index:
+  page-size: 1000
+  complete-threshold: 50
+
+hmpps.sqs:
+  provider: localstack
+  queues:
+    indexqueue:
+      queueName: index-queue
+      dlqName: index-dlq
+  topics:
+    hmppseventtopic:
+      arn: arn:aws:sns:eu-west-2:000000000000:hmpps-event-topic

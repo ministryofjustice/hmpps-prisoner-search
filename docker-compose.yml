@@ -90,7 +90,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=opensearch
+      - SERVICES=opensearch,sns,sqs
     volumes:
       - "$PWD/src/test/resources/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"

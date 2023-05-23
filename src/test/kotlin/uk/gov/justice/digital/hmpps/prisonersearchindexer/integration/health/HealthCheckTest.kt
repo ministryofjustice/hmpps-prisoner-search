@@ -95,6 +95,43 @@ class HealthCheckTest : IntegrationTestBase() {
       .expectBody().jsonPath("components.openSearch.status").isEqualTo("UP")
   }
 
+  @Test
+  fun `HMPPS Domain events topic health reports UP`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("status").isEqualTo("UP")
+      .jsonPath("components.hmppseventtopic-health.status").isEqualTo("UP")
+      .jsonPath("components.hmppseventtopic-health.details.topicArn").isEqualTo(hmppsEventTopicName)
+      .jsonPath("components.hmppseventtopic-health.details.subscriptionsConfirmed").isEqualTo(0)
+      .jsonPath("components.hmppseventtopic-health.details.subscriptionsPending").isEqualTo(0)
+  }
+
+  @Test
+  fun `Index queue health reports UP`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("status").isEqualTo("UP")
+      .jsonPath("components.indexqueue-health.status").isEqualTo("UP")
+      .jsonPath("components.indexqueue-health.details.queueName").isEqualTo(indexQueueName)
+      .jsonPath("components.indexqueue-health.details.messagesOnQueue").isEqualTo(0)
+      .jsonPath("components.indexqueue-health.details.messagesInFlight").isEqualTo(0)
+      .jsonPath("components.indexqueue-health.details.dlqName").isEqualTo(indexDlqName)
+      .jsonPath("components.indexqueue-health.details.dlqStatus").isEqualTo("UP")
+      .jsonPath("components.indexqueue-health.details.messagesOnDlq").isEqualTo(0)
+  }
+
   private fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
     restrictedPatientsApi.stubHealthPing(status)

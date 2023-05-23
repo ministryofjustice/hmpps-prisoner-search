@@ -30,3 +30,21 @@ incentives:
 
 opensearch:
   uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
+
+aws:
+  provider: localstack
+
+hmpps.sqs:
+  provider: localstack
+  queues:
+    indexqueue:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      dlqMaxReceiveCount: 1
+    hmppseventtestqueue:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      subscribeTopicId: hmppseventtopic
+  topics:
+    hmppseventtopic:
+      arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
