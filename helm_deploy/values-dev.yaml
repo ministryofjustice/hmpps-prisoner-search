@@ -18,6 +18,6 @@ generic-service:
     shutdown: '47 21 * * 1-5' # Stop at 9.50pm UTC Monday-Friday
 
 generic-prometheus-alerts:
+  businessHoursOnly: true
   rdsAlertsDatabases:
     cloud-platform-99ebbe3b76dc9264: "prisoner search indexer"
-  businessHoursOnly: true
