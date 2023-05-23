@@ -47,7 +47,7 @@ class OpenApiDocsTest : IntegrationTestBase() {
   fun `the open api json is valid and contains documentation`() {
     val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
     assertThat(result.messages).isEmpty()
-    assertThat(result.openAPI.paths).isEmpty()
+    assertThat(result.openAPI.paths).isNotEmpty
   }
 
   @Test

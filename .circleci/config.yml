@@ -18,7 +18,7 @@ jobs:
       jdk_tag: "19.0"
       localstack_tag: "2.0"
       localstack_type: "localstack"
-      services: "opensearch"
+      services: "opensearch,sns,sqs"
     steps:
       - run:
           command: |

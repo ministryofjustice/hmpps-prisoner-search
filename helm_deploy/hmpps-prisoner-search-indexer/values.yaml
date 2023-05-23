@@ -13,14 +13,21 @@ generic-service:
     enabled: true
     host: app-hostname.local    # override per environment
     tlsSecretName: hmpps-prisoner-search-indexer-cert
+    annotations:
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        server_tokens off;
+        location /queue-admin/retry-all-dlqs {
+          deny all;
+          return 401;
+        }
 
-  # Environment variables to load into the deployment
   env:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
+    HMPPS_SQS_USE_WEB_TOKEN: "true"
 
   namespace_secrets:
     hmpps-prisoner-search-indexer:
@@ -31,6 +38,13 @@ generic-service:
       PRISON_API_CLIENT_SECRET: "PRISON_API_CLIENT_SECRET"
       INCENTIVES_CLIENT_ID: "INCENTIVES_CLIENT_ID"
       INCENTIVES_CLIENT_SECRET: "INCENTIVES_CLIENT_SECRET"
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_HMPPSEVENTTOPIC_ARN: "topic_arn"
+    prisoner-search-indexer-dlq:
+      HMPPS_SQS_QUEUES_INDEXQUEUE_DLQ_NAME: "sqs_queue_name"
+    prisoner-search-indexer-queue:
+      HMPPS_SQS_QUEUES_INDEXQUEUE_QUEUE_NAME: "sqs_queue_name"
+
     opensearch:
       OPENSEARCH_URIS: "url"
 
