@@ -18,6 +18,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
+  implementation("org.springframework.data:spring-data-elasticsearch:5.0.5")
+
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
