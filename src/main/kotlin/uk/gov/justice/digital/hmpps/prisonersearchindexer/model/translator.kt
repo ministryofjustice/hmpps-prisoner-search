@@ -8,17 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCN
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
 
-fun PrisonerA(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) =
-  PrisonerA().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
-fun PrisonerA(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?) =
-  PrisonerA().apply { this.translate(existingPrisoner, ob, incentiveLevel, restrictedPatientData) }
-
-fun PrisonerB(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) =
-  PrisonerB().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
-fun PrisonerB(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?) =
-  PrisonerB().apply { this.translate(existingPrisoner, ob, incentiveLevel, restrictedPatientData) }
-
-fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?) {
+fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()
@@ -128,6 +118,8 @@ fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incenti
   this.dischargeDetails = restrictedPatientData?.dischargeDetails
 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
+
+  return this
 }
 
 private fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {

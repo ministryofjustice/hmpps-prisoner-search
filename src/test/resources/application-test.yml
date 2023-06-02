@@ -37,7 +37,7 @@ aws:
 hmpps.sqs:
   provider: localstack
   queues:
-    indexqueue:
+    index:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       dlqMaxReceiveCount: 1
@@ -48,3 +48,7 @@ hmpps.sqs:
   topics:
     hmppseventtopic:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
+
+index-build:
+  page-size: 10
+  complete-threshold: 0

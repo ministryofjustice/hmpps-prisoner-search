@@ -30,7 +30,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
       ),
     )
     .info(
-      Info().title("HMPPS Prisoner Offender Search Indexer")
+      Info().title("HMPPS Prisoner Search Indexer")
         .version(version)
         .description("Service for indexing prisoners for HMPPS Prisoner Search")
         .contact(Contact().name("HMPPS Digital Studio").email("feedback@digital.justice.gov.uk")),

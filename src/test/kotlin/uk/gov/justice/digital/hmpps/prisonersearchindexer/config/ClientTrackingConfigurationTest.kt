@@ -56,7 +56,7 @@ class ClientTrackingConfigurationTest {
     otelTesting.assertTraces().hasTracesSatisfyingExactly({ t ->
       t.hasSpansSatisfyingExactly({
         it.hasAttribute(AttributeKey.stringKey("username"), "bob")
-        it.hasAttribute(AttributeKey.stringKey("clientId"), "prisoner-offender-search-client")
+        it.hasAttribute(AttributeKey.stringKey("clientId"), "prisoner-search-client")
       },)
     },)
   }
@@ -71,7 +71,7 @@ class ClientTrackingConfigurationTest {
     }
     otelTesting.assertTraces().hasTracesSatisfyingExactly({ t ->
       t.hasSpansSatisfyingExactly({
-        it.hasAttribute(AttributeKey.stringKey("clientId"), "prisoner-offender-search-client")
+        it.hasAttribute(AttributeKey.stringKey("clientId"), "prisoner-search-client")
       },)
     },)
   }
@@ -79,6 +79,6 @@ class ClientTrackingConfigurationTest {
   private companion object {
     @JvmStatic
     @RegisterExtension
-    private val otelTesting: OpenTelemetryExtension = OpenTelemetryExtension.create()
+    val otelTesting: OpenTelemetryExtension = OpenTelemetryExtension.create()
   }
 }

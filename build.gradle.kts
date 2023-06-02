@@ -24,9 +24,14 @@ dependencies {
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0")
 
+  // TODO: work out whether can just use jackson instead
+  implementation("com.google.code.gson:gson:2.10.1")
+
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
+  implementation("io.arrow-kt:arrow-core:1.1.5")
+  implementation("org.awaitility:awaitility-kotlin:4.2.0")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")

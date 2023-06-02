@@ -21,9 +21,9 @@ class TranslatorTest {
   @Test
   fun `when prisoner has no booking associated the booking information is missing`() {
     val dateOfBirth = LocalDate.now().minusYears(18)
-    val prisoner = PrisonerA(
+    val prisoner = Prisoner().translate(
       ob = OffenderBooking("A1234AA", "Fred", "Bloggs", dateOfBirth, false),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
 
@@ -37,8 +37,8 @@ class TranslatorTest {
   @Test
   fun `topupSupervisionExpiryDate is present`() {
     val tseDate = LocalDate.of(2021, 5, 15)
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -46,7 +46,7 @@ class TranslatorTest {
         false,
         sentenceDetail = SentenceDetail(topupSupervisionExpiryDate = tseDate),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.topupSupervisionExpiryDate).isEqualTo(tseDate)
@@ -55,8 +55,8 @@ class TranslatorTest {
   @Test
   fun `topupSupervisionStartDate is present`() {
     val tssDate = LocalDate.of(2021, 5, 15)
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -64,7 +64,7 @@ class TranslatorTest {
         false,
         sentenceDetail = SentenceDetail(topupSupervisionStartDate = tssDate),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.topupSupervisionStartDate).isEqualTo(tssDate)
@@ -73,8 +73,8 @@ class TranslatorTest {
   @Test
   fun `homeDetentionCurfewEndDate is present`() {
     val hdcend = LocalDate.of(2021, 5, 15)
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -82,7 +82,7 @@ class TranslatorTest {
         false,
         sentenceDetail = SentenceDetail(homeDetentionCurfewEndDate = hdcend),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.homeDetentionCurfewEndDate).isEqualTo(hdcend)
@@ -94,8 +94,8 @@ class TranslatorTest {
     val automaticReleaseOverrideDate = LocalDate.now().plusMonths(2)
     val postRecallReleaseOverrideDate = LocalDate.now().plusMonths(1)
     val releaseDate = LocalDate.now().plusMonths(5)
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -110,7 +110,7 @@ class TranslatorTest {
           postRecallReleaseOverrideDate = postRecallReleaseOverrideDate,
         ),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseOverrideDate)
@@ -123,8 +123,8 @@ class TranslatorTest {
     val conditionalReleaseDate = LocalDate.now().plusMonths(5)
     val automaticReleaseDate = LocalDate.now().plusMonths(4)
     val postRecallReleaseDate = LocalDate.now().plusMonths(3)
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -136,7 +136,7 @@ class TranslatorTest {
           postRecallReleaseDate = postRecallReleaseDate,
         ),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
@@ -146,8 +146,8 @@ class TranslatorTest {
 
   @Test
   fun `imprisonmentStatus and description are present`() {
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -156,7 +156,7 @@ class TranslatorTest {
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Serving Life Imprisonment",
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.imprisonmentStatus).isEqualTo("LIFE")
@@ -165,8 +165,8 @@ class TranslatorTest {
 
   @Test
   fun `maps alerts correctly`() {
-    val prisoner = PrisonerA(
-      OffenderBooking(
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
         "A1234AA",
         "Fred",
         "Bloggs",
@@ -183,7 +183,7 @@ class TranslatorTest {
           ),
         ),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
 
@@ -194,13 +194,15 @@ class TranslatorTest {
 
   @Test
   internal fun `current incentive is mapped`() {
-    val prisoner = PrisonerA(
-      aBooking(),
-      IncentiveLevel(
-        iepCode = "STD",
-        iepLevel = "Standard",
-        iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
-        nextReviewDate = LocalDate.parse("2022-02-02"),
+    val prisoner = Prisoner().translate(
+      ob = aBooking(),
+      incentiveLevel = Result.success(
+        IncentiveLevel(
+          iepCode = "STD",
+          iepLevel = "Standard",
+          iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
+          nextReviewDate = LocalDate.parse("2022-02-02"),
+        ),
       ),
       restrictedPatientData = null,
     )
@@ -215,7 +217,7 @@ class TranslatorTest {
 
   @Test
   internal fun `current incentive is mapped when there is no failure`() {
-    val prisoner = PrisonerA(
+    val prisoner = Prisoner().translate(
       null,
       aBooking(),
       Result.success(
@@ -239,9 +241,9 @@ class TranslatorTest {
 
   @Test
   internal fun `restricted patient data is mapped`() {
-    val prisoner = PrisonerA(
-      aBooking().copy(locationDescription = "OUT"),
-      incentiveLevel = null,
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(locationDescription = "OUT"),
+      incentiveLevel = Result.success(null),
       restrictedPatientData = RestrictedPatient(
         supportingPrisonId = "MDI",
         dischargedHospital = Agency(
@@ -266,9 +268,9 @@ class TranslatorTest {
 
   @Test
   internal fun `restricted patient data can be null`() {
-    val prisoner = PrisonerA(
-      aBooking().copy(locationDescription = "OUT"),
-      incentiveLevel = null,
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(locationDescription = "OUT"),
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
 
@@ -285,18 +287,20 @@ class TranslatorTest {
   inner class WithIncentiveLevelFailure {
     @Test
     internal fun `will fall back to old level when present`() {
-      val existingPrisoner = PrisonerA(
-        aBooking().copy(locationDescription = "OUT"),
-        incentiveLevel = IncentiveLevel(
-          iepCode = "STD",
-          iepLevel = "Standard",
-          iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
-          nextReviewDate = LocalDate.parse("2022-02-02"),
+      val existingPrisoner = Prisoner().translate(
+        ob = aBooking().copy(locationDescription = "OUT"),
+        incentiveLevel = Result.success(
+          IncentiveLevel(
+            iepCode = "STD",
+            iepLevel = "Standard",
+            iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
+            nextReviewDate = LocalDate.parse("2022-02-02"),
+          ),
         ),
         restrictedPatientData = null,
       )
 
-      val prisoner = PrisonerA(
+      val prisoner = Prisoner().translate(
         existingPrisoner,
         aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
@@ -313,9 +317,9 @@ class TranslatorTest {
 
     @Test
     internal fun `will fall back to null when previous record did not exist`() {
-      val prisoner = PrisonerA(
+      val prisoner = Prisoner().translate(
         existingPrisoner = null,
-        aBooking(),
+        ob = aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
         restrictedPatientData = null,
       )
@@ -325,13 +329,13 @@ class TranslatorTest {
 
     @Test
     internal fun `will fall back to null when the previous record's incentive was null`() {
-      val existingPrisoner = PrisonerA(
-        aBooking().copy(locationDescription = "OUT"),
-        incentiveLevel = null,
+      val existingPrisoner = Prisoner().translate(
+        ob = aBooking().copy(locationDescription = "OUT"),
+        incentiveLevel = Result.success(null),
         restrictedPatientData = null,
       )
 
-      val prisoner = PrisonerA(
+      val prisoner = Prisoner().translate(
         existingPrisoner,
         aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
@@ -344,7 +348,7 @@ class TranslatorTest {
 
   @Test
   internal fun `Physical Attributes are mapped`() {
-    val prisoner = PrisonerA(
+    val prisoner = Prisoner().translate(
       ob = aBooking().copy(
         physicalAttributes = PhysicalAttributes(
           gender = "M",
@@ -358,7 +362,7 @@ class TranslatorTest {
           heightMetres = BigDecimal.TEN,
         ),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.gender).isEqualTo("M")
@@ -369,7 +373,7 @@ class TranslatorTest {
 
   @Test
   internal fun `Physical Characteristics are mapped`() {
-    val prisoner = PrisonerA(
+    val prisoner = Prisoner().translate(
       ob = aBooking().copy(
         physicalCharacteristics = listOf(
           PhysicalCharacteristic("HAIR", "Hair Colour", "Red", null),
@@ -381,7 +385,7 @@ class TranslatorTest {
           PhysicalCharacteristic("SHOESIZE", "Shoe Size", "10", null),
         ),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.hairColour).isEqualTo("Red")
@@ -395,7 +399,7 @@ class TranslatorTest {
 
   @Test
   internal fun `Physical Marks are mapped`() {
-    val prisoner = PrisonerA(
+    val prisoner = Prisoner().translate(
       ob = aBooking().copy(
         physicalMarks = listOf(
           PhysicalMark("Tattoo", "Left", "Elbow", "Upper", "Comment here", null),
@@ -405,7 +409,7 @@ class TranslatorTest {
           PhysicalMark("Scar", null, "Torso", null, null, null),
         ),
       ),
-      incentiveLevel = null,
+      incentiveLevel = Result.success(null),
       restrictedPatientData = null,
     )
     assertThat(prisoner.tattoos).containsExactly(BodyPartDetail("Elbow", "Comment here"), BodyPartDetail("Foot", null))

@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.model
 
 enum class SyncIndex(val indexName: String) {
 
-  INDEX_A("prisoner-search-a"), INDEX_B("prisoner-search-b");
+  GREEN("prisoner-search-green"), BLUE("prisoner-search-blue"), NONE("new-indexes");
 
-  fun otherIndex(): SyncIndex {
-    return if (this == INDEX_A) INDEX_B else INDEX_A
+  fun otherIndex(): SyncIndex = when (this) {
+    GREEN -> BLUE
+    BLUE -> GREEN
+    NONE -> GREEN
   }
 }
