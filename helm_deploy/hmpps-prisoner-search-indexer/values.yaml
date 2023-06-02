@@ -41,9 +41,9 @@ generic-service:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_HMPPSEVENTTOPIC_ARN: "topic_arn"
     prisoner-search-indexer-dlq:
-      HMPPS_SQS_QUEUES_INDEXQUEUE_DLQ_NAME: "sqs_queue_name"
+      HMPPS_SQS_QUEUES_INDEX_DLQ_NAME: "sqs_queue_name"
     prisoner-search-indexer-queue:
-      HMPPS_SQS_QUEUES_INDEXQUEUE_QUEUE_NAME: "sqs_queue_name"
+      HMPPS_SQS_QUEUES_INDEX_QUEUE_NAME: "sqs_queue_name"
 
     opensearch:
       OPENSEARCH_URIS: "url"

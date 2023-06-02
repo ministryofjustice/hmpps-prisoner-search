@@ -171,11 +171,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.SENTENCE)
   var mostSeriousOffence: String? = null
 
-  @Schema(description = "Indicates that the offender has been recalled", example = "false")
+  @Schema(description = "Indicates that the prisoner has been recalled", example = "false")
   @DiffableProperty(DiffCategory.STATUS)
   var recall: Boolean? = null
 
-  @Schema(description = "Indicates that the offender has an indeterminate sentence", example = "true")
+  @Schema(description = "Indicates that the prisoner has an indeterminate sentence", example = "true")
   @DiffableProperty(DiffCategory.SENTENCE)
   var indeterminateSentence: Boolean? = null
 
@@ -299,11 +299,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.RESTRICTED_PATIENT)
   var supportingPrisonId: String? = null
 
-  @Schema(description = "Which hospital the offender has been discharged to", example = "HAZLWD")
+  @Schema(description = "Which hospital the prisoner has been discharged to", example = "HAZLWD")
   @DiffableProperty(DiffCategory.RESTRICTED_PATIENT)
   var dischargedHospitalId: String? = null
 
-  @Schema(description = "Hospital name to which the offender was discharged", example = "Hazelwood House")
+  @Schema(description = "Hospital name to which the prisoner was discharged", example = "Hazelwood House")
   @DiffableProperty(DiffCategory.RESTRICTED_PATIENT)
   var dischargedHospitalDescription: String? = null
 
@@ -320,11 +320,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.INCENTIVE_LEVEL)
   var currentIncentive: CurrentIncentive? = null
 
-  @Schema(description = "Height in centimetres of the offender", example = "200")
+  @Schema(description = "Height in centimetres of the prisoner", example = "200")
   @DiffableProperty(DiffCategory.PHYSICAL_DETAILS)
   var heightCentimetres: Int? = null
 
-  @Schema(description = "Weight in kilograms of the offender", example = "102")
+  @Schema(description = "Weight in kilograms of the prisoner", example = "102")
   @DiffableProperty(DiffCategory.PHYSICAL_DETAILS)
   var weightKilograms: Int? = null
 

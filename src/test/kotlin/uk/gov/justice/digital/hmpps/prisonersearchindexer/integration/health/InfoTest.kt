@@ -27,15 +27,4 @@ class InfoTest : IntegrationTestBase() {
         assertThat(it).startsWith(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE))
       }
   }
-
-  @Test
-  fun `Info page reports index status`() {
-    webTestClient.get().uri("/info")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath("index-status.id").isEqualTo("STATUS")
-      .jsonPath("index-status.inProgress").isEqualTo("false")
-  }
 }

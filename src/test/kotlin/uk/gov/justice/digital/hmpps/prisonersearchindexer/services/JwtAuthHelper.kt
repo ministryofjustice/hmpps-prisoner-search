@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import org.springframework.stereotype.Component
@@ -23,6 +24,16 @@ class JwtAuthHelper {
     keyPair = gen.generateKeyPair()
   }
 
+  fun setAuthorisation(user: String = "prisoner-search-indexer-client", roles: List<String> = listOf()): (HttpHeaders) -> Unit {
+    val token = createJwt(
+      subject = user,
+      scope = listOf("read"),
+      expiryTime = Duration.ofHours(1L),
+      roles = roles,
+    )
+    return { it.set(HttpHeaders.AUTHORIZATION, "Bearer $token") }
+  }
+
   @Bean
   fun jwtDecoder(): ReactiveJwtDecoder = NimbusReactiveJwtDecoder.withPublicKey(keyPair.public as RSAPublicKey).build()
 
@@ -33,7 +44,7 @@ class JwtAuthHelper {
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString(),
   ): String {
-    val claims = mutableMapOf<String, Any?>("client_id" to "prisoner-offender-search-client")
+    val claims = mutableMapOf<String, Any?>("client_id" to "prisoner-search-client")
       .apply {
         subject?.let { this["user_name"] = subject }
         roles?.let { this["authorities"] = roles }

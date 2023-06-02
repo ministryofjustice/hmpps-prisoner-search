@@ -123,13 +123,13 @@ class HealthCheckTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
-      .jsonPath("components.indexqueue-health.status").isEqualTo("UP")
-      .jsonPath("components.indexqueue-health.details.queueName").isEqualTo(indexQueueName)
-      .jsonPath("components.indexqueue-health.details.messagesOnQueue").isEqualTo(0)
-      .jsonPath("components.indexqueue-health.details.messagesInFlight").isEqualTo(0)
-      .jsonPath("components.indexqueue-health.details.dlqName").isEqualTo(indexDlqName)
-      .jsonPath("components.indexqueue-health.details.dlqStatus").isEqualTo("UP")
-      .jsonPath("components.indexqueue-health.details.messagesOnDlq").isEqualTo(0)
+      .jsonPath("components.index-health.status").isEqualTo("UP")
+      .jsonPath("components.index-health.details.queueName").isEqualTo(indexQueueName)
+      .jsonPath("components.index-health.details.messagesOnQueue").isEqualTo(0)
+      .jsonPath("components.index-health.details.messagesInFlight").isEqualTo(0)
+      .jsonPath("components.index-health.details.dlqName").isEqualTo(indexDlqName)
+      .jsonPath("components.index-health.details.dlqStatus").isEqualTo("UP")
+      .jsonPath("components.index-health.details.messagesOnDlq").isEqualTo(0)
   }
 
   private fun stubPingWithResponse(status: Int) {
