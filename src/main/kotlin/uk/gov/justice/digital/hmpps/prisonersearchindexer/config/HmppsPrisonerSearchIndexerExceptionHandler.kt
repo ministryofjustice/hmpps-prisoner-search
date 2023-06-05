@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
@@ -47,6 +48,12 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
           developerMessage = e.message,
         ),
       ).also { log.error("Unexpected exception", e) }
+
+  @ExceptionHandler(AccessDeniedException::class)
+  fun handleException(e: AccessDeniedException?): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(HttpStatus.FORBIDDEN)
+    .body(ErrorResponse(status = HttpStatus.FORBIDDEN.value()))
+    .also { log.debug("Forbidden (403) returned", e) }
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

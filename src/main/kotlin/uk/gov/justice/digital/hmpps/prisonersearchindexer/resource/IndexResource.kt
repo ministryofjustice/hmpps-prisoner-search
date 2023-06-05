@@ -121,7 +121,7 @@ class IndexResource(private val indexService: IndexService) {
       ),
     ],
   )
-  fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
+  suspend fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
     indexService.switchIndex(force)
       .getOrElse { error ->
         log.error("Request to /prisoner-index/switch-index failed due to error {}", error)
@@ -146,7 +146,7 @@ class IndexResource(private val indexService: IndexService) {
       ApiResponse(responseCode = "409", description = "Conflict, no indexes could be updated"),
     ],
   )
-  fun indexPrisoner(
+  suspend fun indexPrisoner(
     @Parameter(required = true, example = "A1234AA")
     @NotNull
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
@@ -166,7 +166,7 @@ class IndexResource(private val indexService: IndexService) {
     summary = "Triggers maintenance of the index queue",
     description = "This is an internal service which isn't exposed to the outside world. It is called from a Kubernetes CronJob named `index-housekeeping-cronjob`",
   )
-  fun indexQueueHousekeeping() {
+  suspend fun indexQueueHousekeeping() {
     indexService.markIndexingComplete(ignoreThreshold = false)
       .getOrElse { error ->
         if (MarkCompleteError.fromErrorClass(error) == MarkCompleteError.THRESHOLD_NOT_REACHED) {

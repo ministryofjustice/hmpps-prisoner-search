@@ -29,7 +29,8 @@ incentives:
     secret: clientsecret
 
 opensearch:
-  uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
+  uris: http://localhost:4566
+  pathPrefix: /opensearch/eu-west-2/os01
 
 aws:
   provider: localstack

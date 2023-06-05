@@ -39,6 +39,7 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 java {
