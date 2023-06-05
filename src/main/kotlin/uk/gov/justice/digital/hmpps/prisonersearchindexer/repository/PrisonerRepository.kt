@@ -8,8 +8,8 @@ import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.DeleteAliasRequest
 import org.opensearch.client.indices.GetIndexRequest
-import org.opensearch.data.client.orhlc.OpenSearchRestTemplate
 import org.slf4j.LoggerFactory
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.stereotype.Repository
@@ -19,14 +19,14 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
 @Repository
 class PrisonerRepository(
   private val client: RestHighLevelClient,
-  private val restTemplate: OpenSearchRestTemplate,
+  private val openSearchRestTemplate: ElasticsearchOperations,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
   fun save(prisoner: Prisoner, index: SyncIndex) {
-    restTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), IndexCoordinates.of(index.indexName))
+    openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), IndexCoordinates.of(index.indexName))
   }
 
   fun createIndex(index: SyncIndex) {
