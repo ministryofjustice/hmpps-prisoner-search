@@ -8,13 +8,13 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
 
 @RestControllerAdvice
 class HmppsPrisonerSearchIndexerExceptionHandler {
   @ExceptionHandler(ValidationException::class)
-  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> {
-    log.info("Validation exception: {}", e.message)
-    return ResponseEntity
+  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> =
+    ResponseEntity
       .status(BAD_REQUEST)
       .body(
         ErrorResponse(
@@ -22,13 +22,23 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
           userMessage = "Validation failure: ${e.message}",
           developerMessage = e.message,
         ),
-      )
-  }
+      ).also { log.info("Validation exception: {}", e.message) }
 
-  @ExceptionHandler(java.lang.Exception::class)
-  fun handleException(e: java.lang.Exception): ResponseEntity<ErrorResponse?>? {
-    log.error("Unexpected exception", e)
-    return ResponseEntity
+  @ExceptionHandler(ResponseStatusException::class)
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse?>? =
+    ResponseEntity
+      .status(e.statusCode)
+      .body(
+        ErrorResponse(
+          status = e.statusCode.value(),
+          userMessage = "Response status error: ${e.message}",
+          developerMessage = e.message,
+        ),
+      ).also { log.info("Response status exception with message {}", e.message) }
+
+  @ExceptionHandler(Exception::class)
+  fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? =
+    ResponseEntity
       .status(INTERNAL_SERVER_ERROR)
       .body(
         ErrorResponse(
@@ -36,10 +46,9 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
           userMessage = "Unexpected error: ${e.message}",
           developerMessage = e.message,
         ),
-      )
-  }
+      ).also { log.error("Unexpected exception", e) }
 
-  companion object {
+  private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 }

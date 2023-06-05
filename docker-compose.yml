@@ -18,9 +18,11 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - API_BASE_URL_OAUTH=http://oauth:8080/auth
       - API_BASE_URL_NOMIS=http://prisonapi:8080
-      - SQS_ENDPOINT_URL=http://localstack:4566
+      - SQS_ENDPOINT_URL=http://localstack-psi:4566
       - OAUTH_CLIENT_ID=prisoner-offender-search-client
       - OAUTH_CLIENT_SECRET=clientsecret
+      - OPENSEARCH_URIS=http://localstack-psi:4566
+      - OPENSEARCH_PATHPREFIX=/opensearch/eu-west-2/os01
 
   prisonapi:
     image: quay.io/hmpps/prison-api:latest
@@ -91,6 +93,7 @@ services:
       - "4566:4566"
     environment:
       - SERVICES=opensearch,sns,sqs
+      - OPENSEARCH_ENDPOINT_STRATEGY=path
     volumes:
       - "$PWD/src/test/resources/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
