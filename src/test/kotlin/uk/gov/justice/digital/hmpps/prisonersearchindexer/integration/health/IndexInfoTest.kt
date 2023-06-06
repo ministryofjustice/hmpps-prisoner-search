@@ -18,7 +18,7 @@ class IndexInfoTest : IntegrationTestBase() {
   inner class WhenNoIndexesArePresent {
     @BeforeEach
     fun init() {
-      deleteOffenderIndexes()
+      deletePrisonerIndices()
       deinitialiseIndexStatus()
     }
 
