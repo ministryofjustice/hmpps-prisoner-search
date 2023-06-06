@@ -21,7 +21,7 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.helpers.JwtAuthHelper
 
 @Import(JwtAuthHelper::class, ClientTrackingWebFilter::class)
 @ContextConfiguration(initializers = [ConfigDataApplicationContextInitializer::class])

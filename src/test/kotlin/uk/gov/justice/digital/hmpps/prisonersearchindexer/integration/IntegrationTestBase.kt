@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.GsonConfig
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.helpers.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension
@@ -31,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexQueueService
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.AssignedLivingUnit
