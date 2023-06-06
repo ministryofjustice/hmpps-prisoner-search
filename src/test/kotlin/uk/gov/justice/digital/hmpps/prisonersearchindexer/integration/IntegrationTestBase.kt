@@ -77,6 +77,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var indexStatusRepository: IndexStatusRepository
 
+  @Autowired
+  internal lateinit var gson: Gson
+
   internal val indexAwsSqsClient by lazy { indexQueue.sqsClient }
   internal val indexQueueUrl by lazy { indexQueue.queueUrl }
 
@@ -85,10 +88,10 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun cleanElasticsearch() {
-    deleteOffenderIndexes()
+    deletePrisonerIndices()
     indexAwsSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
     indexAwsSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
-    createOffenderIndexes()
+    createPrisonerIndices()
   }
 
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
@@ -98,9 +101,9 @@ abstract class IntegrationTestBase {
   val indexDlqName by lazy { indexQueue.dlqName as String }
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
 
-  fun createOffenderIndexes() = SyncIndex.values().forEach { prisonerRespository.createIndex(it) }
+  fun createPrisonerIndices() = SyncIndex.values().forEach { prisonerRespository.createIndex(it) }
 
-  fun deleteOffenderIndexes() = SyncIndex.values().forEach { prisonerRespository.deleteIndex(it) }
+  fun deletePrisonerIndices() = SyncIndex.values().forEach { prisonerRespository.deleteIndex(it) }
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
