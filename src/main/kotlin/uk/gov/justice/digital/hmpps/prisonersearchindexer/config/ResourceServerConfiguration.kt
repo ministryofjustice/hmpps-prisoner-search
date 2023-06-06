@@ -23,7 +23,7 @@ class ResourceServerConfiguration {
           "/health/**", "/info", "/startup", "/h2-console/**",
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
           "/queue-admin/retry-all-dlqs",
-          "/incentives/reports/reconciliation",
+          "/prisoner-index/queue-housekeeping",
         ).forEach { authorize(it, permitAll) }
         authorize(anyExchange, authenticated)
       }
