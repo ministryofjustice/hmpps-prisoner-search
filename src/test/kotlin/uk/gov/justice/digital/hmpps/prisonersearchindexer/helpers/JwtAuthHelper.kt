@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
+package uk.gov.justice.digital.hmpps.prisonersearchindexer.helpers
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
