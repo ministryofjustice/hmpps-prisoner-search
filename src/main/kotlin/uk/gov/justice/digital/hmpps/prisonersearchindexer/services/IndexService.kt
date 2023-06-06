@@ -235,7 +235,7 @@ class IndexService(
                   ),
                 )
               }
-              indexQueueService.sendPopulateOffenderMessage(offenderIdentifier.offenderNumber)
+              indexQueueService.sendPopulatePrisonerMessage(offenderIdentifier.offenderNumber)
             }.right()
         }
     }

@@ -86,7 +86,7 @@ class PrisonerSynchroniserService(
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.POPULATE_PRISONER_PAGES.name,
-          mapOf("totalNumberOfOffenders" to totalNumberOfPrisoners.toString(), "pageSize" to pageSize.toString()),
+          mapOf("totalNumberOfPrisoners" to totalNumberOfPrisoners.toString(), "pageSize" to pageSize.toString()),
         )
       }
   }

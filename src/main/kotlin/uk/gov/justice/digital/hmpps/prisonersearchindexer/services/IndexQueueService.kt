@@ -59,7 +59,7 @@ class IndexQueueService(
     log.info("Sent populate prisoner page message request {} for page {}", result.messageId(), prisonerPage)
   }
 
-  fun sendPopulateOffenderMessage(prisonerNumber: String) {
+  fun sendPopulatePrisonerMessage(prisonerNumber: String) {
     indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
         gson.toJson(
