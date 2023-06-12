@@ -5,8 +5,6 @@ generic-service:
   ingress:
     host: prisoner-search-indexer-dev.prison.service.justice.gov.uk
 
-  serviceAccountName: hmpps-prisoner-search-indexer-dev
-
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_OAUTH: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
