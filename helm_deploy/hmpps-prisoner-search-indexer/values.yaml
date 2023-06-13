@@ -2,6 +2,8 @@
 generic-service:
   nameOverride: hmpps-prisoner-search-indexer
 
+  serviceAccountName: hmpps-prisoner-search-indexer
+
   replicaCount: 4
 
   image:
