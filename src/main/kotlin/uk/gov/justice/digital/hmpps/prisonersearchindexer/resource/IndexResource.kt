@@ -184,7 +184,7 @@ class IndexResource(private val indexService: IndexService) {
   @GetMapping("/compare-index")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Tag(name = "Elastic Search index comparison, async endpoint with results sent to a custom event called POSIndexReport. Requires ROLE_PRISONER_INDEX.")
+  @Tag(name = "OpenSearch index comparison, async endpoint with results sent to a custom event called COMPARE_INDEX_IDS. Requires ROLE_PRISONER_INDEX.")
   suspend fun compareIndex(): Unit = indexService.doCompare()
 
 // TODO (PGP): Add back in the index and reconcile index functions

@@ -68,7 +68,7 @@ class IndexResource_compareIndexTest : IntegrationTestBase() {
       .expectStatus().isAccepted
 
     verify(telemetryClient, timeout(2000).atLeastOnce()).trackEvent(
-      eq("POSIndexReport"),
+      eq("COMPARE_INDEX_IDS"),
       check<Map<String, String>> {
         assertThat(it["onlyInIndex"]).isEqualTo("[A7089EY, A7089EZ, A7089FA, A9999RC]")
         assertThat(it["onlyInNomis"]).isEqualTo("[A1234SR]")

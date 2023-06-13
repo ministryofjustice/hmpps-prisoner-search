@@ -41,7 +41,7 @@ class PrisonerSynchroniserService(
         indexes.map { index -> prisonerRepository.save(it, index) }
         it.right()
           .also {
-            telemetryClient.trackEvent(TelemetryEvents.PRISONER_UPDATED.name, mapOf("prisonerNumber" to prisonerNumber))
+            telemetryClient.trackEvent(TelemetryEvents.PRISONER_UPDATED, mapOf("prisonerNumber" to prisonerNumber))
           }
       }
 
@@ -85,7 +85,7 @@ class PrisonerSynchroniserService(
       .map { PrisonerPage(it / pageSize, pageSize) }
       .also {
         telemetryClient.trackEvent(
-          TelemetryEvents.POPULATE_PRISONER_PAGES.name,
+          TelemetryEvents.POPULATE_PRISONER_PAGES,
           mapOf("totalNumberOfPrisoners" to totalNumberOfPrisoners.toString(), "pageSize" to pageSize.toString()),
         )
       }
