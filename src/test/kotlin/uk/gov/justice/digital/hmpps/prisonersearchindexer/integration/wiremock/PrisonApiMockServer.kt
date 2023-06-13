@@ -21,8 +21,8 @@ class PrisonApiMockServer : WireMockServer(8093) {
       ),
     )
   }
-  fun stubOffenders(prisoner: List<PrisonerBuilder>) {
-    val prisonerNumbers = prisoner.map { it.prisonerNumber }
+  fun stubOffenders(vararg prisoners: PrisonerBuilder) {
+    val prisonerNumbers = prisoners.map { it.prisonerNumber }
     stubFor(
       WireMock.get(WireMock.urlEqualTo("/api/offenders/ids"))
         .willReturn(
@@ -33,7 +33,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
         ),
     )
 
-    prisoner.forEach {
+    prisoners.forEach {
       stubFor(
         WireMock.get(WireMock.urlEqualTo("/api/offenders/${it.prisonerNumber}"))
           .willReturn(

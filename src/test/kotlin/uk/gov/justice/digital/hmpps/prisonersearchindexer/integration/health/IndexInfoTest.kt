@@ -45,8 +45,7 @@ class IndexInfoTest : IntegrationTestBase() {
 
     @BeforeEach
     fun init() {
-      initialiseIndexStatus()
-      PrisonApiExtension.prisonApi.stubOffenders(listOf(PrisonerBuilder()))
+      PrisonApiExtension.prisonApi.stubOffenders(PrisonerBuilder())
       buildAndSwitchIndex(SyncIndex.GREEN, 1)
     }
 
