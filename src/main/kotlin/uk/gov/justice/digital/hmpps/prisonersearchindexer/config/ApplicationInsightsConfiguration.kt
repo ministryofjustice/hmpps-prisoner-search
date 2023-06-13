@@ -13,10 +13,10 @@ class ApplicationInsightsConfiguration {
   fun telemetryClient(): TelemetryClient = TelemetryClient()
 }
 
-fun TelemetryClient.trackEvent(name: String, properties: Map<String, String>) = this.trackEvent(name, properties, null)
+fun TelemetryClient.trackEvent(event: TelemetryEvents, properties: Map<String, String>) = this.trackEvent(event.name, properties, null)
 
 enum class TelemetryEvents {
   BUILDING_INDEX, CANCELLED_BUILDING_INDEX, COMPLETED_BUILDING_INDEX, SWITCH_INDEX, PURGED_INDEX_QUEUE,
   PURGED_INDEX_DLQ, PURGED_EVENT_DLQ, TRANSFERRED_INDEX_DLQ, TRANSFERRED_EVENT_DLQ, POPULATE_PRISONER_PAGES,
-  PRISONER_UPDATED, BUILD_INDEX_MSG, BUILD_PAGE_MSG, BUILD_PAGE_BOUNDARY
+  PRISONER_UPDATED, BUILD_INDEX_MSG, BUILD_PAGE_MSG, BUILD_PAGE_BOUNDARY, COMPARE_INDEX_IDS
 }

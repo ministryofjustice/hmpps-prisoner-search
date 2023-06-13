@@ -66,7 +66,7 @@ class IndexService(
       .also { logIndexStatuses(it) }
       .also {
         telemetryClient.trackEvent(
-          TelemetryEvents.BUILDING_INDEX.name,
+          TelemetryEvents.BUILDING_INDEX,
           mapOf("index" to indexStatus.otherIndex.name),
         )
       }
@@ -118,9 +118,8 @@ class IndexService(
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
             telemetryClient.trackEvent(
-              TelemetryEvents.COMPLETED_BUILDING_INDEX.name,
+              TelemetryEvents.COMPLETED_BUILDING_INDEX,
               mapOf("index" to it.currentIndex.name),
-              null,
             )
           }
       }
@@ -154,9 +153,8 @@ class IndexService(
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
             telemetryClient.trackEvent(
-              TelemetryEvents.SWITCH_INDEX.name,
+              TelemetryEvents.SWITCH_INDEX,
               mapOf("index" to it.currentIndex.name),
-              null,
             )
           }
       }
@@ -174,9 +172,8 @@ class IndexService(
       .also { logIndexStatuses(it) }
       .also {
         telemetryClient.trackEvent(
-          TelemetryEvents.CANCELLED_BUILDING_INDEX.name,
+          TelemetryEvents.CANCELLED_BUILDING_INDEX,
           mapOf("index" to it.otherIndex.name),
-          null,
         )
       }
   }
@@ -196,7 +193,7 @@ class IndexService(
     }
 
   fun populateIndex(index: SyncIndex): Either<Error, Int> =
-    executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG.name) {
+    executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
       indexStatusService.getIndexStatus()
         .also { logIndexStatuses(it) }
         .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
@@ -205,7 +202,7 @@ class IndexService(
     }
 
   private inline fun <R> executeAndTrackTimeMillis(
-    trackEventName: String,
+    trackEventName: TelemetryEvents,
     properties: Map<String, String> = mapOf(),
     block: () -> R,
   ): R {
@@ -214,7 +211,6 @@ class IndexService(
     telemetryClient.trackEvent(
       trackEventName,
       mutableMapOf("messageTimeMs" to (System.currentTimeMillis() - start).toString()).plus(properties),
-      null,
     )
     return result
   }
@@ -227,7 +223,7 @@ class IndexService(
 
   fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Either<Error, Unit> =
     executeAndTrackTimeMillis(
-      TelemetryEvents.BUILD_PAGE_MSG.name,
+      TelemetryEvents.BUILD_PAGE_MSG,
       mapOf("prisonerPage" to prisonerPage.page.toString()),
     ) {
       indexStatusService.getIndexStatus()
@@ -237,7 +233,7 @@ class IndexService(
             .forEachIndexed { index, offenderIdentifier ->
               if (index == 0 || index.toLong() == prisonerPage.pageSize - 1) {
                 telemetryClient.trackEvent(
-                  TelemetryEvents.BUILD_PAGE_BOUNDARY.name,
+                  TelemetryEvents.BUILD_PAGE_BOUNDARY,
                   mutableMapOf(
                     "page" to prisonerPage.page.toString(),
                     "IndexOnPage" to index.toString(),
@@ -269,13 +265,12 @@ class IndexService(
       val (onlyInIndex, onlyInNomis) = compareIndex()
       val end = System.currentTimeMillis()
       telemetryClient.trackEvent(
-        "POSIndexReport",
+        TelemetryEvents.COMPARE_INDEX_IDS,
         mapOf(
           "onlyInIndex" to toLogMessage(onlyInIndex),
           "onlyInNomis" to toLogMessage(onlyInNomis),
           "timeMs" to (end - start).toString(),
         ),
-        null,
       )
       log.info("End of doCompare()")
     } catch (e: Exception) {
