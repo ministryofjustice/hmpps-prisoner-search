@@ -92,6 +92,7 @@ abstract class IntegrationTestBase {
     indexAwsSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
     indexAwsSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
     createPrisonerIndices()
+    initialiseIndexStatus()
   }
 
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.repository
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,11 +12,6 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexStatusSe
 class IndexStatusTest : IntegrationTestBase() {
   @Autowired
   private lateinit var indexStatusService: IndexStatusService
-
-  @BeforeEach
-  fun `initialise and clear database`() {
-    initialiseIndexStatus()
-  }
 
   @Test
   fun `Should save new index status to repository`() {

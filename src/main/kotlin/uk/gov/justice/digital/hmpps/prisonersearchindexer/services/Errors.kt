@@ -38,8 +38,8 @@ data class NoActiveIndexesError(val indexStatus: IndexStatus) : IndexError {
   override fun message() = "Cannot update current index ${indexStatus.currentIndex} which is in state ${indexStatus.currentIndexState} and other index ${indexStatus.otherIndex} is in state ${indexStatus.otherIndexState}"
 }
 
-data class PrisonerNotFoundError(val crn: String) : PrisonerError {
-  override fun message() = "The prisoner $crn could not be found"
+data class PrisonerNotFoundError(val prisonerNumber: String) : PrisonerError {
+  override fun message() = "The prisoner $prisonerNumber could not be found"
 }
 
 data class ActiveMessagesExistError(val index: SyncIndex, val indexQueueStatus: IndexQueueStatus, val action: String) : IndexError {

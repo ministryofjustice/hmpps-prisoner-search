@@ -9,15 +9,18 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
@@ -177,15 +180,14 @@ class IndexResource(private val indexService: IndexService) {
         }
       }
   }
+
+  @GetMapping("/compare-index")
+  @PreAuthorize("hasRole('PRISONER_INDEX')")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @Tag(name = "Elastic Search index comparison, async endpoint with results sent to a custom event called POSIndexReport. Requires ROLE_PRISONER_INDEX.")
+  suspend fun compareIndex(): Unit = indexService.doCompare()
+
 // TODO (PGP): Add back in the index and reconcile index functions
-//
-//  @GetMapping("/compare-index")
-//  @PreAuthorize("hasRole('PRISONER_INDEX')")
-//  @ResponseStatus(HttpStatus.ACCEPTED)
-//  @Tag(name = "Elastic Search index comparison, async endpoint with results sent to a custom event called POSIndexReport. Requires ROLE_PRISONER_INDEX.")
-//  fun compareIndex() {
-//    indexService.doCompare()
-//  }
 //
 //  @GetMapping("/reconcile-index")
 //  @Operation(
