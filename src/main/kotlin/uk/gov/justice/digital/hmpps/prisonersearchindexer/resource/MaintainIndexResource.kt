@@ -9,18 +9,15 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
@@ -33,15 +30,15 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.UpdatePrisone
 
 @RestController
 @Validated
-@RequestMapping("/prisoner-index", produces = [MediaType.APPLICATION_JSON_VALUE])
+@RequestMapping("/maintain-index", produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "OpenSearch index maintenance")
-class IndexResource(private val indexService: IndexService) {
+class MaintainIndexResource(private val indexService: IndexService) {
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  @PutMapping("/build-index")
+  @PutMapping("/build")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Start building a new index",
@@ -57,14 +54,14 @@ class IndexResource(private val indexService: IndexService) {
   suspend fun buildIndex(): IndexStatus =
     indexService.prepareIndexForRebuild()
       .getOrElse { error ->
-        log.error("Request to /prisoner-index/build-index failed due to error {}", error)
+        log.error("Request to /maintain-index/build failed due to error {}", error)
         when (PrepareRebuildError.fromErrorClass(error)) {
           PrepareRebuildError.BUILD_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
           PrepareRebuildError.ACTIVE_MESSAGES_EXIST -> throw ResponseStatusException(CONFLICT, error.message())
         }
       }
 
-  @PutMapping("/cancel-index")
+  @PutMapping("/cancel")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Cancel building an index",
@@ -78,7 +75,7 @@ class IndexResource(private val indexService: IndexService) {
   )
   suspend fun cancelIndex() = indexService.cancelIndexing()
     .getOrElse { error ->
-      log.error("Request to /prisoner-index/cancel-index failed due to error {}", error)
+      log.error("Request to /maintain-index/cancel failed due to error {}", error)
       when (CancelBuildError.fromErrorClass(error)) {
         CancelBuildError.BUILD_NOT_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
       }
@@ -100,7 +97,7 @@ class IndexResource(private val indexService: IndexService) {
   suspend fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) =
     indexService.markIndexingComplete(ignoreThreshold)
       .getOrElse { error ->
-        log.error("Request to /prisoner-index/mark-complete failed due to error {}", error)
+        log.error("Request to /maintain-index/mark-complete failed due to error {}", error)
         when (MarkCompleteError.fromErrorClass(error)) {
           MarkCompleteError.BUILD_NOT_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
           MarkCompleteError.ACTIVE_MESSAGES_EXIST -> throw ResponseStatusException(CONFLICT, error.message())
@@ -108,7 +105,7 @@ class IndexResource(private val indexService: IndexService) {
         }
       }
 
-  @PutMapping("/switch-index")
+  @PutMapping("/switch")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Switch index without rebuilding",
@@ -127,7 +124,7 @@ class IndexResource(private val indexService: IndexService) {
   suspend fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
     indexService.switchIndex(force)
       .getOrElse { error ->
-        log.error("Request to /prisoner-index/switch-index failed due to error {}", error)
+        log.error("Request to /maintain-index/switch failed due to error {}", error)
         when (SwitchIndexError.fromErrorClass(error)) {
           SwitchIndexError.BUILD_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
           SwitchIndexError.BUILD_CANCELLED -> throw ResponseStatusException(CONFLICT, error.message())
@@ -135,7 +132,7 @@ class IndexResource(private val indexService: IndexService) {
         }
       }
 
-  @PutMapping("/index/prisoner/{prisonerNumber}")
+  @PutMapping("/index-prisoner/{prisonerNumber}")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Index/Refresh Data for Prisoner with specified prisoner number",
@@ -157,19 +154,24 @@ class IndexResource(private val indexService: IndexService) {
     prisonerNumber: String,
   ) = indexService.updatePrisoner(prisonerNumber)
     .getOrElse { error ->
-      log.error("Request to /prisoner-index/index/prisoner/$prisonerNumber failed due to error {}", error)
+      log.error("Request to /maintain-index/index-prisoner/$prisonerNumber failed due to error {}", error)
       when (UpdatePrisonerError.fromErrorClass(error)) {
         UpdatePrisonerError.NO_ACTIVE_INDEXES -> throw ResponseStatusException(CONFLICT, error.message())
         UpdatePrisonerError.PRISONER_NOT_FOUND -> throw ResponseStatusException(NOT_FOUND, error.message())
       }
     }
 
-  @PutMapping("/queue-housekeeping")
+  @PutMapping("/check-complete")
   @Operation(
     summary = "Triggers maintenance of the index queue",
-    description = "This is an internal service which isn't exposed to the outside world. It is called from a Kubernetes CronJob named `index-housekeeping-cronjob`",
+    description = """
+      This job checks to see if there are no more messages on the index queue and therefore indexing is
+      complete.  It also has a safety check to ensure that we have a minimum number of messages in the index.
+      It is an internal service which isn't exposed to the outside world and is called from a Kubernetes CronJob named
+      `index-housekeeping-cronjob`
+      """,
   )
-  suspend fun indexQueueHousekeeping() {
+  suspend fun checkIfComplete() {
     indexService.markIndexingComplete(ignoreThreshold = false)
       .getOrElse { error ->
         if (MarkCompleteError.fromErrorClass(error) == MarkCompleteError.THRESHOLD_NOT_REACHED) {
@@ -180,35 +182,4 @@ class IndexResource(private val indexService: IndexService) {
         }
       }
   }
-
-  @GetMapping("/compare-index")
-  @PreAuthorize("hasRole('PRISONER_INDEX')")
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  @Tag(name = "OpenSearch index comparison, async endpoint with results sent to a custom event called COMPARE_INDEX_IDS. Requires ROLE_PRISONER_INDEX.")
-  suspend fun compareIndex(): Unit = indexService.doCompare()
-
-// TODO (PGP): Add back in the index and reconcile index functions
-//
-//  @GetMapping("/reconcile-index")
-//  @Operation(
-//    summary = "Start a full index comparison",
-//    description = """The whole existing index is compared in detail with current Nomis data, requires ROLE_PRISONER_INDEX.
-//      Results are written as customEvents. Nothing is written where a prisoner's data matches.
-//      Note this is a heavyweight operation, like a full index rebuild""",
-//  )
-//  @PreAuthorize("hasRole('PRISONER_INDEX')")
-//  @ResponseStatus(HttpStatus.ACCEPTED)
-//  fun startIndexReconciliation() = indexService.startIndexReconciliation()
-//
-//  @GetMapping("/reconcile-prisoner/{prisonerNumber}")
-//  @Operation(
-//    summary = "Compare a prisoner's index with Nomis",
-//    description = "Existing index is compared in detail with current Nomis data for a specific prisoner, requires ROLE_PRISONER_INDEX.",
-//  )
-//  @PreAuthorize("hasRole('PRISONER_INDEX')")
-//  fun reconcilePrisoner(
-//    @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
-//    @PathVariable("prisonerNumber")
-//    prisonerNumber: String,
-//  ): String = indexService.comparePrisonerDetail(prisonerNumber).toString()
 }

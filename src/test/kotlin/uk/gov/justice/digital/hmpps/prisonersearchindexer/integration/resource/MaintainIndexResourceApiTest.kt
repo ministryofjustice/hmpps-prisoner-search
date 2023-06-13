@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.NoActiveIndex
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrisonerNotFoundError
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class IndexResourceApiTest : IntegrationTestBase() {
+class MaintainIndexResourceApiTest : IntegrationTestBase() {
   @SpyBean
   private lateinit var indexService: IndexService
 
@@ -43,11 +43,11 @@ class IndexResourceApiTest : IntegrationTestBase() {
   inner class SecureEndpoints {
     private fun secureEndpoints() =
       listOf(
-        "/prisoner-index/build-index",
-        "/prisoner-index/mark-complete",
-        "/prisoner-index/switch-index",
-        "/prisoner-index/cancel-index",
-        "/prisoner-index/index/prisoner/SOME_NOMIS",
+        "/maintain-index/build",
+        "/maintain-index/mark-complete",
+        "/maintain-index/switch",
+        "/maintain-index/cancel",
+        "/maintain-index/index-prisoner/SOME_NOMIS",
       )
 
     @ParameterizedTest
@@ -80,7 +80,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
         .prepareIndexForRebuild()
 
       webTestClient.put()
-        .uri("/prisoner-index/build-index")
+        .uri("/maintain-index/build")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -98,7 +98,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(BuildAlreadyInProgressError(expectedIndexStatus).left()).whenever(indexService).prepareIndexForRebuild()
 
       webTestClient.put()
-        .uri("/prisoner-index/build-index")
+        .uri("/maintain-index/build")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -120,7 +120,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(anIndexStatus().right()).whenever(indexService).markIndexingComplete(ignoreThreshold = false)
 
       webTestClient.put()
-        .uri("/prisoner-index/mark-complete")
+        .uri("/maintain-index/mark-complete")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -137,7 +137,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       )
 
       webTestClient.put()
-        .uri("/prisoner-index/mark-complete")
+        .uri("/maintain-index/mark-complete")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -159,7 +159,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(anIndexStatus().right()).whenever(indexService).switchIndex(false)
 
       webTestClient.put()
-        .uri("/prisoner-index/switch-index")
+        .uri("/maintain-index/switch")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -176,7 +176,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(anIndexStatus().right()).whenever(indexService).cancelIndexing()
 
       webTestClient.put()
-        .uri("/prisoner-index/cancel-index")
+        .uri("/maintain-index/cancel")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -191,7 +191,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(BuildNotInProgressError(expectedIndexStatus).left()).whenever(indexService).cancelIndexing()
 
       webTestClient.put()
-        .uri("/prisoner-index/cancel-index")
+        .uri("/maintain-index/cancel")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -213,7 +213,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn("{}".right()).whenever(indexService).updatePrisoner("SOME_CRN")
 
       webTestClient.put()
-        .uri("/prisoner-index/index/prisoner/SOME_CRN")
+        .uri("/maintain-index/index-prisoner/SOME_CRN")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -228,7 +228,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(NoActiveIndexesError(expectedIndexStatus).left()).whenever(indexService).updatePrisoner("SOME_CRN")
 
       webTestClient.put()
-        .uri("/prisoner-index/index/prisoner/SOME_CRN")
+        .uri("/maintain-index/index-prisoner/SOME_CRN")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -242,7 +242,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
       doReturn(PrisonerNotFoundError("SOME_CRN").left()).whenever(indexService).updatePrisoner("SOME_CRN")
 
       webTestClient.put()
-        .uri("/prisoner-index/index/prisoner/SOME_CRN")
+        .uri("/maintain-index/index-prisoner/SOME_CRN")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
@@ -263,7 +263,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
     @Test
     fun `endpoint is not secured`() {
       webTestClient.put()
-        .uri("/prisoner-index/queue-housekeeping")
+        .uri("/maintain-index/check-complete")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus().isOk
@@ -272,7 +272,7 @@ class IndexResourceApiTest : IntegrationTestBase() {
     @Test
     fun `attempts to mark the build as complete`() {
       webTestClient.put()
-        .uri("/prisoner-index/queue-housekeeping")
+        .uri("/maintain-index/check-complete")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
 
