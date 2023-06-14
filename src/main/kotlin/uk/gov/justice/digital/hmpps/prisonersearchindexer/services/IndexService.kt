@@ -259,7 +259,7 @@ class IndexService(
     }
 
   @Async
-  fun doCompare() {
+  fun doCompareByIds() {
     try {
       val start = System.currentTimeMillis()
       val (onlyInIndex, onlyInNomis) = compareIndex()

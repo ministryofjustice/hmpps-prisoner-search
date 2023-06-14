@@ -117,7 +117,7 @@ abstract class IntegrationTestBase {
     buildIndex(index, expectedCount)
 
     webTestClient.put()
-      .uri("/prisoner-index/mark-complete")
+      .uri("/maintain-index/mark-complete")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
       .exchange()
@@ -128,7 +128,7 @@ abstract class IntegrationTestBase {
 
   fun buildIndex(index: SyncIndex, expectedCount: Long) {
     webTestClient.put()
-      .uri("/prisoner-index/build-index")
+      .uri("/maintain-index/build")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
       .exchange()

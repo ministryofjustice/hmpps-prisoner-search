@@ -9,21 +9,16 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 
-class IndexResource_compareIndexTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var prisonerRepository: PrisonerRepository
+class CompareIndexResourceApiTest : IntegrationTestBase() {
 
   @Test
   fun `access forbidden when no authority`() {
-    webTestClient.get().uri("/prisoner-index/compare-index")
+    webTestClient.get().uri("/compare-index/ids")
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isUnauthorized
@@ -31,7 +26,7 @@ class IndexResource_compareIndexTest : IntegrationTestBase() {
 
   @Test
   fun `access forbidden when no role`() {
-    webTestClient.get().uri("/prisoner-index/compare-index")
+    webTestClient.get().uri("/compare-index/ids")
       .headers(setAuthorisation())
       .header("Content-Type", "application/json")
       .exchange()
@@ -62,7 +57,7 @@ class IndexResource_compareIndexTest : IntegrationTestBase() {
       PrisonerBuilder("A1234SR"),
     )
 
-    webTestClient.get().uri("/prisoner-index/compare-index")
+    webTestClient.get().uri("/compare-index/ids")
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
       .exchange()
       .expectStatus().isAccepted
