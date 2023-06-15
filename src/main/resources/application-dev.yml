@@ -27,13 +27,6 @@ incentives:
     id: incentives-api
     secret: clientsecret
 
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          public-key-location: classpath:local-public-key.pub
-
 opensearch:
   uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
 
