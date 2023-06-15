@@ -13,6 +13,13 @@ api:
       restricted-patients: http://localhost:8095
       incentives: http://localhost:8096
 
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: classpath:local-public-key.pub
+
 restricted-patients:
   client:
     id: prisoner-search-to-restricted-patients-api
