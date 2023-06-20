@@ -4,34 +4,32 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import reactor.core.publisher.Mono
+import reactor.netty.http.client.HttpClientRequest
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
 import java.time.Duration
 
 @Service
 class NomisService(
   val prisonApiWebClient: WebClient,
-  @Value("\${api.offender.timeout:20s}") val offenderTimeout: Duration,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
-
-  private val identifiers = object : ParameterizedTypeReference<List<BookingIdentifier>>() {}
 
   fun getOffendersIds(offset: Long = 0, size: Long = 10): OffenderResponse {
     return prisonApiWebClient.get()
       .uri("/api/offenders/ids")
       .header("Page-Offset", offset.toString())
       .header("Page-Limit", size.toString())
+      .httpRequest {
+        it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
+      }
       .retrieve()
       .toEntityList(OffenderId::class.java)
-      .timeout(Duration.ofMinutes(10))
       .map {
         OffenderResponse(
           it.body,
@@ -45,7 +43,7 @@ class NomisService(
     .retrieve()
     .bodyToMono(OffenderBooking::class.java)
     .onErrorResume(NotFound::class.java) { Mono.empty() }
-    .block(offenderTimeout)
+    .block()
     ?.offenderNo
 
   fun getOffender(offenderNo: String): Either<PrisonerError, OffenderBooking> = prisonApiWebClient.get()
@@ -53,15 +51,8 @@ class NomisService(
     .retrieve()
     .bodyToMono(OffenderBooking::class.java)
     .onErrorResume(::emptyIfNotFound)
-    .block(offenderTimeout)?.right() ?: PrisonerNotFoundError(offenderNo).left()
+    .block()?.right() ?: PrisonerNotFoundError(offenderNo).left()
     .also { log.error("Prisoner with offenderNo {} not found", offenderNo) }
-
-  fun getMergedIdentifiersByBookingId(bookingId: Long): List<BookingIdentifier>? = prisonApiWebClient.get()
-    .uri("/api/bookings/$bookingId/identifiers?type=MERGED")
-    .retrieve()
-    .bodyToMono(identifiers)
-    .onErrorResume(NotFound::class.java) { Mono.empty() }
-    .block(offenderTimeout)
 
   private fun emptyIfNotFound(exception: Throwable): Mono<out OffenderBooking> =
     if (exception is NotFound) Mono.empty() else Mono.error(exception)
