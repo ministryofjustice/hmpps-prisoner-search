@@ -25,6 +25,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.26.0")
 
   // TODO: work out whether can just use jackson instead
   implementation("com.google.code.gson:gson:2.10.1")
