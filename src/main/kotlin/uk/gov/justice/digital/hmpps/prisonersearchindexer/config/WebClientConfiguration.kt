@@ -4,12 +4,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableAsync
-import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProviderBuilder
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService
-import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
-import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction
 import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
@@ -29,10 +29,10 @@ class WebClientConfiguration(
 
   @Bean
   fun prisonApiWebClient(
-    authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
     webClientBuilder: WebClient.Builder,
   ): WebClient {
-    val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
       it.setDefaultClientRegistrationId("prison-api")
     }
 
@@ -44,10 +44,10 @@ class WebClientConfiguration(
 
   @Bean
   fun restrictedPatientsWebClient(
-    authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
     webClientBuilder: WebClient.Builder,
   ): WebClient {
-    val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
       it.setDefaultClientRegistrationId("restricted-patients-api")
     }
 
@@ -59,10 +59,10 @@ class WebClientConfiguration(
 
   @Bean
   fun incentivesWebClient(
-    authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
     webClientBuilder: WebClient.Builder,
   ): WebClient {
-    val oauth2Client = ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
       it.setDefaultClientRegistrationId("incentives-api")
     }
 
@@ -71,12 +71,12 @@ class WebClientConfiguration(
 
   @Bean
   fun authorizedClientManager(
-    clientRegistrationRepository: ReactiveClientRegistrationRepository,
-    oAuth2AuthorizedClientService: ReactiveOAuth2AuthorizedClientService,
-  ): ReactiveOAuth2AuthorizedClientManager {
-    val authorizedClientProvider = ReactiveOAuth2AuthorizedClientProviderBuilder.builder().clientCredentials().build()
+    clientRegistrationRepository: ClientRegistrationRepository,
+    oAuth2AuthorizedClientService: OAuth2AuthorizedClientService,
+  ): OAuth2AuthorizedClientManager {
+    val authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder().clientCredentials().build()
     val authorizedClientManager =
-      AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(
+      AuthorizedClientServiceOAuth2AuthorizedClientManager(
         clientRegistrationRepository,
         oAuth2AuthorizedClientService,
       )
