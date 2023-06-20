@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.listeners
 import arrow.core.getOrElse
 import com.google.gson.Gson
 import io.awspring.cloud.sqs.annotation.SqsListener
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -24,6 +26,7 @@ class IndexListener(
   }
 
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
+  @WithSpan(value = "syscon-devs-hmpps_prisoner_search_index_queue", kind = SpanKind.SERVER)
   fun processIndexRequest(requestJson: String) {
     val indexRequest = try {
       gson.fromJson(requestJson, IndexMessageRequest::class.java)
