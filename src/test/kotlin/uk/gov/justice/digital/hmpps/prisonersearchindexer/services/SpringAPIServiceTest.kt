@@ -2,7 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTestContextBootstrapper
@@ -12,6 +13,7 @@ import org.springframework.web.reactive.config.EnableWebFlux
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.RestrictedPatientsApiExtension
 import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.ANNOTATION_CLASS
 import kotlin.annotation.AnnotationTarget.CLASS
@@ -29,10 +31,11 @@ import kotlin.annotation.AnnotationTarget.CLASS
 @Inherited
 @ExtendWith(
   IncentivesApiExtension::class,
+  RestrictedPatientsApiExtension::class,
   HmppsAuthApiExtension::class,
 )
 @ActiveProfiles("test")
 @EnableWebFlux
-@SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, ReactiveSecurityAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class])
+@SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class])
 @BootstrapWith(SpringBootTestContextBootstrapper::class)
 annotation class SpringAPIServiceTest

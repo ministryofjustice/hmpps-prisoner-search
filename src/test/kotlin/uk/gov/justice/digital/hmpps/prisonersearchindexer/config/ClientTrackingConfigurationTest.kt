@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest
-import org.springframework.mock.web.server.MockServerWebExchange
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -23,14 +23,14 @@ import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.helpers.JwtAuthHelper
 
-@Import(JwtAuthHelper::class, ClientTrackingWebFilter::class)
+@Import(JwtAuthHelper::class, ClientTrackingInterceptor::class, ClientTrackingConfiguration::class)
 @ContextConfiguration(initializers = [ConfigDataApplicationContextInitializer::class])
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension::class)
 class ClientTrackingConfigurationTest {
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
-  private lateinit var clientTrackingInterceptor: ClientTrackingWebFilter
+  private lateinit var clientTrackingInterceptor: ClientTrackingInterceptor
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
   @Autowired
@@ -48,9 +48,10 @@ class ClientTrackingConfigurationTest {
   @Test
   fun shouldAddClientIdAndUserNameToInsightTelemetry() {
     val token = jwtAuthHelper.createJwt("bob")
-    val req = MockServerHttpRequest.get("url").header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+    val req = MockHttpServletRequest().also { it.addHeader(HttpHeaders.AUTHORIZATION, "Bearer $token") }
+    val res = MockHttpServletResponse()
     tracer.spanBuilder("span").startSpan().run {
-      makeCurrent().use { clientTrackingInterceptor.filter(MockServerWebExchange.builder(req).build(), webFilterChain) }
+      makeCurrent().use { clientTrackingInterceptor.preHandle(req, res, "null") }
       end()
     }
     otelTesting.assertTraces().hasTracesSatisfyingExactly({ t ->
@@ -64,9 +65,10 @@ class ClientTrackingConfigurationTest {
   @Test
   fun shouldAddOnlyClientIdIfUsernameNullToInsightTelemetry() {
     val token = jwtAuthHelper.createJwt(null)
-    val req = MockServerHttpRequest.get("url").header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+    val req = MockHttpServletRequest().also { it.addHeader(HttpHeaders.AUTHORIZATION, "Bearer $token") }
+    val res = MockHttpServletResponse()
     tracer.spanBuilder("span").startSpan().run {
-      makeCurrent().use { clientTrackingInterceptor.filter(MockServerWebExchange.builder(req).build(), webFilterChain) }
+      makeCurrent().use { clientTrackingInterceptor.preHandle(req, res, "null") }
       end()
     }
     otelTesting.assertTraces().hasTracesSatisfyingExactly({ t ->

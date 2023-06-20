@@ -6,18 +6,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
-import reactor.core.publisher.Mono
 
-class AuthAwareTokenConverter : Converter<Jwt, Mono<AuthAwareAuthenticationToken>> {
+class AuthAwareTokenConverter : Converter<Jwt, AuthAwareAuthenticationToken> {
   private val jwtGrantedAuthoritiesConverter: Converter<Jwt, Collection<GrantedAuthority>> =
     JwtGrantedAuthoritiesConverter()
 
-  override fun convert(jwt: Jwt): Mono<AuthAwareAuthenticationToken> {
+  override fun convert(jwt: Jwt): AuthAwareAuthenticationToken {
     val claims = jwt.claims
     val userName = findUserName(claims)
     val clientId = findClientId(claims)
     val authorities = extractAuthorities(jwt)
-    return Mono.just(AuthAwareAuthenticationToken(jwt, userName, clientId, authorities))
+    return AuthAwareAuthenticationToken(jwt, userName, clientId, authorities)
   }
 
   private fun findUserName(claims: Map<String, Any?>): String? =

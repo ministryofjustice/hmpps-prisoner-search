@@ -51,7 +51,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       ApiResponse(responseCode = "409", description = "Conflict, the index was not in a state to start building"),
     ],
   )
-  suspend fun buildIndex(): IndexStatus =
+  fun buildIndex(): IndexStatus =
     indexService.prepareIndexForRebuild()
       .getOrElse { error ->
         log.error("Request to /maintain-index/build failed due to error {}", error)
@@ -73,7 +73,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
     ],
   )
-  suspend fun cancelIndex() = indexService.cancelIndexing()
+  fun cancelIndex() = indexService.cancelIndexing()
     .getOrElse { error ->
       log.error("Request to /maintain-index/cancel failed due to error {}", error)
       when (CancelBuildError.fromErrorClass(error)) {
@@ -94,7 +94,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       ApiResponse(responseCode = "409", description = "Conflict, the index was not currently building"),
     ],
   )
-  suspend fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) =
+  fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) =
     indexService.markIndexingComplete(ignoreThreshold)
       .getOrElse { error ->
         log.error("Request to /maintain-index/mark-complete failed due to error {}", error)
@@ -121,7 +121,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       ),
     ],
   )
-  suspend fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
+  fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
     indexService.switchIndex(force)
       .getOrElse { error ->
         log.error("Request to /maintain-index/switch failed due to error {}", error)
@@ -146,7 +146,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       ApiResponse(responseCode = "409", description = "Conflict, no indexes could be updated"),
     ],
   )
-  suspend fun indexPrisoner(
+  fun indexPrisoner(
     @Parameter(required = true, example = "A1234AA")
     @NotNull
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
@@ -171,7 +171,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       `index-housekeeping-cronjob`
       """,
   )
-  suspend fun checkIfComplete() {
+  fun checkIfComplete() {
     indexService.markIndexingComplete(ignoreThreshold = false)
       .getOrElse { error ->
         if (MarkCompleteError.fromErrorClass(error) == MarkCompleteError.THRESHOLD_NOT_REACHED) {

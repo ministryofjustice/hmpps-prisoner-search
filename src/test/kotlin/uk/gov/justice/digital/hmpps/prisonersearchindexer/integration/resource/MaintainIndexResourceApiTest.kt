@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.resource
 
 import arrow.core.left
 import arrow.core.right
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -19,6 +17,8 @@ import org.mockito.kotlin.whenever
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexState.CANCELLED
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexState.COMPLETED
@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.NoActiveIndexesError
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrisonerNotFoundError
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class MaintainIndexResourceApiTest : IntegrationTestBase() {
   @SpyBean
   private lateinit var indexService: IndexService
@@ -172,7 +171,7 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
   @Nested
   inner class CancelIndexing {
     @Test
-    fun `Request to cancel indexing is successful and calls service`() = runTest {
+    fun `Request to cancel indexing is successful and calls service`() {
       doReturn(anIndexStatus().right()).whenever(indexService).cancelIndexing()
 
       webTestClient.put()
@@ -186,7 +185,7 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Request to mark index cancelled when index not building returns error`() = runTest {
+    fun `Request to mark index cancelled when index not building returns error`() {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = CANCELLED)
       doReturn(BuildNotInProgressError(expectedIndexStatus).left()).whenever(indexService).cancelIndexing()
 
@@ -210,45 +209,46 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
   inner class IndexPrisoner {
     @Test
     fun `Request to index prisoner is successful and calls service`() {
-      doReturn("{}".right()).whenever(indexService).updatePrisoner("SOME_CRN")
+      PrisonApiExtension.prisonApi.stubOffenders(PrisonerBuilder("A1234BC"))
+      buildAndSwitchIndex(GREEN, 1)
 
       webTestClient.put()
-        .uri("/maintain-index/index-prisoner/SOME_CRN")
+        .uri("/maintain-index/index-prisoner/A1234BC")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
         .expectStatus().isOk
 
-      verify(indexService).updatePrisoner("SOME_CRN")
+      verify(indexService).updatePrisoner("A1234BC")
     }
 
     @Test
     fun `Request to index prisoner without active indexes returns conflict`() {
       val expectedIndexStatus = IndexStatus.newIndex()
-      doReturn(NoActiveIndexesError(expectedIndexStatus).left()).whenever(indexService).updatePrisoner("SOME_CRN")
+      doReturn(NoActiveIndexesError(expectedIndexStatus).left()).whenever(indexService).updatePrisoner("A1234BC")
 
       webTestClient.put()
-        .uri("/maintain-index/index-prisoner/SOME_CRN")
+        .uri("/maintain-index/index-prisoner/A1234BC")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
         .expectStatus().isEqualTo(409)
 
-      verify(indexService).updatePrisoner("SOME_CRN")
+      verify(indexService).updatePrisoner("A1234BC")
     }
 
     @Test
     fun `Request to index unknown prisoner returns not found`() {
-      doReturn(PrisonerNotFoundError("SOME_CRN").left()).whenever(indexService).updatePrisoner("SOME_CRN")
+      doReturn(PrisonerNotFoundError("A1234BC").left()).whenever(indexService).updatePrisoner("A1234BC")
 
       webTestClient.put()
-        .uri("/maintain-index/index-prisoner/SOME_CRN")
+        .uri("/maintain-index/index-prisoner/A1234BC")
         .accept(MediaType.APPLICATION_JSON)
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
         .expectStatus().isEqualTo(404)
 
-      verify(indexService).updatePrisoner("SOME_CRN")
+      verify(indexService).updatePrisoner("A1234BC")
     }
   }
 

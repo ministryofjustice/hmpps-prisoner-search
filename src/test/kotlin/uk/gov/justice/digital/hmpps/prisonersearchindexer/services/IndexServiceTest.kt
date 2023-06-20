@@ -333,7 +333,7 @@ class IndexServiceTest {
   inner class CancelIndexing {
 
     @Test
-    fun `Index not building returns error`() = runTest {
+    fun `Index not building returns error`() {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
@@ -344,7 +344,7 @@ class IndexServiceTest {
     }
 
     @Test
-    fun `A request is made to mark the index state as cancelled`() = runTest {
+    fun `A request is made to mark the index state as cancelled`() {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
@@ -368,7 +368,7 @@ class IndexServiceTest {
     }
 
     @Test
-    fun `A telemetry event is sent`() = runTest {
+    fun `A telemetry event is sent`() {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
@@ -378,7 +378,7 @@ class IndexServiceTest {
     }
 
     @Test
-    fun `Once current index marked as cancelled, the 'other' index is current`() = runTest {
+    fun `Once current index marked as cancelled, the 'other' index is current`() {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = CANCELLED)
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))

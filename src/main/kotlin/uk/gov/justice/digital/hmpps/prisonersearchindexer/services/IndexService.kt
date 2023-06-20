@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.runBlocking
 import org.opensearch.action.search.ClearScrollRequest
 import org.opensearch.action.search.SearchRequest
 import org.opensearch.action.search.SearchResponse
@@ -159,15 +160,17 @@ class IndexService(
           }
       }
 
-  suspend fun cancelIndexing(): Either<Error, IndexStatus> =
+  fun cancelIndexing(): Either<Error, IndexStatus> =
     indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
       .map { doCancelIndexing() }
 
-  private suspend fun doCancelIndexing(): IndexStatus {
+  private fun doCancelIndexing(): IndexStatus {
     indexStatusService.markBuildCancelled()
-    hmppsQueueService.purgeQueue(PurgeQueueRequest(indexQueue.queueName, indexQueue.sqsClient, indexQueue.queueUrl))
+    runBlocking {
+      hmppsQueueService.purgeQueue(PurgeQueueRequest(indexQueue.queueName, indexQueue.sqsClient, indexQueue.queueUrl))
+    }
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
       .also {

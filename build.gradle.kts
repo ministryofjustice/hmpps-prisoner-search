@@ -4,8 +4,6 @@ plugins {
 }
 
 configurations {
-  implementation { exclude(module = "spring-boot-starter-web") }
-  implementation { exclude(module = "spring-boot-starter-tomcat") }
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
@@ -24,7 +22,7 @@ dependencies {
 
   implementation("org.springframework.data:spring-data-elasticsearch:$springDataElasticsearchVersion")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0")
 

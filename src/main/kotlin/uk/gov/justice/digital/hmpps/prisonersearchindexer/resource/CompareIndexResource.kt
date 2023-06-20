@@ -30,7 +30,7 @@ class CompareIndexResource(private val indexService: IndexService) {
       Requires ROLE_PRISONER_INDEX.
       """,
   )
-  suspend fun compareIndexByIds(): Unit = indexService.doCompareByIds()
+  fun compareIndexByIds(): Unit = indexService.doCompareByIds()
 
 // TODO (PGP): Add back in the index and reconcile index functions
 //

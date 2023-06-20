@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.config
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.security.core.Authentication
@@ -21,6 +22,9 @@ class AuthenticationHolderTest {
     setAuthentication()
     assertThat(authenticationHolder.currentClientId()).isEqualTo("clientID")
   }
+
+  @AfterEach
+  fun afterEach() = SecurityContextHolder.clearContext()
 
   private fun setAuthentication() {
     val auth: Authentication = AuthAwareAuthenticationToken(
