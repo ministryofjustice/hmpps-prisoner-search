@@ -28,7 +28,14 @@ internal class PrisonerSynchroniserServiceTest {
   private val restrictedPatientService = mock<RestrictedPatientService>()
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
-  private val service = PrisonerSynchroniserService(prisonerRepository, telemetryClient, nomisService, restrictedPatientService, incentivesService, IndexBuildProperties(10, 0))
+  private val service = PrisonerSynchroniserService(
+    prisonerRepository,
+    telemetryClient,
+    nomisService,
+    restrictedPatientService,
+    incentivesService,
+    IndexBuildProperties(10, 0),
+  )
 
   @Nested
   inner class SynchronisePrisoner {
@@ -143,7 +150,7 @@ internal class PrisonerSynchroniserServiceTest {
   inner class SplitAllPrisonersIntoChunks {
     @Test
     internal fun `will split total list by our page size`() {
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 30))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(30)
 
       val chunks = service.splitAllPrisonersIntoChunks()
       assertThat(chunks).containsExactly(
@@ -155,7 +162,7 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     internal fun `will round up last page to page size`() {
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 31))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(31)
 
       var chunks = service.splitAllPrisonersIntoChunks()
       assertThat(chunks).containsExactly(
@@ -165,7 +172,7 @@ internal class PrisonerSynchroniserServiceTest {
         PrisonerPage(3, 10),
       )
 
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 29))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(29)
 
       chunks = service.splitAllPrisonersIntoChunks()
       assertThat(chunks).containsExactly(
@@ -186,7 +193,7 @@ internal class PrisonerSynchroniserServiceTest {
         IndexBuildProperties(1000, 0),
       )
 
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 2000001))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(2000001)
 
       val chunks = service.splitAllPrisonersIntoChunks()
       assertThat(chunks).hasSize(2001)
@@ -194,7 +201,7 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     internal fun `will create a single pages for a tiny number of prisoners`() {
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 1))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
 
       val chunks = service.splitAllPrisonersIntoChunks()
       assertThat(chunks).hasSize(1)
@@ -211,11 +218,15 @@ internal class PrisonerSynchroniserServiceTest {
         IndexBuildProperties(1000, 0),
       )
 
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 1))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
 
       service.splitAllPrisonersIntoChunks()
 
-      verify(telemetryClient).trackEvent(TelemetryEvents.POPULATE_PRISONER_PAGES.name, mapOf("totalNumberOfPrisoners" to "1", "pageSize" to "1000"), null)
+      verify(telemetryClient).trackEvent(
+        TelemetryEvents.POPULATE_PRISONER_PAGES.name,
+        mapOf("totalNumberOfPrisoners" to "1", "pageSize" to "1000"),
+        null,
+      )
     }
 
     @Test
@@ -229,7 +240,7 @@ internal class PrisonerSynchroniserServiceTest {
         IndexBuildProperties(1000, 0),
       )
 
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(OffenderResponse(totalRows = 0))
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(0)
 
       val chunks = service.splitAllPrisonersIntoChunks()
       assertThat(chunks).hasSize(0)
@@ -240,15 +251,12 @@ internal class PrisonerSynchroniserServiceTest {
   inner class GetAllPrisonerIdentifiersInPage {
     @BeforeEach
     internal fun setUp() {
-      whenever(nomisService.getOffendersIds(any(), any())).thenReturn(
-        OffenderResponse(
-          listOf(
-            OffenderId("X12345"),
-            OffenderId("X12346"),
-            OffenderId("X12347"),
-            OffenderId("X12348"),
-          ),
-          totalRows = 1,
+      whenever(nomisService.getPrisonerNumbers(any(), any())).thenReturn(
+        listOf(
+          OffenderId("X12345"),
+          OffenderId("X12346"),
+          OffenderId("X12347"),
+          OffenderId("X12348"),
         ),
       )
     }
@@ -256,7 +264,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     internal fun `will pass through page numbers`() {
       service.getAllPrisonerNumbersInPage(PrisonerPage(3, 1000))
-      verify(nomisService).getOffendersIds(3, 1000)
+      verify(nomisService).getPrisonerNumbers(3, 1000)
     }
 
     @Test

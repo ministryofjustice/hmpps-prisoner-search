@@ -9,13 +9,24 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.CompareIndexService
 
 @RestController
 @Validated
 @RequestMapping("/compare-index", produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "OpenSearch index comparison")
-class CompareIndexResource(private val indexService: IndexService) {
+class CompareIndexResource(private val compareIndexService: CompareIndexService) {
+  @GetMapping("/size")
+  @Tag(
+    name = "Simple OpenSearch index size comparison.",
+    description = """
+        Comparison of the number of prisoners in NOMIS and the number of prisoners in the index. 
+        Results sent to a custom event called COMPARE_INDEX_SIZE.
+        It is an internal service which isn't exposed to the outside world and is called from a 
+        Kubernetes CronJob named `synthethic-monitor-cronjob`
+      """,
+  )
+  suspend fun compareIndexSizes(): Unit = compareIndexService.doIndexSizeCheck()
 
   @GetMapping("/ids")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -30,7 +41,7 @@ class CompareIndexResource(private val indexService: IndexService) {
       Requires ROLE_PRISONER_INDEX.
       """,
   )
-  fun compareIndexByIds(): Unit = indexService.doCompareByIds()
+  fun compareIndexByIds(): Unit = compareIndexService.doCompareByIds()
 
 // TODO (PGP): Add back in the index and reconcile index functions
 //

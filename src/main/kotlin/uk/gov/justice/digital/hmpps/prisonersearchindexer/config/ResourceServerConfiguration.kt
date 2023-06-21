@@ -34,7 +34,8 @@ class ResourceServerConfiguration {
           "/health/**", "/info", "/startup", "/h2-console/**",
           "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
           "/queue-admin/retry-all-dlqs",
-          "/maintain-index/check-complete",
+          // These endpoints are secured in the ingress rather than the app so that they can be called from within the namespace without requiring authentication
+          "/maintain-index/check-complete", "/compare-index/size",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }

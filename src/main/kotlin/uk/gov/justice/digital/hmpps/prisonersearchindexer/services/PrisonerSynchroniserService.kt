@@ -79,7 +79,7 @@ class PrisonerSynchroniserService(
   }
 
   fun splitAllPrisonersIntoChunks(): List<PrisonerPage> {
-    val totalNumberOfPrisoners = nomisService.getOffendersIds(0, 1).totalRows
+    val totalNumberOfPrisoners = nomisService.getTotalNumberOfPrisoners()
     log.info("Splitting $totalNumberOfPrisoners in to pages each of size $pageSize")
     return (1..totalNumberOfPrisoners step pageSize).toList()
       .map { PrisonerPage(it / pageSize, pageSize) }
@@ -92,7 +92,7 @@ class PrisonerSynchroniserService(
   }
 
   fun getAllPrisonerNumbersInPage(prisonerPage: PrisonerPage): List<OffenderId> =
-    nomisService.getOffendersIds(prisonerPage.page, prisonerPage.pageSize).offenderIds ?: emptyList()
+    nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
 }
 
 data class PrisonerPage(val page: Long, val pageSize: Long)
