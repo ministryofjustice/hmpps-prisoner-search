@@ -20,23 +20,26 @@ class NomisService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun getOffendersIds(offset: Long = 0, size: Long = 10): OffenderResponse {
-    return prisonApiWebClient.get()
-      .uri("/api/offenders/ids")
-      .header("Page-Offset", offset.toString())
-      .header("Page-Limit", size.toString())
-      .httpRequest {
-        it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
-      }
-      .retrieve()
-      .toEntityList(OffenderId::class.java)
-      .map {
-        OffenderResponse(
-          it.body,
-          it.headers["Total-Records"]?.first()?.toLongOrNull() ?: 0,
-        )
-      }.block() ?: OffenderResponse()
-  }
+  private fun getOffendersIds(offset: Long = 0, size: Long = 10) = prisonApiWebClient.get()
+    .uri("/api/offenders/ids")
+    .header("Page-Offset", offset.toString())
+    .header("Page-Limit", size.toString())
+    .httpRequest {
+      it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
+    }
+    .retrieve()
+    .toEntityList(OffenderId::class.java)
+    .map {
+      OffenderResponse(
+        it.body,
+        it.headers["Total-Records"]?.first()?.toLongOrNull() ?: 0,
+      )
+    }.block() ?: OffenderResponse()
+
+  fun getTotalNumberOfPrisoners(): Long = getOffendersIds(0, 1).totalRows
+
+  fun getPrisonerNumbers(page: Long, pageSize: Long): List<OffenderId> =
+    getOffendersIds(page, pageSize).offenderIds ?: emptyList()
 
   fun getNomsNumberForBooking(bookingId: Long): String? = prisonApiWebClient.get()
     .uri("/api/bookings/$bookingId?basicInfo=true")
@@ -62,12 +65,7 @@ data class OffenderId(
   val offenderNumber: String,
 )
 
-data class OffenderResponse(
+private data class OffenderResponse(
   val offenderIds: List<OffenderId>? = emptyList(),
   val totalRows: Long = 0,
-)
-
-data class BookingIdentifier(
-  val type: String,
-  val value: String,
 )

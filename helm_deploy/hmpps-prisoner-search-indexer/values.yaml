@@ -22,7 +22,14 @@ generic-service:
           deny all;
           return 401;
         }
-
+        location /maintain-index/check-complete {
+          deny all;
+          return 401;
+        }
+        location /compare-index/size {
+          deny all;
+          return 401;
+        }
   env:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
