@@ -7,9 +7,6 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-// temporarily keep this at 5.0.5 as 5.1.0 not compatible with opensearch
-val springDataElasticsearchVersion by extra("5.0.5")
-
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.1.0")
@@ -20,7 +17,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:$springDataElasticsearchVersion")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.1.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
