@@ -476,7 +476,7 @@ class IndexServiceTest {
     internal fun setUp() {
       whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
       whenever(prisonerSynchroniserService.getAllPrisonerNumbersInPage(any()))
-        .thenReturn(listOf(OffenderId("ABC123D"), OffenderId("A12345")))
+        .thenReturn(listOf("ABC123D", "A12345"))
     }
 
     @Test

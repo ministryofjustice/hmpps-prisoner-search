@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.OffenderId
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrisonerNumberPage
 
 class PrisonApiMockServer : WireMockServer(8093) {
   fun stubHealthPing(status: Int) {
@@ -24,12 +24,11 @@ class PrisonApiMockServer : WireMockServer(8093) {
   fun stubOffenders(vararg prisoners: PrisonerBuilder) {
     val prisonerNumbers = prisoners.map { it.prisonerNumber }
     stubFor(
-      WireMock.get(WireMock.urlEqualTo("/api/offenders/ids"))
+      WireMock.get(WireMock.urlPathEqualTo("/api/prisoners/prisoner-numbers"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
-            .withHeader("Total-Records", prisonerNumbers.size.toString())
-            .withBody(Gson().toJson(prisonerNumbers.map { OffenderId(it) })),
+            .withBody(Gson().toJson(PrisonerNumberPage(prisonerNumbers, prisonerNumbers.size.toLong()))),
         ),
     )
 
