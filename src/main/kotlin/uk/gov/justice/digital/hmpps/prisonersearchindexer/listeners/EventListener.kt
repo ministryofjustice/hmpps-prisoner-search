@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.indexer.listeners
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
 
 @Service
 class EventListener(
-  private val gson: Gson,
+  private val objectMapper: ObjectMapper,
   private val indexService: IndexService,
 ) {
   private companion object {
@@ -17,10 +17,10 @@ class EventListener(
 //
 //  @SqsListener("event", factory = "hmppsQueueContainerFactoryProxy")
 //  fun processOffenderEvent(requestJson: String?) {
-//    val (message, _, messageAttributes) = gson.fromJson(requestJson, Message::class.java)
+//    val (message, _, messageAttributes) = objectMapper.readValue(requestJson, Message::class.java)
 //
 //    when (val eventType = messageAttributes.eventType.Value) {
-//      in updateEvents -> indexService.updatePrisoner(gson.fromJson(message, OffenderChangedEvent::class.java).prisonerNumber)
+//      in updateEvents -> indexService.updatePrisoner(objectMapper.readValue(message, OffenderChangedEvent::class.java).prisonerNumber)
 //      else -> log.error("We received a message of event type {} which I really wasn't expecting", eventType)
 //    }
 //  }

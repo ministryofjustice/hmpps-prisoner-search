@@ -32,12 +32,12 @@ class NomisService(
     }
     .retrieve()
     .bodyToMono(PrisonerNumberPage::class.java)
-    .block() ?: PrisonerNumberPage()
+    .block()!!
 
   fun getTotalNumberOfPrisoners(): Long = getOffendersIds(0, 1).totalRecords
 
   fun getPrisonerNumbers(page: Int, pageSize: Int): List<String> =
-    getOffendersIds(page, pageSize).content ?: emptyList()
+    getOffendersIds(page, pageSize).content
 
   fun getNomsNumberForBooking(bookingId: Long): String? = prisonApiWebClient.get()
     .uri("/api/bookings/$bookingId?basicInfo=true")

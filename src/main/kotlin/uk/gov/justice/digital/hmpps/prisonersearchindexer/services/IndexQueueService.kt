@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -24,13 +24,8 @@ data class IndexQueueStatus(val messagesOnQueue: Int, val messagesOnDlq: Int, va
 @Service
 class IndexQueueService(
   private val hmppsQueueService: HmppsQueueService,
-  private val gson: Gson,
+  private val objectMapper: ObjectMapper,
 ) {
-
-  private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
   private val indexQueue by lazy { hmppsQueueService.findByQueueId("index") as HmppsQueue }
   private val indexSqsClient by lazy { indexQueue.sqsClient }
   private val indexSqsDlqClient by lazy { indexQueue.sqsDlqClient }
@@ -40,7 +35,7 @@ class IndexQueueService(
   fun sendPopulateIndexMessage(index: SyncIndex) {
     val result = indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
-        gson.toJson(
+        objectMapper.writeValueAsString(
           IndexMessageRequest(type = POPULATE_INDEX, index = index),
         ),
       ).build(),
@@ -51,7 +46,7 @@ class IndexQueueService(
   fun sendPopulatePrisonerPageMessage(prisonerPage: PrisonerPage) {
     val result = indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
-        gson.toJson(
+        objectMapper.writeValueAsString(
           IndexMessageRequest(type = IndexRequestType.POPULATE_PRISONER_PAGE, prisonerPage = prisonerPage),
         ),
       ).build(),
@@ -62,7 +57,7 @@ class IndexQueueService(
   fun sendPopulatePrisonerMessage(prisonerNumber: String) {
     indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
-        gson.toJson(
+        objectMapper.writeValueAsString(
           IndexMessageRequest(type = IndexRequestType.POPULATE_PRISONER, prisonerNumber = prisonerNumber),
         ),
       ).build(),
@@ -86,5 +81,9 @@ class IndexQueueService(
       messagesInFlight = queueAttributes.attributes()[APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE]?.toInt() ?: 0,
       messagesOnDlq = getNumberOfMessagesCurrentlyOnIndexDLQ(),
     )
+  }
+
+  private companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 }

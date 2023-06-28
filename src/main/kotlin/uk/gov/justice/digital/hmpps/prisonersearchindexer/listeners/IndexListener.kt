@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.listeners
 
 import arrow.core.getOrElse
-import com.google.gson.Gson
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -18,7 +20,7 @@ import java.lang.IllegalArgumentException
 
 @Service
 class IndexListener(
-  private val gson: Gson,
+  private val objectMapper: ObjectMapper,
   private val indexService: IndexService,
 ) {
   private companion object {
@@ -29,7 +31,7 @@ class IndexListener(
   @WithSpan(value = "syscon-devs-hmpps_prisoner_search_index_queue", kind = SpanKind.SERVER)
   fun processIndexRequest(requestJson: String) {
     val indexRequest = try {
-      gson.fromJson(requestJson, IndexMessageRequest::class.java)
+      objectMapper.readValue(requestJson, IndexMessageRequest::class.java)
     } catch (e: Exception) {
       log.error("Failed to process message {}", requestJson, e)
       throw e
@@ -52,8 +54,11 @@ class IndexListener(
 
 data class IndexMessageRequest(
   val type: IndexRequestType?,
+  @JsonInclude(NON_NULL)
   val index: SyncIndex? = null,
+  @JsonInclude(NON_NULL)
   val prisonerPage: PrisonerPage? = null,
+  @JsonInclude(NON_NULL)
   val prisonerNumber: String? = null,
 )
 
