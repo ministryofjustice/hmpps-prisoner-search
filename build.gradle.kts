@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.2"
   kotlin("plugin.spring") version "1.8.22"
 }
 
@@ -7,12 +7,9 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-// temporarily keep this at 5.0.5 as 5.1.0 not compatible with opensearch
-val springDataElasticsearchVersion by extra("5.0.5")
-
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:1.1.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.2.0")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -20,7 +17,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:$springDataElasticsearchVersion")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.1.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
@@ -38,7 +35,7 @@ dependencies {
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.15")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.16")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
