@@ -81,8 +81,8 @@ class PrisonerSynchroniserService(
   fun splitAllPrisonersIntoChunks(): List<PrisonerPage> {
     val totalNumberOfPrisoners = nomisService.getTotalNumberOfPrisoners()
     log.info("Splitting $totalNumberOfPrisoners in to pages each of size $pageSize")
-    return (1..totalNumberOfPrisoners step pageSize).toList()
-      .map { PrisonerPage(it / pageSize, pageSize) }
+    return (1..totalNumberOfPrisoners step pageSize.toLong()).toList()
+      .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.POPULATE_PRISONER_PAGES,
@@ -91,8 +91,8 @@ class PrisonerSynchroniserService(
       }
   }
 
-  fun getAllPrisonerNumbersInPage(prisonerPage: PrisonerPage): List<OffenderId> =
+  fun getAllPrisonerNumbersInPage(prisonerPage: PrisonerPage): List<String> =
     nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
 }
 
-data class PrisonerPage(val page: Long, val pageSize: Long)
+data class PrisonerPage(val page: Int, val pageSize: Int)

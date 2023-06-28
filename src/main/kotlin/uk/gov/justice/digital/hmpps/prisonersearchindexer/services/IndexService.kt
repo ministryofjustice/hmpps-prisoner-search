@@ -224,17 +224,17 @@ class IndexService(
         .flatMap {
           prisonerSynchroniserService.getAllPrisonerNumbersInPage(prisonerPage)
             .forEachIndexed { index, offenderIdentifier ->
-              if (index == 0 || index.toLong() == prisonerPage.pageSize - 1) {
+              if (index == 0 || index == prisonerPage.pageSize - 1) {
                 telemetryClient.trackEvent(
                   TelemetryEvents.BUILD_PAGE_BOUNDARY,
                   mutableMapOf(
                     "page" to prisonerPage.page.toString(),
                     "IndexOnPage" to index.toString(),
-                    "prisonerNumber" to offenderIdentifier.offenderNumber,
+                    "prisonerNumber" to offenderIdentifier,
                   ),
                 )
               }
-              indexQueueService.sendPopulatePrisonerMessage(offenderIdentifier.offenderNumber)
+              indexQueueService.sendPopulatePrisonerMessage(offenderIdentifier)
             }.right()
         }
     }

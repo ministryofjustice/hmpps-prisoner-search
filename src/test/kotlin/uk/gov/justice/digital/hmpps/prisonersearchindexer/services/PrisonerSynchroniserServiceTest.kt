@@ -253,10 +253,10 @@ internal class PrisonerSynchroniserServiceTest {
     internal fun setUp() {
       whenever(nomisService.getPrisonerNumbers(any(), any())).thenReturn(
         listOf(
-          OffenderId("X12345"),
-          OffenderId("X12346"),
-          OffenderId("X12347"),
-          OffenderId("X12348"),
+          "X12345",
+          "X12346",
+          "X12347",
+          "X12348",
         ),
       )
     }
@@ -272,10 +272,10 @@ internal class PrisonerSynchroniserServiceTest {
       val prisoners = service.getAllPrisonerNumbersInPage(PrisonerPage(3, 1000))
 
       assertThat(prisoners).containsExactly(
-        OffenderId("X12345"),
-        OffenderId("X12346"),
-        OffenderId("X12347"),
-        OffenderId("X12348"),
+        "X12345",
+        "X12346",
+        "X12347",
+        "X12348",
       )
     }
   }
