@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.2.2"
   kotlin("plugin.spring") version "1.8.22"
 }
 
@@ -12,7 +12,7 @@ val springDataElasticsearchVersion by extra("5.0.5")
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:1.1.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.2.0")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -38,7 +38,7 @@ dependencies {
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.15")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.16")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
