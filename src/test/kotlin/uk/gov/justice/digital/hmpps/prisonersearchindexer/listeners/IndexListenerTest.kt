@@ -3,8 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.listeners
 import arrow.core.left
 import arrow.core.right
 import ch.qos.logback.classic.Level
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
+import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -13,6 +14,8 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
@@ -21,9 +24,11 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.BuildNotInPro
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrisonerPage
 
-internal class IndexListenerTest {
+@JsonTest
+internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapper) {
   private val indexService = mock<IndexService>()
-  private val listener = IndexListener(Gson(), indexService)
+
+  private val listener = IndexListener(objectMapper, indexService)
 
   @Nested
   inner class PopulateIndex {
@@ -109,7 +114,7 @@ internal class IndexListenerTest {
       val logAppender = findLogAppender(IndexListener::class.java)
 
       assertThatThrownBy { listener.processIndexRequest("this is bad json") }
-        .isInstanceOf(JsonSyntaxException::class.java)
+        .isInstanceOf(JsonParseException::class.java)
 
       assertThat(logAppender.list).anyMatch { it.message.contains("Failed to process message") && it.level == Level.ERROR }
     }
@@ -127,9 +132,9 @@ internal class IndexListenerTest {
             }
           """.trimIndent(),
         )
-      }.isInstanceOf(IllegalArgumentException::class.java)
+      }.isInstanceOf(InvalidFormatException::class.java)
 
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unknown request type for message") && it.level == Level.ERROR }
+      assertThat(logAppender.list).anyMatch { it.message.contains("Failed to process message") && it.level == Level.ERROR }
     }
   }
 }

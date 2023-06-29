@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -15,6 +15,8 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesResponse
@@ -29,7 +31,8 @@ import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
 
-internal class IndexQueueServiceTest {
+@JsonTest
+internal class IndexQueueServiceTest(@Autowired private val objectMapper: ObjectMapper) {
 
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val indexSqsClient = mock<SqsAsyncClient>()
@@ -41,7 +44,7 @@ internal class IndexQueueServiceTest {
     whenever(hmppsQueueService.findByQueueId("index")).thenReturn(HmppsQueue("index", indexSqsClient, "index-queue", indexSqsDlqClient, "index-dlq"))
     whenever(indexSqsClient.getQueueUrl(any<GetQueueUrlRequest>())).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:index-queue").build()))
     whenever(indexSqsDlqClient.getQueueUrl(any<GetQueueUrlRequest>())).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:index-dlq").build()))
-    indexQueueService = IndexQueueService(hmppsQueueService, gson = Gson())
+    indexQueueService = IndexQueueService(hmppsQueueService, objectMapper)
   }
 
   @Nested
