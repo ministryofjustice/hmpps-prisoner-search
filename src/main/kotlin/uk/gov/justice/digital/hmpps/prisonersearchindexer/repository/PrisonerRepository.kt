@@ -29,6 +29,15 @@ class PrisonerRepository(
     openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), IndexCoordinates.of(index.indexName))
   }
 
+  fun delete(prisonerNumber: String) {
+    listOf(SyncIndex.GREEN, SyncIndex.BLUE).forEach {
+      openSearchRestTemplate.delete(prisonerNumber, IndexCoordinates.of(it.indexName))
+    }
+  }
+
+  fun get(prisonerNumber: String, index: SyncIndex) =
+    openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, IndexCoordinates.of(index.indexName))
+
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
     client.indices().create(CreateIndexRequest(index.indexName), RequestOptions.DEFAULT)
