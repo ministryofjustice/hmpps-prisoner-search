@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexStatusService
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PopulateIndexService
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -15,7 +15,7 @@ import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 @Component
 class IndexInfo(
   private val indexStatusService: IndexStatusService,
-  private val indexService: IndexService,
+  private val populateIndexService: PopulateIndexService,
   private val prisonerRepository: PrisonerRepository,
   private val hmppsQueueService: HmppsQueueService,
 ) : InfoContributor {
@@ -33,8 +33,8 @@ class IndexInfo(
     builder.withDetail(
       "index-size",
       mapOf(
-        GREEN to indexService.getIndexCount(GREEN),
-        BLUE to indexService.getIndexCount(BLUE),
+        GREEN to populateIndexService.getIndexCount(GREEN),
+        BLUE to populateIndexService.getIndexCount(BLUE),
       ),
     )
     try {

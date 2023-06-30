@@ -14,19 +14,15 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.listeners.IndexRequest
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrisonerPage
 import java.lang.IllegalArgumentException
 
 @Service
-class IndexListener(
+class PopulateIndexListener(
   private val objectMapper: ObjectMapper,
-  private val indexService: IndexService,
+  private val populateIndexService: PopulateIndexService,
 ) {
-  private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
   @WithSpan(value = "syscon-devs-hmpps_prisoner_search_index_queue", kind = SpanKind.SERVER)
   fun processIndexRequest(requestJson: String) {
@@ -37,9 +33,9 @@ class IndexListener(
       throw e
     }
     when (indexRequest.type) {
-      POPULATE_INDEX -> indexService.populateIndex(indexRequest.index!!)
-      POPULATE_PRISONER_PAGE -> indexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
-      POPULATE_PRISONER -> indexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
+      POPULATE_INDEX -> populateIndexService.populateIndex(indexRequest.index!!)
+      POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
+      POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
       else -> {
         "Unknown request type for message $requestJson"
           .let {
@@ -49,6 +45,10 @@ class IndexListener(
       }
     }
       .getOrElse { log.error("Message {} failed with error {}", indexRequest, it) }
+  }
+
+  private companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 }
 

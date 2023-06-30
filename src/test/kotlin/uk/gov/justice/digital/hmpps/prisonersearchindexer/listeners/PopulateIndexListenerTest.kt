@@ -21,20 +21,20 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.BuildNotInProgressError
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrisonerPage
 
 @JsonTest
-internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapper) {
-  private val indexService = mock<IndexService>()
+internal class PopulateIndexListenerTest(@Autowired private val objectMapper: ObjectMapper) {
+  private val populateIndexService = mock<PopulateIndexService>()
 
-  private val listener = IndexListener(objectMapper, indexService)
+  private val listener = PopulateIndexListener(objectMapper, populateIndexService)
 
   @Nested
   inner class PopulateIndex {
     @Test
     internal fun `will call service with index name`() {
-      whenever(indexService.populateIndex(GREEN)).thenReturn(1.right())
+      whenever(populateIndexService.populateIndex(GREEN)).thenReturn(1.right())
 
       listener.processIndexRequest(
         """
@@ -45,13 +45,13 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
         """.trimIndent(),
       )
 
-      verify(indexService).populateIndex(GREEN)
+      verify(populateIndexService).populateIndex(GREEN)
     }
 
     @Test
     internal fun `failed request`() {
-      val logAppender = findLogAppender(IndexListener::class.java)
-      whenever(indexService.populateIndex(GREEN)).thenReturn(BuildNotInProgressError(IndexStatus.newIndex()).left())
+      val logAppender = findLogAppender(PopulateIndexListener::class.java)
+      whenever(populateIndexService.populateIndex(GREEN)).thenReturn(BuildNotInProgressError(IndexStatus.newIndex()).left())
 
       listener.processIndexRequest(
         """
@@ -70,7 +70,7 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
   inner class PopulatePrisonerPage {
     @Test
     internal fun `will call service with page details`() {
-      whenever(indexService.populateIndexWithPrisonerPage(any())).thenReturn(Unit.right())
+      whenever(populateIndexService.populateIndexWithPrisonerPage(any())).thenReturn(Unit.right())
 
       listener.processIndexRequest(
         """
@@ -84,7 +84,7 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
         """.trimIndent(),
       )
 
-      verify(indexService).populateIndexWithPrisonerPage(PrisonerPage(1, 1000))
+      verify(populateIndexService).populateIndexWithPrisonerPage(PrisonerPage(1, 1000))
     }
   }
 
@@ -92,7 +92,7 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
   inner class PopulatePrisoner {
     @Test
     internal fun `will call service with prisoner number to populate`() {
-      whenever(indexService.populateIndexWithPrisoner(any())).thenReturn(Prisoner().right())
+      whenever(populateIndexService.populateIndexWithPrisoner(any())).thenReturn(Prisoner().right())
 
       listener.processIndexRequest(
         """
@@ -103,7 +103,7 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
         """.trimIndent(),
       )
 
-      verify(indexService).populateIndexWithPrisoner("X12345")
+      verify(populateIndexService).populateIndexWithPrisoner("X12345")
     }
   }
 
@@ -111,7 +111,7 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
   inner class BadMessages {
     @Test
     internal fun `will fail for bad json`() {
-      val logAppender = findLogAppender(IndexListener::class.java)
+      val logAppender = findLogAppender(PopulateIndexListener::class.java)
 
       assertThatThrownBy { listener.processIndexRequest("this is bad json") }
         .isInstanceOf(JsonParseException::class.java)
@@ -121,7 +121,7 @@ internal class IndexListenerTest(@Autowired private val objectMapper: ObjectMapp
 
     @Test
     internal fun `will fail for unknown message type`() {
-      val logAppender = findLogAppender(IndexListener::class.java)
+      val logAppender = findLogAppender(PopulateIndexListener::class.java)
 
       assertThatThrownBy {
         listener.processIndexRequest(

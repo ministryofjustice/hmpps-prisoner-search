@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.CancelBuildError
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IndexService
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.MarkCompleteError
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.PrepareRebuildError
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.SwitchIndexError
@@ -32,11 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.UpdatePrisone
 @Validated
 @RequestMapping("/maintain-index", produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "OpenSearch index maintenance")
-class MaintainIndexResource(private val indexService: IndexService) {
-
-  private companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
+class MaintainIndexResource(private val maintainIndexService: MaintainIndexService) {
 
   @PutMapping("/build")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -52,7 +48,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
     ],
   )
   fun buildIndex(): IndexStatus =
-    indexService.prepareIndexForRebuild()
+    maintainIndexService.prepareIndexForRebuild()
       .getOrElse { error ->
         log.error("Request to /maintain-index/build failed due to error {}", error)
         when (PrepareRebuildError.fromErrorClass(error)) {
@@ -73,7 +69,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
     ],
   )
-  fun cancelIndex() = indexService.cancelIndexing()
+  fun cancelIndex() = maintainIndexService.cancelIndexing()
     .getOrElse { error ->
       log.error("Request to /maintain-index/cancel failed due to error {}", error)
       when (CancelBuildError.fromErrorClass(error)) {
@@ -95,7 +91,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
     ],
   )
   fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) =
-    indexService.markIndexingComplete(ignoreThreshold)
+    maintainIndexService.markIndexingComplete(ignoreThreshold)
       .getOrElse { error ->
         log.error("Request to /maintain-index/mark-complete failed due to error {}", error)
         when (MarkCompleteError.fromErrorClass(error)) {
@@ -122,7 +118,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
     ],
   )
   fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
-    indexService.switchIndex(force)
+    maintainIndexService.switchIndex(force)
       .getOrElse { error ->
         log.error("Request to /maintain-index/switch failed due to error {}", error)
         when (SwitchIndexError.fromErrorClass(error)) {
@@ -152,7 +148,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
-  ) = indexService.updatePrisoner(prisonerNumber)
+  ) = maintainIndexService.updatePrisoner(prisonerNumber)
     .getOrElse { error ->
       log.error("Request to /maintain-index/index-prisoner/$prisonerNumber failed due to error {}", error)
       when (UpdatePrisonerError.fromErrorClass(error)) {
@@ -172,7 +168,7 @@ class MaintainIndexResource(private val indexService: IndexService) {
       """,
   )
   fun checkIfComplete() {
-    indexService.markIndexingComplete(ignoreThreshold = false)
+    maintainIndexService.markIndexingComplete(ignoreThreshold = false)
       .getOrElse { error ->
         if (MarkCompleteError.fromErrorClass(error) == MarkCompleteError.THRESHOLD_NOT_REACHED) {
           log.warn(
@@ -181,5 +177,9 @@ class MaintainIndexResource(private val indexService: IndexService) {
           )
         }
       }
+  }
+
+  private companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
   }
 }
