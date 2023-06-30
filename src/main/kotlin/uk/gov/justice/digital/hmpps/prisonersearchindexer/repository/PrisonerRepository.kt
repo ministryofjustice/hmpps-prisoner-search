@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.repository
 
+import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest
 import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
+import org.opensearch.client.core.CountRequest
 import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.DeleteAliasRequest
 import org.opensearch.client.indices.GetIndexRequest
@@ -25,18 +27,25 @@ class PrisonerRepository(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
+  fun count(index: SyncIndex) = try {
+    client.count(CountRequest(index.indexName), RequestOptions.DEFAULT).count
+  } catch (e: OpenSearchStatusException) {
+    // if the index doesn't exist yet then we will get an exception, so catch and move on
+    -1
+  }
+
   fun save(prisoner: Prisoner, index: SyncIndex) {
-    openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), IndexCoordinates.of(index.indexName))
+    openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), index.toIndexCoordinates())
   }
 
   fun delete(prisonerNumber: String) {
     listOf(SyncIndex.GREEN, SyncIndex.BLUE).forEach {
-      openSearchRestTemplate.delete(prisonerNumber, IndexCoordinates.of(it.indexName))
+      openSearchRestTemplate.delete(prisonerNumber, it.toIndexCoordinates())
     }
   }
 
-  fun get(prisonerNumber: String, index: SyncIndex) =
-    openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, IndexCoordinates.of(index.indexName))
+  fun get(prisonerNumber: String, index: SyncIndex): Prisoner? =
+    openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, index.toIndexCoordinates())
 
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
@@ -77,3 +86,5 @@ class PrisonerRepository(
     return alias.aliases.keys
   }
 }
+
+private fun SyncIndex.toIndexCoordinates() = IndexCoordinates.of(this.indexName)

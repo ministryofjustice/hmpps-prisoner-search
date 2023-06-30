@@ -5,11 +5,6 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
-import org.opensearch.client.RequestOptions
-import org.opensearch.client.RestHighLevelClient
-import org.opensearch.client.core.CountRequest
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
@@ -22,31 +17,13 @@ class PopulateIndexService(
   private val indexStatusService: IndexStatusService,
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val indexQueueService: IndexQueueService,
-  private val openSearchClient: RestHighLevelClient,
+  private val maintainIndexService: MaintainIndexService,
   private val telemetryClient: TelemetryClient,
 ) {
-
-  private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
-  private fun logIndexStatuses(indexStatus: IndexStatus) {
-    log.info(
-      "Current index status is {}.  Index counts {}={} and {}={}.  Queue counts: Queue={} and DLQ={}",
-      indexStatus,
-      indexStatus.currentIndex,
-      getIndexCount(indexStatus.currentIndex),
-      indexStatus.otherIndex,
-      getIndexCount(indexStatus.otherIndex),
-      indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue(),
-      indexQueueService.getNumberOfMessagesCurrentlyOnIndexDLQ(),
-    )
-  }
-
   fun populateIndex(index: SyncIndex): Either<Error, Int> =
     executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
       indexStatusService.getIndexStatus()
-        .also { logIndexStatuses(it) }
+        .also { maintainIndexService.logIndexStatuses(it) }
         .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
         .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedError(it) }
         .map { doPopulateIndex() }
@@ -101,13 +78,6 @@ class PopulateIndexService(
     indexStatusService.getIndexStatus()
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
       .flatMap { prisonerSynchroniserService.synchronisePrisoner(prisonerNumber, it.currentIndex.otherIndex()) }
-
-  fun getIndexCount(index: SyncIndex): Long =
-    try {
-      openSearchClient.count(CountRequest(index.indexName), RequestOptions.DEFAULT).count
-    } catch (e: Exception) {
-      -1L
-    }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,

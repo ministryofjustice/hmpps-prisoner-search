@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 
 @Service
 class CompareIndexService(
@@ -24,7 +25,7 @@ class CompareIndexService(
   private val openSearchClient: RestHighLevelClient,
   private val telemetryClient: TelemetryClient,
   private val nomisService: NomisService,
-  private val populateIndexService: PopulateIndexService,
+  private val prisonerRepository: PrisonerRepository,
 ) {
 
   private companion object {
@@ -34,7 +35,7 @@ class CompareIndexService(
 
   fun doIndexSizeCheck() {
     val start = System.currentTimeMillis()
-    val totalIndexNumber = populateIndexService.getIndexCount(indexStatusService.getIndexStatus().currentIndex)
+    val totalIndexNumber = prisonerRepository.count(indexStatusService.getIndexStatus().currentIndex)
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 

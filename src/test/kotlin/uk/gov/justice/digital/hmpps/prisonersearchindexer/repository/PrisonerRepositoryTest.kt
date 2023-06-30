@@ -3,6 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.repository
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -74,6 +77,33 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       fun `cannot create an index that already exists`() {
         assertThatThrownBy { prisonerRepository.createIndex(GREEN) }.hasMessageContaining("already exists")
       }
+    }
+  }
+
+  @Nested
+  inner class Count {
+    @Test
+    internal fun `will count the number of prisoners in an empty index`() {
+      assertThat(prisonerRepository.count(BLUE)).isEqualTo(0)
+      assertThat(prisonerRepository.count(GREEN)).isEqualTo(0)
+    }
+
+    @Test
+    internal fun `will count the prisoners`() {
+      prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12341" }, BLUE)
+      prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12342" }, BLUE)
+      prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12343" }, BLUE)
+      prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12344" }, BLUE)
+
+      await untilCallTo { prisonerRepository.count(BLUE) } matches { it == 4L }
+      assertThat(prisonerRepository.count(GREEN)).isEqualTo(0L)
+    }
+
+    @Test
+    internal fun `will return -1 if index doesn't exist`() {
+      assertThat(prisonerRepository.count(BLUE)).isEqualTo(0L)
+      prisonerRepository.deleteIndex(BLUE)
+      assertThat(prisonerRepository.count(BLUE)).isEqualTo(-1L)
     }
   }
 
@@ -314,8 +344,6 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       }
     }
   }
-
-  private fun Any.asJson() = gson.toJson(this)
 }
 
 fun RestHighLevelClient.safeIndexCreate(name: String) {

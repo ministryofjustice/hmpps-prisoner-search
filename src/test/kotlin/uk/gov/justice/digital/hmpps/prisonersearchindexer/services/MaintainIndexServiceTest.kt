@@ -20,9 +20,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import org.opensearch.OpenSearchStatusException
-import org.opensearch.client.RestHighLevelClient
-import org.opensearch.client.core.CountResponse
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
@@ -37,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.NONE
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
@@ -46,11 +44,11 @@ class MaintainIndexServiceTest {
   private val indexStatusService = mock<IndexStatusService>()
   private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val indexQueueService = mock<IndexQueueService>()
+  private val prisonerRepository = mock<PrisonerRepository>()
   private val hmppsQueueService = mock<HmppsQueueService>()
-  private val elasticSearchClient = mock<RestHighLevelClient>()
   private val telemetryClient = mock<TelemetryClient>()
   private val indexBuildProperties = mock<IndexBuildProperties>()
-  private val maintainIndexService = MaintainIndexService(indexStatusService, prisonerSynchroniserService, indexQueueService, hmppsQueueService, elasticSearchClient, telemetryClient, indexBuildProperties)
+  private val maintainIndexService = MaintainIndexService(indexStatusService, prisonerSynchroniserService, indexQueueService, prisonerRepository, hmppsQueueService, telemetryClient, indexBuildProperties)
 
   private val indexSqsClient = mock<SqsAsyncClient>()
   private val indexSqsDlqClient = mock<SqsAsyncClient>()
@@ -406,23 +404,6 @@ class MaintainIndexServiceTest {
       maintainIndexService.updatePrisoner("ABC123D")
 
       verify(prisonerSynchroniserService).synchronisePrisoner("ABC123D", GREEN)
-    }
-  }
-
-  @Nested
-  inner class CountIndex {
-    @Test
-    fun `Should return count from elasticsearch client`() {
-      whenever(elasticSearchClient.count(any(), any())).thenReturn(CountResponse(10L, null, null))
-
-      assertThat(maintainIndexService.getIndexCount(BLUE)).isEqualTo(10L)
-    }
-
-    @Test
-    fun `Should return negative count from elasticsearch client for missing index`() {
-      whenever(elasticSearchClient.count(any(), any())).thenThrow(OpenSearchStatusException("no such index [probation-search-green]", null, null))
-
-      assertThat(maintainIndexService.getIndexCount(BLUE)).isEqualTo(-1L)
     }
   }
 

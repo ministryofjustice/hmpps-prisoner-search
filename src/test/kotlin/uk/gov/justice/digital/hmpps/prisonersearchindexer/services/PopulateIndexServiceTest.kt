@@ -1,21 +1,16 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
 import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.opensearch.client.RestHighLevelClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
@@ -34,10 +29,10 @@ class PopulateIndexServiceTest {
   private val indexStatusService = mock<IndexStatusService>()
   private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val indexQueueService = mock<IndexQueueService>()
+  private val maintainIndexService = mock<MaintainIndexService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
-  private val elasticSearchClient = mock<RestHighLevelClient>()
   private val telemetryClient = mock<TelemetryClient>()
-  private val populateIndexService = PopulateIndexService(indexStatusService, prisonerSynchroniserService, indexQueueService, elasticSearchClient, telemetryClient)
+  private val populateIndexService = PopulateIndexService(indexStatusService, prisonerSynchroniserService, indexQueueService, maintainIndexService, telemetryClient)
 
   private val indexSqsClient = mock<SqsAsyncClient>()
   private val indexSqsDlqClient = mock<SqsAsyncClient>()
