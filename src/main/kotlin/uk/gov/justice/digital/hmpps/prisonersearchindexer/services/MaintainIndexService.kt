@@ -6,9 +6,6 @@ import arrow.core.left
 import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.runBlocking
-import org.opensearch.client.RequestOptions
-import org.opensearch.client.RestHighLevelClient
-import org.opensearch.client.core.CountRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -17,7 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
@@ -28,16 +25,11 @@ class MaintainIndexService(
   private val indexStatusService: IndexStatusService,
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val indexQueueService: IndexQueueService,
+  private val prisonerRepository: PrisonerRepository,
   private val hmppsQueueService: HmppsQueueService,
-  private val openSearchClient: RestHighLevelClient,
   private val telemetryClient: TelemetryClient,
   private val indexBuildProperties: IndexBuildProperties,
 ) {
-
-  private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
   private val indexQueue by lazy { hmppsQueueService.findByQueueId("index") as HmppsQueue }
 
   fun prepareIndexForRebuild(): Either<Error, IndexStatus> {
@@ -63,14 +55,14 @@ class MaintainIndexService(
       }
   }
 
-  private fun logIndexStatuses(indexStatus: IndexStatus) {
+  fun logIndexStatuses(indexStatus: IndexStatus) {
     log.info(
       "Current index status is {}.  Index counts {}={} and {}={}.  Queue counts: Queue={} and DLQ={}",
       indexStatus,
       indexStatus.currentIndex,
-      getIndexCount(indexStatus.currentIndex),
+      prisonerRepository.count(indexStatus.currentIndex),
       indexStatus.otherIndex,
-      getIndexCount(indexStatus.otherIndex),
+      prisonerRepository.count(indexStatus.otherIndex),
       indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue(),
       indexQueueService.getNumberOfMessagesCurrentlyOnIndexDLQ(),
     )
@@ -99,7 +91,7 @@ class MaintainIndexService(
   }
 
   private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean =
-    getIndexCount(indexStatus.currentIndex) < indexBuildProperties.completeThreshold
+    prisonerRepository.count(indexStatus.currentIndex) < indexBuildProperties.completeThreshold
 
   private fun doMarkIndexingComplete(): IndexStatus =
     indexStatusService.markBuildCompleteAndSwitchIndex()
@@ -185,13 +177,6 @@ class MaintainIndexService(
       prisonerSynchroniserService.synchronisePrisoner(prisonerNumber, *this.toTypedArray())
     }
 
-  fun getIndexCount(index: SyncIndex): Long =
-    try {
-      openSearchClient.count(CountRequest(index.indexName), RequestOptions.DEFAULT).count
-    } catch (e: Exception) {
-      -1L
-    }
-
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
     onFail: (IndexStatus) -> Error,
@@ -211,6 +196,10 @@ class MaintainIndexService(
         it.failIf(check, onFail)
       }
     }
+
+  private companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
 }
 
 enum class UpdatePrisonerError(val errorClass: KClass<out Error>) {

@@ -4,14 +4,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
 
-@ExtendWith(SpringExtension::class)
 class IndexInfoTest : IntegrationTestBase() {
 
   @Nested
