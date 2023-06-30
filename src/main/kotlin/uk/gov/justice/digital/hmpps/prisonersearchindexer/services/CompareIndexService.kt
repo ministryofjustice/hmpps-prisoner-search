@@ -24,7 +24,7 @@ class CompareIndexService(
   private val openSearchClient: RestHighLevelClient,
   private val telemetryClient: TelemetryClient,
   private val nomisService: NomisService,
-  private val indexService: IndexService,
+  private val populateIndexService: PopulateIndexService,
 ) {
 
   private companion object {
@@ -34,7 +34,7 @@ class CompareIndexService(
 
   fun doIndexSizeCheck() {
     val start = System.currentTimeMillis()
-    val totalIndexNumber = indexService.getIndexCount(indexStatusService.getIndexStatus().currentIndex)
+    val totalIndexNumber = populateIndexService.getIndexCount(indexStatusService.getIndexStatus().currentIndex)
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
