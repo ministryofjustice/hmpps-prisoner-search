@@ -78,6 +78,40 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class Get {
+
+    @Test
+    internal fun `will get a prisoner in the correct index`() {
+      prisonerRepository.save(
+        Prisoner().also { it.prisonerNumber = "X12345" },
+        BLUE,
+      )
+
+      assertThat(prisonerRepository.get("X12345", BLUE)).extracting("prisonerNumber").isEqualTo("X12345")
+      assertThat(prisonerRepository.get("X12345", GREEN)).isNull()
+    }
+
+    @Test
+    internal fun `will get prisoner`() {
+      prisonerRepository.save(
+        Prisoner().also {
+          it.prisonerNumber = "ABC123D"
+          it.croNumber = "X12345"
+          it.shoeSize = 12
+        },
+        BLUE,
+      )
+
+      val prisoner = prisonerRepository.get("ABC123D", BLUE)
+      assertThat(prisoner).isNotNull
+
+      assertThat(prisoner!!.shoeSize).isEqualTo(12)
+      assertThat(prisoner.croNumber).isEqualTo("X12345")
+      assertThat(prisoner.prisonerNumber).isEqualTo("ABC123D")
+    }
+  }
+
+  @Nested
   inner class Save {
 
     @Test
@@ -113,6 +147,32 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       assertThatJson(json).node("croNumber").isEqualTo("X12345")
       val prisonerDetail = gson.fromJson(json, Prisoner::class.java)
       assertThat(prisonerDetail.prisonerNumber).isEqualTo("ABC123D")
+    }
+  }
+
+  @Nested
+  inner class Delete {
+
+    @Test
+    internal fun `will delete prisoner`() {
+      prisonerRepository.save(
+        Prisoner().also { it.prisonerNumber = "X12345" },
+        BLUE,
+      )
+      prisonerRepository.save(
+        Prisoner().also { it.prisonerNumber = "X12345" },
+        GREEN,
+      )
+      assertThat(highLevelClient.get(GetRequest(BLUE.indexName).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()
+
+      prisonerRepository.delete(prisonerNumber = "X12345")
+
+      assertThat(
+        highLevelClient.get(GetRequest(BLUE.indexName).id("X12345"), RequestOptions.DEFAULT).isExists,
+      ).isFalse()
+      assertThat(
+        highLevelClient.get(GetRequest(GREEN.indexName).id("X12345"), RequestOptions.DEFAULT).isExists,
+      ).isFalse()
     }
   }
 
