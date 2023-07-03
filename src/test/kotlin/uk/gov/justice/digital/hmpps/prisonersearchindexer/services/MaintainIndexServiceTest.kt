@@ -424,7 +424,7 @@ class MaintainIndexServiceTest {
   inner class IndexOffender {
     @BeforeEach
     internal fun setUp() {
-      whenever(prisonerSynchroniserService.synchronisePrisoner(any(), any())).thenReturn(Prisoner().right())
+      whenever(prisonerSynchroniserService.reindex(any(), any())).thenReturn(Prisoner().right())
     }
 
     @Test
@@ -434,7 +434,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.updatePrisoner("ABC123D")
 
-      verify(prisonerSynchroniserService).synchronisePrisoner("ABC123D", GREEN)
+      verify(prisonerSynchroniserService).reindex("ABC123D", GREEN)
     }
   }
 
@@ -463,33 +463,33 @@ class MaintainIndexServiceTest {
     fun `Current index active, offender is updated`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-      whenever(prisonerSynchroniserService.synchronisePrisoner(any(), any())).thenReturn(Prisoner().right())
+      whenever(prisonerSynchroniserService.reindex(any(), any())).thenReturn(Prisoner().right())
 
       maintainIndexService.updatePrisoner("SOME_CRN")
 
-      verify(prisonerSynchroniserService).synchronisePrisoner("SOME_CRN", indexStatus.currentIndex)
+      verify(prisonerSynchroniserService).reindex("SOME_CRN", indexStatus.currentIndex)
     }
 
     @Test
     fun `Other index active, offender is updated`() {
       val indexStatus = IndexStatus(currentIndex = NONE, otherIndexState = BUILDING, currentIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-      whenever(prisonerSynchroniserService.synchronisePrisoner(any(), any())).thenReturn(Prisoner().right())
+      whenever(prisonerSynchroniserService.reindex(any(), any())).thenReturn(Prisoner().right())
 
       maintainIndexService.updatePrisoner("SOME_CRN")
 
-      verify(prisonerSynchroniserService).synchronisePrisoner("SOME_CRN", indexStatus.otherIndex)
+      verify(prisonerSynchroniserService).reindex("SOME_CRN", indexStatus.otherIndex)
     }
 
     @Test
     fun `Both indexes active, offender is updated on both indexes`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING, currentIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-      whenever(prisonerSynchroniserService.synchronisePrisoner(any(), any())).thenReturn(Prisoner().right())
+      whenever(prisonerSynchroniserService.reindex(any(), any())).thenReturn(Prisoner().right())
 
       maintainIndexService.updatePrisoner("SOME_CRN")
 
-      verify(prisonerSynchroniserService).synchronisePrisoner(eq("SOME_CRN"), eq(GREEN), eq(BLUE))
+      verify(prisonerSynchroniserService).reindex(eq("SOME_CRN"), eq(GREEN), eq(BLUE))
     }
   }
 }

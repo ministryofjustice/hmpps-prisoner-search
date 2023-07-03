@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
 import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
@@ -22,28 +20,47 @@ class PrisonerSynchroniserService(
   private val incentivesService: IncentivesService,
 ) {
 
-  internal fun synchronisePrisoner(prisonerNumber: String, vararg indexes: SyncIndex): Either<PrisonerError, Prisoner> =
-    nomisService.getOffender(prisonerNumber)
-      .map { convertToPrisoner(it) }
-      .flatMap {
-        indexes.map { index -> prisonerRepository.save(it, index) }
-        it.right()
-          .also {
-            telemetryClient.trackEvent(TelemetryEvents.PRISONER_UPDATED, mapOf("prisonerNumber" to prisonerNumber))
-          }
-      }
+  // called when prisoner updated or manual prisoner index required
+  internal fun reindex(prisonerNumber: String, vararg indexes: SyncIndex): Either<PrisonerError, Prisoner> =
+    nomisService.getOffender(prisonerNumber).map { ob ->
+      val incentiveLevel = runCatching { getIncentive(ob) }
+      val restrictedPatient = runCatching { getRestrictedPatient(ob) }
 
-  private fun convertToPrisoner(ob: OffenderBooking): Prisoner {
-    val incentiveLevel = ob.bookingId?.let { incentivesService.getCurrentIncentive(it) }
-    val restrictedPatient = if (ob.assignedLivingUnit?.agencyId == "OUT") {
+      val existingPrisoner = indexes.map { prisonerRepository.get(prisonerNumber, it) }.firstOrNull()
+
+      val prisoner = Prisoner().translate(
+        existingPrisoner = existingPrisoner,
+        ob = ob,
+        incentiveLevel = incentiveLevel,
+        restrictedPatientData = restrictedPatient,
+      )
+      indexes.map { index -> prisonerRepository.save(prisoner, index) }.also {
+        telemetryClient.trackEvent(TelemetryEvents.PRISONER_UPDATED, mapOf("prisonerNumber" to prisoner.prisonerNumber!!))
+      }
+      incentiveLevel.onFailure { throw it }
+      restrictedPatient.onFailure { throw it }
+      prisoner
+    }
+
+  // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
+  // we don't need to write what we have so far for the prisoner to it.
+  internal fun index(prisonerNumber: String, vararg indexes: SyncIndex): Either<PrisonerError, Prisoner> =
+    nomisService.getOffender(prisonerNumber).map { ob ->
+      val prisoner = Prisoner().translate(
+        ob = ob,
+        incentiveLevel = Result.success(getIncentive(ob)),
+        restrictedPatientData = Result.success(getRestrictedPatient(ob)),
+      )
+      indexes.map { index -> prisonerRepository.save(prisoner, index) }
+      prisoner
+    }
+
+  private fun getRestrictedPatient(ob: OffenderBooking) =
+    if (ob.assignedLivingUnit?.agencyId == "OUT") {
       restrictedPatientService.getRestrictedPatient(ob.offenderNo)
     } else {
       null
     }
-    return Prisoner().translate(
-      ob = ob,
-      incentiveLevel = Result.success(incentiveLevel),
-      restrictedPatientData = restrictedPatient,
-    )
-  }
+
+  private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }
 }

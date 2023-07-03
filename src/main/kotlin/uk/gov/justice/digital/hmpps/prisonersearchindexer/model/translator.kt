@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCN
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
 
-fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: RestrictedPatient?): Prisoner {
+fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()
@@ -98,9 +98,6 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
     ob.sentenceDetail?.conditionalReleaseOverrideDate ?: ob.sentenceDetail?.conditionalReleaseDate
   this.actualParoleDate = ob.sentenceDetail?.actualParoleDate
 
-  this.locationDescription = restrictedPatientData
-    ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
-    ?: ob.locationDescription
   // get the most serious offence for this booking
   this.mostSeriousOffence =
     ob.offenceHistory?.firstOrNull { off -> off.mostSerious && off.bookingId == ob.bookingId }?.offenceDescription
@@ -110,12 +107,26 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.imprisonmentStatusDescription = ob.imprisonmentStatusDescription
   this.indeterminateSentence = ob.sentenceTerms?.any { st -> st.lifeSentence && st.bookingId == ob.bookingId }
 
-  this.restrictedPatient = restrictedPatientData != null
-  this.supportingPrisonId = restrictedPatientData?.supportingPrisonId
-  this.dischargedHospitalId = restrictedPatientData?.dischargedHospital?.agencyId
-  this.dischargedHospitalDescription = restrictedPatientData?.dischargedHospital?.description
-  this.dischargeDate = restrictedPatientData?.dischargeDate
-  this.dischargeDetails = restrictedPatientData?.dischargeDetails
+  restrictedPatientData.onSuccess { rp ->
+    this.restrictedPatient = rp != null
+    this.locationDescription = rp
+      ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
+      ?: ob.locationDescription
+    this.supportingPrisonId = rp?.supportingPrisonId
+    this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
+    this.dischargedHospitalDescription = rp?.dischargedHospital?.description
+    this.dischargeDate = rp?.dischargeDate
+    this.dischargeDetails = rp?.dischargeDetails
+  }.onFailure {
+    // couldn't grab the restricted patient data, so copy across the previous information
+    this.locationDescription = existingPrisoner?.locationDescription
+    this.restrictedPatient = existingPrisoner?.restrictedPatient ?: false
+    this.supportingPrisonId = existingPrisoner?.supportingPrisonId
+    this.dischargedHospitalId = existingPrisoner?.dischargedHospitalId
+    this.dischargedHospitalDescription = existingPrisoner?.dischargedHospitalDescription
+    this.dischargeDate = existingPrisoner?.dischargeDate
+    this.dischargeDetails = existingPrisoner?.dischargeDetails
+  }
 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
 
