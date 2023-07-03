@@ -23,6 +23,16 @@ class IncentivesMockServer : WireMockServer(8096) {
     )
   }
 
+  fun stubNotFound() {
+    stubFor(
+      get(urlPathMatching("/iep/reviews/booking/\\d+"))
+        .willReturn(
+          aResponse()
+            .withStatus(404),
+        ),
+    )
+  }
+
   fun stubCurrentIncentive(
     iepCode: String = "STD",
     iepLevel: String = "Standard",

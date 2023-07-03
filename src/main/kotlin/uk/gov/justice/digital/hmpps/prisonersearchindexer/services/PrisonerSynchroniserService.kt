@@ -36,14 +36,7 @@ class PrisonerSynchroniserService(
   private fun convertToPrisoner(ob: OffenderBooking): Prisoner {
     val incentiveLevel = ob.bookingId?.let { incentivesService.getCurrentIncentive(it) }
     val restrictedPatient = if (ob.assignedLivingUnit?.agencyId == "OUT") {
-      restrictedPatientService.getRestrictedPatient(ob.offenderNo)?.let {
-        RestrictedPatient(
-          supportingPrisonId = it.supportingPrison.agencyId,
-          dischargedHospital = it.hospitalLocation,
-          dischargeDate = it.dischargeTime.toLocalDate(),
-          dischargeDetails = it.commentText,
-        )
-      }
+      restrictedPatientService.getRestrictedPatient(ob.offenderNo)
     } else {
       null
     }
