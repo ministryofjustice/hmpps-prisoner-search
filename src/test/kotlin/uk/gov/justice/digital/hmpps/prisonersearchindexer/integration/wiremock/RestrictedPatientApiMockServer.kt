@@ -2,12 +2,13 @@ package uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.common.ClasspathFileSource
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-class RestrictedPatientApiMockServer : WireMockServer(8095) {
+class RestrictedPatientApiMockServer : WireMockServer(8095, ClasspathFileSource("restricted-patients"), false) {
   fun stubHealthPing(status: Int) {
     stubFor(
       WireMock.get("/health/ping").willReturn(

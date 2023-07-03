@@ -57,5 +57,13 @@ internal class IncentivesServiceTest {
       assertThat(incentive.iepTime).isEqualTo(LocalDateTime.parse("2022-11-10T15:47:24.682335"))
       assertThat(incentive.nextReviewDate).isEqualTo(LocalDate.parse("2023-11-18"))
     }
+
+    @Test
+    internal fun `will return null if incentive level not found`() {
+      incentivesApi.stubNotFound()
+
+      val incentive = incentivesService.getCurrentIncentive(123456L)
+      assertThat(incentive).isNull()
+    }
   }
 }

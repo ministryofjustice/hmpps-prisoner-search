@@ -1,25 +1,29 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.publisher.Mono
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
 class RestrictedPatientService(@Qualifier("restrictedPatientsWebClient") private val webClient: WebClient) {
-  fun getRestrictedPatient(prisonerNumber: String): RestrictedPatientDto? =
-    try {
-      webClient.get().uri("/restricted-patient/prison-number/$prisonerNumber")
-        .retrieve()
-        .bodyToMono(RestrictedPatientDto::class.java)
-        .block()
-    } catch (e: WebClientResponseException) {
-      if (e.statusCode != HttpStatus.NOT_FOUND) throw e
-      null
-    }
+  fun getRestrictedPatient(prisonerNumber: String): RestrictedPatient? =
+    webClient.get().uri("/restricted-patient/prison-number/$prisonerNumber")
+      .retrieve()
+      .bodyToMono(RestrictedPatientDto::class.java)
+      .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+      .block()
+      ?.let {
+        RestrictedPatient(
+          supportingPrisonId = it.supportingPrison.agencyId,
+          dischargedHospital = it.hospitalLocation,
+          dischargeDate = it.dischargeTime.toLocalDate(),
+          dischargeDetails = it.commentText,
+        )
+      }
 }
 
 data class RestrictedPatient(
