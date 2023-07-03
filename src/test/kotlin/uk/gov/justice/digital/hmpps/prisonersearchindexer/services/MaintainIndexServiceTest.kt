@@ -16,6 +16,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -101,13 +102,55 @@ class MaintainIndexServiceTest {
     }
 
     @Test
+    internal fun `will delete the index if it exists`() {
+      whenever(indexStatusService.getIndexStatus())
+        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+
+      whenever(prisonerRepository.doesIndexExist(any())).thenReturn(true).thenReturn(false)
+
+      maintainIndexService.prepareIndexForRebuild()
+
+      verify(prisonerRepository).deleteIndex(BLUE)
+    }
+
+    @Test
+    internal fun `won't bother deleting index if it does not exist`() {
+      whenever(indexStatusService.getIndexStatus())
+        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(prisonerRepository.doesIndexExist(BLUE)).thenReturn(false)
+
+      maintainIndexService.prepareIndexForRebuild()
+
+      verify(prisonerRepository, never()).deleteIndex(any())
+    }
+
+    @Test
+    fun `waits for index to be deleted before recreating`() {
+      whenever(indexStatusService.getIndexStatus())
+        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(prisonerRepository.doesIndexExist(BLUE))
+        .thenReturn(true)
+        .thenReturn(true)
+        .thenReturn(true)
+        .thenReturn(false)
+
+      maintainIndexService.prepareIndexForRebuild()
+
+      verify(prisonerRepository, times(4)).doesIndexExist(BLUE)
+      verify(prisonerRepository).deleteIndex(BLUE)
+      verify(prisonerRepository).createIndex(BLUE)
+    }
+
+    @Test
     fun `A request is made to reset the other index`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
 
+      whenever(prisonerRepository.doesIndexExist(any())).thenReturn(true).thenReturn(false)
+
       maintainIndexService.prepareIndexForRebuild()
 
-      verify(prisonerSynchroniserService).checkExistsAndReset(BLUE)
+      verify(prisonerRepository).createIndex(BLUE)
     }
 
     @Test
@@ -216,18 +259,6 @@ class MaintainIndexServiceTest {
     }
 
     @Test
-    fun `A request is made to switch alias`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.markBuildCompleteAndSwitchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-
-      maintainIndexService.markIndexingComplete(ignoreThreshold = true)
-
-      verify(prisonerSynchroniserService).switchAliasIndex(BLUE)
-    }
-
-    @Test
     fun `A telemetry event is sent`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
@@ -278,7 +309,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.switchIndex(false)
 
-      verify(prisonerSynchroniserService).switchAliasIndex(BLUE)
+      verify(prisonerRepository).switchAliasIndex(BLUE)
     }
 
     @Test

@@ -113,7 +113,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Test
     internal fun `will get a prisoner in the correct index`() {
       prisonerRepository.save(
-        Prisoner().also { it.prisonerNumber = "X12345" },
+        Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
       )
 
@@ -124,10 +124,10 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Test
     internal fun `will get prisoner`() {
       prisonerRepository.save(
-        Prisoner().also {
-          it.prisonerNumber = "ABC123D"
-          it.croNumber = "X12345"
-          it.shoeSize = 12
+        Prisoner().apply {
+          prisonerNumber = "ABC123D"
+          croNumber = "X12345"
+          shoeSize = 12
         },
         BLUE,
       )
@@ -147,7 +147,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Test
     internal fun `will save prisoner in the correct index`() {
       prisonerRepository.save(
-        Prisoner().also { it.prisonerNumber = "X12345" },
+        Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
       )
 
@@ -163,10 +163,10 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Test
     internal fun `will save json`() {
       prisonerRepository.save(
-        Prisoner().also {
-          it.prisonerNumber = "ABC123D"
-          it.croNumber = "X12345"
-          it.shoeSize = 12
+        Prisoner().apply {
+          prisonerNumber = "ABC123D"
+          croNumber = "X12345"
+          shoeSize = 12
         },
         BLUE,
       )
@@ -186,11 +186,11 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Test
     internal fun `will delete prisoner`() {
       prisonerRepository.save(
-        Prisoner().also { it.prisonerNumber = "X12345" },
+        Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
       )
       prisonerRepository.save(
-        Prisoner().also { it.prisonerNumber = "X12345" },
+        Prisoner().apply { prisonerNumber = "X12345" },
         GREEN,
       )
       assertThat(highLevelClient.get(GetRequest(BLUE.indexName).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()

@@ -6,6 +6,9 @@ import arrow.core.left
 import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.runBlocking
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -14,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -43,7 +47,7 @@ class MaintainIndexService(
 
   private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
     indexStatusService.markBuildInProgress()
-    prisonerSynchroniserService.checkExistsAndReset(indexStatus.otherIndex)
+    checkExistsAndReset(indexStatus.otherIndex)
     indexQueueService.sendPopulateIndexMessage(indexStatus.otherIndex)
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
@@ -53,6 +57,14 @@ class MaintainIndexService(
           mapOf("index" to indexStatus.otherIndex.name),
         )
       }
+  }
+
+  private fun checkExistsAndReset(index: SyncIndex) {
+    if (prisonerRepository.doesIndexExist(index)) {
+      prisonerRepository.deleteIndex(index)
+    }
+    await untilCallTo { prisonerRepository.doesIndexExist(index) } matches { it == false }
+    prisonerRepository.createIndex(index)
   }
 
   fun logIndexStatuses(indexStatus: IndexStatus) {
@@ -96,7 +108,7 @@ class MaintainIndexService(
   private fun doMarkIndexingComplete(): IndexStatus =
     indexStatusService.markBuildCompleteAndSwitchIndex()
       .let { newStatus ->
-        prisonerSynchroniserService.switchAliasIndex(newStatus.currentIndex)
+        prisonerRepository.switchAliasIndex(newStatus.currentIndex)
         return indexStatusService.getIndexStatus()
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
@@ -131,7 +143,7 @@ class MaintainIndexService(
   private fun doSwitchIndex(): IndexStatus =
     indexStatusService.switchIndex()
       .let { newStatus ->
-        prisonerSynchroniserService.switchAliasIndex(newStatus.currentIndex)
+        prisonerRepository.switchAliasIndex(newStatus.currentIndex)
         return indexStatusService.getIndexStatus()
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {

@@ -5,7 +5,10 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
@@ -18,8 +21,12 @@ class PopulateIndexService(
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val indexQueueService: IndexQueueService,
   private val maintainIndexService: MaintainIndexService,
+  private val nomisService: NomisService,
   private val telemetryClient: TelemetryClient,
+  indexBuildProperties: IndexBuildProperties,
 ) {
+  private val pageSize = indexBuildProperties.pageSize
+
   fun populateIndex(index: SyncIndex): Either<Error, Int> =
     executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
       indexStatusService.getIndexStatus()
@@ -44,9 +51,17 @@ class PopulateIndexService(
   }
 
   private fun doPopulateIndex(): Int {
-    val chunks = prisonerSynchroniserService.splitAllPrisonersIntoChunks()
-    chunks.forEach { indexQueueService.sendPopulatePrisonerPageMessage(it) }
-    return chunks.size
+    val totalNumberOfPrisoners = nomisService.getTotalNumberOfPrisoners()
+    log.info("Splitting $totalNumberOfPrisoners in to pages each of size $pageSize")
+    return (1..totalNumberOfPrisoners step pageSize.toLong()).toList()
+      .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
+      .onEach { indexQueueService.sendPopulatePrisonerPageMessage(it) }
+      .also {
+        telemetryClient.trackEvent(
+          TelemetryEvents.POPULATE_PRISONER_PAGES,
+          mapOf("totalNumberOfPrisoners" to totalNumberOfPrisoners.toString(), "pageSize" to pageSize.toString()),
+        )
+      }.size
   }
 
   fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Either<Error, Unit> =
@@ -57,7 +72,7 @@ class PopulateIndexService(
       indexStatusService.getIndexStatus()
         .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
         .flatMap {
-          prisonerSynchroniserService.getAllPrisonerNumbersInPage(prisonerPage)
+          nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
             .forEachIndexed { index, offenderIdentifier ->
               if (index == 0 || index == prisonerPage.pageSize - 1) {
                 telemetryClient.trackEvent(
@@ -98,4 +113,10 @@ class PopulateIndexService(
         it.failIf(check, onFail)
       }
     }
+
+  private companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
 }
+
+data class PrisonerPage(val page: Int, val pageSize: Int)
