@@ -24,7 +24,7 @@ class TranslatorTest {
     val prisoner = Prisoner().translate(
       ob = OffenderBooking("A1234AA", "Fred", "Bloggs", dateOfBirth, false),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
 
     assertThat(prisoner.prisonerNumber).isEqualTo("A1234AA")
@@ -47,7 +47,7 @@ class TranslatorTest {
         sentenceDetail = SentenceDetail(topupSupervisionExpiryDate = tseDate),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.topupSupervisionExpiryDate).isEqualTo(tseDate)
   }
@@ -65,7 +65,7 @@ class TranslatorTest {
         sentenceDetail = SentenceDetail(topupSupervisionStartDate = tssDate),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.topupSupervisionStartDate).isEqualTo(tssDate)
   }
@@ -83,7 +83,7 @@ class TranslatorTest {
         sentenceDetail = SentenceDetail(homeDetentionCurfewEndDate = hdcend),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.homeDetentionCurfewEndDate).isEqualTo(hdcend)
   }
@@ -111,7 +111,7 @@ class TranslatorTest {
         ),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseOverrideDate)
     assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseOverrideDate)
@@ -137,7 +137,7 @@ class TranslatorTest {
         ),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
     assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseDate)
@@ -157,7 +157,7 @@ class TranslatorTest {
         imprisonmentStatusDescription = "Serving Life Imprisonment",
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.imprisonmentStatus).isEqualTo("LIFE")
     assertThat(prisoner.imprisonmentStatusDescription).isEqualTo("Serving Life Imprisonment")
@@ -184,7 +184,7 @@ class TranslatorTest {
         ),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
 
     assertThat(prisoner.alerts?.first())
@@ -204,7 +204,7 @@ class TranslatorTest {
           nextReviewDate = LocalDate.parse("2022-02-02"),
         ),
       ),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
 
     assertThat(prisoner.currentIncentive).isNotNull
@@ -228,7 +228,7 @@ class TranslatorTest {
           nextReviewDate = LocalDate.parse("2022-02-02"),
         ),
       ),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
 
     assertThat(prisoner.currentIncentive).isNotNull
@@ -244,16 +244,18 @@ class TranslatorTest {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(locationDescription = "OUT"),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = RestrictedPatient(
-        supportingPrisonId = "MDI",
-        dischargedHospital = Agency(
-          agencyId = "HAZLWD",
-          agencyType = "HSHOSP",
-          active = true,
-          description = "Hazelwood Hospital",
+      restrictedPatientData = Result.success(
+        RestrictedPatient(
+          supportingPrisonId = "MDI",
+          dischargedHospital = Agency(
+            agencyId = "HAZLWD",
+            agencyType = "HSHOSP",
+            active = true,
+            description = "Hazelwood Hospital",
+          ),
+          dischargeDate = LocalDate.now(),
+          dischargeDetails = "Getting worse",
         ),
-        dischargeDate = LocalDate.now(),
-        dischargeDetails = "Getting worse",
       ),
     )
 
@@ -271,7 +273,7 @@ class TranslatorTest {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(locationDescription = "OUT"),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
 
     assertThat(prisoner.restrictedPatient).isFalse
@@ -297,14 +299,14 @@ class TranslatorTest {
             nextReviewDate = LocalDate.parse("2022-02-02"),
           ),
         ),
-        restrictedPatientData = null,
+        restrictedPatientData = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
         existingPrisoner,
         aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
-        restrictedPatientData = null,
+        restrictedPatientData = Result.success(null),
       )
 
       assertThat(prisoner.currentIncentive).isNotNull
@@ -321,7 +323,7 @@ class TranslatorTest {
         existingPrisoner = null,
         ob = aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
-        restrictedPatientData = null,
+        restrictedPatientData = Result.success(null),
       )
 
       assertThat(prisoner.currentIncentive).isNull()
@@ -332,17 +334,90 @@ class TranslatorTest {
       val existingPrisoner = Prisoner().translate(
         ob = aBooking().copy(locationDescription = "OUT"),
         incentiveLevel = Result.success(null),
-        restrictedPatientData = null,
+        restrictedPatientData = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
         existingPrisoner,
         aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
-        restrictedPatientData = null,
+        restrictedPatientData = Result.success(null),
       )
 
       assertThat(prisoner.currentIncentive).isNull()
+    }
+  }
+
+  @Nested
+  inner class WithRestrictedPatientFailure {
+    @Test
+    internal fun `will fall back to old data when present`() {
+      val existingPrisoner = Prisoner().translate(
+        ob = aBooking().copy(locationDescription = "OUT"),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(
+          RestrictedPatient(
+            supportingPrisonId = "MDI",
+            dischargedHospital = Agency(
+              agencyId = "HAZLWD",
+              agencyType = "HSHOSP",
+              active = true,
+              description = "Hazelwood Hospital",
+            ),
+            dischargeDate = LocalDate.now(),
+            dischargeDetails = "Getting worse",
+          ),
+        ),
+      )
+
+      val prisoner = Prisoner().translate(
+        existingPrisoner,
+        aBooking(),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
+      )
+
+      assertThat(prisoner.locationDescription).isEqualTo("OUT - discharged to Hazelwood Hospital")
+      assertThat(prisoner.restrictedPatient).isTrue
+      assertThat(prisoner.supportingPrisonId).isEqualTo("MDI")
+      assertThat(prisoner.dischargedHospitalId).isEqualTo("HAZLWD")
+      assertThat(prisoner.dischargedHospitalDescription).isEqualTo("Hazelwood Hospital")
+      assertThat(prisoner.dischargeDate).isEqualTo(LocalDate.now())
+      assertThat(prisoner.dischargeDetails).isEqualTo("Getting worse")
+    }
+
+    @Test
+    internal fun `will fall back to null when previous record did not exist`() {
+      val prisoner = Prisoner().translate(
+        existingPrisoner = null,
+        ob = aBooking().copy(locationDescription = "previous location"),
+        Result.failure(RuntimeException("It has gone badly wrong")),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.restrictedPatient).isFalse()
+      assertThat(prisoner.locationDescription).isEqualTo("previous location")
+      assertThat(prisoner.supportingPrisonId).isNull()
+    }
+
+    @Test
+    internal fun `will fall back to null when the previous record's restricted patient data was null`() {
+      val existingPrisoner = Prisoner().translate(
+        ob = aBooking().copy(locationDescription = "OUT"),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      val prisoner = Prisoner().translate(
+        existingPrisoner,
+        aBooking(),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
+      )
+
+      assertThat(prisoner.restrictedPatient).isFalse()
+      assertThat(prisoner.locationDescription).isEqualTo("OUT")
+      assertThat(prisoner.supportingPrisonId).isNull()
     }
   }
 
@@ -363,7 +438,7 @@ class TranslatorTest {
         ),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.gender).isEqualTo("M")
     assertThat(prisoner.ethnicity).isEqualTo("W")
@@ -386,7 +461,7 @@ class TranslatorTest {
         ),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.hairColour).isEqualTo("Red")
     assertThat(prisoner.rightEyeColour).isEqualTo("Green")
@@ -410,7 +485,7 @@ class TranslatorTest {
         ),
       ),
       incentiveLevel = Result.success(null),
-      restrictedPatientData = null,
+      restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.tattoos).containsExactly(BodyPartDetail("Elbow", "Comment here"), BodyPartDetail("Foot", null))
     assertThat(prisoner.marks).containsExactly(BodyPartDetail("Ear", "Some comment"))

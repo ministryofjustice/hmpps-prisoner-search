@@ -181,13 +181,12 @@ class MaintainIndexService(
         log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
         NoActiveIndexesError(it)
       }
-      .flatMap { doUpdatePrisoner(it, prisonerNumber) }
-
-  private fun doUpdatePrisoner(indexStatus: IndexStatus, prisonerNumber: String) =
-    with(indexStatus.activeIndexes()) {
-      log.info("Updating prisoner {} on indexes {}", prisonerNumber, this)
-      prisonerSynchroniserService.synchronisePrisoner(prisonerNumber, *this.toTypedArray())
-    }
+      .flatMap {
+        with(it.activeIndexes()) {
+          log.info("Updating prisoner {} on indexes {}", prisonerNumber, this)
+          prisonerSynchroniserService.reindex(prisonerNumber, *this.toTypedArray())
+        }
+      }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,

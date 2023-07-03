@@ -92,7 +92,7 @@ class PopulateIndexService(
   fun populateIndexWithPrisoner(prisonerNumber: String): Either<Error, Prisoner> =
     indexStatusService.getIndexStatus()
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
-      .flatMap { prisonerSynchroniserService.synchronisePrisoner(prisonerNumber, it.currentIndex.otherIndex()) }
+      .flatMap { prisonerSynchroniserService.index(prisonerNumber, it.currentIndex.otherIndex()) }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
