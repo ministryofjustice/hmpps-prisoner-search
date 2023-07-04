@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
-import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -11,6 +10,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex.GREEN
@@ -232,7 +233,7 @@ class PopulateIndexServiceTest {
 
     @BeforeEach
     internal fun setUp() {
-      whenever(prisonerSynchroniserService.index(any(), any())).thenReturn(prisoner.right())
+      whenever(prisonerSynchroniserService.index(any(), any())).thenReturn(prisoner)
     }
 
     @Test
@@ -249,6 +250,8 @@ class PopulateIndexServiceTest {
     internal fun `will return offender just indexed`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
 
       val result = populateIndexService.populateIndexWithPrisoner("ABC123D")
 
@@ -259,10 +262,33 @@ class PopulateIndexServiceTest {
     internal fun `will synchronise offender to current building index`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
 
       populateIndexService.populateIndexWithPrisoner("ABC123D")
 
-      verify(prisonerSynchroniserService).index("ABC123D", BLUE)
+      verify(prisonerSynchroniserService).index(booking, BLUE)
+      verify(nomisService).getOffender("ABC123D")
+    }
+
+    @Test
+    internal fun `will return not found if prisoner not in NOMIS`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+
+      val result = populateIndexService.populateIndexWithPrisoner("ABC123D")
+
+      result shouldBeLeft PrisonerNotFoundError("ABC123D")
+      verifyNoInteractions(prisonerSynchroniserService)
+    }
+
+    @Test
+    internal fun `will raise the not found event if prisoner not in NOMIS`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+
+      populateIndexService.populateIndexWithPrisoner("ABC123D")
+      verify(telemetryClient).trackEvent(TelemetryEvents.BUILD_PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
     }
   }
 }

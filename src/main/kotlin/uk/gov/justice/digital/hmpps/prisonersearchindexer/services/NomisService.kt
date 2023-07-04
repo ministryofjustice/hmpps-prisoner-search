@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -47,16 +44,12 @@ class NomisService(
     .block()
     ?.offenderNo
 
-  fun getOffender(offenderNo: String): Either<PrisonerError, OffenderBooking> = prisonApiWebClient.get()
+  fun getOffender(offenderNo: String): OffenderBooking? = prisonApiWebClient.get()
     .uri("/api/offenders/$offenderNo")
     .retrieve()
     .bodyToMono(OffenderBooking::class.java)
-    .onErrorResume(::emptyIfNotFound)
-    .block()?.right() ?: PrisonerNotFoundError(offenderNo).left()
-    .also { log.error("Prisoner with offenderNo {} not found", offenderNo) }
-
-  private fun emptyIfNotFound(exception: Throwable): Mono<out OffenderBooking> =
-    if (exception is NotFound) Mono.empty() else Mono.error(exception)
+    .onErrorResume(NotFound::class.java) { Mono.empty() }
+    .block()
 }
 
 data class PrisonerNumberPage(

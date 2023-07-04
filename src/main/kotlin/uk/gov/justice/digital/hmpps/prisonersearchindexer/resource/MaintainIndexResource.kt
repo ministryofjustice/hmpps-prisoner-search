@@ -148,7 +148,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
-  ) = maintainIndexService.updatePrisoner(prisonerNumber)
+  ) = maintainIndexService.indexPrisoner(prisonerNumber)
     .getOrElse { error ->
       log.error("Request to /maintain-index/index-prisoner/$prisonerNumber failed due to error {}", error)
       when (UpdatePrisonerError.fromErrorClass(error)) {
