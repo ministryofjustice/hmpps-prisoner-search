@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents.BUILD_PRISONER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
@@ -92,7 +94,15 @@ class PopulateIndexService(
   fun populateIndexWithPrisoner(prisonerNumber: String): Either<Error, Prisoner> =
     indexStatusService.getIndexStatus()
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
-      .flatMap { prisonerSynchroniserService.index(prisonerNumber, it.currentIndex.otherIndex()) }
+      .flatMap {
+        nomisService.getOffender(prisonerNumber)?.let { ob ->
+          prisonerSynchroniserService.index(ob, it.currentIndex.otherIndex())
+        }?.right() ?: run {
+          // can happen if a prisoner is deleted or merged once indexing has started
+          telemetryClient.trackPrisonerEvent(BUILD_PRISONER_NOT_FOUND, prisonerNumber)
+          PrisonerNotFoundError(prisonerNumber).left()
+        }
+      }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,

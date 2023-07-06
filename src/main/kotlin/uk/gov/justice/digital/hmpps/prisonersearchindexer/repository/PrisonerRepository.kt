@@ -44,8 +44,10 @@ class PrisonerRepository(
     }
   }
 
-  fun get(prisonerNumber: String, index: SyncIndex): Prisoner? =
-    openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, index.toIndexCoordinates())
+  fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? =
+    indices.firstNotNullOfOrNull {
+      openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
+    }
 
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)

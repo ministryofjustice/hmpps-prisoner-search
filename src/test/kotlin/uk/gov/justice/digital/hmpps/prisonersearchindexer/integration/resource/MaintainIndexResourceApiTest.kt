@@ -219,13 +219,13 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
 
-      verify(maintainIndexService).updatePrisoner("A1234BC")
+      verify(maintainIndexService).indexPrisoner("A1234BC")
     }
 
     @Test
     fun `Request to index prisoner without active indexes returns conflict`() {
       val expectedIndexStatus = IndexStatus.newIndex()
-      doReturn(NoActiveIndexesError(expectedIndexStatus).left()).whenever(maintainIndexService).updatePrisoner("A1234BC")
+      doReturn(NoActiveIndexesError(expectedIndexStatus).left()).whenever(maintainIndexService).indexPrisoner("A1234BC")
 
       webTestClient.put()
         .uri("/maintain-index/index-prisoner/A1234BC")
@@ -234,12 +234,12 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isEqualTo(409)
 
-      verify(maintainIndexService).updatePrisoner("A1234BC")
+      verify(maintainIndexService).indexPrisoner("A1234BC")
     }
 
     @Test
     fun `Request to index unknown prisoner returns not found`() {
-      doReturn(PrisonerNotFoundError("A1234BC").left()).whenever(maintainIndexService).updatePrisoner("A1234BC")
+      doReturn(PrisonerNotFoundError("A1234BC").left()).whenever(maintainIndexService).indexPrisoner("A1234BC")
 
       webTestClient.put()
         .uri("/maintain-index/index-prisoner/A1234BC")
@@ -248,7 +248,7 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isEqualTo(404)
 
-      verify(maintainIndexService).updatePrisoner("A1234BC")
+      verify(maintainIndexService).indexPrisoner("A1234BC")
     }
   }
 

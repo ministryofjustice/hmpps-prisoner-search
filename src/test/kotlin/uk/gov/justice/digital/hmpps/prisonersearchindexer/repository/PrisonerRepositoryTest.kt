@@ -117,8 +117,18 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      assertThat(prisonerRepository.get("X12345", BLUE)).extracting("prisonerNumber").isEqualTo("X12345")
-      assertThat(prisonerRepository.get("X12345", GREEN)).isNull()
+      assertThat(prisonerRepository.get("X12345", listOf(BLUE))).extracting("prisonerNumber").isEqualTo("X12345")
+      assertThat(prisonerRepository.get("X12345", listOf(GREEN))).isNull()
+    }
+
+    @Test
+    internal fun `will check all supplied indices to find prisoner`() {
+      prisonerRepository.save(
+        Prisoner().apply { prisonerNumber = "X12345" },
+        BLUE,
+      )
+
+      assertThat(prisonerRepository.get("X12345", listOf(GREEN, BLUE))).extracting("prisonerNumber").isEqualTo("X12345")
     }
 
     @Test
@@ -132,7 +142,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      val prisoner = prisonerRepository.get("ABC123D", BLUE)
+      val prisoner = prisonerRepository.get("ABC123D", listOf(BLUE))
       assertThat(prisoner).isNotNull
 
       assertThat(prisoner!!.shoeSize).isEqualTo(12)

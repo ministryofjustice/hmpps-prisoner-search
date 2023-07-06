@@ -14,7 +14,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents.PRISONER_NOT_FOUND
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.TelemetryEvents.PRISONER_REMOVED
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.SyncIndex
@@ -31,6 +34,7 @@ class MaintainIndexService(
   private val indexQueueService: IndexQueueService,
   private val prisonerRepository: PrisonerRepository,
   private val hmppsQueueService: HmppsQueueService,
+  private val nomisService: NomisService,
   private val telemetryClient: TelemetryClient,
   private val indexBuildProperties: IndexBuildProperties,
 ) {
@@ -175,17 +179,29 @@ class MaintainIndexService(
       }
   }
 
-  fun updatePrisoner(prisonerNumber: String): Either<Error, Prisoner> =
+  fun indexPrisoner(prisonerNumber: String): Either<Error, Prisoner> =
     indexStatusService.getIndexStatus()
       .failIf(IndexStatus::activeIndexesEmpty) {
         log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
         NoActiveIndexesError(it)
       }
-      .flatMap {
-        with(it.activeIndexes()) {
-          log.info("Updating prisoner {} on indexes {}", prisonerNumber, this)
-          prisonerSynchroniserService.reindex(prisonerNumber, *this.toTypedArray())
-        }
+      .flatMap { sync(prisonerNumber, it.activeIndexes()) }
+
+  private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>) =
+    nomisService.getOffender(prisonerNumber)?.let { ob ->
+      prisonerSynchroniserService.reindex(ob, activeIndices)
+    }?.right()
+      ?: prisonerRepository.get(prisonerNumber, activeIndices)
+        ?.run {
+          // Prisoner not in NOMIS, but found in index so remove
+          telemetryClient.trackPrisonerEvent(PRISONER_REMOVED, prisonerNumber)
+          prisonerRepository.delete(prisonerNumber)
+          this
+        }?.right()
+      ?: run {
+        // not found in either NOMIS or index, so log and return
+        telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
+        PrisonerNotFoundError(prisonerNumber).left()
       }
 
   private inline fun IndexStatus.failIf(
