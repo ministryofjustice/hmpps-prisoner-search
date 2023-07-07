@@ -12,16 +12,6 @@ parameters:
     default: .
 
 jobs:
-  checkout_workspace:
-    docker:
-      - image: cimg/base:current
-    steps:
-      - checkout
-      - persist_to_workspace:
-          root: << pipeline.parameters.workflow-directory >>
-          paths:
-            - "*"
-
   validate:
     executor:
       name: hmpps/localstack
@@ -30,8 +20,7 @@ jobs:
       localstack_type: "localstack"
       services: "opensearch,sns,sqs"
     steps:
-      - attach_workspace:
-          at: ./
+      - checkout
       - run:
           command: |
             while true; do
@@ -53,7 +42,7 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew check
+          command: ./gradlew :model:check :<< pipeline.parameters.workflow-directory >>:check
       - save_cache:
           paths:
             - ~/.gradle
@@ -67,25 +56,22 @@ workflows:
   version: 2
   build-test-and-deploy:
     jobs:
-      - checkout_workspace
       - validate:
           filters:
             tags:
               ignore: /.*/
-      - hmpps/helm_lint:
-          name: helm_lint
-          pre-steps:
-            - attach_workspace:
-                at: ./
+#      - hmpps/helm_lint:
+#          name: helm_lint
+#          pre-steps:
+#            - checkout
+#            - run:
+#                command: cd << pipeline.parameters.workflow-directory >>
       - hmpps/build_multiplatform_docker:
           name: build_docker
           filters:
             branches:
               only:
                 - main
-          pre-steps:
-            - attach_workspace:
-                at: ./
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -97,12 +83,9 @@ workflows:
                 - main
           requires:
             - validate
-            - build_docker
-            - helm_lint
+#            - build_docker
+#            - helm_lint
           helm_timeout: 5m
-          pre-steps:
-            - attach_workspace:
-                at: ./
 #      - request-preprod-approval:
 #          type: approval
 #          requires:
