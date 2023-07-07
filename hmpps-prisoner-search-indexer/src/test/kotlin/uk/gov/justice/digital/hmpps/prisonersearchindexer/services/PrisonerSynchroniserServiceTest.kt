@@ -16,8 +16,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonersearch.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearchindexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.AssignedLivingUnit
 

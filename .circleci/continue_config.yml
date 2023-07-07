@@ -39,14 +39,14 @@ jobs:
           host: os01.eu-west-2.opensearch.localhost.localstack.cloud
       - restore_cache:
           keys:
-            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
             - gradle-
       - run:
           command: ./gradlew :model:check :<< pipeline.parameters.workflow-directory >>:check
       - save_cache:
           paths:
             - ~/.gradle
-          key: gradle-{{ checksum "build.gradle.kts" }}
+          key: gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
       - store_test_results:
           path: build/test-results
       - store_artifacts:

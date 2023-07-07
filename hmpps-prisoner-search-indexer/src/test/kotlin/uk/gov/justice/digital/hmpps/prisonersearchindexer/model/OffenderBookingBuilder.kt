@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.model
+package uk.gov.justice.digital.hmpps.prisonersearchindexer.model
 
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
