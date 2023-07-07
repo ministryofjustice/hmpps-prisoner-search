@@ -95,7 +95,7 @@ services:
       - SERVICES=opensearch,sns,sqs
       - OPENSEARCH_ENDPOINT_STRATEGY=path
     volumes:
-      - "$PWD/src/test/resources/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "$PWD/hmpps-prisoner-search-indexer/src/test/resources/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
 networks:
