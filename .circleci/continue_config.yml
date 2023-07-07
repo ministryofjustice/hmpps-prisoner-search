@@ -1,18 +1,45 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@dev:002c796
+  hmpps: ministryofjustice/hmpps@7
 
 parameters:
   releases-slack-channel:
     type: string
     default: dps-releases
-  workflow-directory:
-    type: string
-    default: .
+  build-model:
+    type: boolean
+    default: false
+  build-indexer:
+    type: boolean
+    default: false
+  build-search:
+    type: boolean
+    default: false
 
 jobs:
-  validate:
+  validate-model:
+    executor:
+      name: hmpps/java
+      tag: "19.0"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "model/build.gradle.kts" }}
+            - gradle-
+      - run:
+          command: ./gradlew :model:check
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "model/build.gradle.kts" }}
+      - store_test_results:
+          path: model/build/test-results
+      - store_artifacts:
+          path: model/build/reports/tests
+
+  validate-indexer:
     executor:
       name: hmpps/localstack
       jdk_tag: "19.0"
@@ -21,14 +48,6 @@ jobs:
       services: "opensearch,sns,sqs"
     steps:
       - checkout
-      - run:
-          command: |
-            while true; do
-              sleep 5
-              ps auxwwf
-              echo "======"
-            done
-          background: true
       - hmpps/install_aws_cli
       - hmpps/wait_till_ready
       - run:
@@ -39,35 +58,39 @@ jobs:
           host: os01.eu-west-2.opensearch.localhost.localstack.cloud
       - restore_cache:
           keys:
-            - gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
+            - gradle-{{ checksum "hmpps-prisoner-search-indexer/build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew :model:check :<< pipeline.parameters.workflow-directory >>:check
+          command: ./gradlew :hmpps-prisoner-search-indexer:check
       - save_cache:
           paths:
             - ~/.gradle
-          key: gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
+          key: gradle-{{ checksum "hmpps-prisoner-search-indexer/build.gradle.kts" }}
       - store_test_results:
-          # should really aggregate the model test reports, but not expecting many tests to be in the model
-          path: << pipeline.parameters.workflow-directory >>/build/test-results
+          path: hmpps-prisoner-search-indexer/build/test-results
       - store_artifacts:
-          path: << pipeline.parameters.workflow-directory >>/build/reports/tests
+          path: hmpps-prisoner-search-indexer/build/reports/tests
 
 workflows:
   version: 2
-  build-test-and-deploy:
+  build-test-and-deploy-model:
+    when: << pipeline.parameters.build-model >>
     jobs:
-      - validate:
+      - validate-model:
+          filters:
+            tags:
+              ignore: /.*/
+  build-test-and-deploy-indexer:
+    when: << pipeline.parameters.build-indexer >>
+    jobs:
+      - validate-indexer:
           filters:
             tags:
               ignore: /.*/
       - hmpps/helm_lint:
-          name: helm_lint
-          perform-checkout: false
-          pre-steps:
-            - checkout
-            - run:
-                command: cd << pipeline.parameters.workflow-directory >>
+          name: helm_lint-indexer
+          helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+
 #      - hmpps/build_multiplatform_docker:
 #          name: build_docker
 #          filters:

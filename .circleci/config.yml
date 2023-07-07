@@ -15,5 +15,6 @@ workflows:
       - path-filtering/filter:
           name: check-for-changes
           mapping: |
-            (model/.*|hmpps-prisoner-search/.*) workflow-directory "hmpps-prisoner-search"
-            (model/.*|hmpps-prisoner-search-indexer.*) workflow-directory "hmpps-prisoner-search-indexer"
+            model/.* build-model true
+            (model/.*|hmpps-prisoner-search-indexer/.*) build-indexer true
+#             (model/.*|hmpps-prisoner-search/.*) build-search true
