@@ -39,7 +39,10 @@ jobs:
       - store_artifacts:
           path: model/build/reports/tests
 
-  validate-indexer:
+  validate:
+    parameters:
+      project:
+        type: string
     executor:
       name: hmpps/localstack
       jdk_tag: "19.0"
@@ -58,18 +61,18 @@ jobs:
           host: os01.eu-west-2.opensearch.localhost.localstack.cloud
       - restore_cache:
           keys:
-            - gradle-{{ checksum "hmpps-prisoner-search-indexer/build.gradle.kts" }}
+            - gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew :hmpps-prisoner-search-indexer:check
+          command: ./gradlew :<< parameters.project >>:check
       - save_cache:
           paths:
             - ~/.gradle
-          key: gradle-{{ checksum "hmpps-prisoner-search-indexer/build.gradle.kts" }}
+          key: gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
       - store_test_results:
-          path: hmpps-prisoner-search-indexer/build/test-results
+          path: << parameters.project >>/build/test-results
       - store_artifacts:
-          path: hmpps-prisoner-search-indexer/build/reports/tests
+          path: << parameters.project >>/build/reports/tests
 
 workflows:
   version: 2
@@ -83,7 +86,8 @@ workflows:
   build-test-and-deploy-indexer:
     when: << pipeline.parameters.build-indexer >>
     jobs:
-      - validate-indexer:
+      - validate:
+          project: hmpps-prisoner-search-indexer
           filters:
             tags:
               ignore: /.*/
@@ -91,26 +95,31 @@ workflows:
           name: helm_lint-indexer
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
 
-#      - hmpps/build_multiplatform_docker:
-#          name: build_docker
-#          filters:
-#            branches:
-#              only:
-#                - main
-#      - hmpps/deploy_env:
-#          name: deploy_dev
-#          env: "dev"
-#          jira_update: true
-#          context: hmpps-common-vars
-#          filters:
-#            branches:
-#              only:
-#                - main
-#          requires:
-#            - validate
-##            - build_docker
-##            - helm_lint
-#          helm_timeout: 5m
+      - hmpps/build_multiplatform_docker:
+          name: build_docker-indexer
+          additional_docker_build_args: -f hmpps-prisoner-search-indexer/Dockerfile
+          filters:
+            branches:
+              only:
+                - main
+      - hmpps/deploy_env:
+          name: deploy_dev
+          env: "dev"
+          jira_update: true
+          context: hmpps-common-vars
+          k8s_deployment_name: hmpps-prisoner-search-indexer
+          chart_name: hmpps-prisoner-search-indexer
+          release_name: hmpps-prisoner-search-indexer
+          helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - validate
+            - build_docker-indexer
+            - helm_lint-indexer
+          helm_timeout: 5m
 #      - request-preprod-approval:
 #          type: approval
 #          requires:
