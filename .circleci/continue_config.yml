@@ -1,0 +1,121 @@
+version: 2.1
+
+orbs:
+  hmpps: ministryofjustice/hmpps@7
+
+parameters:
+  releases-slack-channel:
+    type: string
+    default: dps-releases
+  workflow-directory:
+    type: string
+    default: .
+
+jobs:
+  validate:
+    executor:
+      name: hmpps/localstack
+      jdk_tag: "19.0"
+      localstack_tag: "2.0"
+      localstack_type: "localstack"
+      services: "opensearch,sns,sqs"
+    steps:
+      - checkout
+      - run:
+          command: |
+            while true; do
+              sleep 5
+              ps auxwwf
+              echo "======"
+            done
+          background: true
+      - hmpps/install_aws_cli
+      - hmpps/wait_till_ready
+      - run:
+          name: Set up opensearch domain
+          command: localstack/setup-opensearch.sh
+      - hmpps/wait_till_ready:
+          port: 4566
+          host: os01.eu-west-2.opensearch.localhost.localstack.cloud
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
+            - gradle-
+      - run:
+          command: ./gradlew :model:check :<< pipeline.parameters.workflow-directory >>:check
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
+      - store_test_results:
+          path: build/test-results
+      - store_artifacts:
+          path: build/reports/tests
+
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - validate:
+          filters:
+            tags:
+              ignore: /.*/
+#      - hmpps/helm_lint:
+#          name: helm_lint
+#          pre-steps:
+#            - checkout
+#            - run:
+#                command: cd << pipeline.parameters.workflow-directory >>
+      - hmpps/build_multiplatform_docker:
+          name: build_docker
+          filters:
+            branches:
+              only:
+                - main
+      - hmpps/deploy_env:
+          name: deploy_dev
+          env: "dev"
+          jira_update: true
+          context: hmpps-common-vars
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - validate
+#            - build_docker
+#            - helm_lint
+          helm_timeout: 5m
+#      - request-preprod-approval:
+#          type: approval
+#          requires:
+#            - deploy_dev
+#      - hmpps/deploy_env:
+#          name: deploy_preprod
+#          env: "preprod"
+#          jira_update: true
+#          jira_env_type: staging
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-prisoner-search-indexer-preprod
+#          requires:
+#            - request-preprod-approval
+#          helm_timeout: 5m
+#      - request-prod-approval:
+#          type: approval
+#          requires:
+#            - deploy_preprod
+#      - hmpps/deploy_env:
+#          name: deploy_prod
+#          env: "prod"
+#          jira_update: true
+#          jira_env_type: production
+#          slack_notification: true
+#          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
+#          context:
+#            - hmpps-common-vars
+#            - hmpps-prisoner-search-indexer-prod
+#          requires:
+#            - request-prod-approval
+#          helm_timeout: 5m
+
