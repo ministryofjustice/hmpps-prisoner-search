@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@7
+  hmpps: ministryofjustice/hmpps@dev:002c796
 
 parameters:
   releases-slack-channel:
@@ -48,9 +48,10 @@ jobs:
             - ~/.gradle
           key: gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
       - store_test_results:
-          path: build/test-results
+          # should really aggregate the model test reports, but not expecting many tests to be in the model
+          path: << pipeline.parameters.workflow-directory >>/build/test-results
       - store_artifacts:
-          path: build/reports/tests
+          path: << pipeline.parameters.workflow-directory >>/build/reports/tests
 
 workflows:
   version: 2
@@ -60,32 +61,33 @@ workflows:
           filters:
             tags:
               ignore: /.*/
-#      - hmpps/helm_lint:
-#          name: helm_lint
-#          pre-steps:
-#            - checkout
-#            - run:
-#                command: cd << pipeline.parameters.workflow-directory >>
-      - hmpps/build_multiplatform_docker:
-          name: build_docker
-          filters:
-            branches:
-              only:
-                - main
-      - hmpps/deploy_env:
-          name: deploy_dev
-          env: "dev"
-          jira_update: true
-          context: hmpps-common-vars
-          filters:
-            branches:
-              only:
-                - main
-          requires:
-            - validate
-#            - build_docker
-#            - helm_lint
-          helm_timeout: 5m
+      - hmpps/helm_lint:
+          name: helm_lint
+          perform-checkout: false
+          pre-steps:
+            - checkout
+            - run:
+                command: cd << pipeline.parameters.workflow-directory >>
+#      - hmpps/build_multiplatform_docker:
+#          name: build_docker
+#          filters:
+#            branches:
+#              only:
+#                - main
+#      - hmpps/deploy_env:
+#          name: deploy_dev
+#          env: "dev"
+#          jira_update: true
+#          context: hmpps-common-vars
+#          filters:
+#            branches:
+#              only:
+#                - main
+#          requires:
+#            - validate
+##            - build_docker
+##            - helm_lint
+#          helm_timeout: 5m
 #      - request-preprod-approval:
 #          type: approval
 #          requires:
