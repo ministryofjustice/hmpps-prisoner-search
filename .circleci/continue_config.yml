@@ -33,7 +33,7 @@ jobs:
       - hmpps/wait_till_ready
       - run:
           name: Set up opensearch domain
-          command: src/test/resources/localstack/setup-opensearch.sh
+          command: localstack/setup-opensearch.sh
       - hmpps/wait_till_ready:
           port: 4566
           host: os01.eu-west-2.opensearch.localhost.localstack.cloud
