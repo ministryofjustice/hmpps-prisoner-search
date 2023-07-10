@@ -7,12 +7,42 @@ parameters:
   releases-slack-channel:
     type: string
     default: dps-releases
-  workflow-directory:
-    type: string
-    default: .
+  build-model:
+    type: boolean
+    default: false
+  build-indexer:
+    type: boolean
+    default: false
+  build-search:
+    type: boolean
+    default: false
 
 jobs:
+  validate-model:
+    executor:
+      name: hmpps/java
+      tag: "19.0"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "model/build.gradle.kts" }}
+            - gradle-
+      - run:
+          command: ./gradlew :model:check
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "model/build.gradle.kts" }}
+      - store_test_results:
+          path: model/build/test-results
+      - store_artifacts:
+          path: model/build/reports/tests
+
   validate:
+    parameters:
+      project:
+        type: string
     executor:
       name: hmpps/localstack
       jdk_tag: "19.0"
@@ -21,14 +51,6 @@ jobs:
       services: "opensearch,sns,sqs"
     steps:
       - checkout
-      - run:
-          command: |
-            while true; do
-              sleep 5
-              ps auxwwf
-              echo "======"
-            done
-          background: true
       - hmpps/install_aws_cli
       - hmpps/wait_till_ready
       - run:
@@ -39,35 +61,43 @@ jobs:
           host: os01.eu-west-2.opensearch.localhost.localstack.cloud
       - restore_cache:
           keys:
-            - gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
+            - gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew :model:check :<< pipeline.parameters.workflow-directory >>:check
+          command: ./gradlew :<< parameters.project >>:check
       - save_cache:
           paths:
             - ~/.gradle
-          key: gradle-{{ checksum "<< pipeline.parameters.workflow-directory >>/build.gradle.kts" }}
+          key: gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
       - store_test_results:
-          path: build/test-results
+          path: << parameters.project >>/build/test-results
       - store_artifacts:
-          path: build/reports/tests
+          path: << parameters.project >>/build/reports/tests
 
 workflows:
   version: 2
-  build-test-and-deploy:
+  build-test-and-deploy-model:
+    when: << pipeline.parameters.build-model >>
     jobs:
-      - validate:
+      - validate-model:
           filters:
             tags:
               ignore: /.*/
-#      - hmpps/helm_lint:
-#          name: helm_lint
-#          pre-steps:
-#            - checkout
-#            - run:
-#                command: cd << pipeline.parameters.workflow-directory >>
+  build-test-and-deploy-indexer:
+    when: << pipeline.parameters.build-indexer >>
+    jobs:
+      - validate:
+          project: hmpps-prisoner-search-indexer
+          filters:
+            tags:
+              ignore: /.*/
+      - hmpps/helm_lint:
+          name: helm_lint-indexer
+          helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+
       - hmpps/build_multiplatform_docker:
-          name: build_docker
+          name: build_docker-indexer
+          additional_docker_build_args: -f hmpps-prisoner-search-indexer/Dockerfile
           filters:
             branches:
               only:
@@ -77,14 +107,18 @@ workflows:
           env: "dev"
           jira_update: true
           context: hmpps-common-vars
+          k8s_deployment_name: hmpps-prisoner-search-indexer
+          chart_name: hmpps-prisoner-search-indexer
+          release_name: hmpps-prisoner-search-indexer
+          helm_dir: hmpps-prisoner-search-indexer/helm_deploy
           filters:
             branches:
               only:
                 - main
           requires:
             - validate
-#            - build_docker
-#            - helm_lint
+            - build_docker-indexer
+            - helm_lint-indexer
           helm_timeout: 5m
 #      - request-preprod-approval:
 #          type: approval
