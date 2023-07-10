@@ -16,5 +16,5 @@ import org.springframework.boot.runApplication
 class HmppsPrisonerSearch
 
 fun main(args: Array<String>) {
-  runApplication<uk.gov.justice.digital.hmpps.prisonersearch.search.HmppsPrisonerSearch>(*args)
+  runApplication<HmppsPrisonerSearch>(*args)
 }
