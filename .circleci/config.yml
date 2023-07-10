@@ -17,4 +17,4 @@ workflows:
           mapping: |
             model/.* build-model true
             (model/.*|hmpps-prisoner-search-indexer/.*) build-indexer true
-#             (model/.*|hmpps-prisoner-search/.*) build-search true
+            (model/.*|hmpps-prisoner-search/.*) build-search true

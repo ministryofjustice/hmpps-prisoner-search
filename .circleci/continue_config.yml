@@ -106,7 +106,9 @@ workflows:
           name: deploy_dev
           env: "dev"
           jira_update: true
-          context: hmpps-common-vars
+          context:
+            - hmpps-common-vars
+            - hmpps-prisoner-search
           k8s_deployment_name: hmpps-prisoner-search-indexer
           chart_name: hmpps-prisoner-search-indexer
           release_name: hmpps-prisoner-search-indexer
@@ -152,4 +154,42 @@ workflows:
 #          requires:
 #            - request-prod-approval
 #          helm_timeout: 5m
+  build-test-and-deploy-search:
+    when: << pipeline.parameters.build-search >>
+    jobs:
+      - validate:
+          project: hmpps-prisoner-search
+          filters:
+            tags:
+              ignore: /.*/
+      - hmpps/helm_lint:
+          name: helm_lint-search
+          helm_dir: hmpps-prisoner-search/helm_deploy
 
+      - hmpps/build_multiplatform_docker:
+          name: build_docker-search
+          additional_docker_build_args: -f hmpps-prisoner-search/Dockerfile
+#          filters:
+#            branches:
+#              only:
+#                - main
+      - hmpps/deploy_env:
+          name: deploy_dev
+          env: "dev"
+          jira_update: true
+          context:
+            - hmpps-common-vars
+            - hmpps-prisoner-search
+          k8s_deployment_name: hmpps-prisoner-search
+          chart_name: hmpps-prisoner-search
+          release_name: hmpps-prisoner-search
+          helm_dir: hmpps-prisoner-search/helm_deploy
+#          filters:
+#            branches:
+#              only:
+#                - main
+          requires:
+            - validate
+            - build_docker-search
+            - helm_lint-search
+          helm_timeout: 5m

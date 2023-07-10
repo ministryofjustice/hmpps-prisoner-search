@@ -1,0 +1,14 @@
+server:
+  shutdown: immediate
+
+aws:
+  provider: localstack
+
+api:
+  base:
+    url:
+      oauth: http://localhost:8090/auth
+
+opensearch:
+  uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
+
