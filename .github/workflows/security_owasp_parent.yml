@@ -1,8 +1,8 @@
 name: Parent security OWASP dependency check
 
 on:
-  pull_request:
-    types: [opened, edited, reopened, synchronize]
+  schedule:
+    - cron: "30 5 * * MON-FRI" # Every weekday at 05:30 UTC
 
 jobs:
   security-owasp-search-check:
