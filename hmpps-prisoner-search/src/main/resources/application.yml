@@ -18,6 +18,8 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${api.base.url.oauth}/.well-known/jwks.json
+
+      client:
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.oauth}/oauth/token

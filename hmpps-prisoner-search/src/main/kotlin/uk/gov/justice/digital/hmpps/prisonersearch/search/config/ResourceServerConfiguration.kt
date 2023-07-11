@@ -10,10 +10,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.config.web.server.invoke
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import uk.gov.justice.digital.hmpps.prisonersearch.config.AuthAwareTokenConverter
 
 @Configuration
 @EnableWebSecurity
@@ -29,12 +29,18 @@ class ResourceServerConfiguration {
       csrf { disable() }
       authorizeHttpRequests {
         listOf(
-          "/webjars/**", "/favicon.ico", "/csrf",
-          "/health/**", "/info", "/startup", "/h2-console/**",
-          "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+          "/webjars/**",
+          "/favicon.ico",
+          "/csrf",
+          "/health/**",
+          "/info",
+          "/v3/api-docs/**",
+          "/swagger-ui/**",
+          "/swagger-ui.html",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }
+      oauth2ResourceServer { jwt { jwtAuthenticationConverter = AuthAwareTokenConverter() } }
     }
     return http.build()
   }

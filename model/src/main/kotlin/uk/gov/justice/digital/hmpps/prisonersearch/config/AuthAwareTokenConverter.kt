@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearchindexer.config
+package uk.gov.justice.digital.hmpps.prisonersearch.config
 
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.core.GrantedAuthority
