@@ -45,9 +45,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
           .description("Endpoints that were designed for a specific use case and are unlikely to fit for general use"),
         Tag().name("Experimental")
           .description("Endpoints that have not been tried and tested in a production environment"),
-        Tag().name("Elastic Search index maintenance").description("Endpoints that are to be used by administrators only for maintaining Elasticsearch indices"),
-        Tag().name("hmpps-queue-resource").description("""Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href="https://github.com/ministryofjustice/hmpps-spring-boot-sqs">hmpps-spring-boot-sqs</a> project"""),
-        Tag().name("hmpps-queue-resource-async").description("""Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href="https://github.com/ministryofjustice/hmpps-spring-boot-sqs">hmpps-spring-boot-sqs</a> project"""),
       ),
     )
     .info(
