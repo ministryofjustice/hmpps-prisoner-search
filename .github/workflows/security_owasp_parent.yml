@@ -1,6 +1,7 @@
 name: Parent security OWASP dependency check
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "30 5 * * MON-FRI" # Every weekday at 05:30 UTC
 
