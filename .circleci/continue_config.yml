@@ -74,12 +74,12 @@ jobs:
       - store_artifacts:
           path: << parameters.project >>/build/reports/tests
 
-  noop:
+  no-op:
     docker:
       - image: cimg/base:current
     resource_class: small
     steps:
-      - run: echo "noop"
+      - run: echo "no-op"
 
 workflows:
   version: 2
@@ -91,7 +91,7 @@ workflows:
           - << pipeline.parameters.build-indexer >>
           - << pipeline.parameters.build-search >>
     jobs:
-      - noop
+      - no-op
   build-test-model:
     when: << pipeline.parameters.build-model >>
     jobs:
@@ -103,6 +103,7 @@ workflows:
     when: << pipeline.parameters.build-indexer >>
     jobs:
       - validate:
+          name: validate-indexer
           project: hmpps-prisoner-search-indexer
           filters:
             tags:
@@ -136,7 +137,7 @@ workflows:
               only:
                 - main
           requires:
-            - validate
+            - validate-indexer
             - build_docker-indexer
             - helm_lint-indexer
           helm_timeout: 5m
@@ -144,6 +145,7 @@ workflows:
     when: << pipeline.parameters.build-search >>
     jobs:
       - validate:
+          name: validate-search
           project: hmpps-prisoner-search
           filters:
             tags:
@@ -172,7 +174,7 @@ workflows:
               only:
                 - main
           requires:
-            - validate
+            - validate-search
             - build_docker-search
             - helm_lint-search
           helm_timeout: 5m
