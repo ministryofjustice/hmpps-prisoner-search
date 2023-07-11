@@ -12,7 +12,7 @@
     </encoder>
   </appender>
 
-  <logger name="uk.gov.justice.digital.hmpps.prisonersearch.HmppsPrisonerSearchKt" additivity="false"
+  <logger name="uk.gov.justice.digital.hmpps.prisonersearch.search.HmppsPrisonerSearchKt" additivity="false"
           level="DEBUG">
     <appender-ref ref="consoleAppender"/>
   </logger>

@@ -7,6 +7,8 @@ import org.mockito.Mockito
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
+import uk.gov.justice.digital.hmpps.prisonersearch.config.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.prisonersearch.config.AuthenticationHolder
 
 class AuthenticationHolderTest {
   private val authenticationHolder: AuthenticationHolder = AuthenticationHolder()

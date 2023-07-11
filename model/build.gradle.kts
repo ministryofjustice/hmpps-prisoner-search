@@ -6,6 +6,7 @@ plugins {
 dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:5.1.1")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 }
 
 java {
