@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services
 
+import uk.gov.justice.digital.hmpps.prisonersearch.model.canonicalPNCNumber
+
 internal fun String.prisonerNumberOrCanonicalPNCNumber(): String =
   when {
     isPrisonerNumber() -> this.uppercase()
