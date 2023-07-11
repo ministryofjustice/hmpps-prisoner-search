@@ -74,9 +74,25 @@ jobs:
       - store_artifacts:
           path: << parameters.project >>/build/reports/tests
 
+  noop:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run: echo "noop"
+
 workflows:
   version: 2
-  build-test-and-deploy-model:
+  no-changes:
+    when:
+      not:
+        or:
+          - << pipeline.parameters.build-model >>
+          - << pipeline.parameters.build-indexer >>
+          - << pipeline.parameters.build-search >>
+    jobs:
+      - noop
+  build-test-model:
     when: << pipeline.parameters.build-model >>
     jobs:
       - validate-model:
@@ -94,6 +110,7 @@ workflows:
       - hmpps/helm_lint:
           name: helm_lint-indexer
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+          chart_name: hmpps-prisoner-search-indexer
 
       - hmpps/build_multiplatform_docker:
           name: build_docker-indexer
@@ -122,38 +139,6 @@ workflows:
             - build_docker-indexer
             - helm_lint-indexer
           helm_timeout: 5m
-#      - request-preprod-approval:
-#          type: approval
-#          requires:
-#            - deploy_dev
-#      - hmpps/deploy_env:
-#          name: deploy_preprod
-#          env: "preprod"
-#          jira_update: true
-#          jira_env_type: staging
-#          context:
-#            - hmpps-common-vars
-#            - hmpps-prisoner-search-indexer-preprod
-#          requires:
-#            - request-preprod-approval
-#          helm_timeout: 5m
-#      - request-prod-approval:
-#          type: approval
-#          requires:
-#            - deploy_preprod
-#      - hmpps/deploy_env:
-#          name: deploy_prod
-#          env: "prod"
-#          jira_update: true
-#          jira_env_type: production
-#          slack_notification: true
-#          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
-#          context:
-#            - hmpps-common-vars
-#            - hmpps-prisoner-search-indexer-prod
-#          requires:
-#            - request-prod-approval
-#          helm_timeout: 5m
   build-test-and-deploy-search:
     when: << pipeline.parameters.build-search >>
     jobs:
@@ -180,9 +165,6 @@ workflows:
           context:
             - hmpps-common-vars
             - hmpps-prisoner-search
-          k8s_deployment_name: hmpps-prisoner-search
-          chart_name: hmpps-prisoner-search
-          release_name: hmpps-prisoner-search
           helm_dir: hmpps-prisoner-search/helm_deploy
           filters:
             branches:
