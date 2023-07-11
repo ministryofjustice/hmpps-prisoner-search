@@ -114,6 +114,7 @@ workflows:
 
       - hmpps/build_multiplatform_docker:
           name: build_docker-indexer
+          image_name: hmpps-prisoner-search-indexer
           additional_docker_build_args: -f hmpps-prisoner-search-indexer/Dockerfile
           filters:
             branches:
