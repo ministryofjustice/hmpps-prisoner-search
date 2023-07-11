@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
+package uk.gov.justice.digital.hmpps.prisonersearch.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest

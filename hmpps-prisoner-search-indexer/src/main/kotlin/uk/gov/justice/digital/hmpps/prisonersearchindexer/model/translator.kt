@@ -7,10 +7,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.model.PrisonerAlias
+import uk.gov.justice.digital.hmpps.prisonersearch.model.canonicalPNCNumberLong
+import uk.gov.justice.digital.hmpps.prisonersearch.model.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCNumberLong
-import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.services.dto.nomis.OffenderBooking
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
