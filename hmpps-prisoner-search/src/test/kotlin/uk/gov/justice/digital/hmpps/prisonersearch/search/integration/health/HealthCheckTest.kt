@@ -87,17 +87,3 @@ class HealthCheckTest : IntegrationTestBase() {
     hmppsAuth.stubHealthPing(status)
   }
 }
-/*
-protected fun stubPing(status: Int) {
-  IntegrationTestBase.oauthMockServer.stubFor(
-    WireMock.get("/auth/health/ping").willReturn(
-      WireMock.aResponse()
-        .withHeader("Content-Type", "application/json")
-        .withBody(if (status == 200) "pong" else "some error")
-        .withStatus(status),
-    ),
-  )
-}
-
-
- */
