@@ -21,6 +21,7 @@ dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:5.1.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+  implementation("org.springdoc:springdoc-openapi-webmvc-core:1.7.0")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.27.0")
 
