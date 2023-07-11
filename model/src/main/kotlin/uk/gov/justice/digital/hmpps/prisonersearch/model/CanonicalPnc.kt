@@ -1,15 +1,15 @@
-package uk.gov.justice.digital.hmpps.prisonersearchindexer.services
+package uk.gov.justice.digital.hmpps.prisonersearch.model
 
-internal fun String.canonicalPNCNumber(): String = if (isPNCNumber()) combinePNC(splitPNC()) else this
+fun String.canonicalPNCNumber(): String = if (isPNCNumber()) combinePNC(splitPNC()) else this
 
-internal fun String.canonicalPNCNumberShort(): String? =
+fun String.canonicalPNCNumberShort(): String? =
   when {
     isPNCNumberShort() -> combinePNC(splitPNC())
     isPNCNumberLong() -> with(splitPNC()) { combinePNC(Pnc(year.substring(2, 4), serialNumber, checksum)) }
     else -> null
   }
 
-internal fun String.canonicalPNCNumberLong(): String? =
+fun String.canonicalPNCNumberLong(): String? =
   when {
     isPNCNumberLong() -> combinePNC(splitPNC())
     isPNCNumberShort() -> with(splitPNC()) { combinePNC(Pnc(addCenturyToYear(year), serialNumber, checksum)) }
