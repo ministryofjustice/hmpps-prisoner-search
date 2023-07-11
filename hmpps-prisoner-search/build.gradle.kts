@@ -21,8 +21,8 @@ dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:5.1.1")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
-  implementation("org.springdoc:springdoc-openapi-webmvc-core:1.7.0")
 
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.0.0")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.27.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -35,7 +35,6 @@ dependencies {
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.16")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
