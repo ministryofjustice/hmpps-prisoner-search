@@ -1,0 +1,17 @@
+name: Parent security OWASP dependency check
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  security-owasp-search-check:
+    name: Search security OWASP dependency check
+    uses: ./.github/workflows/security_owasp.yml
+    with:
+      subproject: hmpps-prisoner-search
+  security-owasp-indexer-check:
+    name: Indexer security OWASP dependency check
+    uses: ./.github/workflows/security_owasp.yml
+    with:
+      subproject: hmpps-prisoner-search-indexer
