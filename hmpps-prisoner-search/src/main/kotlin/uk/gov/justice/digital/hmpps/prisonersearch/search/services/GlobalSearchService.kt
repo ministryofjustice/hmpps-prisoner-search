@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.config.OpenSearchIndexConfiguration.Companion.INDEX_ALIAS
 import uk.gov.justice.digital.hmpps.prisonersearch.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.config.AuthenticationHolder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
@@ -76,7 +77,7 @@ class GlobalSearchService(
         trackTotalHits(true)
       }
 
-      val searchRequest = SearchRequest(arrayOf(getIndex()), searchSourceBuilder)
+      val searchRequest = SearchRequest(arrayOf(INDEX_ALIAS), searchSourceBuilder)
       val searchResults = searchClient.search(searchRequest)
       val prisonerMatches = getSearchResult(searchResults)
       return if (prisonerMatches.isEmpty()) {
@@ -89,9 +90,6 @@ class GlobalSearchService(
       }
     } ?: GlobalResult.NoMatch
   }
-
-  // TODO What should the name of the index be?
-  private fun getIndex() = "person-search-primary"
 
   private fun idMatch(globalSearchCriteria: GlobalSearchCriteria): BoolQueryBuilder {
     with(globalSearchCriteria) {

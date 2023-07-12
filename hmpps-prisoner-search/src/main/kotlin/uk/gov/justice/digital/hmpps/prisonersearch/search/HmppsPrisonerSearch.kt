@@ -12,6 +12,9 @@ import org.springframework.boot.runApplication
     ElasticsearchDataAutoConfiguration::class, ElasticsearchRestClientAutoConfiguration::class,
     ReactiveElasticsearchClientAutoConfiguration::class, ElasticsearchClientAutoConfiguration::class,
   ],
+  scanBasePackages = [
+    "uk.gov.justice.digital.hmpps.prisonersearch",
+  ],
 )
 class HmppsPrisonerSearch
 
