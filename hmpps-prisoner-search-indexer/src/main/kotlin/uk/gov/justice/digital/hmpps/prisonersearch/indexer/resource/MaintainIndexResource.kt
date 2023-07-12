@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CancelBuildError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MarkCompleteError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrepareRebuildError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.SwitchIndexError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.UpdatePrisonerError
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexStatus
 
 @RestController
 @Validated

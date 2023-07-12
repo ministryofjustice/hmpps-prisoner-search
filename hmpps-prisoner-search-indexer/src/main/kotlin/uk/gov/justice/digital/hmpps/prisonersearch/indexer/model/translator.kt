@@ -2,16 +2,16 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberLong
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.model.BodyPartDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.model.CurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.model.PrisonerAlert
-import uk.gov.justice.digital.hmpps.prisonersearch.model.PrisonerAlias
-import uk.gov.justice.digital.hmpps.prisonersearch.model.canonicalPNCNumberLong
-import uk.gov.justice.digital.hmpps.prisonersearch.model.canonicalPNCNumberShort
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
   this.prisonerNumber = ob.offenderNo
@@ -140,7 +140,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
 
 private fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
   CurrentIncentive(
-    level = uk.gov.justice.digital.hmpps.prisonersearch.model.IncentiveLevel(it.iepCode, it.iepLevel),
+    level = uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel(it.iepCode, it.iepLevel),
     nextReviewDate = it.nextReviewDate,
     dateTime = it.iepTime.withNano(0), // ES only stores to the second
   )

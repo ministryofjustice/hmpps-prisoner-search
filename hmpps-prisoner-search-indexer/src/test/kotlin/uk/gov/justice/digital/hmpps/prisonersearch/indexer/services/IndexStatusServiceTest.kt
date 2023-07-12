@@ -13,11 +13,11 @@ import org.mockito.kotlin.whenever
 import org.opensearch.client.IndicesClient
 import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.indices.GetIndexRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.model.INDEX_STATUS_ID
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexState
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex
 import java.util.Optional
 
 class IndexStatusServiceTest {

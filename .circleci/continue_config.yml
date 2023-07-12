@@ -7,7 +7,7 @@ parameters:
   releases-slack-channel:
     type: string
     default: dps-releases
-  build-model:
+  build-common:
     type: boolean
     default: false
   build-indexer:
@@ -18,7 +18,7 @@ parameters:
     default: false
 
 jobs:
-  validate-model:
+  validate-common:
     executor:
       name: hmpps/java
       tag: "19.0"
@@ -26,18 +26,18 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - gradle-{{ checksum "model/build.gradle.kts" }}
+            - gradle-{{ checksum "common/build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew :model:check
+          command: ./gradlew :common:check
       - save_cache:
           paths:
             - ~/.gradle
-          key: gradle-{{ checksum "model/build.gradle.kts" }}
+          key: gradle-{{ checksum "common/build.gradle.kts" }}
       - store_test_results:
-          path: model/build/test-results
+          path: common/build/test-results
       - store_artifacts:
-          path: model/build/reports/tests
+          path: common/build/reports/tests
 
   validate:
     parameters:
@@ -87,15 +87,15 @@ workflows:
     when:
       not:
         or:
-          - << pipeline.parameters.build-model >>
+          - << pipeline.parameters.build-common >>
           - << pipeline.parameters.build-indexer >>
           - << pipeline.parameters.build-search >>
     jobs:
       - no-op
-  build-test-model:
-    when: << pipeline.parameters.build-model >>
+  build-test-common:
+    when: << pipeline.parameters.build-common >>
     jobs:
-      - validate-model:
+      - validate-common:
           filters:
             tags:
               ignore: /.*/

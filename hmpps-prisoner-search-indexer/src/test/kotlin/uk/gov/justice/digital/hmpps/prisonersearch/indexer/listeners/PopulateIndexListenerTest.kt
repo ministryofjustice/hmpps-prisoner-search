@@ -16,13 +16,13 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.GREEN
 
 @JsonTest
 internal class PopulateIndexListenerTest(@Autowired private val objectMapper: ObjectMapper) {

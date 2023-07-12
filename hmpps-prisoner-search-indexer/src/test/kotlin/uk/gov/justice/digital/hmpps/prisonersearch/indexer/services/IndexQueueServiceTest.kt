@@ -26,7 +26,7 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture

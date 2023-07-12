@@ -1,6 +1,6 @@
 rootProject.name = "hmpps-prisoner-search"
 include(
-  "model",
+  "common",
   "hmpps-prisoner-search-indexer",
   "hmpps-prisoner-search",
 )
