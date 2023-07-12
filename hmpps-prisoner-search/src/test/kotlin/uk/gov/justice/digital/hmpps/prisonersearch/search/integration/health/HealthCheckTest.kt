@@ -19,6 +19,24 @@ class HealthCheckTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Health page shows associated services`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("status").isEqualTo("UP")
+      .jsonPath("components.hmppsAuth.status").isEqualTo("UP")
+      .jsonPath("components.openSearch.status").isEqualTo("UP")
+      .jsonPath("components.openSearch.details.cluster_name").isEqualTo("opensearch")
+      .jsonPath("components.openSearch.details.status").isEqualTo("GREEN")
+      .jsonPath("components.openSearch.details.timed_out").isEqualTo("false")
+  }
+
+  @Test
   fun `Health ping page is accessible`() {
     stubPingWithResponse(200)
 
