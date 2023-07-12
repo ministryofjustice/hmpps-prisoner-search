@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.integration
 
 import com.google.gson.Gson
-import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.lang3.RandomStringUtils
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -55,9 +54,6 @@ import kotlin.random.Random
 abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthHelper
-
-  @SpyBean
-  lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   lateinit var elasticSearchClient: RestHighLevelClient

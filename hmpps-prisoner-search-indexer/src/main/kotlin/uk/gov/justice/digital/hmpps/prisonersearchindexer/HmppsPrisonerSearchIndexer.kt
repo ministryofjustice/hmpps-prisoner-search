@@ -14,6 +14,10 @@ import uk.gov.justice.digital.hmpps.prisonersearchindexer.config.IndexBuildPrope
     ElasticsearchDataAutoConfiguration::class, ElasticsearchRestClientAutoConfiguration::class,
     ReactiveElasticsearchClientAutoConfiguration::class, ElasticsearchClientAutoConfiguration::class,
   ],
+  scanBasePackages = [
+    "uk.gov.justice.digital.hmpps.prisonersearch",
+    "uk.gov.justice.digital.hmpps.prisonersearchindexer",
+  ],
 )
 @EnableConfigurationProperties(IndexBuildProperties::class)
 class HmppsPrisonerSearchIndexer

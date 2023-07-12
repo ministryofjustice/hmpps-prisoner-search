@@ -2,6 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.resource
 
+import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -13,12 +14,16 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
+import org.springframework.boot.test.mock.mockito.SpyBean
 import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearchindexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class CompareIndexResourceApiTest : IntegrationTestBase() {
+  @SpyBean
+  lateinit var telemetryClient: TelemetryClient
+
   @Nested
   inner class compareTestsNoData {
     @BeforeEach
