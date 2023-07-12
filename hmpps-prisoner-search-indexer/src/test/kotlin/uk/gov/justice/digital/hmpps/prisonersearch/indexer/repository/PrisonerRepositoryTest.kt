@@ -18,10 +18,10 @@ import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.GetIndexRequest
 import org.opensearch.client.indices.GetMappingsResponse
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.BLUE
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.GREEN
 
 internal class PrisonerRepositoryTest : IntegrationTestBase() {
 

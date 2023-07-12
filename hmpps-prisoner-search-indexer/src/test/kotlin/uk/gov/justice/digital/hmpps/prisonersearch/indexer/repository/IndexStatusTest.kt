@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexStatusService
-import uk.gov.justice.digital.hmpps.prisonersearch.model.INDEX_STATUS_ID
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexState
 
 class IndexStatusTest : IntegrationTestBase() {
   @Autowired

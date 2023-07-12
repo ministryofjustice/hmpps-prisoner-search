@@ -1,9 +1,10 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.model
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.translate
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RestrictedPatient

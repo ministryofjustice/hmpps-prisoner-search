@@ -15,6 +15,6 @@ workflows:
       - path-filtering/filter:
           name: check-for-changes
           mapping: |
-            (model/.*|build.gradle.kts|.circleci/.*) build-model true
-            (hmpps-prisoner-search-indexer/.*|model/.*|build.gradle.kts|.circleci/.*) build-indexer true
-            (hmpps-prisoner-search/.*|model/.*|build.gradle.kts|.circleci/.*) build-search true
+            (common/.*|build.gradle.kts|.circleci/.*) build-common true
+            (hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*) build-indexer true
+            (hmpps-prisoner-search/.*|common/.*|build.gradle.kts|.circleci/.*) build-search true

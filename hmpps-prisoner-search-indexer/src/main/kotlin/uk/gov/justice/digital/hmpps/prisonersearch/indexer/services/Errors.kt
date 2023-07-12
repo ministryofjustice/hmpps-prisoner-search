@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
 interface Error {
   fun message(): String

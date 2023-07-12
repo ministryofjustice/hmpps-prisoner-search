@@ -30,7 +30,7 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:1.1.5")
   implementation("org.awaitility:awaitility-kotlin:4.2.0")
 
-  implementation(project(":model"))
+  implementation(project(":common"))
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")

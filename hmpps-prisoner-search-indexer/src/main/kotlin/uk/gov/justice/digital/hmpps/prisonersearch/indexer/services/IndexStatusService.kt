@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.model.INDEX_STATUS_ID
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexStatus
 
 @Service
 class IndexStatusService(private val indexStatusRepository: IndexStatusRepository) {

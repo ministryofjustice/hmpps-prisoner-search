@@ -15,10 +15,10 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.springframework.boot.test.mock.mockito.SpyBean
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex
 
 class CompareIndexResourceApiTest : IntegrationTestBase() {
   @SpyBean

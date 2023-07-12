@@ -16,6 +16,11 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCELLED
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension
@@ -24,11 +29,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInPr
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.NoActiveIndexesError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotFoundError
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexState.BUILDING
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexState.CANCELLED
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexState.COMPLETED
-import uk.gov.justice.digital.hmpps.prisonersearch.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.GREEN
 
 class MaintainIndexResourceApiTest : IntegrationTestBase() {
   @SpyBean

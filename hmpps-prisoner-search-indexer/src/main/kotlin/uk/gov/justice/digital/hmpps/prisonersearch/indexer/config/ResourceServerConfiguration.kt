@@ -15,7 +15,7 @@ import org.springframework.security.config.web.server.invoke
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
-import uk.gov.justice.digital.hmpps.prisonersearch.config.AuthAwareTokenConverter
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.AuthAwareTokenConverter
 
 @Configuration
 @EnableWebSecurity

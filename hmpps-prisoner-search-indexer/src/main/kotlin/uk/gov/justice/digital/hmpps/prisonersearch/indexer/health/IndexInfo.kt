@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 import org.springframework.boot.actuate.info.Info
 import org.springframework.boot.actuate.info.InfoContributor
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexStatusService
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.BLUE
-import uk.gov.justice.digital.hmpps.prisonersearch.model.SyncIndex.GREEN
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
