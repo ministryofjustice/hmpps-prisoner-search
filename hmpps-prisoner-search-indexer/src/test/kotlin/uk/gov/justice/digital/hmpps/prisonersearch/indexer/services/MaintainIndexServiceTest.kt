@@ -170,7 +170,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.prepareIndexForRebuild()
 
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
     }
 
     @Test
@@ -267,7 +267,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.markIndexingComplete(ignoreThreshold = true)
 
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.COMPLETED_BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.COMPLETED_BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
     }
 
     @Test
@@ -321,7 +321,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.switchIndex(false)
 
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.SWITCH_INDEX.name, mapOf("index" to "BLUE"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.SWITCH_INDEX.name, mapOf("index" to "BLUE"), null)
     }
 
     @Test
@@ -403,7 +403,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.cancelIndexing()
 
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.CANCELLED_BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.CANCELLED_BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
     }
 
     @Test
@@ -454,7 +454,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.indexPrisoner("ABC123D")
 
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_REMOVED.name, mapOf("prisonerNumber" to "ABC123D"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_REMOVED.name, mapOf("prisonerNumber" to "ABC123D"), null)
     }
 
     @Test
@@ -464,7 +464,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.indexPrisoner("ABC123D")
 
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
     }
 
     @Test

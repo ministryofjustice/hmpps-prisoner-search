@@ -32,7 +32,7 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatient,
     )
     indices.map { index -> prisonerRepository.save(prisoner, index) }.also {
-      telemetryClient.trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED, mapOf("prisonerNumber" to prisoner.prisonerNumber!!))
+      telemetryClient.trackEvent(TelemetryEvents.PRISONER_UPDATED, mapOf("prisonerNumber" to prisoner.prisonerNumber!!))
     }
     incentiveLevel.onFailure { throw it }
     restrictedPatient.onFailure { throw it }

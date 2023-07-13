@@ -40,7 +40,7 @@ class CompareIndexService(
     val end = System.currentTimeMillis()
 
     telemetryClient.trackEvent(
-      uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.COMPARE_INDEX_SIZE,
+      TelemetryEvents.COMPARE_INDEX_SIZE,
       mapOf(
         "timeMs" to (end - start).toString(),
         "totalNomis" to totalNomisNumber.toString(),
@@ -56,7 +56,7 @@ class CompareIndexService(
       val (onlyInIndex, onlyInNomis) = compareIndex()
       val end = System.currentTimeMillis()
       telemetryClient.trackEvent(
-        uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.COMPARE_INDEX_IDS,
+        TelemetryEvents.COMPARE_INDEX_IDS,
         mapOf(
           "onlyInIndex" to toLogMessage(onlyInIndex),
           "onlyInNomis" to toLogMessage(onlyInNomis),

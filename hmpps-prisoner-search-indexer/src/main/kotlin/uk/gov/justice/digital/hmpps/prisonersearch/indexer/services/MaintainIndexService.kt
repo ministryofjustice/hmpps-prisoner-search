@@ -57,7 +57,7 @@ class MaintainIndexService(
       .also { logIndexStatuses(it) }
       .also {
         telemetryClient.trackEvent(
-          uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILDING_INDEX,
+          TelemetryEvents.BUILDING_INDEX,
           mapOf("index" to indexStatus.otherIndex.name),
         )
       }
@@ -117,7 +117,7 @@ class MaintainIndexService(
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
             telemetryClient.trackEvent(
-              uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.COMPLETED_BUILDING_INDEX,
+              TelemetryEvents.COMPLETED_BUILDING_INDEX,
               mapOf("index" to it.currentIndex.name),
             )
           }
@@ -152,7 +152,7 @@ class MaintainIndexService(
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
             telemetryClient.trackEvent(
-              uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.SWITCH_INDEX,
+              TelemetryEvents.SWITCH_INDEX,
               mapOf("index" to it.currentIndex.name),
             )
           }
@@ -173,7 +173,7 @@ class MaintainIndexService(
       .also { logIndexStatuses(it) }
       .also {
         telemetryClient.trackEvent(
-          uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.CANCELLED_BUILDING_INDEX,
+          TelemetryEvents.CANCELLED_BUILDING_INDEX,
           mapOf("index" to it.otherIndex.name),
         )
       }
