@@ -189,7 +189,7 @@ class PopulateIndexServiceTest {
       populateIndexService.populateIndex(BLUE)
 
       verify(telemetryClient).trackEvent(
-        uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.POPULATE_PRISONER_PAGES.name,
+        TelemetryEvents.POPULATE_PRISONER_PAGES.name,
         mapOf("totalNumberOfPrisoners" to "25", "pageSize" to "10"),
         null,
       )
@@ -288,7 +288,7 @@ class PopulateIndexServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
       populateIndexService.populateIndexWithPrisoner("ABC123D")
-      verify(telemetryClient).trackEvent(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILD_PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
+      verify(telemetryClient).trackEvent(TelemetryEvents.BUILD_PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
     }
   }
 }

@@ -30,7 +30,7 @@ class PopulateIndexService(
   private val pageSize = indexBuildProperties.pageSize
 
   fun populateIndex(index: SyncIndex): Either<Error, Int> =
-    executeAndTrackTimeMillis(uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILD_INDEX_MSG) {
+    executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
       indexStatusService.getIndexStatus()
         .also { maintainIndexService.logIndexStatuses(it) }
         .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
@@ -39,7 +39,7 @@ class PopulateIndexService(
     }
 
   private inline fun <R> executeAndTrackTimeMillis(
-    trackEventName: uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents,
+    trackEventName: TelemetryEvents,
     properties: Map<String, String> = mapOf(),
     block: () -> R,
   ): R {
@@ -60,7 +60,7 @@ class PopulateIndexService(
       .onEach { indexQueueService.sendPopulatePrisonerPageMessage(it) }
       .also {
         telemetryClient.trackEvent(
-          uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.POPULATE_PRISONER_PAGES,
+          TelemetryEvents.POPULATE_PRISONER_PAGES,
           mapOf("totalNumberOfPrisoners" to totalNumberOfPrisoners.toString(), "pageSize" to pageSize.toString()),
         )
       }.size
@@ -68,7 +68,7 @@ class PopulateIndexService(
 
   fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Either<Error, Unit> =
     executeAndTrackTimeMillis(
-      uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILD_PAGE_MSG,
+      TelemetryEvents.BUILD_PAGE_MSG,
       mapOf("prisonerPage" to prisonerPage.page.toString()),
     ) {
       indexStatusService.getIndexStatus()
@@ -78,7 +78,7 @@ class PopulateIndexService(
             .forEachIndexed { index, offenderIdentifier ->
               if (index == 0 || index == prisonerPage.pageSize - 1) {
                 telemetryClient.trackEvent(
-                  uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILD_PAGE_BOUNDARY,
+                  TelemetryEvents.BUILD_PAGE_BOUNDARY,
                   mutableMapOf(
                     "page" to prisonerPage.page.toString(),
                     "IndexOnPage" to index.toString(),
