@@ -53,6 +53,10 @@ generic-service:
       HMPPS_SQS_QUEUES_INDEX_DLQ_NAME: "sqs_queue_name"
     prisoner-search-indexer-queue:
       HMPPS_SQS_QUEUES_INDEX_QUEUE_NAME: "sqs_queue_name"
+    sqs-domain-event-secret:
+      HMPPS_SQS_QUEUES_HMPPSDOMAINQUEUE_QUEUE_NAME: "sqs_queue_name"
+    sqs-domain-event-dlq-secret:
+      HMPPS_SQS_QUEUES_HMPPSDOMAINQUEUE_DLQ_NAME: "sqs_queue_name"
 
     opensearch:
       OPENSEARCH_URIS: "url"
