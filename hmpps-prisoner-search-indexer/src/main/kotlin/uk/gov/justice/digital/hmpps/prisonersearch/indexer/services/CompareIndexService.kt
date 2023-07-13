@@ -69,7 +69,7 @@ class CompareIndexService(
     }
   }
   fun compareIndex(): Pair<List<String>, List<String>> {
-    val allNomis = nomisService.getPrisonerNumbers(0, Int.MAX_VALUE).sorted()
+    val allNomis = nomisService.getPrisonerNumbers(0, 10000000).sorted()
 
     val scroll = Scroll(TimeValue.timeValueMinutes(1L))
     val searchResponse = setupIndexSearch(scroll)
