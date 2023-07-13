@@ -31,7 +31,7 @@ class NomisService(
     .bodyToMono(PrisonerNumberPage::class.java)
     .block()!!
 
-  fun getTotalNumberOfPrisoners(): Long = getOffendersIds(0, 1).totalRecords
+  fun getTotalNumberOfPrisoners(): Long = getOffendersIds(0, 1).totalElements
 
   fun getPrisonerNumbers(page: Int, pageSize: Int): List<String> =
     getOffendersIds(page, pageSize).content
@@ -54,5 +54,5 @@ class NomisService(
 
 data class PrisonerNumberPage(
   val content: List<String> = emptyList(),
-  val totalRecords: Long = 0,
+  val totalElements: Long = 0,
 )
