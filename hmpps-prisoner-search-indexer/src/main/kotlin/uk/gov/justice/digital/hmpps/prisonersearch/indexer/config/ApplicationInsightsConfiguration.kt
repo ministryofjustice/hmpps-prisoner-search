@@ -5,8 +5,8 @@ import com.microsoft.applicationinsights.TelemetryClient
 /**
  * TelemetryClient gets altered at runtime by the java agent and so is a no-op otherwise
  */
-fun TelemetryClient.trackEvent(event: uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents, properties: Map<String, String>) = this.trackEvent(event.name, properties, null)
-fun TelemetryClient.trackPrisonerEvent(event: uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents, prisonerNumber: String) = this.trackEvent(event.name, mapOf("prisonerNumber" to prisonerNumber), null)
+fun TelemetryClient.trackEvent(event: TelemetryEvents, properties: Map<String, String>) = this.trackEvent(event.name, properties, null)
+fun TelemetryClient.trackPrisonerEvent(event: TelemetryEvents, prisonerNumber: String) = this.trackEvent(event.name, mapOf("prisonerNumber" to prisonerNumber), null)
 
 enum class TelemetryEvents {
   BUILDING_INDEX, CANCELLED_BUILDING_INDEX, COMPLETED_BUILDING_INDEX, SWITCH_INDEX,
