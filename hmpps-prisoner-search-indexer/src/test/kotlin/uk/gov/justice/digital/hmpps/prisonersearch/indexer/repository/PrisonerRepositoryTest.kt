@@ -18,6 +18,7 @@ import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.GetIndexRequest
 import org.opensearch.client.indices.GetMappingsResponse
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
@@ -289,12 +290,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       @Test
       fun `can create an alias for active index`() {
         prisonerRepository.switchAliasIndex(GREEN)
-        assertThat(highLevelClient.indices().exists(GetIndexRequest("prisoner"), RequestOptions.DEFAULT)).isTrue()
+        assertThat(highLevelClient.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)).isTrue()
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).containsKey(GREEN.indexName)
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(BLUE.indexName)
       }
 
@@ -316,12 +317,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       @Test
       fun `can switch an alias for active index`() {
         prisonerRepository.switchAliasIndex(BLUE)
-        assertThat(highLevelClient.indices().exists(GetIndexRequest("prisoner"), RequestOptions.DEFAULT)).isTrue()
+        assertThat(highLevelClient.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)).isTrue()
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).containsKey(BLUE.indexName)
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(GREEN.indexName)
       }
 
@@ -344,12 +345,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       @Test
       fun `will keep an alias for active index`() {
         prisonerRepository.switchAliasIndex(BLUE)
-        assertThat(highLevelClient.indices().exists(GetIndexRequest("prisoner"), RequestOptions.DEFAULT)).isTrue()
+        assertThat(highLevelClient.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)).isTrue()
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).containsKey(BLUE.indexName)
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(GREEN.indexName)
       }
     }
