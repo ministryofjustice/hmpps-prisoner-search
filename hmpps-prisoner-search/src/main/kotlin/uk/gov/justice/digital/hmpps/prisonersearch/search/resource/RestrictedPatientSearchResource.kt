@@ -1,0 +1,36 @@
+package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
+
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springdoc.core.annotations.ParameterObject
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
+import org.springframework.http.MediaType
+import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchService
+
+@RestController
+@Validated
+@RequestMapping(
+  "/restricted-patient-search",
+  produces = [MediaType.APPLICATION_JSON_VALUE],
+  consumes = [MediaType.APPLICATION_JSON_VALUE],
+)
+class RestrictedPatientSearchResource(private val restrictedPatientSearchService: RestrictedPatientSearchService) {
+
+  @PostMapping("/match-restricted-patients")
+  @Operation(summary = "Match prisoners by criteria", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Tag(name = "Specific use case")
+  fun findByCriteria(
+    @Parameter(required = true) @RequestBody searchCriteria: RestrictedPatientSearchCriteria,
+    @ParameterObject @PageableDefault
+    pageable: Pageable,
+  ) =
+    restrictedPatientSearchService.findBySearchCriteria(searchCriteria, pageable)
+}
