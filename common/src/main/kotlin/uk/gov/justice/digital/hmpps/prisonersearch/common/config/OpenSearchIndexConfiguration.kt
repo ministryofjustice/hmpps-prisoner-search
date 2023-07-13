@@ -6,6 +6,6 @@ import org.springframework.context.annotation.Configuration
 class OpenSearchIndexConfiguration {
 
   companion object {
-    const val INDEX_ALIAS = "prisoner"
+    const val PRISONER_INDEX = "prisoner"
   }
 }

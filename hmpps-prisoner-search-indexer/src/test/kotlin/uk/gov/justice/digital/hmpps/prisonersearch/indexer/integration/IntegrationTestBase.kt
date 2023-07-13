@@ -18,6 +18,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -119,7 +120,7 @@ abstract class IntegrationTestBase {
       .exchange()
       .expectStatus().isOk
 
-    await untilCallTo { getIndexCount("prisoner") } matches { it == expectedCount }
+    await untilCallTo { getIndexCount(PRISONER_INDEX) } matches { it == expectedCount }
   }
 
   fun buildIndex(index: SyncIndex, expectedCount: Long) {

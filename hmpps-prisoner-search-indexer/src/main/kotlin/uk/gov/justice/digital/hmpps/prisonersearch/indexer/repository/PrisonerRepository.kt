@@ -15,6 +15,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
@@ -67,12 +68,12 @@ class PrisonerRepository(
     client.indices().exists(GetIndexRequest(index.indexName), RequestOptions.DEFAULT)
 
   fun switchAliasIndex(index: SyncIndex) {
-    val alias = client.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT)
+    val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
     client.indices()
       .updateAliases(
         IndicesAliasesRequest().addAliasAction(
           IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.indexName)
-            .alias("prisoner"),
+            .alias(PRISONER_INDEX),
         ),
         RequestOptions.DEFAULT,
       )
@@ -84,7 +85,7 @@ class PrisonerRepository(
   }
 
   fun prisonerAliasIsPointingAt(): Set<String> {
-    val alias = client.indices().getAlias(GetAliasesRequest().aliases("prisoner"), RequestOptions.DEFAULT)
+    val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
     return alias.aliases.keys
   }
 }
