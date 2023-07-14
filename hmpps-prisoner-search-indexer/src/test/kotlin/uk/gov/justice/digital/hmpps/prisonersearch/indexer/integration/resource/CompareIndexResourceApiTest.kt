@@ -122,5 +122,18 @@ class CompareIndexResourceApiTest : IntegrationTestBase() {
         isNull(),
       )
     }
+
+    @Test
+    @DisplayName("/compare-index/size returns correct data")
+    fun `size endpoint returns differences`() {
+      webTestClient.get().uri("/compare-index/size")
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("timeMs").value<Int?> { assertThat(it).isGreaterThan(0) }
+        .jsonPath("totalNomis").value<Int?> { assertThat(it).isEqualTo(6) }
+        .jsonPath("totalIndex").value<Int?> { assertThat(it).isEqualTo(9) }
+    }
   }
 }
