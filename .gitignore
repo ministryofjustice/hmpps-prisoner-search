@@ -70,6 +70,7 @@ dps-gradle-spring-boot-suppressions.xml
 sonar-project.properties
 
 #Helm
+**/charts
 **/Chart.lock
 
 #Docker
