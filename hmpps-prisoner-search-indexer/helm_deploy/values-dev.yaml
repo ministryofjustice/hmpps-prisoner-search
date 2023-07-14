@@ -11,6 +11,7 @@ generic-service:
     API_BASE_URL_PRISON_API: "https://prison-api-dev.prison.service.justice.gov.uk"
     API_BASE_URL_RESTRICTED_PATIENTS: "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk"
     API_BASE_URL_INCENTIVES: "https://incentives-api-dev.hmpps.service.justice.gov.uk"
+    INDEX_BUILD_COMPLETE_THRESHOLD: 500000
 
   scheduledDowntime:
     enabled: true
