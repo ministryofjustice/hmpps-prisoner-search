@@ -26,7 +26,7 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
         Kubernetes CronJob named `synthethic-monitor-cronjob`
       """,
   )
-  suspend fun compareIndexSizes(): Unit = compareIndexService.doIndexSizeCheck()
+  fun compareIndexSizes() = compareIndexService.doIndexSizeCheck()
 
   @GetMapping("/ids")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
