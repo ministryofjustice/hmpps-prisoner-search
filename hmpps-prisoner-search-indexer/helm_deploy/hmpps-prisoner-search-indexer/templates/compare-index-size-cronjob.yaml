@@ -22,5 +22,5 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 http://prisoner-offender-search/compare-index/size
+                - curl --retry 2 http://hmpps-prisoner-search-indexer/compare-index/size
           restartPolicy: Never
