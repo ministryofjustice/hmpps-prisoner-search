@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-check-indexing-complete
+  name: {{ include "app.fullname" . }}-check-index-complete
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
