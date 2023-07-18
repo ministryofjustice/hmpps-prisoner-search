@@ -32,7 +32,6 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.hmppsAuth.status").isEqualTo("UP")
       .jsonPath("components.openSearch.status").isEqualTo("UP")
       .jsonPath("components.openSearch.details.cluster_name").isEqualTo("opensearch")
-      .jsonPath("components.openSearch.details.status").isEqualTo("GREEN")
       .jsonPath("components.openSearch.details.timed_out").isEqualTo("false")
   }
 

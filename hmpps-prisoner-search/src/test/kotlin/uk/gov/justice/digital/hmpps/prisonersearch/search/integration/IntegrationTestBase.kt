@@ -21,7 +21,7 @@ abstract class IntegrationTestBase {
   internal lateinit var jwtAuthHelper: JwtAuthHelper
 
   @Autowired
-  private lateinit var gson: Gson
+  lateinit var gson: Gson
 
   @Autowired
   internal lateinit var webTestClient: WebTestClient
