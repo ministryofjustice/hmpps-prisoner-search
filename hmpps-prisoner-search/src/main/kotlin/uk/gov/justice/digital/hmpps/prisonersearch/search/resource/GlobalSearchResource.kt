@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
@@ -8,16 +9,23 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerSearchService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.NotFoundException
 
 @RestController
 @Validated
 class GlobalSearchResource(
   private val globalSearchService: GlobalSearchService,
+  private val prisonerSearchService: PrisonerSearchService,
 ) {
 
   @PostMapping(
@@ -38,8 +46,6 @@ class GlobalSearchResource(
     pageable: Pageable,
   ) = globalSearchService.findByGlobalSearchCriteria(globalSearchCriteria, pageable)
 
-  /*
-  TODO move service call out of search
   @GetMapping("/prisoner/{id}")
   @PreAuthorize("hasAnyRole('ROLE_VIEW_PRISONER_DATA', 'ROLE_PRISONER_SEARCH')")
   @Operation(
@@ -48,7 +54,48 @@ class GlobalSearchResource(
     security = [SecurityRequirement(name = "ROLE_VIEW_PRISONER_DATA"), SecurityRequirement(name = "ROLE_PRISONER_SEARCH")],
   )
   @Tag(name = "Popular")
-  fun findByPrisonNumber(@PathVariable id: String) =
-    prisonerIndexService.get(id).takeIf { it != null } ?: throw NotFoundException("$id not found")
-  */
+  fun findByPrisonNumber(@PathVariable id: String): Prisoner? =
+    prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null)).firstOrNull()
+      ?: throw NotFoundException("$id not found")
 }
+
+/*
+ TODO Decide where this should live now that search and index are separate
+ Have left here for now to ensure this is not forgotten
+
+  @GetMapping("/synthetic-monitor")
+  @Tag(name = "Elastic Search index maintenance")
+  fun syntheticMonitor() {
+    val start = System.currentTimeMillis()
+    val results = globalSearchService.findByGlobalSearchCriteria(
+      GlobalSearchCriteria(
+        prisonerIdentifier = null,
+        firstName = null,
+        lastName = "Smith",
+        gender = null,
+        location = null,
+      ),
+      PageRequest.of(0, 10),
+    )
+    val mid = System.currentTimeMillis()
+    val totalIndexNumber = prisonerIndexService.countIndex(indexStatusService.getCurrentIndex().currentIndex)
+    val totalNomisNumber = getTotalNomisNumber()
+    val end = System.currentTimeMillis()
+
+    telemetryClient.trackEvent(
+      "synthetic-monitor",
+      mapOf(
+        "results" to "${results.totalElements}",
+        "timeMs" to (mid - start).toString(),
+        "totalNomis" to totalNomisNumber.toString(),
+        "totalIndex" to totalIndexNumber.toString(),
+        "totalNumberTimeMs" to (end - mid).toString(),
+      ),
+      null,
+    )
+  }
+
+  private fun getTotalNomisNumber(): Int = prisonerIndexService.getAllNomisOffenders(0, 1).totalRows.toInt()
+}
+
+ */
