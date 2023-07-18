@@ -5,17 +5,19 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.NotFoundException
 
 @RestControllerAdvice
 class HmppsPrisonerSearchIndexerExceptionHandler {
   @ExceptionHandler(BadRequestException::class)
-  fun handleBadRequestException(e: Exception): ResponseEntity<ErrorResponse> =
+  fun handleBadRequestException(e: BadRequestException): ResponseEntity<ErrorResponse> =
     ResponseEntity
       .status(BAD_REQUEST)
       .body(
@@ -27,7 +29,7 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
       ).also { log.info("Validation exception: {}", e.message) }
 
   @ExceptionHandler(ValidationException::class)
-  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> =
+  fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> =
     ResponseEntity
       .status(BAD_REQUEST)
       .body(
@@ -49,6 +51,14 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
           developerMessage = e.message,
         ),
       ).also { log.info("Response status exception with message {}", e.message) }
+
+  @ExceptionHandler(NotFoundException::class)
+  fun handleEntityNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> {
+    return ResponseEntity
+      .status(HttpStatus.NOT_FOUND)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), developerMessage = e.message))
+  }
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? =
