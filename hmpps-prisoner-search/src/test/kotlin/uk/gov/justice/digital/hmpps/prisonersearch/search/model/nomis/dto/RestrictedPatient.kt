@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class RestrictivePatient(
+data class RestrictedPatient(
   var supportingPrisonId: String?,
   val dischargedHospital: Agency?,
   val dischargeDate: LocalDate,
