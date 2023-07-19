@@ -12,7 +12,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.toPrisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchCriteria
@@ -63,7 +65,7 @@ abstract class AbstractSearchDataIntegrationTest : IntegrationTestBase() {
     prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
   }
 
-  private fun loadPrisonerData() {
+  fun loadPrisonerData() {
     val prisoners = listOf(
       "A1090AA", "A7089EZ", "A7089FB", "A7089FX", "A7090AB", "A7090AD", "A7090AF", "A7090BB",
       "A7090BD", "A7090BF", "A9999AB", "A9999RA", "A9999RC", "A7089EY", "A7089FA", "A7089FC", "A7090AA", "A7090AC",
@@ -72,6 +74,15 @@ abstract class AbstractSearchDataIntegrationTest : IntegrationTestBase() {
     prisoners.forEach {
       val sourceAsString = "/prisoners/prisoner$it.json".readResourceAsText()
       val prisoner = gson.fromJson(sourceAsString, Prisoner::class.java)
+      prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    }
+    waitForPrisonerLoading(prisoners.size)
+  }
+
+  fun loadPrisonersFromBuilders(prisonerBuilders: List<PrisonerBuilder>) = loadPrisoners(prisonerBuilders.map { it.toPrisoner() })
+
+  fun loadPrisoners(prisoners: List<Prisoner>) {
+    prisoners.forEach { prisoner ->
       prisonerRepository.save(prisoner, SyncIndex.GREEN)
     }
     waitForPrisonerLoading(prisoners.size)
