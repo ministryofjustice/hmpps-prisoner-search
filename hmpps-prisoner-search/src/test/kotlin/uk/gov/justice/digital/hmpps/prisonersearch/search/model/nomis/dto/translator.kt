@@ -13,12 +13,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-fun Prisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictivePatient?) =
+fun Prisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictedPatient?) =
   Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
-fun Prisoner(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevelDto?>, restrictedPatientData: RestrictivePatient?) =
+fun Prisoner(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevelDto?>, restrictedPatientData: RestrictedPatient?) =
   Prisoner().apply { this.translate(existingPrisoner, ob, incentiveLevel, restrictedPatientData) }
 
-fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevelDto?>, restrictedPatientData: RestrictivePatient?) {
+fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevelDto?>, restrictedPatientData: RestrictedPatient?) {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()

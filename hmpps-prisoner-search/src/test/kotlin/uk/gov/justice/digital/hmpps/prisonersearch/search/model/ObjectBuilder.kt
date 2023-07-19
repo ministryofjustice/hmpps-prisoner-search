@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.Offend
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalMark
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.RestrictivePatient
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import java.time.LocalDate
@@ -211,5 +211,5 @@ fun PrisonerBuilder.toPrisoner(): Prisoner =
 private fun getOffenderBookingTemplate(): OffenderBooking =
   GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
 
-fun Prisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictivePatient?) =
+fun Prisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictedPatient?) =
   Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
