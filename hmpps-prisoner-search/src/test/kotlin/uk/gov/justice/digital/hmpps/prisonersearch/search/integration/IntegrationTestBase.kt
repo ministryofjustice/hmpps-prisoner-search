@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.integration
 
 import com.google.gson.Gson
+import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.HttpHeaders
 import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -19,6 +21,9 @@ import java.time.Duration
 abstract class IntegrationTestBase {
   @Autowired
   internal lateinit var jwtAuthHelper: JwtAuthHelper
+
+  @SpyBean
+  lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   lateinit var gson: Gson
