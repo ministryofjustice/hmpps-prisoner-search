@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
@@ -26,7 +27,21 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
           userMessage = "Validation failure: ${e.message}",
           developerMessage = e.message,
         ),
-      ).also { log.info("Validation exception: {}", e.message) }
+      ).also { log.info("BadRequest exception: {}", e.message) }
+
+  @ExceptionHandler(MethodArgumentNotValidException::class)
+  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
+    log.debug("Bad request (400) returned", e)
+    return ResponseEntity
+      .status(BAD_REQUEST)
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST.value(),
+          userMessage = "Method argument failure: ${e.message}",
+          developerMessage = e.developerMessage(),
+        ),
+      ).also { log.info("MethodArgumentNotValid exception: {}", e.message) }
+  }
 
   @ExceptionHandler(ValidationException::class)
   fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> =
@@ -98,4 +113,8 @@ data class ErrorResponse(
     moreInfo: String? = null,
   ) :
     this(status.value(), errorCode, userMessage, developerMessage, moreInfo)
+}
+
+private fun MethodArgumentNotValidException.developerMessage(): String {
+  return this.bindingResult.allErrors.joinToString { it.defaultMessage ?: "unknown" }
 }
