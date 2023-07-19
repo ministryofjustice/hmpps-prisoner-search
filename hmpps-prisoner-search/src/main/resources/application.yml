@@ -7,6 +7,8 @@ spring:
     name: hmpps-prisoner-search
   codec:
     max-in-memory-size: 10MB
+  data.web.pageable:
+    max-page-size: 3000
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
@@ -72,4 +74,3 @@ search:
   detailed:
     timeout-seconds: 10
     max-results: 100
-
