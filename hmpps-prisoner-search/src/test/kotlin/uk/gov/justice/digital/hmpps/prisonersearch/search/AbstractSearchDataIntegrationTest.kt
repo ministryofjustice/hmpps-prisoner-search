@@ -4,7 +4,9 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
  * Subclasses will get the same set of search data and we have implemented our own custom junit orderer to ensure that
  * no other type of tests run inbetween and cause a re-index to ruin our data.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractSearchDataIntegrationTest : IntegrationTestBase() {
 
   private companion object {
@@ -53,6 +56,11 @@ abstract class AbstractSearchDataIntegrationTest : IntegrationTestBase() {
 
       initialiseSearchData = false
     }
+  }
+
+  @AfterAll
+  fun shutdown() {
+    initialiseSearchData = true
   }
 
   fun createPrisonerIndex() = prisonerRepository.createIndex(SyncIndex.GREEN)
