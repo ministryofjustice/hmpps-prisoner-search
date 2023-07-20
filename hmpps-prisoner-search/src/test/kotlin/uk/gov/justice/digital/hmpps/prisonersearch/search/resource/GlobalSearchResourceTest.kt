@@ -499,7 +499,7 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
       verify(telemetryClient, atLeastOnce()).trackEvent(
         eq("synthetic-monitor"),
         check<Map<String, String>> {
-          assertThat(it["results"]?.toInt()).isEqualTo(1)
+          assertThat(it["results"]?.toInt()).isEqualTo(10)
           assertThat(it["timeMs"]?.toInt()).isGreaterThan(0)
         },
         isNull(),

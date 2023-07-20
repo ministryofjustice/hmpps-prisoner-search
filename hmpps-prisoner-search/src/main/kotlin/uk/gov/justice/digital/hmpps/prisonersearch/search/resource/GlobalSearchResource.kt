@@ -78,7 +78,7 @@ class GlobalSearchResource(
     telemetryClient.trackEvent(
       "synthetic-monitor",
       mapOf(
-        "results" to "${results.totalElements}",
+        "results" to "${results.size}",
         "timeMs" to (System.currentTimeMillis() - start).toString(),
       ),
       null,
