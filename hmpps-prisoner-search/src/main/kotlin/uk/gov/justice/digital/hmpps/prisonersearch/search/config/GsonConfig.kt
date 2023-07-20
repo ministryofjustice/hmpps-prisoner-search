@@ -17,24 +17,20 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Configuration
-class GsonConfig() {
+class GsonConfig {
 
   @Bean
-  fun gson(): Gson {
-    return GsonBuilder().setPrettyPrinting()
-      .registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())
-      .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
-      .create()
-  }
+  fun gson(): Gson = GsonBuilder().setPrettyPrinting()
+    .registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())
+    .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
+    .create()
 
   internal class LocalDateAdapter : JsonSerializer<LocalDate?>, JsonDeserializer<LocalDate?> {
-    override fun serialize(src: LocalDate?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-      return JsonPrimitive(src?.format(DateTimeFormatter.ISO_LOCAL_DATE))
-    }
+    override fun serialize(src: LocalDate?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement =
+      JsonPrimitive(src?.format(DateTimeFormatter.ISO_LOCAL_DATE))
 
-    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): LocalDate? {
-      return LocalDate.parse(json?.asJsonPrimitive?.asString)
-    }
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): LocalDate? =
+      LocalDate.parse(json?.asJsonPrimitive?.asString)
   }
 
   internal class LocalDateTimeAdapter : JsonSerializer<LocalDateTime?>, JsonDeserializer<LocalDateTime> {
@@ -42,15 +38,12 @@ class GsonConfig() {
       localDateTime: LocalDateTime?,
       srcType: Type,
       context: JsonSerializationContext,
-    ): JsonElement {
-      return JsonPrimitive(DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(localDateTime))
-    }
+    ): JsonElement = JsonPrimitive(DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(localDateTime))
 
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LocalDateTime {
-      return LocalDateTime.parse(
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LocalDateTime =
+      LocalDateTime.parse(
         json.asString,
         DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ENGLISH),
       )
-    }
   }
 }
