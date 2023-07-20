@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
+import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springdoc.core.annotations.ParameterObject
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.No
 class GlobalSearchResource(
   private val globalSearchService: GlobalSearchService,
   private val prisonerSearchService: PrisonerSearchService,
+  private val telemetryClient: TelemetryClient,
 ) {
 
   @PostMapping(
@@ -57,14 +60,8 @@ class GlobalSearchResource(
   fun findByPrisonNumber(@PathVariable id: String): Prisoner? =
     prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null)).firstOrNull()
       ?: throw NotFoundException("$id not found")
-}
-
-/*
- TODO Decide where this should live now that search and index are separate
- Have left here for now to ensure this is not forgotten
 
   @GetMapping("/synthetic-monitor")
-  @Tag(name = "Elastic Search index maintenance")
   fun syntheticMonitor() {
     val start = System.currentTimeMillis()
     val results = globalSearchService.findByGlobalSearchCriteria(
@@ -77,25 +74,14 @@ class GlobalSearchResource(
       ),
       PageRequest.of(0, 10),
     )
-    val mid = System.currentTimeMillis()
-    val totalIndexNumber = prisonerIndexService.countIndex(indexStatusService.getCurrentIndex().currentIndex)
-    val totalNomisNumber = getTotalNomisNumber()
-    val end = System.currentTimeMillis()
 
     telemetryClient.trackEvent(
       "synthetic-monitor",
       mapOf(
-        "results" to "${results.totalElements}",
-        "timeMs" to (mid - start).toString(),
-        "totalNomis" to totalNomisNumber.toString(),
-        "totalIndex" to totalIndexNumber.toString(),
-        "totalNumberTimeMs" to (end - mid).toString(),
+        "results" to "${results.size}",
+        "timeMs" to (System.currentTimeMillis() - start).toString(),
       ),
       null,
     )
   }
-
-  private fun getTotalNomisNumber(): Int = prisonerIndexService.getAllNomisOffenders(0, 1).totalRows.toInt()
 }
-
- */

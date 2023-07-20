@@ -1,19 +1,21 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.Gender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchCriteria
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.LocalDate
 
 class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
-
-  private fun response(file: String): String {
-    return Files.readString(Paths.get(file))
-  }
 
   @Test
   fun `access forbidden when no authority`() {
@@ -476,8 +478,6 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
     )
   }
 
-  /*
-  TODO Decide where this lives - left as uncommented, for now to ensure it isn't missed
   @Nested
   inner class SyntheticMonitor {
 
@@ -499,43 +499,11 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
       verify(telemetryClient, atLeastOnce()).trackEvent(
         eq("synthetic-monitor"),
         check<Map<String, String>> {
-          assertThat(it["results"]?.toInt()).isEqualTo(1)
+          assertThat(it["results"]?.toInt()).isEqualTo(10)
           assertThat(it["timeMs"]?.toInt()).isGreaterThan(0)
-          assertThat(it["totalNomis"]?.toInt()).isEqualTo(25)
-          assertThat(it["totalIndex"]?.toInt()).isEqualTo(25)
-          assertThat(it["totalNumberTimeMs"]?.toInt()).isGreaterThan(0)
         },
         isNull(),
       )
     }
   }
-
-  @Test
-  fun `Index discrepancy is detected`() {
-    prisonMockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/api/offenders/ids"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withHeader("Total-Records", "26") // Now there is another prisoner in Nomis but not the index
-            .withBody("[]"),
-        ),
-    )
-
-    webTestClient.get().uri("/synthetic-monitor")
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-
-    verify(telemetryClient, atLeastOnce()).trackEvent(
-      eq("synthetic-monitor"),
-      check<Map<String, String>> {
-        assertThat(it["totalNomis"]?.toInt()).isEqualTo(26)
-        assertThat(it["totalIndex"]?.toInt()).isEqualTo(25)
-      },
-      isNull(),
-    )
-  }
-
-   */
 }
