@@ -53,6 +53,14 @@ class PrisonerRepository(
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
     client.indices().create(CreateIndexRequest(index.indexName), RequestOptions.DEFAULT)
+    addMapping(index)
+  }
+
+  fun addMapping(index: SyncIndex) {
+    log.info("adding mapping to index {}", index.indexName)
+    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.indexName)).apply {
+      putMapping(createMapping(Prisoner::class.java))
+    }
   }
 
   fun deleteIndex(index: SyncIndex) {
