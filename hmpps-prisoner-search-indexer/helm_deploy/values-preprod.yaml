@@ -14,3 +14,8 @@ generic-service:
 
 generic-prometheus-alerts:
   businessHoursOnly: true
+
+cron:
+  retry_dlqs_schedule: "*/10 6-20 * * 1-5"
+  index_size_schedule: "*/10 6-20 * * 1-5"
+  check_index_schedule: "*/15 6-20 * * 1-5"
