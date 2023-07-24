@@ -1,13 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
-import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -29,13 +26,13 @@ class PopulateIndexService(
 ) {
   private val pageSize = indexBuildProperties.pageSize
 
-  fun populateIndex(index: SyncIndex): Either<Error, Int> =
+  fun populateIndex(index: SyncIndex): Int =
     executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
       indexStatusService.getIndexStatus()
         .also { maintainIndexService.logIndexStatuses(it) }
-        .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
-        .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedError(it) }
-        .map { doPopulateIndex() }
+        .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+        .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedException(it) }
+        .run { doPopulateIndex() }
     }
 
   private inline fun <R> executeAndTrackTimeMillis(
@@ -66,14 +63,14 @@ class PopulateIndexService(
       }.size
   }
 
-  fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Either<Error, Unit> =
+  fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit =
     executeAndTrackTimeMillis(
       TelemetryEvents.BUILD_PAGE_MSG,
       mapOf("prisonerPage" to prisonerPage.page.toString()),
     ) {
       indexStatusService.getIndexStatus()
-        .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
-        .flatMap {
+        .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+        .run {
           nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
             .forEachIndexed { index, offenderIdentifier ->
               if (index == 0 || index == prisonerPage.pageSize - 1) {
@@ -87,41 +84,30 @@ class PopulateIndexService(
                 )
               }
               indexQueueService.sendPopulatePrisonerMessage(offenderIdentifier)
-            }.right()
+            }
         }
     }
 
-  fun populateIndexWithPrisoner(prisonerNumber: String): Either<Error, Prisoner> =
+  fun populateIndexWithPrisoner(prisonerNumber: String): Prisoner =
     indexStatusService.getIndexStatus()
-      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
-      .flatMap {
+      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+      .run {
         nomisService.getOffender(prisonerNumber)?.let { ob ->
-          prisonerSynchroniserService.index(ob, it.currentIndex.otherIndex())
-        }?.right() ?: run {
+          prisonerSynchroniserService.index(ob, this.currentIndex.otherIndex())
+        } ?: run {
           // can happen if a prisoner is deleted or merged once indexing has started
           telemetryClient.trackPrisonerEvent(BUILD_PRISONER_NOT_FOUND, prisonerNumber)
-          PrisonerNotFoundError(prisonerNumber).left()
+          throw PrisonerNotFoundException(prisonerNumber)
         }
       }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
-    onFail: (IndexStatus) -> Error,
-  ): Either<Error, IndexStatus> =
+    onFail: (IndexStatus) -> ResponseStatusException,
+  ): IndexStatus =
     when (check(this)) {
-      false -> this.right()
-      true -> onFail(this).left()
-    }
-
-  private inline fun Either<Error, IndexStatus>.failIf(
-    crossinline check: (IndexStatus) -> Boolean,
-    crossinline onFail: (IndexStatus) -> Error,
-  ): Either<Error, IndexStatus> =
-    when (this.isLeft()) {
-      true -> this
-      false -> this.flatMap {
-        it.failIf(check, onFail)
-      }
+      false -> this
+      true -> throw onFail(this)
     }
 
   private companion object {

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
-import arrow.core.left
-import arrow.core.right
 import ch.qos.logback.classic.Level
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -20,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressError
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 
@@ -34,7 +32,7 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
   inner class PopulateIndex {
     @Test
     internal fun `will call service with index name`() {
-      whenever(populateIndexService.populateIndex(GREEN)).thenReturn(1.right())
+      whenever(populateIndexService.populateIndex(GREEN)).thenReturn(1)
 
       listener.processIndexRequest(
         """
@@ -51,7 +49,7 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
     @Test
     internal fun `failed request`() {
       val logAppender = findLogAppender(PopulateIndexListener::class.java)
-      whenever(populateIndexService.populateIndex(GREEN)).thenReturn(BuildNotInProgressError(IndexStatus.newIndex()).left())
+      whenever(populateIndexService.populateIndex(GREEN)).thenThrow(BuildNotInProgressException(IndexStatus.newIndex()))
 
       listener.processIndexRequest(
         """
@@ -70,8 +68,6 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
   inner class PopulatePrisonerPage {
     @Test
     internal fun `will call service with page details`() {
-      whenever(populateIndexService.populateIndexWithPrisonerPage(any())).thenReturn(Unit.right())
-
       listener.processIndexRequest(
         """
       {
@@ -92,7 +88,7 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
   inner class PopulatePrisoner {
     @Test
     internal fun `will call service with prisoner number to populate`() {
-      whenever(populateIndexService.populateIndexWithPrisoner(any())).thenReturn(Prisoner().right())
+      whenever(populateIndexService.populateIndexWithPrisoner(any())).thenReturn(Prisoner())
 
       listener.processIndexRequest(
         """
