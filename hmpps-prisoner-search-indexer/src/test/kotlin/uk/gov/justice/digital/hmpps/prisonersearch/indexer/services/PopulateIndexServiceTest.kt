@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
-import io.kotest.assertions.arrow.core.shouldBeLeft
-import io.kotest.assertions.arrow.core.shouldBeRight
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -90,25 +90,22 @@ class PopulateIndexServiceTest {
       val indexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      val result = populateIndexService.populateIndex(GREEN)
-
-      result shouldBeLeft BuildNotInProgressError(indexStatus)
+      assertThatThrownBy { populateIndexService.populateIndex(GREEN) }
+        .isInstanceOf(BuildNotInProgressException::class.java)
+        .hasMessageContaining("The index BLUE is in state COMPLETED")
     }
 
     @Test
     internal fun `will return an error if indexing request is for the wrong index`() {
-      val result = populateIndexService.populateIndex(GREEN)
-
-      result shouldBeLeft WrongIndexRequestedError(indexStatus)
+      assertThatThrownBy { populateIndexService.populateIndex(GREEN) }
+        .isInstanceOf(WrongIndexRequestedException::class.java)
     }
 
     @Test
     internal fun `will return the number of chunks sent for processing`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
 
-      val result = populateIndexService.populateIndex(BLUE)
-
-      result shouldBeRight 3
+      assertThat(populateIndexService.populateIndex(BLUE)).isEqualTo(3)
     }
 
     @Test
@@ -241,9 +238,9 @@ class PopulateIndexServiceTest {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      val result = populateIndexService.populateIndexWithPrisoner("ABC123D")
-
-      result shouldBeLeft BuildNotInProgressError(indexStatus)
+      assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
+        .isInstanceOf(BuildNotInProgressException::class.java)
+        .hasMessageContaining("The index BLUE is in state COMPLETED")
     }
 
     @Test
@@ -253,9 +250,8 @@ class PopulateIndexServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
-      val result = populateIndexService.populateIndexWithPrisoner("ABC123D")
-
-      result.map { it.prisonerNumber } shouldBeRight "ABC123D"
+      assertThat(populateIndexService.populateIndexWithPrisoner("ABC123D"))
+        .extracting { it.prisonerNumber }.isEqualTo("ABC123D")
     }
 
     @Test
@@ -276,9 +272,10 @@ class PopulateIndexServiceTest {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      val result = populateIndexService.populateIndexWithPrisoner("ABC123D")
+      assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
+        .hasMessageContaining("The prisoner ABC123D")
 
-      result shouldBeLeft PrisonerNotFoundError("ABC123D")
       verifyNoInteractions(prisonerSynchroniserService)
     }
 
@@ -287,7 +284,9 @@ class PopulateIndexServiceTest {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      populateIndexService.populateIndexWithPrisoner("ABC123D")
+      assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
+
       verify(telemetryClient).trackEvent(TelemetryEvents.BUILD_PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
     }
   }
