@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
-import arrow.core.right
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.runBlocking
 import org.awaitility.kotlin.await
@@ -12,6 +8,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -25,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRe
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
-import kotlin.reflect.KClass
 
 @Service
 class MaintainIndexService(
@@ -40,13 +36,13 @@ class MaintainIndexService(
 ) {
   private val indexQueue by lazy { hmppsQueueService.findByQueueId("index") as HmppsQueue }
 
-  fun prepareIndexForRebuild(): Either<Error, IndexStatus> {
+  fun prepareIndexForRebuild(): IndexStatus {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
     return indexStatusService.initialiseIndexWhenRequired().getIndexStatus()
       .also { logIndexStatuses(it) }
-      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressError(it) }
-      .failIf({ indexQueueStatus.active }) { ActiveMessagesExistError(it.otherIndex, indexQueueStatus, "build index") }
-      .map { doPrepareIndexForRebuild(it) }
+      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
+      .failIf({ indexQueueStatus.active }) { ActiveMessagesExistException(it.otherIndex, indexQueueStatus, "build index") }
+      .run { doPrepareIndexForRebuild(this) }
   }
 
   private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
@@ -84,26 +80,26 @@ class MaintainIndexService(
     )
   }
 
-  fun markIndexingComplete(ignoreThreshold: Boolean): Either<Error, IndexStatus> {
+  fun markIndexingComplete(ignoreThreshold: Boolean): IndexStatus {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
     val indexStatus = indexStatusService.getIndexStatus()
     return indexStatus
-      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
+      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
       .failIf({ indexQueueStatus.active }) {
-        ActiveMessagesExistError(
+        ActiveMessagesExistException(
           it.otherIndex,
           indexQueueStatus,
           "mark complete",
         )
       }
       .failIf({ ignoreThreshold.not() && indexSizeNotReachedThreshold(it) }) {
-        ThresholdNotReachedError(
+        ThresholdNotReachedException(
           it.otherIndex,
           indexBuildProperties.completeThreshold,
         )
       }
       .also { logIndexStatuses(indexStatus) }
-      .map { doMarkIndexingComplete() }
+      .run { doMarkIndexingComplete() }
   }
 
   private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean =
@@ -123,25 +119,21 @@ class MaintainIndexService(
           }
       }
 
-  fun switchIndex(force: Boolean): Either<Error, IndexStatus> {
+  fun switchIndex(force: Boolean): IndexStatus {
     val indexStatus = indexStatusService.getIndexStatus()
     return when {
-      force -> {
+      force ->
         indexStatus
-          .failIf(IndexStatus::isAbsent) { BuildAbsentError(it) }
-          .also { logIndexStatuses(indexStatus) }
-          .map { doSwitchIndex() }
-      }
+          .failIf(IndexStatus::isAbsent) { BuildAbsentException(it) }
 
-      else -> {
+      else ->
         indexStatus
-          .failIf(IndexStatus::isAbsent) { BuildAbsentError(it) }
-          .failIf(IndexStatus::isBuilding) { BuildInProgressError(it) }
-          .failIf(IndexStatus::isCancelled) { BuildCancelledError(it) }
-          .also { logIndexStatuses(indexStatus) }
-          .map { doSwitchIndex() }
-      }
+          .failIf(IndexStatus::isAbsent) { BuildAbsentException(it) }
+          .failIf(IndexStatus::isBuilding) { BuildInProgressException(it) }
+          .failIf(IndexStatus::isCancelled) { BuildCancelledException(it) }
     }
+      .also { logIndexStatuses(indexStatus) }
+      .run { doSwitchIndex() }
   }
 
   private fun doSwitchIndex(): IndexStatus =
@@ -158,11 +150,11 @@ class MaintainIndexService(
           }
       }
 
-  fun cancelIndexing(): Either<Error, IndexStatus> =
+  fun cancelIndexing(): IndexStatus =
     indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
-      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressError(it) }
-      .map { doCancelIndexing() }
+      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+      .run { doCancelIndexing() }
 
   private fun doCancelIndexing(): IndexStatus {
     indexStatusService.markBuildCancelled()
@@ -179,103 +171,41 @@ class MaintainIndexService(
       }
   }
 
-  fun indexPrisoner(prisonerNumber: String): Either<Error, Prisoner> =
+  fun indexPrisoner(prisonerNumber: String): Prisoner =
     indexStatusService.getIndexStatus()
       .failIf(IndexStatus::activeIndexesEmpty) {
         log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
-        NoActiveIndexesError(it)
+        NoActiveIndexesException(it)
       }
-      .flatMap { sync(prisonerNumber, it.activeIndexes()) }
+      .run { sync(prisonerNumber, this.activeIndexes()) }
 
   private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>) =
     nomisService.getOffender(prisonerNumber)?.let { ob ->
       prisonerSynchroniserService.reindex(ob, activeIndices)
-    }?.right()
+    }
       ?: prisonerRepository.get(prisonerNumber, activeIndices)
         ?.run {
           // Prisoner not in NOMIS, but found in index so remove
           telemetryClient.trackPrisonerEvent(PRISONER_REMOVED, prisonerNumber)
           prisonerRepository.delete(prisonerNumber)
           this
-        }?.right()
+        }
       ?: run {
-        // not found in either NOMIS or index, so log and return
+        // not found in either NOMIS or index, so log and throw
         telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
-        PrisonerNotFoundError(prisonerNumber).left()
+        throw PrisonerNotFoundException(prisonerNumber)
       }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
-    onFail: (IndexStatus) -> Error,
-  ): Either<Error, IndexStatus> =
+    onFail: (IndexStatus) -> ResponseStatusException,
+  ): IndexStatus =
     when (check(this)) {
-      false -> this.right()
-      true -> onFail(this).left()
-    }
-
-  private inline fun Either<Error, IndexStatus>.failIf(
-    crossinline check: (IndexStatus) -> Boolean,
-    crossinline onFail: (IndexStatus) -> Error,
-  ): Either<Error, IndexStatus> =
-    when (this.isLeft()) {
-      true -> this
-      false -> this.flatMap {
-        it.failIf(check, onFail)
-      }
+      false -> this
+      true -> throw onFail(this)
     }
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-}
-
-enum class UpdatePrisonerError(val errorClass: KClass<out Error>) {
-  NO_ACTIVE_INDEXES(NoActiveIndexesError::class),
-  PRISONER_NOT_FOUND(PrisonerNotFoundError::class),
-  ;
-
-  companion object {
-    fun fromErrorClass(error: Error): UpdatePrisonerError = values().first { it.errorClass == error::class }
-  }
-}
-
-enum class PrepareRebuildError(val errorClass: KClass<out Error>) {
-  BUILD_IN_PROGRESS(BuildAlreadyInProgressError::class),
-  ACTIVE_MESSAGES_EXIST(ActiveMessagesExistError::class),
-  ;
-
-  companion object {
-    fun fromErrorClass(error: Error): PrepareRebuildError = values().first { it.errorClass == error::class }
-  }
-}
-
-enum class MarkCompleteError(val errorClass: KClass<out Error>) {
-  BUILD_NOT_IN_PROGRESS(BuildNotInProgressError::class),
-  ACTIVE_MESSAGES_EXIST(ActiveMessagesExistError::class),
-  THRESHOLD_NOT_REACHED(ThresholdNotReachedError::class),
-  ;
-
-  companion object {
-    fun fromErrorClass(error: Error): MarkCompleteError = values().first { it.errorClass == error::class }
-  }
-}
-
-enum class SwitchIndexError(val errorClass: KClass<out Error>) {
-  BUILD_ABSENT(BuildAbsentError::class),
-  BUILD_IN_PROGRESS(BuildInProgressError::class),
-  BUILD_CANCELLED(BuildCancelledError::class),
-  ;
-
-  companion object {
-    fun fromErrorClass(error: Error): SwitchIndexError = values().first { it.errorClass == error::class }
-  }
-}
-
-enum class CancelBuildError(val errorClass: KClass<out Error>) {
-  BUILD_NOT_IN_PROGRESS(BuildNotInProgressError::class),
-  ;
-
-  companion object {
-    fun fromErrorClass(error: Error): CancelBuildError = values().first { it.errorClass == error::class }
   }
 }

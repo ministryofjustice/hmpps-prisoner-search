@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
-import arrow.core.getOrElse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -8,9 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
-import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus.CONFLICT
-import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -19,14 +15,8 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CancelBuildError
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MarkCompleteError
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrepareRebuildError
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.SwitchIndexError
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.UpdatePrisonerError
 
 @RestController
 @Validated
@@ -47,15 +37,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       ApiResponse(responseCode = "409", description = "Conflict, the index was not in a state to start building"),
     ],
   )
-  fun buildIndex(): IndexStatus =
-    maintainIndexService.prepareIndexForRebuild()
-      .getOrElse { error ->
-        log.error("Request to /maintain-index/build failed due to error {}", error)
-        when (PrepareRebuildError.fromErrorClass(error)) {
-          PrepareRebuildError.BUILD_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
-          PrepareRebuildError.ACTIVE_MESSAGES_EXIST -> throw ResponseStatusException(CONFLICT, error.message())
-        }
-      }
+  fun buildIndex(): IndexStatus = maintainIndexService.prepareIndexForRebuild()
 
   @PutMapping("/cancel")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -70,12 +52,6 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
     ],
   )
   fun cancelIndex() = maintainIndexService.cancelIndexing()
-    .getOrElse { error ->
-      log.error("Request to /maintain-index/cancel failed due to error {}", error)
-      when (CancelBuildError.fromErrorClass(error)) {
-        CancelBuildError.BUILD_NOT_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
-      }
-    }
 
   @PutMapping("/mark-complete")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -92,14 +68,6 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   )
   fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) =
     maintainIndexService.markIndexingComplete(ignoreThreshold)
-      .getOrElse { error ->
-        log.error("Request to /maintain-index/mark-complete failed due to error {}", error)
-        when (MarkCompleteError.fromErrorClass(error)) {
-          MarkCompleteError.BUILD_NOT_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
-          MarkCompleteError.ACTIVE_MESSAGES_EXIST -> throw ResponseStatusException(CONFLICT, error.message())
-          MarkCompleteError.THRESHOLD_NOT_REACHED -> throw ResponseStatusException(CONFLICT, error.message())
-        }
-      }
 
   @PutMapping("/switch")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -119,14 +87,6 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   )
   fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
     maintainIndexService.switchIndex(force)
-      .getOrElse { error ->
-        log.error("Request to /maintain-index/switch failed due to error {}", error)
-        when (SwitchIndexError.fromErrorClass(error)) {
-          SwitchIndexError.BUILD_IN_PROGRESS -> throw ResponseStatusException(CONFLICT, error.message())
-          SwitchIndexError.BUILD_CANCELLED -> throw ResponseStatusException(CONFLICT, error.message())
-          SwitchIndexError.BUILD_ABSENT -> throw ResponseStatusException(CONFLICT, error.message())
-        }
-      }
 
   @PutMapping("/index-prisoner/{prisonerNumber}")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -149,13 +109,6 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
   ) = maintainIndexService.indexPrisoner(prisonerNumber)
-    .getOrElse { error ->
-      log.error("Request to /maintain-index/index-prisoner/$prisonerNumber failed due to error {}", error)
-      when (UpdatePrisonerError.fromErrorClass(error)) {
-        UpdatePrisonerError.NO_ACTIVE_INDEXES -> throw ResponseStatusException(CONFLICT, error.message())
-        UpdatePrisonerError.PRISONER_NOT_FOUND -> throw ResponseStatusException(NOT_FOUND, error.message())
-      }
-    }
 
   @PutMapping("/check-complete")
   @Operation(
@@ -167,18 +120,5 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       `index-housekeeping-cronjob`
       """,
   )
-  fun checkIfComplete() =
-    maintainIndexService.markIndexingComplete(ignoreThreshold = false)
-      .getOrElse { error ->
-        if (MarkCompleteError.fromErrorClass(error) == MarkCompleteError.THRESHOLD_NOT_REACHED) {
-          log.warn(
-            "Not marking index build complete but only because the minimum index size threshold of {} has not been reached",
-            error,
-          )
-        }
-      }
-
-  private companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
+  fun checkIfComplete() = maintainIndexService.markIndexingComplete(ignoreThreshold = false)
 }
