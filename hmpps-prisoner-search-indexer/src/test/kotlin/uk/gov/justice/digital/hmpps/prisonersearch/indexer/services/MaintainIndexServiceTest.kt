@@ -3,11 +3,10 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
-import io.kotest.assertions.arrow.core.shouldBeLeft
-import io.kotest.assertions.arrow.core.shouldBeRight
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -73,10 +72,11 @@ class MaintainIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.prepareIndexForRebuild()
+      assertThatThrownBy { maintainIndexService.prepareIndexForRebuild() }
+        .isInstanceOf(BuildAlreadyInProgressException::class.java)
+        .hasMessageContaining("The build for BLUE is already BUILDING")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft BuildAlreadyInProgressError(expectedIndexStatus)
     }
 
     @Test
@@ -85,10 +85,9 @@ class MaintainIndexServiceTest {
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
-      val result = maintainIndexService.prepareIndexForRebuild()
-
-      verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft ActiveMessagesExistError(BLUE, expectedIndexQueueStatus, "build index")
+      assertThatThrownBy { maintainIndexService.prepareIndexForRebuild() }
+        .isInstanceOf(ActiveMessagesExistException::class.java)
+        .hasMessageContaining("The index prisoner-search-blue has active messages")
     }
 
     @Test
@@ -183,7 +182,7 @@ class MaintainIndexServiceTest {
       val result = maintainIndexService.prepareIndexForRebuild()
 
       verify(indexStatusService, times(2)).getIndexStatus()
-      result shouldBeRight expectedIndexStatus
+      assertThat(result).isEqualTo(expectedIndexStatus)
     }
   }
 
@@ -200,10 +199,11 @@ class MaintainIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.markIndexingComplete(ignoreThreshold = true)
+      assertThatThrownBy { maintainIndexService.markIndexingComplete(ignoreThreshold = true) }
+        .isInstanceOf(BuildNotInProgressException::class.java)
+        .hasMessageContaining("The index BLUE is in state COMPLETED")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft BuildNotInProgressError(expectedIndexStatus)
     }
 
     @Test
@@ -212,10 +212,11 @@ class MaintainIndexServiceTest {
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
-      val result = maintainIndexService.markIndexingComplete(ignoreThreshold = true)
+      assertThatThrownBy { maintainIndexService.markIndexingComplete(ignoreThreshold = true) }
+        .isInstanceOf(ActiveMessagesExistException::class.java)
+        .hasMessageContaining("The index prisoner-search-blue has active messages")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft ActiveMessagesExistError(BLUE, expectedIndexQueueStatus, "mark complete")
     }
 
     @Test
@@ -225,11 +226,12 @@ class MaintainIndexServiceTest {
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
       whenever(indexBuildProperties.completeThreshold).thenReturn(1000000)
 
-      val result = maintainIndexService.markIndexingComplete(ignoreThreshold = false)
+      assertThatThrownBy { maintainIndexService.markIndexingComplete(ignoreThreshold = false) }
+        .isInstanceOf(ThresholdNotReachedException::class.java)
+        .hasMessageContaining("The index prisoner-search-blue has not reached threshold 1000000 so")
 
       verify(indexStatusService).getIndexStatus()
       verify(indexQueueService).getIndexQueueStatus()
-      result shouldBeLeft ThresholdNotReachedError(BLUE, 1000000)
     }
 
     @Test
@@ -251,11 +253,12 @@ class MaintainIndexServiceTest {
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
       whenever(indexBuildProperties.completeThreshold).thenReturn(1000000)
 
-      val result = maintainIndexService.markIndexingComplete(ignoreThreshold = false)
+      assertThatThrownBy { maintainIndexService.markIndexingComplete(ignoreThreshold = false) }
+        .isInstanceOf(ThresholdNotReachedException::class.java)
+        .hasMessageContaining("The index prisoner-search-blue has not reached threshold 1000000 so")
 
       verify(indexStatusService).getIndexStatus()
       verify(indexQueueService).getIndexQueueStatus()
-      result shouldBeLeft ThresholdNotReachedError(BLUE, 1000000)
     }
 
     @Test
@@ -280,7 +283,7 @@ class MaintainIndexServiceTest {
       val result = maintainIndexService.markIndexingComplete(ignoreThreshold = true)
 
       verify(indexStatusService, times(2)).getIndexStatus()
-      result shouldBeRight IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED)
+      assertThat(result).isEqualTo(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
     }
   }
 
@@ -297,7 +300,7 @@ class MaintainIndexServiceTest {
       val result = maintainIndexService.switchIndex(false)
 
       verify(indexStatusService).switchIndex()
-      result shouldBeRight IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED)
+      assertThat(result).isEqualTo(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
     }
 
     @Test
@@ -329,10 +332,11 @@ class MaintainIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.switchIndex(false)
+      assertThatThrownBy { maintainIndexService.switchIndex(false) }
+        .isInstanceOf(BuildInProgressException::class.java)
+        .hasMessageContaining("The build for BLUE is already BUILDING")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft BuildInProgressError(expectedIndexStatus)
     }
 
     @Test
@@ -340,10 +344,11 @@ class MaintainIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = CANCELLED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.switchIndex(false)
+      assertThatThrownBy { maintainIndexService.switchIndex(false) }
+        .isInstanceOf(BuildCancelledException::class.java)
+        .hasMessageContaining("The build for BLUE is in state CANCELLED")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft BuildCancelledError(expectedIndexStatus)
     }
 
     @Test
@@ -351,10 +356,11 @@ class MaintainIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.switchIndex(false)
+      assertThatThrownBy { maintainIndexService.switchIndex(false) }
+        .isInstanceOf(BuildAbsentException::class.java)
+        .hasMessageContaining("The build for BLUE is in state ABSENT")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft BuildAbsentError(expectedIndexStatus)
     }
   }
 
@@ -366,10 +372,11 @@ class MaintainIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.cancelIndexing()
+      assertThatThrownBy { maintainIndexService.cancelIndexing() }
+        .isInstanceOf(BuildNotInProgressException::class.java)
+        .hasMessageContaining("The index BLUE is in state COMPLETED")
 
       verify(indexStatusService).getIndexStatus()
-      result shouldBeLeft BuildNotInProgressError(expectedIndexStatus)
     }
 
     @Test
@@ -416,7 +423,7 @@ class MaintainIndexServiceTest {
       val result = maintainIndexService.cancelIndexing()
 
       verify(indexStatusService, times(2)).getIndexStatus()
-      result shouldBeRight expectedIndexStatus
+      assertThat(result).isEqualTo(expectedIndexStatus)
     }
   }
 
@@ -462,7 +469,8 @@ class MaintainIndexServiceTest {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      maintainIndexService.indexPrisoner("ABC123D")
+      assertThatThrownBy { maintainIndexService.indexPrisoner("ABC123D") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
 
       verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_NOT_FOUND.name, mapOf("prisonerNumber" to "ABC123D"), null)
     }
@@ -472,16 +480,17 @@ class MaintainIndexServiceTest {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      val result = maintainIndexService.indexPrisoner("ABC123D")
-
-      result shouldBeLeft PrisonerNotFoundError("ABC123D")
+      assertThatThrownBy { maintainIndexService.indexPrisoner("ABC123D") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
+        .hasMessageContaining("The prisoner ABC123D")
     }
 
     @Test
     fun `No active indexes, update is not requested`() {
       whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus.newIndex())
 
-      maintainIndexService.indexPrisoner("SOME_CRN")
+      assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
+        .isInstanceOf(NoActiveIndexesException::class.java)
 
       verifyNoInteractions(prisonerSynchroniserService)
     }
@@ -491,9 +500,9 @@ class MaintainIndexServiceTest {
       val indexStatus = IndexStatus.newIndex()
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      val result = maintainIndexService.indexPrisoner("SOME_CRN")
-
-      result shouldBeLeft NoActiveIndexesError(indexStatus)
+      assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
+        .isInstanceOf(NoActiveIndexesException::class.java)
+        .hasMessageContaining("Cannot update current index NONE")
     }
 
     @Test
@@ -503,7 +512,8 @@ class MaintainIndexServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
-      maintainIndexService.indexPrisoner("SOME_CRN")
+      assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
 
       verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.currentIndex))
     }
@@ -515,7 +525,8 @@ class MaintainIndexServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
-      maintainIndexService.indexPrisoner("SOME_CRN")
+      assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
 
       verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.otherIndex))
     }
@@ -527,7 +538,8 @@ class MaintainIndexServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
-      maintainIndexService.indexPrisoner("SOME_CRN")
+      assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
+        .isInstanceOf(PrisonerNotFoundException::class.java)
 
       verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN, BLUE))
     }
