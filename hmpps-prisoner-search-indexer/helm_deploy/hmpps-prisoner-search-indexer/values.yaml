@@ -75,3 +75,7 @@ generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-search-indexer
   alertSeverity: syscon
 
+cron:
+  retry_dlqs_schedule: "*/10 * * * *"
+  index_size_schedule: "*/10 * * * *"
+  check_index_schedule: "*/15 * * * *"
