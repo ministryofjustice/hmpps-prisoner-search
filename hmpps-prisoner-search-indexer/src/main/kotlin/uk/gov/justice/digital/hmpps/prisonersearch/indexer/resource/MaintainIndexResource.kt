@@ -167,7 +167,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       `index-housekeeping-cronjob`
       """,
   )
-  fun checkIfComplete() {
+  fun checkIfComplete() =
     maintainIndexService.markIndexingComplete(ignoreThreshold = false)
       .getOrElse { error ->
         if (MarkCompleteError.fromErrorClass(error) == MarkCompleteError.THRESHOLD_NOT_REACHED) {
@@ -177,7 +177,6 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
           )
         }
       }
-  }
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

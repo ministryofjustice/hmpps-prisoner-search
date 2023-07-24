@@ -278,6 +278,16 @@ class MaintainIndexResourceApiTest : IntegrationTestBase() {
 
       verify(maintainIndexService).markIndexingComplete(ignoreThreshold = false)
     }
+
+    @Test
+    fun `returns build status information`() {
+      webTestClient.put()
+        .uri("/maintain-index/check-complete")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectBody()
+        .jsonPath("currentIndex").isEqualTo("GREEN")
+    }
   }
 }
 
