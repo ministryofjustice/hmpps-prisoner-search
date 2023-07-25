@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.opentelemetry.api.trace.SpanKind
@@ -57,11 +55,8 @@ class PopulateIndexListener(
 
 data class IndexMessageRequest(
   val type: IndexRequestType?,
-  @JsonInclude(NON_NULL)
   val index: SyncIndex? = null,
-  @JsonInclude(NON_NULL)
   val prisonerPage: PrisonerPage? = null,
-  @JsonInclude(NON_NULL)
   val prisonerNumber: String? = null,
 )
 

@@ -69,7 +69,7 @@ abstract class IntegrationTestBase {
   lateinit var hmppsQueueService: HmppsQueueService
 
   @Autowired
-  lateinit var prisonerRespository: PrisonerRepository
+  lateinit var prisonerRepository: PrisonerRepository
 
   @Autowired
   lateinit var indexStatusRepository: IndexStatusRepository
@@ -77,31 +77,36 @@ abstract class IntegrationTestBase {
   @Autowired
   internal lateinit var gson: Gson
 
-  internal val indexAwsSqsClient by lazy { indexQueue.sqsClient }
-  internal val indexQueueUrl by lazy { indexQueue.queueUrl }
+  protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
+  protected val hmppsDomainQueue by lazy { hmppsQueueService.findByQueueId("hmppsdomainqueue") ?: throw MissingQueueException("HmppsQueue hmppsdomainqueue not found") }
+  protected val hmppsEventTopic by lazy { hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingQueueException("HmppsTopic hmpps event topic not found") }
 
-  internal val indexAwsSqsDlqClient by lazy { indexQueue.sqsDlqClient }
+  internal val indexSqsClient by lazy { indexQueue.sqsClient }
+  internal val indexQueueUrl by lazy { indexQueue.queueUrl }
+  internal val indexSqsDlqClient by lazy { indexQueue.sqsDlqClient }
   internal val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
+
+  internal val hmppsDomainSqsClient by lazy { hmppsDomainQueue.sqsClient }
+  internal val hmppsDomainQueueUrl by lazy { hmppsDomainQueue.queueUrl }
+  internal val hmppsDomainQueueDlqName by lazy { hmppsDomainQueue.dlqName as String }
+  internal val hmppsDomainQueueDlqUrl by lazy { hmppsDomainQueue.dlqUrl as String }
 
   @BeforeEach
   fun cleanElasticsearch() {
     deletePrisonerIndices()
-    indexAwsSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
-    indexAwsSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
+    indexSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
+    indexSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
     createPrisonerIndices()
     initialiseIndexStatus()
   }
-
-  protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
-  protected val hmppsEventTopic by lazy { hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingQueueException("HmppsTopic hmpps event topic not found") }
 
   val indexQueueName by lazy { indexQueue.queueName }
   val indexDlqName by lazy { indexQueue.dlqName as String }
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
 
-  fun createPrisonerIndices() = SyncIndex.values().forEach { prisonerRespository.createIndex(it) }
+  fun createPrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.createIndex(it) }
 
-  fun deletePrisonerIndices() = SyncIndex.values().forEach { prisonerRespository.deleteIndex(it) }
+  fun deletePrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.deleteIndex(it) }
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()

@@ -1,18 +1,21 @@
-package uk.gov.justice.digital.hmpps.indexer.listeners
+@file:Suppress("PropertyName")
 
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
+
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 
 @Service
 class DomainEventListener(
   private val objectMapper: ObjectMapper,
-  private val telemetryClient: TelemetryClient,
+  private val indexListenerService: IndexListenerService,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -34,7 +37,7 @@ class DomainEventListener(
       log.debug("Received message {} type {}", messageId, eventType)
 
       when (eventType) {
-        in incentiveEvent -> log.info("Found incentive change message of {}", fromJson<IncentiveChangedMessage>(message).eventType)
+        in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message))
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
@@ -44,9 +47,7 @@ class DomainEventListener(
     }
   }
 
-  private inline fun <reified T> fromJson(message: String): T {
-    return objectMapper.readValue(message, T::class.java)
-  }
+  private inline fun <reified T> fromJson(message: String?): T = objectMapper.readValue(message, T::class.java)
 }
 
 data class IncentiveChangedMessage(
@@ -60,6 +61,6 @@ data class IncentiveChangeAdditionalInformation(
   val id: Long,
 )
 
-data class EventType(val Value: String)
+data class EventType(@JsonProperty("Value") val Value: String)
 data class MessageAttributes(val eventType: EventType)
 data class Message(val Message: String, val MessageId: String, val MessageAttributes: MessageAttributes)
