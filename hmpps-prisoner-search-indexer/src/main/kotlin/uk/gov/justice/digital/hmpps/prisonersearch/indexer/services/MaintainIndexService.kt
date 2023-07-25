@@ -8,7 +8,6 @@ import org.awaitility.kotlin.untilCallTo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -198,7 +197,7 @@ class MaintainIndexService(
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
-    onFail: (IndexStatus) -> ResponseStatusException,
+    onFail: (IndexStatus) -> IndexException,
   ): IndexStatus =
     when (check(this)) {
       false -> this
