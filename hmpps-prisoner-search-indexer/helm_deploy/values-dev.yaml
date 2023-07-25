@@ -24,6 +24,6 @@ generic-prometheus-alerts:
     cloud-platform-99ebbe3b76dc9264: "prisoner search indexer"
 
 cron:
-  retry_dlqs_schedule: "*/10 6-20 * * 1-5"
-  index_size_schedule: "*/10 6-20 * * 1-5"
-  check_index_schedule: "*/15 6-20 * * 1-5"
+  retry_dlqs_schedule: "*/10 7-20 * * 1-5"
+  index_size_schedule: "*/10 7-20 * * 1-5"
+  check_index_schedule: "*/15 7-20 * * 1-5"
