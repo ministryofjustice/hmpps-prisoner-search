@@ -9,11 +9,11 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import java.lang.IllegalArgumentException
@@ -45,7 +45,7 @@ class PopulateIndexListener(
             }
         }
       }
-    } catch (e: ResponseStatusException) {
+    } catch (e: IndexException) {
       log.error("Message {} failed with error {}", indexRequest, e.message)
     }
   }
