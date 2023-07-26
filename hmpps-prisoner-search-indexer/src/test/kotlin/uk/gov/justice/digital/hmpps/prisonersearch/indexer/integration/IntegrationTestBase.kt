@@ -79,17 +79,23 @@ abstract class IntegrationTestBase {
 
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
   protected val hmppsDomainQueue by lazy { hmppsQueueService.findByQueueId("hmppsdomainqueue") ?: throw MissingQueueException("HmppsQueue hmppsdomainqueue not found") }
+  protected val offenderQueue by lazy { hmppsQueueService.findByQueueId("offenderqueue") ?: throw MissingQueueException("HmppsQueue offenderqueue not found") }
   protected val hmppsEventTopic by lazy { hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingQueueException("HmppsTopic hmpps event topic not found") }
 
   internal val indexSqsClient by lazy { indexQueue.sqsClient }
   internal val indexQueueUrl by lazy { indexQueue.queueUrl }
   internal val indexSqsDlqClient by lazy { indexQueue.sqsDlqClient }
   internal val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
+  internal val indexQueueName by lazy { indexQueue.queueName }
+  internal val indexDlqName by lazy { indexQueue.dlqName as String }
 
   internal val hmppsDomainSqsClient by lazy { hmppsDomainQueue.sqsClient }
   internal val hmppsDomainQueueUrl by lazy { hmppsDomainQueue.queueUrl }
-  internal val hmppsDomainQueueDlqName by lazy { hmppsDomainQueue.dlqName as String }
-  internal val hmppsDomainQueueDlqUrl by lazy { hmppsDomainQueue.dlqUrl as String }
+
+  internal val offenderSqsClient by lazy { offenderQueue.sqsClient }
+  internal val offenderQueueUrl by lazy { offenderQueue.queueUrl }
+  internal val offenderQueueName by lazy { offenderQueue.queueName }
+  internal val offenderDlqName by lazy { offenderQueue.dlqName as String }
 
   @BeforeEach
   fun cleanElasticsearch() {
@@ -100,8 +106,6 @@ abstract class IntegrationTestBase {
     initialiseIndexStatus()
   }
 
-  val indexQueueName by lazy { indexQueue.queueName }
-  val indexDlqName by lazy { indexQueue.dlqName as String }
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
 
   fun createPrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.createIndex(it) }

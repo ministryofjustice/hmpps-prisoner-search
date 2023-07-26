@@ -45,6 +45,10 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       dlqMaxReceiveCount: 1
+    offenderqueue:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      dlqMaxReceiveCount: 1
     hmppseventtestqueue:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
