@@ -132,6 +132,26 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.index-health.details.messagesOnDlq").isEqualTo(0)
   }
 
+  @Test
+  fun `Offender queue health reports UP`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("status").isEqualTo("UP")
+      .jsonPath("components.offenderqueue-health.status").isEqualTo("UP")
+      .jsonPath("components.offenderqueue-health.details.queueName").isEqualTo(offenderQueueName)
+      .jsonPath("components.offenderqueue-health.details.messagesOnQueue").isEqualTo(0)
+      .jsonPath("components.offenderqueue-health.details.messagesInFlight").isEqualTo(0)
+      .jsonPath("components.offenderqueue-health.details.dlqName").isEqualTo(offenderDlqName)
+      .jsonPath("components.offenderqueue-health.details.dlqStatus").isEqualTo("UP")
+      .jsonPath("components.offenderqueue-health.details.messagesOnDlq").isEqualTo(0)
+  }
+
   private fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
     restrictedPatientsApi.stubHealthPing(status)
