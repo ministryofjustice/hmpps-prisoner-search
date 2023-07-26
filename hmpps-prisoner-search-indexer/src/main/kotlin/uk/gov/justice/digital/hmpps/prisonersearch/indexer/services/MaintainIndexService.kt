@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_NOT_FOUND
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_REMOVED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
@@ -185,8 +184,7 @@ class MaintainIndexService(
       ?: prisonerRepository.get(prisonerNumber, activeIndices)
         ?.run {
           // Prisoner not in NOMIS, but found in index so remove
-          telemetryClient.trackPrisonerEvent(PRISONER_REMOVED, prisonerNumber)
-          prisonerRepository.delete(prisonerNumber)
+          prisonerSynchroniserService.delete(prisonerNumber)
           this
         }
       ?: run {

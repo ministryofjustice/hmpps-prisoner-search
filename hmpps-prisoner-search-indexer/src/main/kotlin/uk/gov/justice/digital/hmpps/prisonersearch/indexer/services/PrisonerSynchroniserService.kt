@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
@@ -50,6 +51,11 @@ class PrisonerSynchroniserService(
     indexes.map { index -> prisonerRepository.save(prisoner, index) }
     return prisoner
   }
+
+  fun delete(prisonerNumber: String) =
+    prisonerRepository.delete(prisonerNumber).also {
+      telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
+    }
 
   private fun getRestrictedPatient(ob: OffenderBooking) =
     if (ob.assignedLivingUnit?.agencyId == "OUT") {

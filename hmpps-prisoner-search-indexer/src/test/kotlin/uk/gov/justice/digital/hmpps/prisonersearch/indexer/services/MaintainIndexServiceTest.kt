@@ -450,18 +450,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.indexPrisoner("ABC123D")
 
-      verify(prisonerRepository).delete("ABC123D")
-    }
-
-    @Test
-    internal fun `will raise a telemetry event if prisoner only found in indices`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
-
-      maintainIndexService.indexPrisoner("ABC123D")
-
-      verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_REMOVED.name, mapOf("prisonerNumber" to "ABC123D"), null)
+      verify(prisonerSynchroniserService).delete("ABC123D")
     }
 
     @Test

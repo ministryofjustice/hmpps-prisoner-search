@@ -32,7 +32,7 @@ class DomainEventListener(
   @WithSpan(value = "syscon-devs-hmpps_prisoner_search_domain_queue", kind = SpanKind.SERVER)
   fun processDomainEvent(requestJson: String?) {
     try {
-      val (message, messageId, messageAttributes) = objectMapper.readValue(requestJson, Message::class.java)
+      val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)
       val eventType = messageAttributes.eventType.Value
       log.debug("Received message {} type {}", messageId, eventType)
 
