@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import org.slf4j.LoggerFactory
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
@@ -13,10 +13,6 @@ import java.time.Duration
 class NomisService(
   val prisonApiWebClient: WebClient,
 ) {
-  private companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
-
   private fun getOffendersIds(page: Int = 0, size: Int = 10) = prisonApiWebClient.get()
     .uri {
       it.path("/api/prisoners/prisoner-numbers")
@@ -50,9 +46,21 @@ class NomisService(
     .bodyToMono(OffenderBooking::class.java)
     .onErrorResume(NotFound::class.java) { Mono.empty() }
     .block()
+
+  fun getMergedIdentifiersByBookingId(bookingId: Long): List<BookingIdentifier>? = prisonApiWebClient.get()
+    .uri("/api/bookings/$bookingId/identifiers?type=MERGED")
+    .retrieve()
+    .bodyToMono(object : ParameterizedTypeReference<List<BookingIdentifier>>() {})
+    .onErrorResume(NotFound::class.java) { Mono.empty() }
+    .block()
 }
 
 data class PrisonerNumberPage(
   val content: List<String> = emptyList(),
   val totalElements: Long = 0,
+)
+
+data class BookingIdentifier(
+  val type: String,
+  val value: String,
 )

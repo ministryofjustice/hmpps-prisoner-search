@@ -17,6 +17,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
@@ -264,6 +265,23 @@ internal class PrisonerSynchroniserServiceTest {
       assertThatThrownBy { service.index(booking, GREEN) }.hasMessage("not today thank you")
 
       verifyNoInteractions(prisonerRepository)
+    }
+  }
+
+  @Nested
+  inner class delete {
+    @Test
+    internal fun `will raise a telemetry event`() {
+      service.delete("ABC123D")
+
+      verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_REMOVED.name, mapOf("prisonerNumber" to "ABC123D"), null)
+    }
+
+    @Test
+    internal fun `will call prisoner repository to delete the prisoner`() {
+      service.delete("ABC123D")
+
+      verify(prisonerRepository).delete("ABC123D")
     }
   }
 }
