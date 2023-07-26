@@ -29,9 +29,6 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   @Autowired
   lateinit var highLevelClient: RestHighLevelClient
 
-  @Autowired
-  lateinit var prisonerRepository: PrisonerRepository
-
   @Nested
   inner class CreateIndex {
     @Nested

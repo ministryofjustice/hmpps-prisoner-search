@@ -27,6 +27,7 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
   private val populateIndexService = mock<PopulateIndexService>()
 
   private val listener = PopulateIndexListener(objectMapper, populateIndexService)
+  private val logAppender = findLogAppender(PopulateIndexListener::class.java)
 
   @Nested
   inner class PopulateIndex {
@@ -48,7 +49,6 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
 
     @Test
     internal fun `failed request`() {
-      val logAppender = findLogAppender(PopulateIndexListener::class.java)
       whenever(populateIndexService.populateIndex(GREEN)).thenThrow(BuildNotInProgressException(IndexStatus.newIndex()))
 
       listener.processIndexRequest(
@@ -107,8 +107,6 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
   inner class BadMessages {
     @Test
     internal fun `will fail for bad json`() {
-      val logAppender = findLogAppender(PopulateIndexListener::class.java)
-
       assertThatThrownBy { listener.processIndexRequest("this is bad json") }
         .isInstanceOf(JsonParseException::class.java)
 
@@ -117,8 +115,6 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
 
     @Test
     internal fun `will fail for unknown message type`() {
-      val logAppender = findLogAppender(PopulateIndexListener::class.java)
-
       assertThatThrownBy {
         listener.processIndexRequest(
           """
