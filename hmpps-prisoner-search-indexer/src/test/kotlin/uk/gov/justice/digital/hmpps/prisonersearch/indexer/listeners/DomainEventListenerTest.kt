@@ -81,7 +81,7 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
             "MessageAttributes": {
               "eventType": {
                 "Type": "String",
-                "Value": "incentives.iep-review.updated"
+                "Value": "$eventType"
               },
               "id": {
                 "Type": "String",
@@ -107,7 +107,7 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
         """
         {
           "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
-          "Message": "{\"eventType\":\"incentives.iep-review.inserted\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
+          "Message": "{\"eventType\":\"not.an.iep.message\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
           "MessageAttributes": {
             "eventType": {
               "Type": "String",

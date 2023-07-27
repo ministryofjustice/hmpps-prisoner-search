@@ -21,6 +21,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
       ),
     )
   }
+
   fun stubOffenders(vararg prisoners: PrisonerBuilder) {
     val prisonerNumbers = prisoners.map { it.prisonerNumber }
     stubFor(
@@ -51,6 +52,59 @@ class PrisonApiMockServer : WireMockServer(8093) {
       )
     }
   }
+
+  fun stubGetNomsNumberForBooking(bookingId: Long, prisonerNumber: String) {
+    stubFor(
+      WireMock.get(WireMock.urlEqualTo("/api/bookings/$bookingId?basicInfo=true"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(validBookingMessage(bookingId, prisonerNumber)),
+        ),
+    )
+  }
+
+  fun stubGetMergedIdentifiersByBookingId(bookingId: Long, prisonerNumber: String) {
+    stubFor(
+      WireMock.get(WireMock.urlEqualTo("/api/bookings/$bookingId/identifiers?type=MERGED"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+                [
+                  {
+                    "type": "MERGED",
+                    "value": "$prisonerNumber"
+                  }
+                ]
+              """.trimIndent(),
+            ),
+        ),
+    )
+  }
+
+  private fun validBookingMessage(bookingId: Long, prisonerNumber: String): String =
+    """
+    {
+      "bookingId": $bookingId,
+      "bookingNo": "V61587",
+      "offenderNo": "$prisonerNumber",
+      "firstName": "DAVID",
+      "lastName": "WALLIS",
+      "agencyId": "MDI",
+      "assignedLivingUnitId": 721727,
+      "activeFlag": true,
+      "assignedLivingUnit": {
+        "agencyId": "MDI",
+        "locationId": 721726,
+        "description": "A-1-003",
+        "agencyName": "Moorland Prison"
+      },
+      "facialImageId": 1171172,
+      "dateOfBirth": "1990-02-01"
+    }
+    """.trimIndent()
 }
 
 class PrisonApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
