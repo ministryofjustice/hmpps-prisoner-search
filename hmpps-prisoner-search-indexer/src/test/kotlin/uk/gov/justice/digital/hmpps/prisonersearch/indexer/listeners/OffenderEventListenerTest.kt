@@ -78,19 +78,6 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["DATA_COMPLIANCE_DELETE-OFFENDER"])
-    internal fun `will call service for data compliance offender deletion`(eventType: String) {
-      listener.processOffenderEvent(validOffenderChangedMessage(eventType))
-      verify(indexListenerService).deleteOffender(
-        OffenderChangedMessage(
-          eventType = eventType,
-          offenderIdDisplay = "A123ZZZ",
-          offenderId = 2345612,
-        ),
-      )
-    }
-
-    @ParameterizedTest
     @ValueSource(strings = ["OFFENDER-DELETED"])
     internal fun `will call service for offender deletion`(eventType: String) {
       listener.processOffenderEvent(validOffenderChangedMessage(eventType))

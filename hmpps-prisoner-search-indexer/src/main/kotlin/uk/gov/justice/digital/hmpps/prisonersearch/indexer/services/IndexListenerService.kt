@@ -48,11 +48,6 @@ class IndexListenerService(
       sync(prisonerNumber = this)
     } ?: customEventForMissingOffenderIdDisplay(message)
 
-  fun deleteOffender(message: OffenderChangedMessage) =
-    message.offenderIdDisplay?.run {
-      prisonerSynchroniserService.delete(prisonerNumber = this)
-    } ?: customEventForMissingOffenderIdDisplay(message)
-
   fun maybeDeleteOffender(message: OffenderChangedMessage) {
     message.offenderIdDisplay?.run {
       // This event only means that one of potentially several aliases has been deleted
