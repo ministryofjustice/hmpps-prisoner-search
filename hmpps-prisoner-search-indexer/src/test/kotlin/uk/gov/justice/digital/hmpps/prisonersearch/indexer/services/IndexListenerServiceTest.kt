@@ -144,15 +144,7 @@ internal class IndexListenerServiceTest {
       verifyNoInteractions(prisonerSynchroniserService)
     }
 
-    private fun anExternalMovement() = ExternalPrisonerMovementMessage(
-      bookingId = 1234,
-      movementSeq = 1,
-      offenderIdDisplay = "A1234BC",
-      fromAgencyLocationId = "MDI",
-      toAgencyLocationId = "DNI",
-      directionCode = "IN",
-      movementType = "TFR",
-    )
+    private fun anExternalMovement() = ExternalPrisonerMovementMessage(bookingId = 1234)
   }
 
   @Nested

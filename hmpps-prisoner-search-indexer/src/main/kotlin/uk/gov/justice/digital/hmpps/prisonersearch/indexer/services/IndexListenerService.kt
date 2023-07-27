@@ -105,15 +105,7 @@ class IndexListenerService(
   }
 }
 
-data class ExternalPrisonerMovementMessage(
-  val bookingId: Long,
-  val movementSeq: Long,
-  val offenderIdDisplay: String,
-  val fromAgencyLocationId: String,
-  val toAgencyLocationId: String,
-  val directionCode: String,
-  val movementType: String,
-)
+data class ExternalPrisonerMovementMessage(val bookingId: Long)
 
 data class OffenderBookingChangedMessage(val bookingId: Long)
 
