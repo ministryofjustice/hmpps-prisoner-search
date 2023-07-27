@@ -58,7 +58,6 @@ class OffenderEventListener(
         in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message))
         "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message))
         in offenderEvent -> indexListenerService.offenderChange(fromJson(message))
-        "DATA_COMPLIANCE_DELETE-OFFENDER" -> indexListenerService.deleteOffender(fromJson(message))
         "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message))
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)

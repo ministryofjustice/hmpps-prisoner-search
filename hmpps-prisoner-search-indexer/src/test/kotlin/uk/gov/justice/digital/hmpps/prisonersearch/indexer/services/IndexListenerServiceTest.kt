@@ -284,34 +284,6 @@ internal class IndexListenerServiceTest {
   }
 
   @Nested
-  inner class deleteOffender {
-    @Test
-    fun `will create an event for missing offender id display`() {
-      indexListenerService.deleteOffender(anOffenderChanged(null))
-
-      verify(telemetryClient).trackEvent(
-        "MISSING_OFFENDER_ID_DISPLAY",
-        mapOf("eventType" to "OFFENDER_CHANGED", "offenderId" to "1234"),
-        null,
-      )
-      verifyNoInteractions(nomisService)
-    }
-
-    @Test
-    fun `will delete the prisoner on data compliance delete offender`() {
-      indexListenerService.deleteOffender(anOffenderChanged("A1234BC"))
-
-      verify(prisonerSynchroniserService).delete("A1234BC")
-    }
-
-    private fun anOffenderChanged(prisonerNumber: String?) = OffenderChangedMessage(
-      offenderId = 1234,
-      eventType = "OFFENDER_CHANGED",
-      offenderIdDisplay = prisonerNumber,
-    )
-  }
-
-  @Nested
   inner class maybeDeleteOffender {
     @Test
     fun `will create an event for missing offender id display`() {
