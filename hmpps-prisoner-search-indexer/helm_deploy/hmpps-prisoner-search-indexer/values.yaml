@@ -61,6 +61,11 @@ generic-service:
       HMPPS_SQS_QUEUES_OFFENDERQUEUE_QUEUE_NAME: "sqs_queue_name"
     sqs-offender-event-dlq-secret:
       HMPPS_SQS_QUEUES_OFFENDERQUEUE_DLQ_NAME: "sqs_queue_name"
+    rds-instance-output:
+      DB_SERVER: "rds_instance_address"
+      DB_NAME: "database_name"
+      DB_USER: "database_username"
+      DB_PASS: "database_password"
 
     opensearch:
       OPENSEARCH_URIS: "url"

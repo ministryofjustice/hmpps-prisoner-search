@@ -1,6 +1,12 @@
 server:
   shutdown: immediate
 
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pos
+    username: pos
+    password: pos
+
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0

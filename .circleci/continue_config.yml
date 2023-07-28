@@ -39,7 +39,7 @@ jobs:
       - store_artifacts:
           path: common/build/reports/tests
 
-  validate:
+  validate-search:
     parameters:
       project:
         type: string
@@ -74,6 +74,44 @@ jobs:
       - store_artifacts:
           path: << parameters.project >>/build/reports/tests
 
+  validate-indexer:
+    parameters:
+      project:
+        type: string
+    executor:
+      name: hmpps/java_localstack_postgres
+      jdk_tag: "19.0"
+      localstack_tag: "2.0"
+      localstack_type: "localstack"
+      services: "opensearch,sns,sqs"
+      postgres_tag: "15"
+      postgres_username: "pos"
+      postgres_password: "pos"
+    steps:
+      - checkout
+      - hmpps/install_aws_cli
+      - hmpps/wait_till_ready
+      - run:
+          name: Set up opensearch domain
+          command: localstack/setup-opensearch.sh
+      - hmpps/wait_till_ready:
+          port: 4566
+          host: os01.eu-west-2.opensearch.localhost.localstack.cloud
+      - hmpps/wait_till_ready_postgres
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
+            - gradle-
+      - run:
+          command: ./gradlew :<< parameters.project >>:check
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
+      - store_test_results:
+          path: << parameters.project >>/build/test-results
+      - store_artifacts:
+          path: << parameters.project >>/build/reports/tests
   no-op:
     docker:
       - image: cimg/base:current
@@ -102,7 +140,7 @@ workflows:
   build-test-and-deploy-indexer:
     when: << pipeline.parameters.build-indexer >>
     jobs:
-      - validate:
+      - validate-indexer:
           name: validate-indexer
           project: hmpps-prisoner-search-indexer
           filters:
@@ -144,7 +182,7 @@ workflows:
   build-test-and-deploy-search:
     when: << pipeline.parameters.build-search >>
     jobs:
-      - validate:
+      - validate-search:
           name: validate-search
           project: hmpps-prisoner-search
           filters:

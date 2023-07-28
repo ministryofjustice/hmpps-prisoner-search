@@ -152,6 +152,21 @@ class HealthCheckTest : IntegrationTestBase() {
       .jsonPath("components.offenderqueue-health.details.messagesOnDlq").isEqualTo(0)
   }
 
+  @Test
+  fun `Database reports UP`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("status").isEqualTo("UP")
+      .jsonPath("components.db.status").isEqualTo("UP")
+      .jsonPath("components.db.details.database").isEqualTo("PostgreSQL")
+  }
+
   private fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
     restrictedPatientsApi.stubHealthPing(status)

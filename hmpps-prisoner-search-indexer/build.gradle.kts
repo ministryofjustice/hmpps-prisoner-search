@@ -16,6 +16,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-cache")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("org.springframework.data:spring-data-elasticsearch:5.1.2")
 
@@ -30,6 +31,9 @@ dependencies {
   implementation("org.awaitility:awaitility-kotlin:4.2.0")
 
   implementation(project(":common"))
+
+  runtimeOnly("org.postgresql:postgresql:42.6.0")
+  runtimeOnly("org.flywaydb:flyway-core")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
