@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springdoc.core.annotations.ParameterObject
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
@@ -60,28 +59,4 @@ class GlobalSearchResource(
   fun findByPrisonNumber(@PathVariable id: String): Prisoner? =
     prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null)).firstOrNull()
       ?: throw NotFoundException("$id not found")
-
-  @GetMapping("/synthetic-monitor")
-  fun syntheticMonitor() {
-    val start = System.currentTimeMillis()
-    val results = globalSearchService.findByGlobalSearchCriteria(
-      GlobalSearchCriteria(
-        prisonerIdentifier = null,
-        firstName = null,
-        lastName = "Smith",
-        gender = null,
-        location = null,
-      ),
-      PageRequest.of(0, 10),
-    )
-
-    telemetryClient.trackEvent(
-      "synthetic-monitor",
-      mapOf(
-        "results" to "${results.size}",
-        "timeMs" to (System.currentTimeMillis() - start).toString(),
-      ),
-      null,
-    )
-  }
 }

@@ -37,7 +37,6 @@ class ResourceServerConfiguration {
           "/v3/api-docs/**",
           "/swagger-ui/**",
           "/swagger-ui.html",
-          "/synthetic-monitor",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }

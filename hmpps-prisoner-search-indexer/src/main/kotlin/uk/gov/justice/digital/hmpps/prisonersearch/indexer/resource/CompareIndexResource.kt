@@ -23,7 +23,7 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
         Comparison of the number of prisoners in NOMIS and the number of prisoners in the index. 
         Results sent to a custom event called COMPARE_INDEX_SIZE.
         It is an internal service which isn't exposed to the outside world and is called from a 
-        Kubernetes CronJob named `synthethic-monitor-cronjob`
+        Kubernetes CronJob named `compare-index-size-cronjob`
       """,
   )
   fun compareIndexSizes() = compareIndexService.doIndexSizeCheck()

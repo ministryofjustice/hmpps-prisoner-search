@@ -1,14 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.atLeastOnce
-import org.mockito.kotlin.check
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.Gender
@@ -476,34 +469,5 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
       2,
       "/results/globalSearch/search_results_sam_pagination3.json",
     )
-  }
-
-  @Nested
-  inner class SyntheticMonitor {
-
-    @Test
-    fun `endpoint is unsecured`() {
-      webTestClient.get().uri("/synthetic-monitor")
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
-    }
-
-    @Test
-    fun `telemetry is recorded`() {
-      webTestClient.get().uri("/synthetic-monitor")
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
-
-      verify(telemetryClient, atLeastOnce()).trackEvent(
-        eq("synthetic-monitor"),
-        check<Map<String, String>> {
-          assertThat(it["results"]?.toInt()).isEqualTo(10)
-          assertThat(it["timeMs"]?.toInt()).isGreaterThan(0)
-        },
-        isNull(),
-      )
-    }
   }
 }

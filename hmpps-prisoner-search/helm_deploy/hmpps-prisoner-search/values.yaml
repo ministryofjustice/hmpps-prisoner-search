@@ -16,10 +16,6 @@ generic-service:
     annotations:
       nginx.ingress.kubernetes.io/configuration-snippet: |
         server_tokens off;
-        location /synthetic-monitor {
-          deny all;
-          return 401;
-        }
   env:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
