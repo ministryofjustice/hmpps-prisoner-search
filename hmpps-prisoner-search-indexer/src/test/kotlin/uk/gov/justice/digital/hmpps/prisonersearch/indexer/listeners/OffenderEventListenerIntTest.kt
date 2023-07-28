@@ -12,9 +12,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPL
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test

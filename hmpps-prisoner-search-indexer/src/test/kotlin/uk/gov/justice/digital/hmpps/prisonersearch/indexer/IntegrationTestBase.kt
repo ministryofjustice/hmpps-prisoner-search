@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer
 
 import com.google.gson.Gson
 import org.apache.commons.lang3.RandomStringUtils
@@ -24,10 +24,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.JwtAuthHelper
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.IncentivesApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.RestrictedPatientsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
@@ -39,6 +35,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Of
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.time.LocalDate

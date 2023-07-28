@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.resource
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -20,16 +20,16 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildAlreadyInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.NoActiveIndexesException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotFoundException
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
 
-class MaintainIndexResourceApiTest : IntegrationTestBase() {
+class MaintainIndexResourceIntTest : IntegrationTestBase() {
   @SpyBean
   private lateinit var maintainIndexService: MaintainIndexService
 

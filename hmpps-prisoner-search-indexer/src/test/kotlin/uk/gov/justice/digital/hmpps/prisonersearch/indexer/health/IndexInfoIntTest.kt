@@ -1,22 +1,22 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.health
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
 
-class IndexInfoTest : IntegrationTestBase() {
+class IndexInfoIntTest : IntegrationTestBase() {
 
   @Nested
   inner class WhenNoIndexesArePresent {
     @BeforeEach
     fun init() {
-      deletePrisonerIndices()
-      deinitialiseIndexStatus()
+      deletePrisonerIndices() // required for index-size of -1
+      deinitialiseIndexStatus() // required for no index status
     }
 
     @Test

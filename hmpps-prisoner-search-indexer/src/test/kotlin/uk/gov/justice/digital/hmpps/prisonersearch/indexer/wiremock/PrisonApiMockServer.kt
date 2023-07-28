@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNumberPage
 
 class PrisonApiMockServer : WireMockServer(8093) {

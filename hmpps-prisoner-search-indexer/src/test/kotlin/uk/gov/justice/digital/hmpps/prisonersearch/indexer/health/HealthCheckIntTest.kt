@@ -1,17 +1,17 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.health
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.IncentivesApiExtension.Companion.incentivesApi
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
 
-class HealthCheckTest : IntegrationTestBase() {
+class HealthCheckIntTest : IntegrationTestBase() {
 
   @Test
   fun `Health page reports ok`() {
