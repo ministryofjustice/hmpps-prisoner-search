@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 
 internal class PrisonerRepositoryTest : IntegrationTestBase() {
 

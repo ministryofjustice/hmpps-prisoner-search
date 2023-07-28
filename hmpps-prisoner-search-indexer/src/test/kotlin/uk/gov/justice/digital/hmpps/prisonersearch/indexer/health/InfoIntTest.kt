@@ -1,12 +1,12 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.health
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class InfoTest : IntegrationTestBase() {
+class InfoIntTest : IntegrationTestBase() {
 
   @Test
   fun `Info page is accessible`() {

@@ -11,9 +11,9 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.BootstrapWith
 import org.springframework.web.reactive.config.EnableWebFlux
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.IncentivesApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.RestrictedPatientsApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
 import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.ANNOTATION_CLASS
 import kotlin.annotation.AnnotationTarget.CLASS

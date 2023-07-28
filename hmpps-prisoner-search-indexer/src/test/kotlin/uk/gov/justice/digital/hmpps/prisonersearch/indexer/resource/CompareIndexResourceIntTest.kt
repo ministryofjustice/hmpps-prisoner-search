@@ -1,6 +1,6 @@
 @file:Suppress("ClassName")
 
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.resource
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
@@ -16,11 +16,11 @@ import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.springframework.boot.test.mock.mockito.SpyBean
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
-class CompareIndexResourceApiTest : IntegrationTestBase() {
+class CompareIndexResourceIntTest : IntegrationTestBase() {
   @SpyBean
   lateinit var telemetryClient: TelemetryClient
 

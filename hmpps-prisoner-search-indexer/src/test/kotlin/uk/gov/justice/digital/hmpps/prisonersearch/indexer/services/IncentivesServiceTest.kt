@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.IncentivesApiExtension.Companion.incentivesApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import java.time.LocalDate
 import java.time.LocalDateTime
 

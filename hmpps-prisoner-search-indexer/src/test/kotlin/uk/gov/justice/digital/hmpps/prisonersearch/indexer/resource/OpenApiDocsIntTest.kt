@@ -6,11 +6,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class OpenApiDocsTest : IntegrationTestBase() {
+class OpenApiDocsIntTest : IntegrationTestBase() {
   @LocalServerPort
   private var port: Int = 0
 

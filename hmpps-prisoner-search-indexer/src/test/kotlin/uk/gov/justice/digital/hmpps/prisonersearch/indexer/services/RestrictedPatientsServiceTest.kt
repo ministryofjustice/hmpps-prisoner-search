@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.integration.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 import java.time.LocalDate
 
 @SpringAPIServiceTest
