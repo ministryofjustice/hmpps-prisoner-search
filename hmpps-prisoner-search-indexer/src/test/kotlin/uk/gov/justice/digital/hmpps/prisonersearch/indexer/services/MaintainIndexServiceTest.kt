@@ -224,14 +224,30 @@ class MaintainIndexServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
       val expectedIndexQueueStatus = IndexQueueStatus(0, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
-      whenever(indexBuildProperties.completeThreshold).thenReturn(1000000)
+      whenever(indexBuildProperties.completeThreshold).thenReturn(10000)
+      whenever(prisonerRepository.count(any())).thenReturn(9999)
 
       assertThatThrownBy { maintainIndexService.markIndexingComplete(ignoreThreshold = false) }
         .isInstanceOf(ThresholdNotReachedException::class.java)
-        .hasMessageContaining("The index prisoner-search-blue has not reached threshold 1000000 so")
+        .hasMessageContaining("The index prisoner-search-blue has not reached threshold 10000 so")
 
       verify(indexStatusService).getIndexStatus()
       verify(indexQueueService).getIndexQueueStatus()
+      verify(prisonerRepository).count(BLUE)
+    }
+
+    @Test
+    fun `Index reached threshold with other index under threshold`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
+      val expectedIndexQueueStatus = IndexQueueStatus(0, 0, 0)
+      whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
+      whenever(indexBuildProperties.completeThreshold).thenReturn(100)
+      whenever(prisonerRepository.count(GREEN)).thenReturn(99)
+      whenever(prisonerRepository.count(BLUE)).thenReturn(100)
+
+      maintainIndexService.markIndexingComplete(ignoreThreshold = false)
+
+      verify(indexStatusService).markBuildCompleteAndSwitchIndex()
     }
 
     @Test

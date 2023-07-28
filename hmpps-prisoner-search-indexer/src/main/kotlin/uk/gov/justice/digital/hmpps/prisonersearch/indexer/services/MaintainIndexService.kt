@@ -101,7 +101,7 @@ class MaintainIndexService(
   }
 
   private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean =
-    prisonerRepository.count(indexStatus.currentIndex) < indexBuildProperties.completeThreshold
+    prisonerRepository.count(indexStatus.currentIndex.otherIndex()) < indexBuildProperties.completeThreshold
 
   private fun doMarkIndexingComplete(): IndexStatus =
     indexStatusService.markBuildCompleteAndSwitchIndex()
