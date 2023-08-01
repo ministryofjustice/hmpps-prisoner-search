@@ -101,3 +101,7 @@ hmpps.sqs:
 index-build:
   page-size: 1000
   complete-threshold: 750000
+
+diff:
+  events: false
+  host: http://localhost:8080
