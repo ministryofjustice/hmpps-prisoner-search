@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestCli
 import org.springframework.boot.autoconfigure.elasticsearch.ReactiveElasticsearchClientAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
 @SpringBootApplication(
@@ -18,7 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProp
     "uk.gov.justice.digital.hmpps.prisonersearch",
   ],
 )
-@EnableConfigurationProperties(IndexBuildProperties::class)
+@EnableConfigurationProperties(IndexBuildProperties::class, DiffProperties::class)
 class HmppsPrisonerSearchIndexer
 
 fun main(args: Array<String>) {

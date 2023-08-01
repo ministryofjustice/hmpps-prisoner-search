@@ -11,9 +11,6 @@ import org.springframework.data.elasticsearch.annotations.Field
 import org.springframework.data.elasticsearch.annotations.FieldType
 import org.springframework.data.elasticsearch.annotations.InnerField
 import org.springframework.data.elasticsearch.annotations.MultiField
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.diff.DiffCategory
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.diff.DiffableProperty
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.diff.getDiffResult
 import java.time.LocalDate
 
 open class Prisoner : Diffable<Prisoner> {

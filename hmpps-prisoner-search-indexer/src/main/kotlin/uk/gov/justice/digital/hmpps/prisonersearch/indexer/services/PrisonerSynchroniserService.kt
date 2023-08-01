@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
@@ -17,6 +16,7 @@ class PrisonerSynchroniserService(
   private val telemetryClient: TelemetryClient,
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
+  private val prisonerDifferenceService: PrisonerDifferenceService,
 ) {
 
   // called when prisoner updated or manual prisoner index required
@@ -32,9 +32,10 @@ class PrisonerSynchroniserService(
       incentiveLevel = incentiveLevel,
       restrictedPatientData = restrictedPatient,
     )
-    indices.map { index -> prisonerRepository.save(prisoner, index) }.also {
-      telemetryClient.trackEvent(TelemetryEvents.PRISONER_UPDATED, mapOf("prisonerNumber" to prisoner.prisonerNumber!!))
-    }
+    indices.map { index -> prisonerRepository.save(prisoner, index) }
+
+    prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
+
     incentiveLevel.onFailure { throw it }
     restrictedPatient.onFailure { throw it }
     return prisoner

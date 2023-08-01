@@ -66,3 +66,6 @@ hmpps.sqs:
 index-build:
   page-size: 10
   complete-threshold: 0
+
+diff:
+  events: true
