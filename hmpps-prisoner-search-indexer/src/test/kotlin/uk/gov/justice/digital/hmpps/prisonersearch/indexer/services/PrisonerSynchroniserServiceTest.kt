@@ -11,11 +11,11 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isA
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
@@ -27,11 +27,13 @@ internal class PrisonerSynchroniserServiceTest {
   private val restrictedPatientService = mock<RestrictedPatientService>()
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
+  private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
     telemetryClient,
     restrictedPatientService,
     incentivesService,
+    prisonerDifferenceService,
   )
 
   @Nested
@@ -53,10 +55,18 @@ internal class PrisonerSynchroniserServiceTest {
     }
 
     @Test
-    internal fun `will send telemetry event for update`() {
+    internal fun `will call prisoner difference to handle differences`() {
+      val existingPrisoner = Prisoner()
+      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
       service.reindex(booking, listOf(GREEN))
 
-      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
+      verify(prisonerDifferenceService).handleDifferences(
+        eq(existingPrisoner),
+        eq(booking),
+        check {
+          assertThat(it.prisonerNumber).isEqualTo(booking.offenderNo)
+        },
+      )
     }
 
     @Test

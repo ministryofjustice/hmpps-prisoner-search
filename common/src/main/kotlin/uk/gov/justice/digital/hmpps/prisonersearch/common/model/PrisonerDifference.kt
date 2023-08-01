@@ -1,9 +1,8 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.common.model.diff
+package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
 import org.apache.commons.lang3.builder.DiffBuilder
 import org.apache.commons.lang3.builder.DiffResult
 import org.apache.commons.lang3.builder.ToStringStyle
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import kotlin.reflect.full.findAnnotations
 
 @Target(AnnotationTarget.PROPERTY)
