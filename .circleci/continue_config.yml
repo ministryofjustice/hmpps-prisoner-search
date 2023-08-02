@@ -165,7 +165,7 @@ workflows:
           jira_update: true
           context:
             - hmpps-common-vars
-            - hmpps-prisoner-search
+            - hmpps-prisoner-search-dev
           k8s_deployment_name: hmpps-prisoner-search-indexer
           chart_name: hmpps-prisoner-search-indexer
           release_name: hmpps-prisoner-search-indexer
@@ -179,6 +179,24 @@ workflows:
             - build_docker-indexer
             - helm_lint-indexer
           helm_timeout: 5m
+      - request-preprod-approval:
+          type: approval
+          requires:
+            - deploy_dev-indexer
+      - hmpps/deploy_env:
+          name: deploy_preprod
+          env: "preprod"
+          jira_update: true
+          jira_env_type: staging
+          context:
+            - hmpps-common-vars
+            - hmpps-prisoner-search-preprod
+          k8s_deployment_name: hmpps-prisoner-search-indexer
+          chart_name: hmpps-prisoner-search-indexer
+          release_name: hmpps-prisoner-search-indexer
+          helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+          requires:
+            - request-preprod-approval
   build-test-and-deploy-search:
     when: << pipeline.parameters.build-search >>
     jobs:
@@ -205,7 +223,7 @@ workflows:
           jira_update: true
           context:
             - hmpps-common-vars
-            - hmpps-prisoner-search
+            - hmpps-prisoner-search-dev
           helm_dir: hmpps-prisoner-search/helm_deploy
           filters:
             branches:
@@ -216,3 +234,17 @@ workflows:
             - build_docker-search
             - helm_lint-search
           helm_timeout: 5m
+      - request-preprod-approval:
+          type: approval
+          requires:
+            - deploy_dev-search
+      - hmpps/deploy_env:
+          name: deploy_preprod
+          env: "preprod"
+          jira_update: true
+          jira_env_type: staging
+          context:
+            - hmpps-common-vars
+            - hmpps-prisoner-search-preprod
+          requires:
+            - request-preprod-approval
