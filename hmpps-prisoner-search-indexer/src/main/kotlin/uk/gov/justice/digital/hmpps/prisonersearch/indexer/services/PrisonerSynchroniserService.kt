@@ -43,15 +43,17 @@ class PrisonerSynchroniserService(
 
   // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
   // we don't need to write what we have so far for the prisoner to it.
-  internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner {
-    val prisoner = Prisoner().translate(
+  internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner =
+    translate(ob).also {
+      indexes.map { index -> prisonerRepository.save(it, index) }
+    }
+
+  internal fun translate(ob: OffenderBooking): Prisoner =
+    Prisoner().translate(
       ob = ob,
       incentiveLevel = Result.success(getIncentive(ob)),
       restrictedPatientData = Result.success(getRestrictedPatient(ob)),
     )
-    indexes.map { index -> prisonerRepository.save(prisoner, index) }
-    return prisoner
-  }
 
   fun delete(prisonerNumber: String) =
     prisonerRepository.delete(prisonerNumber).also {
@@ -59,10 +61,8 @@ class PrisonerSynchroniserService(
     }
 
   private fun getRestrictedPatient(ob: OffenderBooking) =
-    if (ob.assignedLivingUnit?.agencyId == "OUT") {
-      restrictedPatientService.getRestrictedPatient(ob.offenderNo)
-    } else {
-      null
+    ob.takeIf { it.assignedLivingUnit?.agencyId == "OUT" }?.let {
+      restrictedPatientService.getRestrictedPatient(it.offenderNo)
     }
 
   private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }

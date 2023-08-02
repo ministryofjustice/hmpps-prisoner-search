@@ -26,6 +26,8 @@ class CompareIndexService(
   private val telemetryClient: TelemetryClient,
   private val nomisService: NomisService,
   private val prisonerRepository: PrisonerRepository,
+  private val prisonerSynchroniserService: PrisonerSynchroniserService,
+  private val prisonerDifferenceService: PrisonerDifferenceService,
 ) {
 
   private companion object {
@@ -107,13 +109,25 @@ class CompareIndexService(
     return Pair(onlyInIndex, onlyInNomis)
   }
 
+  fun comparePrisoner(prisonerNumber: String) =
+    nomisService.getOffender(prisonerNumber)?.let { ob ->
+      val calculated = prisonerSynchroniserService.translate(ob)
+      val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
+
+      prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
+    }
+
   private fun setupIndexSearch(scroll: Scroll): SearchResponse {
     val searchSourceBuilder = SearchSourceBuilder().apply {
       fetchSource(FetchSourceContext.DO_NOT_FETCH_SOURCE)
       size(2000)
     }
-    val searchRequest = SearchRequest(arrayOf(indexStatusService.getIndexStatus().currentIndex.indexName), searchSourceBuilder)
-    searchRequest.scroll(scroll)
+    val searchRequest = SearchRequest(
+      arrayOf(indexStatusService.getIndexStatus().currentIndex.indexName),
+      searchSourceBuilder,
+    ).apply {
+      scroll(scroll)
+    }
     return openSearchClient.search(searchRequest, RequestOptions.DEFAULT)
   }
 

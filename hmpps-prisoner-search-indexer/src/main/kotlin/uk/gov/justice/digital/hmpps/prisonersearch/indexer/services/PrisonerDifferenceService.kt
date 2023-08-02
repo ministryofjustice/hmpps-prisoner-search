@@ -143,7 +143,7 @@ class PrisonerDifferenceService(
     prisoner: Prisoner,
   ): List<Diff<Prisoner>> {
     previousPrisonerSnapshot?.also {
-      val differences = DiffBuilder<Prisoner>(it, prisoner, ToStringStyle.JSON_STYLE).apply<DiffBuilder<Prisoner>> {
+      val differences = DiffBuilder(it, prisoner, ToStringStyle.JSON_STYLE).apply {
         Prisoner::class.members
           .filterNot { exemptedMethods.contains(it.name) }
           .forEach { property ->
