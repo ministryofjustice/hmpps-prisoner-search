@@ -34,14 +34,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
     )
 
     prisoners.forEach {
-      stubFor(
-        WireMock.get(WireMock.urlEqualTo("/api/offenders/${it.prisonerNumber}"))
-          .willReturn(
-            WireMock.aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withBody(it.toOffenderBooking()),
-          ),
-      )
+      stubGetOffender(it)
       stubFor(
         WireMock.get(WireMock.urlPathEqualTo("/iep/reviews/booking/${it.bookingId}"))
           .willReturn(
@@ -51,6 +44,17 @@ class PrisonApiMockServer : WireMockServer(8093) {
           ),
       )
     }
+  }
+
+  fun stubGetOffender(prisonerBuilder: PrisonerBuilder) {
+    stubFor(
+      WireMock.get(WireMock.urlEqualTo("/api/offenders/${prisonerBuilder.prisonerNumber}"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(prisonerBuilder.toOffenderBooking()),
+        ),
+    )
   }
 
   fun stubGetNomsNumberForBooking(bookingId: Long, prisonerNumber: String) {
