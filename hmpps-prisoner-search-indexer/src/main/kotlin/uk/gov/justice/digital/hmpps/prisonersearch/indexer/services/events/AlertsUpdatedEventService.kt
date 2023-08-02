@@ -6,6 +6,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 @Service
 class AlertsUpdatedEventService {
   fun generateAnyEvents(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) {
-    TODO("Not yet implemented")
+    // TODO("Not yet implemented")
   }
 }
