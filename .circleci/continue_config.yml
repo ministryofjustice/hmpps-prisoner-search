@@ -246,5 +246,6 @@ workflows:
           context:
             - hmpps-common-vars
             - hmpps-prisoner-search-preprod
+          helm_dir: hmpps-prisoner-search/helm_deploy
           requires:
             - request-preprod-approval
