@@ -3,7 +3,7 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: hmpps-prisoner-search-indexer-preprod.hmpps.service.justice.gov.uk
+    host: prisoner-search-indexer-preprod.prison.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
@@ -16,7 +16,5 @@ generic-service:
 generic-prometheus-alerts:
   businessHoursOnly: true
 
-cron:
-  retry_dlqs_schedule: "*/10 7-20 * * 1-5"
-  index_size_schedule: "*/10 7-20 * * 1-5"
-  check_index_schedule: "*/15 7-20 * * 1-5"
+  rdsAlertsDatabases:
+    cloud-platform-12e2a73b0333ffab: "prisoner search indexer"
