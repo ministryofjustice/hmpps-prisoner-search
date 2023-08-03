@@ -7,6 +7,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Of
 @Service
 class PrisonerMovementsEventService {
   fun generateAnyEvents(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner, offenderBooking: OffenderBooking) {
-    TODO("Not yet implemented")
+    // TODO("Not yet implemented")
   }
 }
