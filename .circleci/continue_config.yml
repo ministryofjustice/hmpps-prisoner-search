@@ -184,7 +184,7 @@ workflows:
           requires:
             - deploy_dev-indexer
       - hmpps/deploy_env:
-          name: deploy_preprod
+          name: deploy_preprod-indexer
           env: "preprod"
           jira_update: true
           jira_env_type: staging
@@ -239,7 +239,7 @@ workflows:
           requires:
             - deploy_dev-search
       - hmpps/deploy_env:
-          name: deploy_preprod
+          name: deploy_preprod-search
           env: "preprod"
           jira_update: true
           jira_env_type: staging

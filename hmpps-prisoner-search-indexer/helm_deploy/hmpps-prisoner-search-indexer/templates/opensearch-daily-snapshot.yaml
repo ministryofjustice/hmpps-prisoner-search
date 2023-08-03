@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensearch-snapshot-script
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+data:
+  entrypoint.sh: |-
+{{ .Files.Get "snapshot.sh" | indent 4 }}
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "app.fullname" . }}-opensearch-snapshot
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  schedule: "30 2 * * *"
+  concurrencyPolicy: "Forbid"
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      backoffLimit: 0
+      activeDeadlineSeconds: 2400
+      template:
+        spec:
+          containers:
+          - name: opensearch-snapshot
+            image: "ghcr.io/ministryofjustice/hmpps-devops-tools:latest"
+            command:
+            - /bin/entrypoint.sh
+            volumeMounts:
+            - name: opensearch-snapshot-script
+              mountPath: /bin/entrypoint.sh
+              readOnly: true
+              subPath: entrypoint.sh
+            env:
+            - name: OPENSEARCH_PROXY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: opensearch
+                  key: url
+            - name: SNAPSHOT_ROLE_ARN
+              valueFrom:
+                secretKeyRef:
+                  name: os-snapshot-role
+                  key: snapshot_role_arn
+            - name: BUCKET_NAME
+              valueFrom: 
+                secretKeyRef:
+                  name: os-snapshot-bucket
+                  key: bucket_name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          restartPolicy: "Never"
+          volumes:
+          - name: opensearch-snapshot-script
+            configMap:
+              name: opensearch-snapshot-script
+              defaultMode: 0755
