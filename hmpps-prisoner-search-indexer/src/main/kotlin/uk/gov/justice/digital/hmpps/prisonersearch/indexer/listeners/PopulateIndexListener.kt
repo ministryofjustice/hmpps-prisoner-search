@@ -8,6 +8,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_PRISONER
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
@@ -35,6 +38,9 @@ class PopulateIndexListener(
         POPULATE_INDEX -> populateIndexService.populateIndex(indexRequest.index!!)
         POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
+        COMPARE_INDEX -> log.info("Found COMPARE_INDEX request")
+        COMPARE_PRISONER_PAGE -> log.info("Found COMPARE_PRISONER_PAGE request")
+        COMPARE_PRISONER -> log.info("Found COMPARE_PRISONER request")
         else -> {
           "Unknown request type for message $requestJson"
             .let {
@@ -61,5 +67,6 @@ data class IndexMessageRequest(
 )
 
 enum class IndexRequestType {
-  POPULATE_INDEX, POPULATE_PRISONER_PAGE, POPULATE_PRISONER
+  POPULATE_INDEX, POPULATE_PRISONER_PAGE, POPULATE_PRISONER,
+  COMPARE_INDEX, COMPARE_PRISONER_PAGE, COMPARE_PRISONER,
 }
