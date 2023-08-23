@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -46,7 +47,7 @@ class MaintainIndexService(
   private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
     indexStatusService.markBuildInProgress()
     checkExistsAndReset(indexStatus.otherIndex)
-    indexQueueService.sendPopulateIndexMessage(indexStatus.otherIndex)
+    indexQueueService.sendIndexMessage(indexStatus.otherIndex, POPULATE_INDEX)
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
       .also {

@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -32,33 +31,33 @@ class IndexQueueService(
   private val indexQueueUrl by lazy { indexQueue.queueUrl }
   private val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
 
-  fun sendPopulateIndexMessage(index: SyncIndex) {
+  fun sendIndexMessage(index: SyncIndex, type: IndexRequestType) {
     val result = indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
         objectMapper.writeValueAsString(
-          IndexMessageRequest(type = POPULATE_INDEX, index = index),
+          IndexMessageRequest(type = type, index = index),
         ),
       ).build(),
     ).get()
     log.info("Sent populate index message request {}", result.messageId())
   }
 
-  fun sendPopulatePrisonerPageMessage(prisonerPage: PrisonerPage) {
+  fun sendPrisonerPageMessage(prisonerPage: PrisonerPage, type: IndexRequestType) {
     val result = indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
         objectMapper.writeValueAsString(
-          IndexMessageRequest(type = IndexRequestType.POPULATE_PRISONER_PAGE, prisonerPage = prisonerPage),
+          IndexMessageRequest(type = type, prisonerPage = prisonerPage),
         ),
       ).build(),
     ).get()
-    log.info("Sent populate prisoner page message request {} for page {}", result.messageId(), prisonerPage)
+    log.info("Sent {} prisoner page message request {} for page {}", type, result.messageId(), prisonerPage)
   }
 
-  fun sendPopulatePrisonerMessage(prisonerNumber: String) {
+  fun sendPrisonerMessage(prisonerNumber: String, type: IndexRequestType) {
     indexSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
         objectMapper.writeValueAsString(
-          IndexMessageRequest(type = IndexRequestType.POPULATE_PRISONER, prisonerNumber = prisonerNumber),
+          IndexMessageRequest(type = type, prisonerNumber = prisonerNumber),
         ),
       ).build(),
     ).get()
