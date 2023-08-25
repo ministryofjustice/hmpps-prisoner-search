@@ -22,7 +22,7 @@ dependencies {
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.28.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.29.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
