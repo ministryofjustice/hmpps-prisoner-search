@@ -39,7 +39,7 @@ dependencies {
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.16")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
-  testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
+  testImplementation("org.wiremock:wiremock:3.0.3")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.0.0")
