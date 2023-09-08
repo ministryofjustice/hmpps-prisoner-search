@@ -22,5 +22,5 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XDELETE http://prisoner-offender-search/prisoner-differences/delete
+                - curl --retry 2 -XDELETE http://hmpps-prisoner-search-indexer/prisoner-differences/delete
           restartPolicy: Never
