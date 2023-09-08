@@ -30,6 +30,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /prisoner-differences/delete {
+          deny all;
+          return 401;
+        }
   env:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
