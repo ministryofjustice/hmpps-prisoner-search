@@ -27,12 +27,10 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_INDEX
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_PRISONER
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_PRISONER_PAGE
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
@@ -61,24 +59,8 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
     }
 
     @Test
-    fun `will send populate message with index name`() {
-      indexQueueService.sendIndexMessage(GREEN, POPULATE_INDEX)
-      verify(indexSqsClient).sendMessage(
-        check<SendMessageRequest> {
-          assertThatJson(it.messageBody()).isEqualTo(
-            """{
-          "type": "POPULATE_INDEX",
-          "index": "GREEN"
-          }
-            """.trimIndent(),
-          )
-        },
-      )
-    }
-
-    @Test
-    fun `will ignore index name`() {
-      indexQueueService.sendIndexMessage(GREEN, COMPARE_INDEX)
+    fun `will send populate message`() {
+      indexQueueService.sendIndexMessage(GREEN)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -94,7 +76,7 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendIndexMessage(GREEN, POPULATE_INDEX)
+      indexQueueService.sendIndexMessage(GREEN)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
@@ -111,29 +93,13 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
     }
 
     @Test
-    fun `will send populate message with index name`() {
+    fun `will send refresh message`() {
       indexQueueService.sendRefreshIndexMessage(GREEN)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "COMPARE_INDEX",
-          "index": "GREEN"
-          }
-            """.trimIndent(),
-          )
-        },
-      )
-    }
-
-    @Test
-    fun `will ignore index name`() {
-      indexQueueService.sendRefreshIndexMessage(GREEN)
-      verify(indexSqsClient).sendMessage(
-        check<SendMessageRequest> {
-          assertThatJson(it.messageBody()).isEqualTo(
-            """{
-          "type": "COMPARE_INDEX",
+          "type": "REFRESH_INDEX",
           "index": "GREEN"
           }
             """.trimIndent(),
@@ -181,12 +147,12 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send compare message with index name`() {
-      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), COMPARE_PRISONER_PAGE)
+      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), REFRESH_PRISONER_PAGE)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "COMPARE_PRISONER_PAGE",
+          "type": "REFRESH_PRISONER_PAGE",
           "prisonerPage": {
             "page": 1,
             "pageSize": 1000
@@ -237,13 +203,13 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send compare message with prisonerNumber`() {
-      indexQueueService.sendPrisonerMessage("X12345", COMPARE_PRISONER)
+      indexQueueService.sendPrisonerMessage("X12345", REFRESH_PRISONER)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """
         {
-          "type":"COMPARE_PRISONER",
+          "type":"REFRESH_PRISONER",
           "prisonerNumber":"X12345"
         }
             """.trimIndent(),
