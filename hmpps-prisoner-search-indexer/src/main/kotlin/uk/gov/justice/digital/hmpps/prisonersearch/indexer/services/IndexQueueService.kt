@@ -8,9 +8,12 @@ import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -32,25 +35,27 @@ class IndexQueueService(
   private val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
 
   fun sendIndexMessage(index: SyncIndex, type: IndexRequestType) {
-    val result = indexSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
-        objectMapper.writeValueAsString(
-          IndexMessageRequest(type = type, index = index),
-        ),
-      ).build(),
-    ).get()
-    log.info("Sent populate index message request {}", result.messageId())
+    sendMessage(IndexMessageRequest(type = POPULATE_INDEX, index = index)).also {
+      log.info("Sent populate index message request {}", it.messageId())
+    }
   }
 
+  fun sendRefreshIndexMessage(index: SyncIndex) {
+    sendMessage(IndexMessageRequest(type = COMPARE_INDEX, index = index)).also {
+      log.info("Sent refresh index message request {}", it.messageId())
+    }
+  }
+
+  fun sendMessage(request: IndexMessageRequest): SendMessageResponse = indexSqsClient.sendMessage(
+    SendMessageRequest.builder().queueUrl(indexQueueUrl)
+      .messageBody(objectMapper.writeValueAsString(request))
+      .build(),
+  ).get()
+
   fun sendPrisonerPageMessage(prisonerPage: PrisonerPage, type: IndexRequestType) {
-    val result = indexSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
-        objectMapper.writeValueAsString(
-          IndexMessageRequest(type = type, prisonerPage = prisonerPage),
-        ),
-      ).build(),
-    ).get()
-    log.info("Sent {} prisoner page message request {} for page {}", type, result.messageId(), prisonerPage)
+    sendMessage(IndexMessageRequest(type = type, prisonerPage = prisonerPage)).also {
+      log.info("Sent {} prisoner page message request {} for page {}", type, it.messageId(), prisonerPage)
+    }
   }
 
   fun sendPrisonerMessage(prisonerNumber: String, type: IndexRequestType) {
