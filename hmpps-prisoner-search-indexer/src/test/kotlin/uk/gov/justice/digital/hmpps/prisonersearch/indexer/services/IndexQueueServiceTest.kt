@@ -77,8 +77,58 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
     }
 
     @Test
-    fun `will send compare message with index name`() {
+    fun `will ignore index name`() {
       indexQueueService.sendIndexMessage(GREEN, COMPARE_INDEX)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "POPULATE_INDEX",
+          "index": "GREEN"
+          }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to index queue`() {
+      indexQueueService.sendIndexMessage(GREEN, POPULATE_INDEX)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
+        },
+      )
+    }
+  }
+
+  @Nested
+  inner class SendRefreshIndexMessage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
+    }
+
+    @Test
+    fun `will send populate message with index name`() {
+      indexQueueService.sendRefreshIndexMessage(GREEN)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "COMPARE_INDEX",
+          "index": "GREEN"
+          }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will ignore index name`() {
+      indexQueueService.sendRefreshIndexMessage(GREEN)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -94,7 +144,7 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendIndexMessage(GREEN, POPULATE_INDEX)
+      indexQueueService.sendRefreshIndexMessage(GREEN)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
