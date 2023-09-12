@@ -27,6 +27,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
@@ -44,6 +46,7 @@ class PrisonerDifferenceServiceTest {
   private val objectMapper = mock<ObjectMapper>()
   private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
   private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
+  private val prisonerDifferencesRepository = mock<PrisonerDifferencesRepository>()
 
   private val prisonerDifferenceService = PrisonerDifferenceService(
     telemetryClient,
@@ -53,6 +56,7 @@ class PrisonerDifferenceServiceTest {
     objectMapper,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
+    prisonerDifferencesRepository,
   )
 
   @Nested
@@ -498,12 +502,12 @@ class PrisonerDifferenceServiceTest {
         pncNumber = "somePnc1"
         prisonerNumber = "A1234ZZ"
       }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
+      val prisoner2 = Prisoner().apply { prisonerNumber = "A1234ZZ"; pncNumber = "somePnc2" }
 
       prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
 
       verify(telemetryClient).trackEvent(
-        eq("DIFFERENCE_REPORTED"),
+        eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
         check<Map<String, String>> {
           assertThat(it["prisonerNumber"]).isEqualTo("A1234ZZ")
           assertThat(it["categoriesChanged"]).isEqualTo("[IDENTIFIERS]")
@@ -511,28 +515,36 @@ class PrisonerDifferenceServiceTest {
         isNull(),
       )
 
-      assertThat(prisonerDifferenceService.reportDiffTelemetryDetails(prisoner1, prisoner2).toString()).isEqualTo(
-        "[[pncNumber: somePnc1, somePnc2], [prisonerNumber: A1234ZZ, null]]",
+      verify(prisonerDifferencesRepository).save(
+        check {
+          assertThat(it.differences).isEqualTo(
+            "[[pncNumber: somePnc1, somePnc2]]",
+          )
+        },
       )
     }
 
     @Test
     fun `should report null differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc"; croNumber = null; prisonerNumber = "A1234BC" }
-      val prisoner2 = Prisoner().apply { pncNumber = null; croNumber = "someCro"; prisonerNumber = "A1234BC" }
+      val prisoner1 = Prisoner().apply { prisonerNumber = "A1234BC"; pncNumber = "somePnc"; croNumber = null }
+      val prisoner2 = Prisoner().apply { prisonerNumber = "A1234BC"; pncNumber = null; croNumber = "someCro" }
 
       prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
 
       verify(telemetryClient).trackEvent(
-        eq("DIFFERENCE_REPORTED"),
+        eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
         check<Map<String, String>> {
           assertThat(it["categoriesChanged"]).isEqualTo("[IDENTIFIERS]")
         },
         isNull(),
       )
 
-      assertThat(prisonerDifferenceService.reportDiffTelemetryDetails(prisoner1, prisoner2).toString()).isEqualTo(
-        "[[croNumber: null, someCro], [pncNumber: somePnc, null]]",
+      verify(prisonerDifferencesRepository).save(
+        check {
+          assertThat(it.differences).isEqualTo(
+            "[[croNumber: null, someCro], [pncNumber: somePnc, null]]",
+          )
+        },
       )
     }
 
@@ -565,7 +577,7 @@ class PrisonerDifferenceServiceTest {
 
       verify(telemetryClient)
         .trackEvent(
-          eq("DIFFERENCE_REPORTED"),
+          eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
           check<Map<String, String>> {
             assertThat(it["categoriesChanged"]).isEqualTo(
               "[ALERTS, IDENTIFIERS, INCENTIVE_LEVEL, PERSONAL_DETAILS, PHYSICAL_DETAILS, SENTENCE]",
@@ -574,13 +586,17 @@ class PrisonerDifferenceServiceTest {
           isNull(),
         )
 
-      assertThat(prisonerDifferenceService.reportDiffTelemetryDetails(prisoner1, prisoner2).toString()).isEqualTo(
-        "[[alerts: [PrisonerAlert(alertType=X, alertCode=X1, active=true, expired=false)]," +
-          " [PrisonerAlert(alertType=Y, alertCode=X1, active=true, expired=false)]]," +
-          " [currentIncentive: CurrentIncentive(level=IncentiveLevel(code=STANDARD, description=Standard), dateTime=2021-05-09T10:00, nextReviewDate=null), null]," +
-          " [firstName: null, someFirstName2], [pncNumber: somePnc1, somePnc2]," +
-          " [sentenceStartDate: null, 2023-05-09]," +
-          " [shoeSize: 10, 11]]",
+      verify(prisonerDifferencesRepository).save(
+        check {
+          assertThat(it.differences).isEqualTo(
+            "[[alerts: [PrisonerAlert(alertType=X, alertCode=X1, active=true, expired=false)]," +
+              " [PrisonerAlert(alertType=Y, alertCode=X1, active=true, expired=false)]]," +
+              " [currentIncentive: CurrentIncentive(level=IncentiveLevel(code=STANDARD, description=Standard), dateTime=2021-05-09T10:00, nextReviewDate=null), null]," +
+              " [firstName: null, someFirstName2], [pncNumber: somePnc1, somePnc2]," +
+              " [sentenceStartDate: null, 2023-05-09]," +
+              " [shoeSize: 10, 11]]",
+          )
+        },
       )
     }
 
@@ -602,7 +618,7 @@ class PrisonerDifferenceServiceTest {
 
       verify(telemetryClient)
         .trackEvent(
-          eq("DIFFERENCE_MISSING"),
+          eq(TelemetryEvents.DIFFERENCE_MISSING.name),
           check<Map<String, String>> {
             assertThat(it["prisonerNumber"]).isEqualTo("B1234YY")
           },

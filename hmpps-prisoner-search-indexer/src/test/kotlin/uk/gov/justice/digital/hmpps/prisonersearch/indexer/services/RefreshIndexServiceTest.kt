@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.microsoft.applicationinsights.TelemetryClient
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -10,6 +9,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.ABSENT
@@ -17,20 +17,24 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILD
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCELLED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 
 class RefreshIndexServiceTest {
 
   private val indexStatusService = mock<IndexStatusService>()
   private val indexQueueService = mock<IndexQueueService>()
   private val nomisService = mock<NomisService>()
-  private val telemetryClient = mock<TelemetryClient>()
+  private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val indexBuildProperties = IndexBuildProperties(10, 10)
   private val refreshIndexService = RefreshIndexService(
     indexStatusService,
     indexQueueService,
     nomisService,
+    prisonerSynchroniserService,
     indexBuildProperties,
   )
 
@@ -114,7 +118,7 @@ class RefreshIndexServiceTest {
     internal fun `will return the number of chunks sent for processing`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
 
-      Assertions.assertThat(refreshIndexService.refreshIndex()).isEqualTo(3)
+      assertThat(refreshIndexService.refreshIndex()).isEqualTo(3)
     }
 
     @Test
@@ -217,6 +221,60 @@ class RefreshIndexServiceTest {
 
       verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
       verify(indexQueueService).sendRefreshPrisonerMessage("A12345")
+    }
+  }
+
+  @Nested
+  inner class RefreshPrisoner {
+    private val prisoner = Prisoner().also { it.prisonerNumber = "ABC123D" }
+
+    @BeforeEach
+    internal fun setUp() {
+      whenever(prisonerSynchroniserService.compareAndMaybeIndex(any(), any())).thenReturn(prisoner)
+    }
+
+    @Test
+    internal fun `will return error if other index is building`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+
+      assertThatThrownBy { refreshIndexService.refreshPrisoner("ABC123D") }
+        .isInstanceOf(BuildAlreadyInProgressException::class.java)
+        .hasMessageContaining("The build for BLUE is already BUILDING")
+    }
+
+    @Test
+    internal fun `will return offender just indexed`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+
+      assertThat(refreshIndexService.refreshPrisoner("ABC123D"))
+        .extracting { it?.prisonerNumber }.isEqualTo("ABC123D")
+    }
+
+    @Test
+    internal fun `will synchronise offender to all active indices`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+
+      refreshIndexService.refreshPrisoner("ABC123D")
+
+      verify(prisonerSynchroniserService).compareAndMaybeIndex(booking, listOf(GREEN, BLUE))
+      verify(nomisService).getOffender("ABC123D")
+    }
+
+    @Test
+    internal fun `will do nothing if prisoner not in NOMIS`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+
+      refreshIndexService.refreshPrisoner("ABC123D")
+
+      verifyNoInteractions(prisonerSynchroniserService)
     }
   }
 }

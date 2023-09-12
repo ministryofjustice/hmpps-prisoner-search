@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
 @Service
@@ -11,6 +12,7 @@ class RefreshIndexService(
   private val indexStatusService: IndexStatusService,
   private val indexQueueService: IndexQueueService,
   private val nomisService: NomisService,
+  private val prisonerSynchroniserService: PrisonerSynchroniserService,
   indexBuildProperties: IndexBuildProperties,
 ) {
   private val pageSize = indexBuildProperties.pageSize
@@ -47,12 +49,19 @@ class RefreshIndexService(
   }
 
   fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit =
+    nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
+      .forEach {
+        indexQueueService.sendRefreshPrisonerMessage(it)
+      }
+
+  fun refreshPrisoner(prisonerNumber: String): Prisoner? =
     indexStatusService.getIndexStatus()
+      // no point refreshing index if we're already building the other one
+      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
       .run {
-        nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
-          .forEach {
-            indexQueueService.sendRefreshPrisonerMessage(it)
-          }
+        nomisService.getOffender(prisonerNumber)?.let { ob ->
+          prisonerSynchroniserService.compareAndMaybeIndex(ob, activeIndexes())
+        }
       }
 
   private companion object {
