@@ -1,9 +1,6 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -189,6 +186,37 @@ class RefreshIndexServiceTest {
 
       refreshIndexService.refreshIndex()
       verifyNoMoreInteractions(indexQueueService)
+    }
+  }
+
+  @Nested
+  inner class RefreshIndexWithPrisonerPage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(
+          currentIndex = GREEN,
+          currentIndexState = COMPLETED,
+          otherIndexState = COMPLETED,
+        ),
+      )
+      whenever(nomisService.getPrisonerNumbers(any(), any()))
+        .thenReturn(listOf("ABC123D", "A12345"))
+    }
+
+    @Test
+    internal fun `will get offenders in the supplied page`() {
+      refreshIndexService.refreshIndexWithPrisonerPage(PrisonerPage(page = 99, pageSize = 1000))
+
+      verify(nomisService).getPrisonerNumbers(page = 99, pageSize = 1000)
+    }
+
+    @Test
+    internal fun `for each offender will send populate offender message`() {
+      refreshIndexService.refreshIndexWithPrisonerPage(PrisonerPage(page = 99, pageSize = 1000))
+
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
+      verify(indexQueueService).sendRefreshPrisonerMessage("A12345")
     }
   }
 }

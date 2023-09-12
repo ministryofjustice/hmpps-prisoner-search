@@ -41,7 +41,7 @@ class PopulateIndexListener(
         POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
         REFRESH_INDEX -> refreshIndexService.refreshIndex()
-        REFRESH_PRISONER_PAGE -> log.info("Found REFRESH_PRISONER_PAGE request")
+        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         REFRESH_PRISONER -> log.info("Found REFRESH_PRISONER request")
         else -> {
           "Unknown request type for message $requestJson"

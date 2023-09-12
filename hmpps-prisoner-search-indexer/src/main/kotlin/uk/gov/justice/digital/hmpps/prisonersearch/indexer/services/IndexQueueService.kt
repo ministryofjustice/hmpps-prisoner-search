@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessag
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -64,15 +65,11 @@ class IndexQueueService(
       log.info("Sent {} prisoner page message request {} for page {}", REFRESH_PRISONER_PAGE, it.messageId(), prisonerPage)
     }
 
-  fun sendPrisonerMessage(prisonerNumber: String, type: IndexRequestType) {
-    indexSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(indexQueueUrl).messageBody(
-        objectMapper.writeValueAsString(
-          IndexMessageRequest(type = type, prisonerNumber = prisonerNumber),
-        ),
-      ).build(),
-    ).get()
-  }
+  fun sendPrisonerMessage(prisonerNumber: String, type: IndexRequestType) =
+    sendMessage(IndexMessageRequest(type = type, prisonerNumber = prisonerNumber))
+
+  fun sendRefreshPrisonerMessage(prisonerNumber: String) =
+    sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber))
 
   fun getNumberOfMessagesCurrentlyOnIndexQueue(): Int = indexSqsClient.countMessagesOnQueue(indexQueueUrl).get()
 

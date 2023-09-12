@@ -286,6 +286,43 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
   }
 
   @Nested
+  inner class SendRefreshPrisonerMessage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(
+        CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()),
+      )
+    }
+
+    @Test
+    fun `will send populate message with prisonerNumber`() {
+      indexQueueService.sendRefreshPrisonerMessage("X12345")
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """
+        {
+          "type":"REFRESH_PRISONER",
+          "prisonerNumber":"X12345"
+        }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to index queue`() {
+      indexQueueService.sendPrisonerMessage("X12345", REFRESH_PRISONER)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
+        },
+      )
+    }
+  }
+
+  @Nested
   inner class QueueMessageAttributes {
     @Test
     internal fun `async calls for queue status successfully complete`() {
