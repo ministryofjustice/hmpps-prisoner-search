@@ -21,12 +21,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppend
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
 
 @JsonTest
 internal class PopulateIndexListenerTest(@Autowired private val objectMapper: ObjectMapper) {
   private val populateIndexService = mock<PopulateIndexService>()
+  private val refreshIndexService = mock<RefreshIndexService>()
 
-  private val listener = PopulateIndexListener(objectMapper, populateIndexService)
+  private val listener = PopulateIndexListener(objectMapper, populateIndexService, refreshIndexService)
   private val logAppender = findLogAppender(PopulateIndexListener::class.java)
 
   @Nested
@@ -61,6 +63,23 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
       )
 
       assertThat(logAppender.list).anyMatch { it.message.contains("failed with error") }
+    }
+  }
+
+  @Nested
+  inner class RefreshIndex {
+    @Test
+    internal fun `will call service with index name`() {
+      listener.processIndexRequest(
+        """
+      {
+        "type": "REFRESH_INDEX",
+        "index": "GREEN"
+      }
+        """.trimIndent(),
+      )
+
+      verify(refreshIndexService).refreshIndex()
     }
   }
 

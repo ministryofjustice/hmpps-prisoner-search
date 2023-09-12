@@ -2,12 +2,18 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
+import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.ABSENT
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
@@ -15,12 +21,21 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
 class RefreshIndexServiceTest {
 
   private val indexStatusService = mock<IndexStatusService>()
   private val indexQueueService = mock<IndexQueueService>()
-  private val refreshIndexService = RefreshIndexService(indexStatusService, indexQueueService)
+  private val nomisService = mock<NomisService>()
+  private val telemetryClient = mock<TelemetryClient>()
+  private val indexBuildProperties = IndexBuildProperties(10, 10)
+  private val refreshIndexService = RefreshIndexService(
+    indexStatusService,
+    indexQueueService,
+    nomisService,
+    indexBuildProperties,
+  )
 
   @Nested
   inner class StartIndexRefresh {
@@ -75,6 +90,105 @@ class RefreshIndexServiceTest {
       refreshIndexService.startIndexRefresh()
 
       verify(indexQueueService).sendRefreshIndexMessage(GREEN)
+    }
+  }
+
+  @Nested
+  inner class RefreshIndex {
+    private val indexStatus =
+      IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
+
+    @BeforeEach
+    internal fun beforeEach() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+    }
+
+    @Test
+    internal fun `will return an error if indexing is in progress`() {
+      val indexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+
+      assertThatThrownBy { refreshIndexService.refreshIndex() }
+        .isInstanceOf(BuildAlreadyInProgressException::class.java)
+        .hasMessageContaining("The build for BLUE is already BUILDING")
+    }
+
+    @Test
+    internal fun `will return the number of chunks sent for processing`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
+
+      Assertions.assertThat(refreshIndexService.refreshIndex()).isEqualTo(3)
+    }
+
+    @Test
+    internal fun `For each chunk should send a process chunk message`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
+
+      refreshIndexService.refreshIndex()
+
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(0, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(1, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(2, 10))
+    }
+
+    @Test
+    internal fun `will split total list by our page size`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(30)
+
+      refreshIndexService.refreshIndex()
+
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(0, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(1, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(2, 10))
+    }
+
+    @Test
+    internal fun `will round up last page to page size when over`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(31)
+
+      refreshIndexService.refreshIndex()
+
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(0, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(1, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(2, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(3, 10))
+      verifyNoMoreInteractions(indexQueueService)
+    }
+
+    @Test
+    internal fun `will round up last page to page size when under`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(29)
+
+      refreshIndexService.refreshIndex()
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(0, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(1, 10))
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(2, 10))
+      verifyNoMoreInteractions(indexQueueService)
+    }
+
+    @Test
+    internal fun `will create a large number of pages for a large number of prisoners`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(20001)
+
+      refreshIndexService.refreshIndex()
+      verify(indexQueueService, times(2001)).sendRefreshPrisonerPageMessage(any())
+    }
+
+    @Test
+    internal fun `will create a single pages for a tiny number of prisoners`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
+
+      refreshIndexService.refreshIndex()
+      verify(indexQueueService).sendRefreshPrisonerPageMessage(PrisonerPage(0, 10))
+      verifyNoMoreInteractions(indexQueueService)
+    }
+
+    @Test
+    internal fun `will create no pages for no prisoners`() {
+      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(0)
+
+      refreshIndexService.refreshIndex()
+      verifyNoMoreInteractions(indexQueueService)
     }
   }
 }

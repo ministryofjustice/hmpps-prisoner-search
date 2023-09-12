@@ -4,12 +4,17 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
 @Service
 class RefreshIndexService(
   private val indexStatusService: IndexStatusService,
   private val indexQueueService: IndexQueueService,
+  private val nomisService: NomisService,
+  indexBuildProperties: IndexBuildProperties,
 ) {
+  private val pageSize = indexBuildProperties.pageSize
+
   fun startIndexRefresh() {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
     return indexStatusService.getIndexStatus()
@@ -25,6 +30,20 @@ class RefreshIndexService(
         log.info("Sending index refresh request")
         indexQueueService.sendRefreshIndexMessage(currentIndex)
       }
+  }
+
+  fun refreshIndex(): Int =
+    indexStatusService.getIndexStatus()
+      // no point refreshing index if we're already building the other one
+      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
+      .run { doRefreshIndex() }
+
+  private fun doRefreshIndex(): Int {
+    val totalNumberOfPrisoners = nomisService.getTotalNumberOfPrisoners()
+    log.info("Splitting $totalNumberOfPrisoners in to pages each of size $pageSize")
+    return (1..totalNumberOfPrisoners step pageSize.toLong()).toList()
+      .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
+      .onEach { indexQueueService.sendRefreshPrisonerPageMessage(it) }.size
   }
 
   private companion object {

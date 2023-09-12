@@ -176,6 +176,62 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
   }
 
   @Nested
+  inner class SendRefreshPrisonerPageMessage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
+    }
+
+    @Test
+    fun `will send populate message with index name`() {
+      indexQueueService.sendRefreshPrisonerPageMessage(PrisonerPage(1, 1000))
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "REFRESH_PRISONER_PAGE",
+          "prisonerPage": {
+            "page": 1,
+            "pageSize": 1000
+          }
+        }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send compare message with index name`() {
+      indexQueueService.sendRefreshPrisonerPageMessage(PrisonerPage(1, 1000))
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "REFRESH_PRISONER_PAGE",
+          "prisonerPage": {
+            "page": 1,
+            "pageSize": 1000
+          }
+        }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to index queue`() {
+      indexQueueService.sendRefreshPrisonerPageMessage(PrisonerPage(1, 1000))
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
+        },
+      )
+    }
+  }
+
+  @Nested
   inner class SendPrisonerMessage {
     @BeforeEach
     internal fun setUp() {

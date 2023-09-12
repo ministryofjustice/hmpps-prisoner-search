@@ -17,12 +17,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
 import java.lang.IllegalArgumentException
 
 @Service
 class PopulateIndexListener(
   private val objectMapper: ObjectMapper,
   private val populateIndexService: PopulateIndexService,
+  private val refreshIndexService: RefreshIndexService,
 ) {
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
   @WithSpan(value = "syscon-devs-hmpps_prisoner_search_index_queue", kind = SpanKind.SERVER)
@@ -38,7 +40,7 @@ class PopulateIndexListener(
         POPULATE_INDEX -> populateIndexService.populateIndex(indexRequest.index!!)
         POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
-        REFRESH_INDEX -> log.info("Found REFRESH_INDEX request")
+        REFRESH_INDEX -> refreshIndexService.refreshIndex()
         REFRESH_PRISONER_PAGE -> log.info("Found REFRESH_PRISONER_PAGE request")
         REFRESH_PRISONER -> log.info("Found REFRESH_PRISONER request")
         else -> {
