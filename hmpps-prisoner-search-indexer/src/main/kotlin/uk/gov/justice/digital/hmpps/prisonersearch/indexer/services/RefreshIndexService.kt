@@ -46,6 +46,15 @@ class RefreshIndexService(
       .onEach { indexQueueService.sendRefreshPrisonerPageMessage(it) }.size
   }
 
+  fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit =
+    indexStatusService.getIndexStatus()
+      .run {
+        nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
+          .forEach {
+            indexQueueService.sendRefreshPrisonerMessage(it)
+          }
+      }
+
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
