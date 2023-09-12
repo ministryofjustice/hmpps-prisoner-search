@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -33,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.NONE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -161,7 +159,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.prepareIndexForRebuild()
 
-      verify(indexQueueService).sendIndexMessage(any(), eq(POPULATE_INDEX))
+      verify(indexQueueService).sendIndexMessage(any())
     }
 
     @Test

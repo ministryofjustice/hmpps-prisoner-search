@@ -12,8 +12,8 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.COMPARE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -34,14 +34,14 @@ class IndexQueueService(
   private val indexQueueUrl by lazy { indexQueue.queueUrl }
   private val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
 
-  fun sendIndexMessage(index: SyncIndex, type: IndexRequestType) {
+  fun sendIndexMessage(index: SyncIndex) {
     sendMessage(IndexMessageRequest(type = POPULATE_INDEX, index = index)).also {
       log.info("Sent populate index message request {}", it.messageId())
     }
   }
 
   fun sendRefreshIndexMessage(index: SyncIndex) {
-    sendMessage(IndexMessageRequest(type = COMPARE_INDEX, index = index)).also {
+    sendMessage(IndexMessageRequest(type = REFRESH_INDEX, index = index)).also {
       log.info("Sent refresh index message request {}", it.messageId())
     }
   }
