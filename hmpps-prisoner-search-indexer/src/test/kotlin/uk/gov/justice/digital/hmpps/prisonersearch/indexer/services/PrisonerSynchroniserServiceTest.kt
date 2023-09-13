@@ -46,6 +46,8 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     internal fun `will save prisoner to repository`() {
+      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
       service.reindex(booking, listOf(GREEN))
 
       verify(prisonerRepository).save(isA(), isA())
@@ -53,15 +55,29 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     internal fun `will save prisoner to current index`() {
+      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
       service.reindex(booking, listOf(GREEN))
 
       verify(prisonerRepository).save(isA(), check { assertThat(it).isEqualTo(GREEN) })
     }
 
     @Test
+    internal fun `will not save prisoner if no changes`() {
+      val existingPrisoner = Prisoner()
+      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(false)
+      service.reindex(booking, listOf(GREEN))
+
+      verify(prisonerDifferenceService, never()).handleDifferences(any(), any(), any())
+      verify(prisonerRepository, never()).save(any(), any())
+    }
+
+    @Test
     internal fun `will call prisoner difference to handle differences`() {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
       service.reindex(booking, listOf(GREEN))
 
       verify(prisonerDifferenceService).handleDifferences(
@@ -127,6 +143,8 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
       whenever(restrictedPatientService.getRestrictedPatient(any())).thenThrow(RuntimeException("not today thank you"))
+      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
 
       assertThatThrownBy { service.reindex(outsidePrisoner, listOf(GREEN)) }.hasMessage("not today thank you")
 
@@ -158,6 +176,8 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     internal fun `will throw exception if incentives service call fails, but still save prisoner`() {
       whenever(incentivesService.getCurrentIncentive(any())).thenThrow(RuntimeException("not today thank you"))
+      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
 
       assertThatThrownBy { service.reindex(booking, listOf(GREEN)) }.hasMessage("not today thank you")
 

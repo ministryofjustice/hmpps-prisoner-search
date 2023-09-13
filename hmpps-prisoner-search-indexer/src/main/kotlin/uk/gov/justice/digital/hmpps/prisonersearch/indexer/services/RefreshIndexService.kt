@@ -4,7 +4,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
 @Service
@@ -54,7 +53,7 @@ class RefreshIndexService(
         indexQueueService.sendRefreshPrisonerMessage(it)
       }
 
-  fun refreshPrisoner(prisonerNumber: String): Prisoner? =
+  fun refreshPrisoner(prisonerNumber: String) {
     indexStatusService.getIndexStatus()
       // no point refreshing index if we're already building the other one
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
@@ -63,6 +62,7 @@ class RefreshIndexService(
           prisonerSynchroniserService.compareAndMaybeIndex(ob, activeIndexes())
         }
       }
+  }
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)

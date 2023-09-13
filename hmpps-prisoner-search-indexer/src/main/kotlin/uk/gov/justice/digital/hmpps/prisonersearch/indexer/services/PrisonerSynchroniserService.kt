@@ -32,9 +32,11 @@ class PrisonerSynchroniserService(
       incentiveLevel = incentiveLevel,
       restrictedPatientData = restrictedPatient,
     )
-    indices.map { index -> prisonerRepository.save(prisoner, index) }
-
-    prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
+    // only save to elastic search if we encounter any differences
+    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+      indices.map { index -> prisonerRepository.save(prisoner, index) }
+      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
+    }
 
     incentiveLevel.onFailure { throw it }
     restrictedPatient.onFailure { throw it }
@@ -48,7 +50,7 @@ class PrisonerSynchroniserService(
       indexes.map { index -> prisonerRepository.save(it, index) }
     }
 
-  internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>): Prisoner {
+  internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>) {
     val incentiveLevel = getIncentive(ob)
     val restrictedPatient = getRestrictedPatient(ob)
 
@@ -64,10 +66,8 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
-
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
     }
-    return prisoner
   }
 
   internal fun translate(ob: OffenderBooking): Prisoner =
