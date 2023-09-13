@@ -28,3 +28,5 @@ cron:
   retry_dlqs_schedule: "*/10 7-20 * * 1-5"
   index_size_schedule: "*/10 7-20 * * 1-5"
   check_index_schedule: "*/15 7-20 * * 1-5"
+  index_refresh_schedule: "05 18 * * 1-5"
+  remove_differences_schedule: "30 21 * * 1-5"
