@@ -45,7 +45,8 @@ class MaintainIndexService(
 
   private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
     indexStatusService.markBuildInProgress()
-    checkExistsAndReset(indexStatus.otherIndex)
+    createIfDoesntExist(indexStatus.currentIndex)
+    resetAndCreate(indexStatus.otherIndex)
     indexQueueService.sendIndexMessage(indexStatus.otherIndex)
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
@@ -57,11 +58,17 @@ class MaintainIndexService(
       }
   }
 
-  private fun checkExistsAndReset(index: SyncIndex) {
+  private fun createIfDoesntExist(index: SyncIndex) {
+    if (!prisonerRepository.doesIndexExist(index)) {
+      prisonerRepository.createIndex(index)
+    }
+  }
+
+  private fun resetAndCreate(index: SyncIndex) {
     if (prisonerRepository.doesIndexExist(index)) {
       prisonerRepository.deleteIndex(index)
+      await untilCallTo { prisonerRepository.doesIndexExist(index) } matches { it == false }
     }
-    await untilCallTo { prisonerRepository.doesIndexExist(index) } matches { it == false }
     prisonerRepository.createIndex(index)
   }
 

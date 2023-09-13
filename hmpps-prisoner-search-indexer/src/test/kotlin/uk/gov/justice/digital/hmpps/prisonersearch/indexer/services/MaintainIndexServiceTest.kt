@@ -101,11 +101,24 @@ class MaintainIndexServiceTest {
     }
 
     @Test
+    internal fun `will create the current index if it doesn't exist`() {
+      whenever(indexStatusService.getIndexStatus())
+        .thenReturn(IndexStatus(currentIndex = GREEN, currentIndexState = ABSENT, otherIndexState = ABSENT))
+
+      whenever(prisonerRepository.doesIndexExist(any())).thenReturn(false).thenReturn(false)
+
+      maintainIndexService.prepareIndexForRebuild()
+
+      verify(prisonerRepository).createIndex(GREEN)
+    }
+
+    @Test
     internal fun `will delete the index if it exists`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
 
-      whenever(prisonerRepository.doesIndexExist(any())).thenReturn(true).thenReturn(false)
+      whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
+      whenever(prisonerRepository.doesIndexExist(BLUE)).thenReturn(true).thenReturn(false)
 
       maintainIndexService.prepareIndexForRebuild()
 
@@ -116,6 +129,7 @@ class MaintainIndexServiceTest {
     internal fun `won't bother deleting index if it does not exist`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
       whenever(prisonerRepository.doesIndexExist(BLUE)).thenReturn(false)
 
       maintainIndexService.prepareIndexForRebuild()
@@ -127,6 +141,7 @@ class MaintainIndexServiceTest {
     fun `waits for index to be deleted before recreating`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
       whenever(prisonerRepository.doesIndexExist(BLUE))
         .thenReturn(true)
         .thenReturn(true)
