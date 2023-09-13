@@ -47,7 +47,7 @@ class MaintainIndexService(
     indexStatusService.markBuildInProgress()
     createIfDoesntExist(indexStatus.currentIndex)
     resetAndCreate(indexStatus.otherIndex)
-    indexQueueService.sendIndexMessage(indexStatus.otherIndex)
+    indexQueueService.sendPopulateIndexMessage(indexStatus.otherIndex)
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
       .also {
