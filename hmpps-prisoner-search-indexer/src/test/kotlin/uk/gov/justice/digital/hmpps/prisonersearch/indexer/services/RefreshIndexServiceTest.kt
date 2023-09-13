@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILD
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCELLED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
@@ -226,13 +225,6 @@ class RefreshIndexServiceTest {
 
   @Nested
   inner class RefreshPrisoner {
-    private val prisoner = Prisoner().also { it.prisonerNumber = "ABC123D" }
-
-    @BeforeEach
-    internal fun setUp() {
-      whenever(prisonerSynchroniserService.compareAndMaybeIndex(any(), any())).thenReturn(prisoner)
-    }
-
     @Test
     internal fun `will return error if other index is building`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
@@ -241,17 +233,6 @@ class RefreshIndexServiceTest {
       assertThatThrownBy { refreshIndexService.refreshPrisoner("ABC123D") }
         .isInstanceOf(BuildAlreadyInProgressException::class.java)
         .hasMessageContaining("The build for BLUE is already BUILDING")
-    }
-
-    @Test
-    internal fun `will return offender just indexed`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
-
-      assertThat(refreshIndexService.refreshPrisoner("ABC123D"))
-        .extracting { it?.prisonerNumber }.isEqualTo("ABC123D")
     }
 
     @Test

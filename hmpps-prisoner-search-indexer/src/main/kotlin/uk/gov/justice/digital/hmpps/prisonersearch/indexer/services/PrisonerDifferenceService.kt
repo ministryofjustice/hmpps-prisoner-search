@@ -62,20 +62,20 @@ class PrisonerDifferenceService(
       .associate { property -> property.name to property.findAnnotations<DiffableProperty>().first().type }
 
   @Transactional
-  fun handleDifferences(previousPrisonerSnapshot: Prisoner?, offenderBooking: OffenderBooking, prisoner: Prisoner) {
-    val newHash = prisoner.hash()
-    if (previousPrisonerSnapshot?.hash() != newHash) {
-      if (updateDbHash(offenderBooking.offenderNo, newHash)) {
-        generateDiffEvent(previousPrisonerSnapshot, offenderBooking, prisoner)
-        generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner)
-        prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
-        alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
-      } else {
-        raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo)
-      }
-    } else {
-      raiseNoDifferencesTelemetry(offenderBooking.offenderNo)
-    }
+  fun handleDifferences(
+    previousPrisonerSnapshot: Prisoner?,
+    offenderBooking: OffenderBooking,
+    prisoner: Prisoner,
+  ) {
+    prisoner.hash().takeIf { previousPrisonerSnapshot?.hash() != it }
+      ?.run {
+        takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
+          generateDiffEvent(previousPrisonerSnapshot, offenderBooking, prisoner)
+          generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner)
+          prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
+          alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+        } ?: raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo)
+      } ?: raiseNoDifferencesTelemetry(offenderBooking.offenderNo)
   }
 
   fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) =
@@ -132,7 +132,9 @@ class PrisonerDifferenceService(
       }
       // and the sensitive full differences in our postgres database
       reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
-        prisonerDifferencesRepository.save(PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString()))
+        prisonerDifferencesRepository.save(
+          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString()),
+        )
       }
     }
       ?: telemetryClient.trackPrisonerEvent(DIFFERENCE_MISSING, prisoner.prisonerNumber!!)
