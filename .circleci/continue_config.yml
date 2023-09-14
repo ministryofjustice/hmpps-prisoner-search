@@ -165,7 +165,6 @@ workflows:
           jira_update: true
           context:
             - hmpps-common-vars
-            - hmpps-prisoner-search-dev
           k8s_deployment_name: hmpps-prisoner-search-indexer
           chart_name: hmpps-prisoner-search-indexer
           release_name: hmpps-prisoner-search-indexer
@@ -223,7 +222,6 @@ workflows:
           jira_update: true
           context:
             - hmpps-common-vars
-            - hmpps-prisoner-search-dev
           helm_dir: hmpps-prisoner-search/helm_deploy
           filters:
             branches:
