@@ -174,7 +174,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.prepareIndexForRebuild()
 
-      verify(indexQueueService).sendIndexMessage(any())
+      verify(indexQueueService).sendPopulateIndexMessage(any())
     }
 
     @Test

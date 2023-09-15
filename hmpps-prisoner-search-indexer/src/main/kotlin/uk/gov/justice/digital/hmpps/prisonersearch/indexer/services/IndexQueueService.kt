@@ -11,8 +11,9 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessageRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
@@ -36,7 +37,7 @@ class IndexQueueService(
   private val indexQueueUrl by lazy { indexQueue.queueUrl }
   private val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
 
-  fun sendIndexMessage(index: SyncIndex) {
+  fun sendPopulateIndexMessage(index: SyncIndex) {
     sendMessage(IndexMessageRequest(type = POPULATE_INDEX, index = index)).also {
       log.info("Sent populate index message request {}", it.messageId())
     }
@@ -54,9 +55,9 @@ class IndexQueueService(
       .build(),
   ).get()
 
-  fun sendPrisonerPageMessage(prisonerPage: PrisonerPage, type: IndexRequestType) {
-    sendMessage(IndexMessageRequest(type = type, prisonerPage = prisonerPage)).also {
-      log.info("Sent {} prisoner page message request {} for page {}", type, it.messageId(), prisonerPage)
+  fun sendPrisonerPageMessage(prisonerPage: PrisonerPage) {
+    sendMessage(IndexMessageRequest(type = POPULATE_PRISONER_PAGE, prisonerPage = prisonerPage)).also {
+      log.info("Sent {} prisoner page message request {} for page {}", POPULATE_PRISONER_PAGE, it.messageId(), prisonerPage)
     }
   }
 
@@ -65,8 +66,8 @@ class IndexQueueService(
       log.info("Sent {} prisoner page message request {} for page {}", REFRESH_PRISONER_PAGE, it.messageId(), prisonerPage)
     }
 
-  fun sendPrisonerMessage(prisonerNumber: String, type: IndexRequestType) =
-    sendMessage(IndexMessageRequest(type = type, prisonerNumber = prisonerNumber))
+  fun sendPopulatePrisonerMessage(prisonerNumber: String) =
+    sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber))
 
   fun sendRefreshPrisonerMessage(prisonerNumber: String) =
     sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber))
