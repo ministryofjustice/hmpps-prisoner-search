@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
@@ -74,9 +73,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var indexStatusRepository: IndexStatusRepository
-
-  @Autowired
-  lateinit var prisonerHashRepository: PrisonerHashRepository
 
   @Autowired
   internal lateinit var gson: Gson
