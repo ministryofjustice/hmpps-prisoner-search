@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.google.gson.Gson
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -48,7 +50,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
 
   fun stubGetOffender(prisonerBuilder: PrisonerBuilder) {
     stubFor(
-      WireMock.get(WireMock.urlEqualTo("/api/offenders/${prisonerBuilder.prisonerNumber}"))
+      WireMock.get(urlEqualTo("/api/offenders/${prisonerBuilder.prisonerNumber}"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -59,7 +61,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
 
   fun stubGetNomsNumberForBooking(bookingId: Long, prisonerNumber: String) {
     stubFor(
-      WireMock.get(WireMock.urlEqualTo("/api/bookings/$bookingId?basicInfo=true"))
+      WireMock.get(urlEqualTo("/api/bookings/$bookingId?basicInfo=true"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -70,7 +72,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
 
   fun stubGetMergedIdentifiersByBookingId(bookingId: Long, prisonerNumber: String) {
     stubFor(
-      WireMock.get(WireMock.urlEqualTo("/api/bookings/$bookingId/identifiers?type=MERGED"))
+      WireMock.get(urlEqualTo("/api/bookings/$bookingId/identifiers?type=MERGED"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -87,6 +89,8 @@ class PrisonApiMockServer : WireMockServer(8093) {
         ),
     )
   }
+
+  fun countFor(url: String): Int = findAll(getRequestedFor(urlEqualTo(url))).count()
 
   private fun validBookingMessage(bookingId: Long, prisonerNumber: String): String =
     """

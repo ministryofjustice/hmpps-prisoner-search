@@ -1,12 +1,17 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue
+import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_SEND_FAILURE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.CREATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_ALERTS_UPDATED_EVENT_TYPE
@@ -14,6 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_RELEASED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -23,17 +30,25 @@ import kotlin.reflect.full.memberProperties
 
 @Service
 class HmppsDomainEventEmitter(
+  private val objectMapper: ObjectMapper,
+  private val hmppsQueueService: HmppsQueueService,
   private val diffProperties: DiffProperties,
   private val clock: Clock?,
   private val telemetryClient: TelemetryClient,
 ) {
+
+  private val hmppsDomainTopic by lazy {
+    hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw IllegalStateException("hmppseventtopic not found")
+  }
+  private val topicArn by lazy { hmppsDomainTopic.arn }
+  private val topicSnsClient by lazy { hmppsDomainTopic.snsClient }
 
   fun <T : PrisonerAdditionalInformation> defaultFailureHandler(event: PrisonerDomainEvent<T>, exception: Throwable) {
     log.error(
       "Failed to send event ${event.eventType} for offenderNo= ${event.additionalInformation.nomsNumber}. Event must be manually created",
       exception,
     )
-    telemetryClient.trackEvent("POSPrisonerDomainEventSendFailure", event.asMap(), null)
+    telemetryClient.trackEvent(EVENTS_SEND_FAILURE, event.asMap())
   }
 
   fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.publish(
@@ -41,7 +56,28 @@ class HmppsDomainEventEmitter(
       defaultFailureHandler(this, it)
     },
   ) {
-    // TODO: Implement me
+    val event = PrisonerDomainEvent(
+      additionalInformation = this.additionalInformation,
+      eventType = "${diffProperties.prefix}${this.eventType}",
+      occurredAt = this.occurredAt,
+      version = this.version,
+      description = this.description,
+      detailUrl = this.detailUrl,
+    )
+
+    val request = PublishRequest.builder()
+      .topicArn(topicArn)
+      .message(objectMapper.writeValueAsString(event))
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(event.eventType).build(),
+        ),
+      ).build()
+
+    runCatching {
+      topicSnsClient.publish(request)
+      telemetryClient.trackEvent(event.eventType, event.asMap(), null)
+    }.onFailure(onFailure)
   }
 
   fun emitPrisonerDifferenceEvent(
@@ -134,7 +170,6 @@ abstract class PrisonerAdditionalInformation {
   abstract val nomsNumber: String
 }
 
-@Suppress("MemberVisibilityCanBePrivate")
 open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
   val additionalInformation: T,
   val occurredAt: String,
@@ -202,7 +237,7 @@ class PrisonerReceivedDomainEvent(additionalInformation: PrisonerReceivedEvent, 
 
 data class PrisonerReleasedEvent(
   override val nomsNumber: String,
-  val reason: HmppsDomainEventEmitter.PrisonerReleaseReason,
+  val reason: PrisonerReleaseReason,
   val prisonId: String,
 ) : PrisonerAdditionalInformation()
 

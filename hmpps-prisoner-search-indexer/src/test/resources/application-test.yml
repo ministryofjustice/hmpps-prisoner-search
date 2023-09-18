@@ -69,3 +69,4 @@ index-build:
 
 diff:
   events: true
+  prefix: test.

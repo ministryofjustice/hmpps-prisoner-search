@@ -7,16 +7,23 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.kotlin.whenever
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.core.CountRequest
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
@@ -39,9 +46,16 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
+import uk.gov.justice.hmpps.sqs.HmppsQueueFactory
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
+import uk.gov.justice.hmpps.sqs.HmppsTopicFactory
 import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.MissingTopicException
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.random.Random
 
 @ExtendWith(
@@ -51,6 +65,7 @@ import kotlin.random.Random
   HmppsAuthApiExtension::class,
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(IntegrationTestBase.SqsConfig::class)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
   @Autowired
@@ -76,6 +91,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   internal lateinit var gson: Gson
+
+  @SpyBean
+  lateinit var clock: Clock
 
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
   protected val hmppsDomainQueue by lazy { hmppsQueueService.findByQueueId("hmppsdomainqueue") ?: throw MissingQueueException("HmppsQueue hmppsdomainqueue not found") }
@@ -104,6 +122,13 @@ abstract class IntegrationTestBase {
     indexSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
     createPrisonerIndices()
     initialiseIndexStatus()
+  }
+
+  @BeforeEach
+  fun mockClock() {
+    val fixedClock = Clock.fixed(Instant.parse("2022-09-16T10:40:34Z"), ZoneId.of("UTC"))
+    whenever(clock.instant()).thenReturn(fixedClock.instant())
+    whenever(clock.zone).thenReturn(fixedClock.zone)
   }
 
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
@@ -151,6 +176,45 @@ abstract class IntegrationTestBase {
     user: String = "prisoner-offender-search-indexer-client",
     roles: List<String> = listOf(),
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, roles)
+
+  /* Need to redefine these beans so that we can then spy on them in tests */
+  @Suppress("SpringJavaInjectionPointsAutowiringInspection")
+  @TestConfiguration
+  class SqsConfig(private val hmppsQueueFactory: HmppsQueueFactory, private val hmppsTopicFactory: HmppsTopicFactory) {
+
+    @Bean("offenderqueue-sqs-client")
+    fun offenderQueueSqsClient(
+      hmppsSqsProperties: HmppsSqsProperties,
+      @Qualifier("offenderqueue-sqs-dlq-client") offenderQueueSqsDlqClient: SqsAsyncClient,
+
+    ): SqsAsyncClient =
+      with(hmppsSqsProperties) {
+        val config = queues["offenderqueue"]
+          ?: throw MissingQueueException("HmppsSqsProperties config for offenderqueue not found")
+        hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, offenderQueueSqsDlqClient)
+      }
+
+    @Bean("hmppsdomainqueue-sqs-client")
+    fun hmppsDomainQueueSqsClient(
+      hmppsSqsProperties: HmppsSqsProperties,
+      @Qualifier("hmppsdomainqueue-sqs-dlq-client") hmppsDomainQueueSqsDlqClient: SqsAsyncClient,
+    ): SqsAsyncClient =
+      with(hmppsSqsProperties) {
+        val config = queues["hmppsdomainqueue"]
+          ?: throw MissingQueueException("HmppsSqsProperties config for hmppsdomainqueue not found")
+        hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, hmppsDomainQueueSqsDlqClient)
+      }
+
+    @Bean("hmppseventtopic-sns-client")
+    fun eventTopicSnsClient(
+      hmppsSqsProperties: HmppsSqsProperties,
+    ): SnsAsyncClient =
+      with(hmppsSqsProperties) {
+        val config = topics["hmppseventtopic"]
+          ?: throw MissingTopicException("HmppsSqsProperties config for hmppseventtopic not found")
+        hmppsTopicFactory.createSnsAsyncClient("hmppseventtopic", config, hmppsSqsProperties)
+      }
+  }
 }
 
 data class PrisonerBuilder(

@@ -416,7 +416,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
     bookingId = 123456L,
     identifiers = identifiers,
   )
-}
 
-private fun String.readResourceAsText(): String =
-  PrisonerMovementsEventServiceTest::class.java.getResource(this)!!.readText()
+  private fun String.readResourceAsText(): String =
+    PrisonerMovementsEventServiceTest::class.java.getResource(this)!!.readText()
+}
