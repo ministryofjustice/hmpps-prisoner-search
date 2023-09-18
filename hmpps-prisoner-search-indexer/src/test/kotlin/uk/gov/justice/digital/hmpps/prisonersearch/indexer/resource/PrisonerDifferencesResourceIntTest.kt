@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDi
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-class PrisonerDifferencesResourceTest : IntegrationTestBase() {
+class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
   @Autowired
   private lateinit var repository: PrisonerDifferencesRepository
 
