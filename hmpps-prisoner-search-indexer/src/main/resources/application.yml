@@ -105,3 +105,4 @@ index-build:
 diff:
   events: false
   host: http://localhost:8080
+  prefix: dummy.
