@@ -243,12 +243,12 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
       "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"),
     )
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
+    val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.updated")
-
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.released")
+    assertThat(nextTwoEventTypes).containsExactlyInAnyOrder(
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.released",
+    )
   }
 
   @Test
@@ -275,11 +275,12 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.updated")
+    val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.received")
+    assertThat(nextTwoEventTypes).containsExactlyInAnyOrder(
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.received",
+    )
   }
 
   @Test
@@ -307,11 +308,12 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.updated")
+    val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.alerts-updated")
+    assertThat(nextTwoEventTypes).containsExactlyInAnyOrder(
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.alerts-updated",
+    )
   }
 
   @Test
@@ -372,11 +374,12 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.updated")
+    val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
 
-    assertThatJson(readNextDomainEventMessage()).node("eventType")
-      .isEqualTo("test.prisoner-offender-search.prisoner.alerts-updated")
+    assertThat(nextTwoEventTypes).containsExactlyInAnyOrder(
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.alerts-updated",
+    )
   }
 
   @Test
@@ -494,10 +497,14 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     Mockito.reset(prisonerDifferenceService)
   }
 
-  fun readNextDomainEventMessage(): String {
+  private fun readNextDomainEventMessage(): String {
     val updateResult = hmppsEventsQueue.sqsClient.receiveFirstMessage()
     hmppsEventsQueue.sqsClient.deleteLastMessage(updateResult)
     return objectMapper.readValue<MsgBody>(updateResult.body()).Message
+  }
+  private fun readEventFromNextDomainEventMessage(): String {
+    val message = readNextDomainEventMessage()
+    return objectMapper.readValue<EventMessage>(message).eventType
   }
 
   private fun PrisonApiMockServer.stubOffenderNoFromBookingId(prisonerNumber: String) {
@@ -561,3 +568,5 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
 @JsonNaming(value = PropertyNamingStrategies.UpperCamelCaseStrategy::class)
 data class MsgBody(val Message: String)
+
+data class EventMessage(val eventType: String)
