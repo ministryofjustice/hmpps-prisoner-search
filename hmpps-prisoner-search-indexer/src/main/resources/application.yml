@@ -103,6 +103,6 @@ index-build:
   complete-threshold: 750000
 
 diff:
-  events: false
+  events: true
   host: http://localhost:8080
   prefix: dummy.
