@@ -10,3 +10,5 @@ generic-service:
     API_BASE_URL_INCENTIVES: "https://incentives-api.hmpps.service.justice.gov.uk"
     DIFF_HOST: "https://prisoner-search.prison.service.justice.gov.uk"
 
+  rdsAlertsDatabases:
+    cloud-platform-beab851ca55f05a8: "prisoner search indexer"
