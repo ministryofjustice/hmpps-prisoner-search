@@ -196,6 +196,24 @@ workflows:
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
           requires:
             - request-preprod-approval
+      - request-prod-approval:
+          type: approval
+          requires:
+            - deploy_preprod-indexer
+      - hmpps/deploy_env:
+          name: deploy_prod-indexer
+          env: "prod"
+          jira_update: true
+          jira_env_type: production
+          context:
+            - hmpps-common-vars
+            - hmpps-prisoner-search-prod
+          k8s_deployment_name: hmpps-prisoner-search-indexer
+          chart_name: hmpps-prisoner-search-indexer
+          release_name: hmpps-prisoner-search-indexer
+          helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+          requires:
+            - request-prod-approval
   build-test-and-deploy-search:
     when: << pipeline.parameters.build-search >>
     jobs:
@@ -247,3 +265,18 @@ workflows:
           helm_dir: hmpps-prisoner-search/helm_deploy
           requires:
             - request-preprod-approval
+      - request-prod-approval:
+          type: approval
+          requires:
+            - deploy_preprod-search
+      - hmpps/deploy_env:
+          name: deploy_prod-search
+          env: "prod"
+          jira_update: true
+          jira_env_type: production
+          context:
+            - hmpps-common-vars
+            - hmpps-prisoner-search-prod
+          helm_dir: hmpps-prisoner-search/helm_deploy
+          requires:
+            - request-prod-approval
