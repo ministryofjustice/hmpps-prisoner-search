@@ -421,7 +421,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
    * This is to test what happens if we fail to send a domain event.
    * In real life:
    * 1. We receive a prison event indicating "something" happened to the prisoner
-   * 2. The prisoner is updated in Elastic Search
+   * 2. The prisoner is updated in Open Search
    * 3. We update the prisoner event hash to reflect the changes to the prisoner
    * 4. We try to send a domain event BUT IT FAILS
    * 5. The prison event is rejected and is sent to the DLQ

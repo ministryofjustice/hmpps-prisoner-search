@@ -18,3 +18,7 @@ generic-prometheus-alerts:
 
   rdsAlertsDatabases:
     cloud-platform-12e2a73b0333ffab: "prisoner search indexer"
+
+cron:
+  snapshot_namespace: hmpps-prisoner-search-prod
+  suspend_restore: false

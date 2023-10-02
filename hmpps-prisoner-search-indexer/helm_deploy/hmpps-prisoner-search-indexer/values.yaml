@@ -95,3 +95,6 @@ cron:
   check_index_schedule: "*/15 * * * *"
   index_refresh_schedule: "05 20 * * *"
   remove_differences_schedule: "45 22 * * *"
+
+  # default is to suspend the restore - only want it happening on preprod
+  suspend_restore: true
