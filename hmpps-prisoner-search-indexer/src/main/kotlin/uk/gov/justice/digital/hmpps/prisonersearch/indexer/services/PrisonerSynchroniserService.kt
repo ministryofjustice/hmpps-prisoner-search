@@ -32,7 +32,7 @@ class PrisonerSynchroniserService(
       incentiveLevel = incentiveLevel,
       restrictedPatientData = restrictedPatient,
     )
-    // only save to elastic search if we encounter any differences
+    // only save to open search if we encounter any differences
     if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)

@@ -72,7 +72,7 @@ abstract class IntegrationTestBase {
   protected lateinit var jwtAuthHelper: JwtAuthHelper
 
   @Autowired
-  lateinit var elasticSearchClient: RestHighLevelClient
+  lateinit var openSearchClient: RestHighLevelClient
 
   @Autowired
   lateinit var webTestClient: WebTestClient
@@ -116,7 +116,7 @@ abstract class IntegrationTestBase {
   internal val offenderDlqName by lazy { offenderQueue.dlqName as String }
 
   @BeforeEach
-  fun cleanElasticsearch() {
+  fun cleanOpenSearch() {
     deletePrisonerIndices()
     indexSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
     indexSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
@@ -170,7 +170,7 @@ abstract class IntegrationTestBase {
   }
 
   fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName)
-  fun getIndexCount(index: String): Long = elasticSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
+  fun getIndexCount(index: String): Long = openSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
 
   internal fun setAuthorisation(
     user: String = "prisoner-offender-search-indexer-client",
