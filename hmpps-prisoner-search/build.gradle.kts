@@ -18,11 +18,11 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:5.1.3")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.1.4")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.29.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.30.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
@@ -35,11 +35,11 @@ dependencies {
   testImplementation("io.jsonwebtoken:jjwt-impl:0.11.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
-  testImplementation("org.wiremock:wiremock:3.0.3")
+  testImplementation("org.wiremock:wiremock:3.2.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.0.0")
-  testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.3.3")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.2")
+  testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
 }
 
 java {
