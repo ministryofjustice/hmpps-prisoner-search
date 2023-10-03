@@ -10,5 +10,15 @@ generic-service:
     API_BASE_URL_INCENTIVES: "https://incentives-api.hmpps.service.justice.gov.uk"
     DIFF_HOST: "https://prisoner-search.prison.service.justice.gov.uk"
 
+generic-prometheus-alerts:
   rdsAlertsDatabases:
     cloud-platform-beab851ca55f05a8: "prisoner search indexer"
+  sqsAlertsQueueNames:
+    - "syscon-devs-prod-hmpps_prisoner_search_index_queue_dl"
+    - "syscon-devs-prod-hmpps_prisoner_search_index_queue"
+    - "syscon-devs-prod-hmpps_prisoner_search_domain_dlq"
+    - "syscon-devs-prod-hmpps_prisoner_search_domain_queue"
+    - "syscon-devs-prod-hmpps_prisoner_search_offender_dlq"
+    - "syscon-devs-prod-hmpps_prisoner_search_offender_queue"
+  sqsAlertsOldestThreshold: 10
+  sqsAlertsTotalMessagesThreshold: 2

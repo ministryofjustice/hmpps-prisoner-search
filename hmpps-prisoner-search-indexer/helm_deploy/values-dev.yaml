@@ -23,6 +23,15 @@ generic-prometheus-alerts:
   businessHoursOnly: true
   rdsAlertsDatabases:
     cloud-platform-99ebbe3b76dc9264: "prisoner search indexer"
+  sqsAlertsQueueNames:
+    - "syscon-devs-dev-hmpps_prisoner_search_index_queue_dl"
+    - "syscon-devs-dev-hmpps_prisoner_search_index_queue"
+    - "syscon-devs-dev-hmpps_prisoner_search_domain_dlq"
+    - "syscon-devs-dev-hmpps_prisoner_search_domain_queue"
+    - "syscon-devs-dev-hmpps_prisoner_search_offender_dlq"
+    - "syscon-devs-dev-hmpps_prisoner_search_offender_queue"
+  sqsAlertsOldestThreshold: 10
+  sqsAlertsTotalMessagesThreshold: 1
 
 cron:
   retry_dlqs_schedule: "*/10 7-20 * * 1-5"
