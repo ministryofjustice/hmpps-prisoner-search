@@ -205,6 +205,7 @@ workflows:
           env: "prod"
           jira_update: true
           jira_env_type: production
+          slack_notification: true
           context:
             - hmpps-common-vars
             - hmpps-prisoner-search-prod
@@ -274,6 +275,7 @@ workflows:
           env: "prod"
           jira_update: true
           jira_env_type: production
+          slack_notification: true
           context:
             - hmpps-common-vars
             - hmpps-prisoner-search-prod
