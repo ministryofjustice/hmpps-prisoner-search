@@ -35,6 +35,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /refresh-index/automated {
+          deny all;
+          return 401;
+        }
   env:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
