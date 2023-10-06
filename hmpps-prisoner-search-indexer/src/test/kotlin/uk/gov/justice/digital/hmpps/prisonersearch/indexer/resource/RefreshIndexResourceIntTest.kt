@@ -3,7 +3,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
 import com.microsoft.applicationinsights.TelemetryClient
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await

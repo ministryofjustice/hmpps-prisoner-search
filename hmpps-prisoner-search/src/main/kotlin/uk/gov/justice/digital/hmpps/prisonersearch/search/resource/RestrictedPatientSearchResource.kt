@@ -7,6 +7,7 @@ import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPat
 
 @RestController
 @Validated
+@PreAuthorize("hasAnyRole('ROLE_GLOBAL_SEARCH', 'ROLE_PRISONER_SEARCH')")
 @RequestMapping(
   "/restricted-patient-search",
   produces = [MediaType.APPLICATION_JSON_VALUE],
