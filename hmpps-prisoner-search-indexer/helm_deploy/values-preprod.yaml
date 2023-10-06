@@ -30,3 +30,6 @@ generic-prometheus-alerts:
 cron:
   snapshot_namespace: hmpps-prisoner-search-prod
   suspend_restore: false
+  index_refresh_schedule: "05 17 * * 1-5"
+  index_size_schedule: "*/10 7-20 * * 1-5"
+  check_index_schedule: "*/15 * * * 1-5"
