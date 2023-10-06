@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services
 
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpHeaders
@@ -17,13 +16,7 @@ import java.util.UUID
 
 @Component
 class JwtAuthHelper {
-  private val keyPair: KeyPair
-
-  init {
-    val gen = KeyPairGenerator.getInstance("RSA")
-    gen.initialize(2048)
-    keyPair = gen.generateKeyPair()
-  }
+  private val keyPair: KeyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
 
   fun setAuthorisation(user: String = "prisoner-search-indexer-client", roles: List<String> = listOf()): (HttpHeaders) -> Unit {
     val token = createJwt(
@@ -53,11 +46,11 @@ class JwtAuthHelper {
         scope?.let { this["scope"] = scope }
       }
     return Jwts.builder()
-      .setId(jwtId)
-      .setSubject(subject)
-      .addClaims(claims)
-      .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
-      .signWith(keyPair.private, SignatureAlgorithm.RS256)
+      .id(jwtId)
+      .subject(subject)
+      .claims(claims)
+      .expiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+      .signWith(keyPair.private, Jwts.SIG.RS256)
       .compact()
   }
 }

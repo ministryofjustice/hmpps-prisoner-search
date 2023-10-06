@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
-import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -27,7 +26,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.No
 class GlobalSearchResource(
   private val globalSearchService: GlobalSearchService,
   private val prisonerSearchService: PrisonerSearchService,
-  private val telemetryClient: TelemetryClient,
 ) {
 
   @PostMapping(

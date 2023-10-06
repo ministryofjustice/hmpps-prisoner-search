@@ -1,13 +1,13 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
+package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
 import java.io.File
 
 class ResourceSecurityTest : IntegrationTestBase() {
@@ -40,7 +40,7 @@ class ResourceSecurityTest : IntegrationTestBase() {
         val annotation = method.getMethodAnnotation(PreAuthorize::class.java)
         if (classAnnotation == null && annotation == null) {
           mappingInfo.getMappings().forEach {
-            assertThat(exclusions.contains(it)).withFailMessage {
+            Assertions.assertThat(exclusions.contains(it)).withFailMessage {
               "Found $mappingInfo of type $method with no PreAuthorize annotation"
             }.isTrue()
           }
