@@ -18,8 +18,6 @@ generic-prometheus-alerts:
   rdsAlertsDatabases:
     cloud-platform-12e2a73b0333ffab: "prisoner search indexer"
   sqsAlertsQueueNames:
-    - "syscon-devs-preprod-hmpps_prisoner_search_index_queue_dl"
-    - "syscon-devs-preprod-hmpps_prisoner_search_index_queue"
     - "syscon-devs-preprod-hmpps_prisoner_search_domain_dlq"
     - "syscon-devs-preprod-hmpps_prisoner_search_domain_queue"
     - "syscon-devs-preprod-hmpps_prisoner_search_offender_dlq"
@@ -33,3 +31,7 @@ cron:
   index_refresh_schedule: "05 17 * * 1-5"
   index_size_schedule: "*/10 7-20 * * 1-5"
   check_index_schedule: "*/15 * * * 1-5"
+
+indexQueueNames:
+  - "syscon-devs-preprod-hmpps_prisoner_search_index_queue_dl"
+  - "syscon-devs-preprod-hmpps_prisoner_search_index_queue"

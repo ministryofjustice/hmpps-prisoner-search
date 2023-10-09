@@ -97,8 +97,13 @@ cron:
   retry_dlqs_schedule: "*/10 * * * *"
   index_size_schedule: "*/10 * * * *"
   check_index_schedule: "*/15 * * * *"
-  index_refresh_schedule: "05 20 * * 1,3,5"
+  index_refresh_schedule: "05 19 * * 1,3,5"
   remove_differences_schedule: "45 22 * * *"
 
   # default is to suspend the restore - only want it happening on preprod
   suspend_restore: true
+
+# had to copy these from https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/values.yaml
+# as want to override the default values for only some of our queues
+runbookUrl: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#
+grafanaUrl: https://grafana.live.cloud-platform.service.justice.gov.uk
