@@ -46,7 +46,7 @@ jobs:
     executor:
       name: hmpps/localstack
       jdk_tag: "20.0"
-      localstack_tag: "2.0"
+      localstack_tag: "2.3"
       localstack_type: "localstack"
       services: "opensearch,sns,sqs"
     steps:
@@ -81,7 +81,7 @@ jobs:
     executor:
       name: hmpps/java_localstack_postgres
       jdk_tag: "20.0"
-      localstack_tag: "2.0"
+      localstack_tag: "2.3"
       localstack_type: "localstack"
       services: "opensearch,sns,sqs"
       postgres_tag: "15"
