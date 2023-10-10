@@ -38,6 +38,7 @@ cron:
   check_index_schedule: "*/15 7-20 * * 1-5"
   index_refresh_schedule: "05 18 * * 1-5"
   remove_differences_schedule: "30 21 * * 1-5"
+  snapshot_schedule: "49 1 * * *"
 
 indexQueueNames:
   - "syscon-devs-dev-hmpps_prisoner_search_index_queue_dl"

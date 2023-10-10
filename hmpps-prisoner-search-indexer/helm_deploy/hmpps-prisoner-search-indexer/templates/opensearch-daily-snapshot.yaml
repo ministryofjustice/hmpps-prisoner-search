@@ -17,7 +17,7 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "30 2 * * *"
+  schedule: "{{ .Values.cron.snapshot_schedule }}"
   concurrencyPolicy: "Forbid"
   successfulJobsHistoryLimit: 5
   failedJobsHistoryLimit: 5
