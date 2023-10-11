@@ -36,8 +36,8 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.6.0")
   runtimeOnly("org.flywaydb:flyway-core")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.0")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.0")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.2")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.2")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.16")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.wiremock:wiremock:3.2.0")
@@ -56,10 +56,5 @@ tasks {
     kotlinOptions {
       jvmTarget = "20"
     }
-  }
-
-  test {
-    // required for jjwt 0.12 - see https://github.com/jwtk/jjwt/issues/849
-    jvmArgs("--add-exports", "java.base/sun.security.util=ALL-UNNAMED")
   }
 }
