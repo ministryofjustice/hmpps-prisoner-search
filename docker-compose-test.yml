@@ -13,11 +13,11 @@ services:
       - "$PWD/localstack/setup-opensearch.sh:/etc/localstack/init/ready.d/init-aws.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
-  hposi-db:
+  hpsi-db:
     image: postgres:15
     networks:
       - hmpps
-    container_name: hposi-db
+    container_name: hpsi-db
     ports:
       - "5432:5432"
     restart: unless-stopped
