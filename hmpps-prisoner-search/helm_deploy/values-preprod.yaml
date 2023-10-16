@@ -9,5 +9,12 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_OAUTH: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
 
+  # Additional allowlist rules
+  # See also allowlist values helm_deploy/prisoner-offender-search/values.yaml
+  allowlist:
+    prum-test-platform-1: "18.134.149.68/32"
+    prum-test-platform-2: "18.133.201.123/32"
+    prum-test-platform-3: "52.56.76.34/32"
+
 generic-prometheus-alerts:
   businessHoursOnly: true
