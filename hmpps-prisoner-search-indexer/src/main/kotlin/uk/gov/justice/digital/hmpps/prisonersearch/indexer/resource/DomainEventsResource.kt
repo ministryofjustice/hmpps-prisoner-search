@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
@@ -20,6 +21,7 @@ import java.time.ZoneId
 
 @RestController
 @Validated
+@Tag(name = "Domain events recovery")
 class DomainEventsResource(private val domainEventEmitter: HmppsDomainEventEmitter) {
   @PutMapping("/events/prisoner/received/{prisonerNumber}")
   @ResponseStatus(HttpStatus.ACCEPTED)
@@ -37,11 +39,9 @@ class DomainEventsResource(private val domainEventEmitter: HmppsDomainEventEmitt
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
-
     @RequestBody
     @Valid
     details: PrisonerReceivedEventDetails,
-
   ) = domainEventEmitter.emitPrisonerReceiveEvent(
     prisonerNumber,
     details.reason,

@@ -24,12 +24,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndex
 @Tag(name = "OpenSearch index comparison")
 class CompareIndexResource(private val compareIndexService: CompareIndexService) {
   @GetMapping("/size")
-  @Tag(
-    name = "Simple OpenSearch index size comparison.",
-    description = """
-        Comparison of the number of prisoners in NOMIS and the number of prisoners in the index. 
+  @Operation(
+    summary = "Simple OpenSearch index size comparison.",
+    description = """Comparison of the number of prisoners in NOMIS and the number of prisoners in the index.
         Results sent to a custom event called COMPARE_INDEX_SIZE.
-        It is an internal service which isn't exposed to the outside world and is called from a 
+        It is an internal service which isn't exposed to the outside world and is called from a
         Kubernetes CronJob named `compare-index-size-cronjob`
       """,
   )
@@ -38,10 +37,9 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
   @GetMapping("/ids")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Tag(
-    name = "Comparison of prisoners in NOMIS and OpenSearch by prisoner numbers.",
-    description = """
-      This endpoint will retrieve the list of all prisoner numbers in NOMIS and compare them against the list in the
+  @Operation(
+    summary = "Comparison of prisoners in NOMIS and OpenSearch by prisoner numbers.",
+    description = """This endpoint will retrieve the list of all prisoner numbers in NOMIS and compare them against the list in the
       index.  It will then send a COMPARE_INDEX_IDS custom event to application insights with prisoner numbers of
       prisoners that are only in NOMIS and those that are only in OpenSearch.  It is asynchronous since the comparison
       can take a while.
@@ -49,19 +47,6 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
       """,
   )
   fun compareIndexByIds(): Unit = compareIndexService.doCompareByIds()
-
-// TODO (PGP): Add back in the index and reconcile index functions
-//
-//  @GetMapping("/full")
-//  @Operation(
-//    summary = "Start a full index comparison",
-//    description = """The whole existing index is compared in detail with current Nomis data, requires ROLE_PRISONER_INDEX.
-//      Results are written as customEvents. Nothing is written where a prisoner's data matches.
-//      Note this is a heavyweight operation, like a full index rebuild""",
-//  )
-//  @PreAuthorize("hasRole('PRISONER_INDEX')")
-//  @ResponseStatus(HttpStatus.ACCEPTED)
-//  fun startIndexReconciliation() = indexService.startIndexReconciliation()
 
   @GetMapping("/prisoner/{prisonerNumber}")
   @Operation(

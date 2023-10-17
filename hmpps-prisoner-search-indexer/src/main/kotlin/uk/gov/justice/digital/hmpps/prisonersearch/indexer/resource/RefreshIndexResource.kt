@@ -16,15 +16,16 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndex
 @RestController
 @Validated
 @RequestMapping("/refresh-index", produces = [MediaType.APPLICATION_JSON_VALUE])
-@Tag(name = "OpenSearch index comparison")
+@Tag(name = "OpenSearch index refresh")
 class RefreshIndexResource(private val refreshIndexService: RefreshIndexService) {
   @PutMapping
   @Operation(
     summary = "Start a full refresh of the index.",
     description = """The whole existing index is compared in detail with current Nomis data, requires ROLE_PRISONER_INDEX.
-      Results are written as customEvents. Nothing is written where a prisoner's data matches.  If the prisoner
-      data is different then the prisoner data is refreshed from Nomis.
-      Note this is a heavyweight operation, like a full index rebuild""",
+      Results are written as <code>customEvents</code>. When a prisoner's data matches no event is generated and no data is changed.
+      If the prisoner data is different then DIFFERENCE_REPORTED or DIFFERENCE_MISSING event is generated and the
+      prisoner data is then refreshed from Nomis.  This will also cause domain events to be generated.
+      <p>Note this is a heavyweight operation, like a full index rebuild""",
   )
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @ResponseStatus(HttpStatus.ACCEPTED)
@@ -34,9 +35,8 @@ class RefreshIndexResource(private val refreshIndexService: RefreshIndexService)
   @PutMapping("/automated")
   @Operation(
     summary = "Automated full refresh of the index.",
-    description = """Same as /refresh-index, but this is an internal only endpoint called from the 
-      full-index-comparison cronjob.
-    """,
+    description = """Same as /refresh-index, but this is an internal only endpoint called from the
+      full-index-comparison cronjob.""",
   )
   @ResponseStatus(HttpStatus.ACCEPTED)
   fun automatedIndexRefresh() = refreshIndexService.startIndexRefresh()
