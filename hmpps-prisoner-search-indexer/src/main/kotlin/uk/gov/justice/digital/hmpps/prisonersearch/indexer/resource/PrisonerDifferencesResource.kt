@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
@@ -24,12 +25,12 @@ import java.time.temporal.ChronoUnit
 @RestController
 @Validated
 @RequestMapping(value = ["/prisoner-differences"], produces = [MediaType.APPLICATION_JSON_VALUE])
+@Tag(name = "OpenSearch differences report")
 class PrisonerDifferencesResource(private val prisonerDifferencesService: PrisonerDifferencesService) {
 
   @Operation(
     summary = "Find all prisoner differences",
-    description = """
-      Find all prisoner differences since a given date time.  This defaults to within the last 24 hours.
+    description = """Find all prisoner differences since a given date time.  This defaults to within the last 24 hours.
       Requires PRISONER_INDEX role.
       """,
     security = [SecurityRequirement(name = "prisoner-index-role")],

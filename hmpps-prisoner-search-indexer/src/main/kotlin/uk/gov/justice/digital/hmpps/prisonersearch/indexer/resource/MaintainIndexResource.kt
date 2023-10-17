@@ -28,7 +28,8 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Start building a new index",
-    description = "The current index will be left untouched and continue to be maintained while the new index is built.  The new index must not be currently building.  Requires PRISONER_INDEX role.  Returns the new status of the index.",
+    description = """The current index will be left untouched and continue to be maintained while the new index is built.
+      The new index must not be currently building.  Requires PRISONER_INDEX role.  Returns the new status of the index.""",
   )
   @ApiResponses(
     value = [
@@ -43,7 +44,8 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Cancel building an index",
-    description = "Cancels the building of the current index if it is currently building.  Requires PRISONER_INDEX role.  Returns the new status of the index.",
+    description = """Cancels the building of the current index if it is currently building.
+      Requires PRISONER_INDEX role.  Returns the new status of the index.""",
   )
   @ApiResponses(
     value = [
@@ -57,7 +59,8 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Mark the current index build as complete",
-    description = "Completes the index build if it is currently building.  Requires PRISONER_INDEX role.  Returns the new status of the index.",
+    description = """Completes the index build if it is currently building and has reached the required threshold.
+      Requires PRISONER_INDEX role.  Returns the new status of the index.""",
   )
   @ApiResponses(
     value = [
@@ -73,7 +76,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Switch index without rebuilding",
-    description = "current index will be switched both indexed have to be complete, requires PRISONER_INDEX role",
+    description = """Current index will be switched. Both indexed have to be complete, requires PRISONER_INDEX role.""",
   )
   @ApiResponses(
     value = [
@@ -91,8 +94,9 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PutMapping("/index-prisoner/{prisonerNumber}")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
-    summary = "Index/Refresh Data for Prisoner with specified prisoner number",
-    description = "Requires PRISONER_INDEX role.  Returns the prisoner details added to the index.",
+    summary = "Index / refresh data for prisoner with specified prisoner number",
+    description = """Updates the prisoner details for the specified prisoner.
+      Returns the prisoner details added to the index. Requires PRISONER_INDEX role.""",
   )
   @ApiResponses(
     value = [
@@ -112,12 +116,12 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
 
   @PutMapping("/check-complete")
   @Operation(
-    summary = "Triggers maintenance of the index queue",
-    description = """
-      This job checks to see if there are no more messages on the index queue and therefore indexing is
-      complete.  It also has a safety check to ensure that we have a minimum number of messages in the index.
+    summary = "Checks to see if the index has finished building",
+    description = """This job checks to see if there are no more messages on the index queue and therefore indexing is
+      complete.  If the index isn't currently building then no action will be taken.
+      It also has a safety check to ensure that we have a minimum number of messages in the index.
       It is an internal service which isn't exposed to the outside world and is called from a Kubernetes CronJob named
-      `index-housekeeping-cronjob`
+      `check-indexing-complete`
       """,
   )
   fun checkIfComplete() = maintainIndexService.markIndexingComplete(ignoreThreshold = false)
