@@ -18,7 +18,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:5.1.4")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.1.5")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 

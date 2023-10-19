@@ -19,7 +19,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:5.1.4")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.1.5")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
@@ -38,7 +38,7 @@ dependencies {
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.16")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.18")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.wiremock:wiremock:3.2.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
