@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 
 @Service
@@ -25,6 +26,14 @@ class IndexListenerService(
       message.additionalInformation.id,
     )
     sync(message.additionalInformation.nomsNumber)
+  }
+  fun restrictedPatientChange(message: RestrictedPatientMessage) {
+    log.info(
+      "Restricted patient change: {} for prisoner {}",
+      message.description,
+      message.additionalInformation.prisonerNumber,
+    )
+    sync(message.additionalInformation.prisonerNumber)
   }
 
   fun externalMovement(message: ExternalPrisonerMovementMessage) = sync(message.bookingId)

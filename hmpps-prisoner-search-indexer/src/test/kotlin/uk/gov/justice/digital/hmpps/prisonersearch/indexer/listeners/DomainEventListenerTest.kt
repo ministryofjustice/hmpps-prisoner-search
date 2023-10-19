@@ -27,7 +27,7 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
   private val logAppender = findLogAppender(DomainEventListener::class.java)
 
   @Nested
-  inner class ProcessDomainEvent {
+  inner class ProcessIncentiveDomainEvent {
     @ParameterizedTest
     @ValueSource(
       strings = [
@@ -78,6 +78,69 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
             "Type": "Notification",
             "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
             "Message": "{\"eventType\":\"$eventType\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
+            "MessageAttributes": {
+              "eventType": {
+                "Type": "String",
+                "Value": "$eventType"
+              },
+              "id": {
+                "Type": "String",
+                "Value": "cb4645f2-d0c1-4677-806a-8036ed54bf69"
+              }
+            }
+          }
+  """.trimIndent()
+
+  @Nested
+  inner class ProcessRestrictedPatientDomainEvent {
+    @ParameterizedTest
+    @ValueSource(
+      strings = [
+        "restricted-patients.patient.added",
+        "restricted-patients.patient.removed",
+      ],
+    )
+    internal fun `will call service for restricted patint`(eventType: String) {
+      listener.processDomainEvent(validRestrictedPatientDomainEvent(eventType))
+
+      verify(indexListenerService).restrictedPatientChange(
+        RestrictedPatientMessage(
+          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
+          eventType = eventType,
+          description = "some desc",
+        ),
+      )
+    }
+
+    @Test
+    internal fun `failed request`() {
+      whenever(indexListenerService.restrictedPatientChange(any())).thenThrow(RuntimeException("something went wrong"))
+
+      assertThatThrownBy {
+        listener.processDomainEvent(
+          """
+        {
+          "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
+          "Message": "{\"eventType\":\"restricted-patients.patient.added\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"prisonerNumber\":\"A7089FD\"}}",
+          "MessageAttributes": {
+            "eventType": {
+              "Type": "String",
+              "Value": "restricted-patients.patient.added"
+            }
+          }
+        }
+          """.trimIndent(),
+        )
+      }.hasMessageContaining("something went wrong")
+      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
+    }
+  }
+
+  private fun validRestrictedPatientDomainEvent(eventType: String) = """
+          {
+            "Type": "Notification",
+            "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
+            "Message": "{\"eventType\":\"$eventType\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"prisonerNumber\":\"A7089FD\"}}",
             "MessageAttributes": {
               "eventType": {
                 "Type": "String",
