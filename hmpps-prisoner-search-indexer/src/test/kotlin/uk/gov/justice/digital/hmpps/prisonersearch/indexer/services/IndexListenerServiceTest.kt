@@ -20,6 +20,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangeAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientAdditionalInformation
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 
 internal class IndexListenerServiceTest {
@@ -87,6 +89,71 @@ internal class IndexListenerServiceTest {
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
+          eventType = "some.iep.update",
+          description = "some desc",
+        ),
+      )
+
+      verifyNoInteractions(prisonerSynchroniserService)
+    }
+  }
+
+  @Nested
+  inner class RestrictedPatientChange {
+    @Test
+    fun `will reindex on restricted patient change`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+      )
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
+      indexListenerService.restrictedPatientChange(
+        RestrictedPatientMessage(
+          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
+          eventType = "some.iep.update",
+          description = "some desc",
+        ),
+      )
+
+      verify(prisonerSynchroniserService).reindex(
+        check {
+          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
+        },
+        eq(listOf(GREEN)),
+      )
+    }
+
+    @Test
+    fun `will do nothing if prisoner not found`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+      )
+      indexListenerService.restrictedPatientChange(
+        RestrictedPatientMessage(
+          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
+          eventType = "some.iep.update",
+          description = "some desc",
+        ),
+      )
+
+      verifyNoInteractions(prisonerSynchroniserService)
+    }
+
+    @Test
+    fun `will do nothing if no active indices`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(
+          currentIndex = GREEN,
+          currentIndexState = IndexState.CANCELLED,
+          otherIndexState = IndexState.ABSENT,
+        ),
+      )
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      indexListenerService.restrictedPatientChange(
+        RestrictedPatientMessage(
+          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
           eventType = "some.iep.update",
           description = "some desc",
         ),

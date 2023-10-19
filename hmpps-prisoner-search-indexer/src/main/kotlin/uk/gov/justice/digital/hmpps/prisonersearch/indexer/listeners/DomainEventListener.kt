@@ -26,6 +26,10 @@ class DomainEventListener(
       "incentives.iep-review.deleted",
       "incentives.prisoner.next-review-date-changed",
     )
+    private val restrictedPatientEvent = setOf(
+      "restricted-patients.patient.added",
+      "restricted-patients.patient.removed",
+    )
   }
 
   @SqsListener("hmppsdomainqueue", factory = "hmppsQueueContainerFactoryProxy")
@@ -38,6 +42,7 @@ class DomainEventListener(
 
       when (eventType) {
         in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message))
+        in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message))
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
@@ -59,6 +64,16 @@ data class IncentiveChangedMessage(
 data class IncentiveChangeAdditionalInformation(
   val nomsNumber: String,
   val id: Long,
+)
+
+data class RestrictedPatientMessage(
+  val additionalInformation: RestrictedPatientAdditionalInformation,
+  val eventType: String,
+  val description: String,
+)
+
+data class RestrictedPatientAdditionalInformation(
+  val prisonerNumber: String,
 )
 
 data class EventType(@JsonProperty("Value") val Value: String)
