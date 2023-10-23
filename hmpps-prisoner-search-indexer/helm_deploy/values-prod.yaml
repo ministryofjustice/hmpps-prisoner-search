@@ -9,6 +9,7 @@ generic-service:
     API_BASE_URL_RESTRICTED_PATIENTS: "https://restricted-patients-api.hmpps.service.justice.gov.uk"
     API_BASE_URL_INCENTIVES: "https://incentives-api.hmpps.service.justice.gov.uk"
     DIFF_HOST: "https://prisoner-search.prison.service.justice.gov.uk"
+    DIFF_PREFIX: "dummy."
 
 generic-prometheus-alerts:
   rdsAlertsDatabases:
