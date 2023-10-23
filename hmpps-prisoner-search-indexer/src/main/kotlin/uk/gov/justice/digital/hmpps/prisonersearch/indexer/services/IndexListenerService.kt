@@ -18,29 +18,29 @@ class IndexListenerService(
   private val nomisService: NomisService,
   private val telemetryClient: TelemetryClient,
 ) {
-  fun incentiveChange(message: IncentiveChangedMessage) {
+  fun incentiveChange(message: IncentiveChangedMessage, eventType: String) {
     log.info(
       "Incentive change: {} for prisoner {} with incentive id {}",
       message.description,
       message.additionalInformation.nomsNumber,
       message.additionalInformation.id,
     )
-    sync(message.additionalInformation.nomsNumber)
+    sync(message.additionalInformation.nomsNumber, eventType)
   }
-  fun restrictedPatientChange(message: RestrictedPatientMessage) {
+  fun restrictedPatientChange(message: RestrictedPatientMessage, eventType: String) {
     log.info(
       "Restricted patient change: {} for prisoner {}",
       message.description,
       message.additionalInformation.prisonerNumber,
     )
-    sync(message.additionalInformation.prisonerNumber)
+    sync(message.additionalInformation.prisonerNumber, eventType)
   }
 
-  fun externalMovement(message: ExternalPrisonerMovementMessage) = sync(message.bookingId)
+  fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)
 
-  fun offenderBookingChange(message: OffenderBookingChangedMessage) = sync(message.bookingId)
+  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String) = sync(message.bookingId, eventType)
 
-  fun offenderBookNumberChange(message: OffenderBookingChangedMessage) =
+  fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) =
     message.bookingId.run {
       log.debug("Check for merged booking for ID {}", this)
 
@@ -49,15 +49,15 @@ class IndexListenerService(
         prisonerSynchroniserService.delete(it.value)
       }
 
-      sync(bookingId = this)
+      sync(bookingId = this, eventType)
     }
 
-  fun offenderChange(message: OffenderChangedMessage) =
+  fun offenderChange(message: OffenderChangedMessage, eventType: String) =
     message.offenderIdDisplay?.run {
-      sync(prisonerNumber = this)
+      sync(prisonerNumber = this, eventType)
     } ?: customEventForMissingOffenderIdDisplay(message)
 
-  fun maybeDeleteOffender(message: OffenderChangedMessage) {
+  fun maybeDeleteOffender(message: OffenderChangedMessage, eventType: String) {
     message.offenderIdDisplay?.run {
       // This event only means that one of potentially several aliases has been deleted
       val offender = nomisService.getOffender(offenderNo = this)
@@ -66,30 +66,30 @@ class IndexListenerService(
         prisonerSynchroniserService.delete(prisonerNumber = this)
       } else {
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
-        reindexPrisoner(offender)
+        reindexPrisoner(offender, eventType)
       }
     } ?: customEventForMissingOffenderIdDisplay(message)
   }
 
-  private fun reindexPrisoner(ob: OffenderBooking): Prisoner? =
+  private fun reindexPrisoner(ob: OffenderBooking, eventType: String): Prisoner? =
     indexStatusService.getIndexStatus()
       .run {
         if (activeIndexesEmpty()) {
           log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)
           null
         } else {
-          prisonerSynchroniserService.reindex(ob, activeIndexes())
+          prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
         }
       }
 
-  private fun sync(prisonerNumber: String): Prisoner? =
+  private fun sync(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
-      reindexPrisoner(ob = this)
+      reindexPrisoner(ob = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
 
-  private fun sync(bookingId: Long): Prisoner? =
+  private fun sync(bookingId: Long, eventType: String): Prisoner? =
     nomisService.getNomsNumberForBooking(bookingId)?.run {
-      sync(prisonerNumber = this)
+      sync(prisonerNumber = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner (by booking id) {} not found", bookingId) }
 
   private fun customEventForMissingOffenderIdDisplay(

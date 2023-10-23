@@ -65,14 +65,15 @@ class PrisonerDifferenceService(
     previousPrisonerSnapshot: Prisoner?,
     offenderBooking: OffenderBooking,
     prisoner: Prisoner,
+    eventType: String,
   ) {
     prisoner.hash().run {
       takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
         generateDiffEvent(previousPrisonerSnapshot, offenderBooking, prisoner)
-        generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner)
+        generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner, eventType)
         prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
         alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
-      } ?: raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo)
+      } ?: raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo, offenderBooking.bookingId, eventType)
     }
   }
 
@@ -101,13 +102,14 @@ class PrisonerDifferenceService(
     previousPrisonerSnapshot: Prisoner?,
     offenderBooking: OffenderBooking,
     prisoner: Prisoner,
+    eventType: String,
   ) {
     runCatching {
       previousPrisonerSnapshot?.also {
         getDifferencesByCategory(it, prisoner).run {
-          raiseDifferencesTelemetry(offenderBooking.offenderNo, this)
+          raiseDifferencesTelemetry(offenderBooking.offenderNo, offenderBooking.bookingId, eventType, this)
         }
-      } ?: raiseCreatedTelemetry(offenderBooking.offenderNo)
+      } ?: raiseCreatedTelemetry(offenderBooking.offenderNo, offenderBooking.bookingId, eventType)
     }.onFailure {
       log.error("Prisoner difference telemetry failed with error", it)
     }
@@ -183,26 +185,56 @@ class PrisonerDifferenceService(
       }
     }.filter { differencesByCategory -> differencesByCategory.value.isNotEmpty() }
 
-  private fun raiseDifferencesTelemetry(offenderNo: String, differences: PrisonerDifferences) =
+  private fun raiseDifferencesTelemetry(
+    offenderNo: String,
+    bookingId: Long?,
+    eventType: String,
+    differences: PrisonerDifferences,
+  ) =
     if (differences.isEmpty()) {
       // we've detected a change in the hash for the prisoner, but no differences are recorded
-      telemetryClient.trackPrisonerEvent(PRISONER_UPDATED_NO_DIFFERENCES, offenderNo)
+      telemetryClient.trackPrisonerEvent(
+        PRISONER_UPDATED_NO_DIFFERENCES,
+        prisonerNumber = offenderNo,
+        bookingId = bookingId,
+        eventType = eventType,
+      )
     } else {
       telemetryClient.trackEvent(
         PRISONER_UPDATED,
         mapOf(
           "prisonerNumber" to offenderNo,
+          "bookingId" to (bookingId?.toString() ?: "not set"),
+          "event" to eventType,
           "categoriesChanged" to differences.keys.map { it.name }.toList().sorted().toString(),
         ),
       )
     }
 
-  private fun raiseDatabaseHashUnchangedTelemetry(offenderNo: String) =
+  private fun raiseDatabaseHashUnchangedTelemetry(
+    offenderNo: String,
+    bookingId: Long?,
+    eventType: String,
+  ) =
     // the prisoner hash stored in the database is unchanged
-    telemetryClient.trackPrisonerEvent(PRISONER_DATABASE_NO_CHANGE, offenderNo)
+    telemetryClient.trackPrisonerEvent(
+      PRISONER_DATABASE_NO_CHANGE,
+      prisonerNumber = offenderNo,
+      bookingId = bookingId,
+      eventType = eventType,
+    )
 
-  private fun raiseCreatedTelemetry(offenderNo: String) =
-    telemetryClient.trackPrisonerEvent(PRISONER_CREATED, offenderNo)
+  private fun raiseCreatedTelemetry(
+    offenderNo: String,
+    bookingId: Long?,
+    eventType: String,
+  ) =
+    telemetryClient.trackPrisonerEvent(
+      PRISONER_CREATED,
+      prisonerNumber = offenderNo,
+      bookingId = bookingId,
+      eventType = eventType,
+    )
 }
 
 data class Difference(val property: String, val categoryChanged: DiffCategory, val oldValue: Any?, val newValue: Any?)

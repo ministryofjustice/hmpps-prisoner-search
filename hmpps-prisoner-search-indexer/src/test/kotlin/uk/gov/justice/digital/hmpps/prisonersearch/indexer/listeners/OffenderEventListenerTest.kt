@@ -35,7 +35,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     @ValueSource(strings = ["EXTERNAL_MOVEMENT_RECORD-INSERTED", "EXTERNAL_MOVEMENT-CHANGED"])
     internal fun `will call service for external movement`(eventType: String) {
       listener.processOffenderEvent(validExternalMovementMessage(eventType))
-      verify(indexListenerService).externalMovement(ExternalPrisonerMovementMessage(bookingId = 12345L))
+      verify(indexListenerService).externalMovement(ExternalPrisonerMovementMessage(bookingId = 12345L), eventType)
     }
 
     @ParameterizedTest
@@ -49,14 +49,14 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     )
     internal fun `will call service for booking change`(eventType: String) {
       listener.processOffenderEvent(validOffenderBookingChangedMessage(eventType))
-      verify(indexListenerService).offenderBookingChange(OffenderBookingChangedMessage(bookingId = 4323342L))
+      verify(indexListenerService).offenderBookingChange(OffenderBookingChangedMessage(bookingId = 4323342L), eventType)
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["BOOKING_NUMBER-CHANGED"])
     internal fun `will call service for booking number change`(eventType: String) {
       listener.processOffenderEvent(validOffenderBookingChangedMessage(eventType))
-      verify(indexListenerService).offenderBookNumberChange(OffenderBookingChangedMessage(bookingId = 4323342L))
+      verify(indexListenerService).offenderBookNumberChange(OffenderBookingChangedMessage(bookingId = 4323342L), eventType)
     }
 
     @ParameterizedTest
@@ -74,6 +74,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
           offenderIdDisplay = "A123ZZZ",
           offenderId = 2345612,
         ),
+        eventType,
       )
     }
 
@@ -87,12 +88,13 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
           offenderIdDisplay = "A123ZZZ",
           offenderId = 2345612,
         ),
+        eventType,
       )
     }
 
     @Test
     internal fun `failed request`() {
-      whenever(indexListenerService.externalMovement(any())).thenThrow(RuntimeException("something went wrong"))
+      whenever(indexListenerService.externalMovement(any(), any())).thenThrow(RuntimeException("something went wrong"))
 
       assertThatThrownBy {
         listener.processOffenderEvent(

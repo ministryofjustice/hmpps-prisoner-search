@@ -41,8 +41,8 @@ class DomainEventListener(
       log.debug("Received message {} type {}", messageId, eventType)
 
       when (eventType) {
-        in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message))
-        in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message))
+        in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message), eventType)
+        in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }

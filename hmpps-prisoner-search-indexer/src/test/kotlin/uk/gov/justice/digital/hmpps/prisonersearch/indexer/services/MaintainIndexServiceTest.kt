@@ -462,7 +462,7 @@ class MaintainIndexServiceTest {
   inner class IndexOffender {
     @Test
     internal fun `will delegate to synchronisation service if prisoner found in NOMIS`() {
-      whenever(prisonerSynchroniserService.reindex(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerSynchroniserService.reindex(any(), any(), any())).thenReturn(Prisoner())
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
@@ -470,7 +470,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.indexPrisoner("ABC123D")
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN))
+      verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN), "MAINTAIN")
     }
 
     @Test
@@ -535,7 +535,7 @@ class MaintainIndexServiceTest {
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.currentIndex))
+      verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.currentIndex), "MAINTAIN")
     }
 
     @Test
@@ -548,7 +548,7 @@ class MaintainIndexServiceTest {
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.otherIndex))
+      verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.otherIndex), "MAINTAIN")
     }
 
     @Test
@@ -561,7 +561,7 @@ class MaintainIndexServiceTest {
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN, BLUE))
+      verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN, BLUE), "MAINTAIN")
     }
   }
 }

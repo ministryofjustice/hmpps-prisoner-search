@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
@@ -20,7 +21,7 @@ class PrisonerSynchroniserService(
 ) {
 
   // called when prisoner updated or manual prisoner index required
-  internal fun reindex(ob: OffenderBooking, indices: List<SyncIndex>): Prisoner {
+  internal fun reindex(ob: OffenderBooking, indices: List<SyncIndex>, eventType: String): Prisoner {
     val incentiveLevel = runCatching { getIncentive(ob) }
     val restrictedPatient = runCatching { getRestrictedPatient(ob) }
 
@@ -35,9 +36,14 @@ class PrisonerSynchroniserService(
     // only save to open search if we encounter any differences
     if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
-      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
+      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
-      telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE, ob.offenderNo)
+      telemetryClient.trackPrisonerEvent(
+        PRISONER_OPENSEARCH_NO_CHANGE,
+        prisonerNumber = ob.offenderNo,
+        bookingId = ob.bookingId,
+        eventType = eventType,
+      )
     }
 
     incentiveLevel.onFailure { throw it }
@@ -68,7 +74,7 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
-      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
+      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
     }
   }
 
