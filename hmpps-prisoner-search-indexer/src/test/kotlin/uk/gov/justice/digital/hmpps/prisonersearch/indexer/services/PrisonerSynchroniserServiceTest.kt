@@ -71,6 +71,7 @@ internal class PrisonerSynchroniserServiceTest {
 
       verify(prisonerDifferenceService, never()).handleDifferences(any(), any(), any())
       verify(prisonerRepository, never()).save(any(), any())
+      verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE.name, mapOf("prisonerNumber" to "A1234AA"), null)
     }
 
     @Test

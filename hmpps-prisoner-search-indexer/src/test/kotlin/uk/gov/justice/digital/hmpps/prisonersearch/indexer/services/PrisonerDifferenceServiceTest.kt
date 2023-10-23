@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_DATABASE_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
@@ -88,35 +89,6 @@ class PrisonerDifferenceServiceTest {
     }
 
     @Test
-    fun `should not send event if prisoner hash not changed`() {
-      whenever(
-        prisonerHashRepository.upsertIfChanged(
-          anyString(),
-          anyString(),
-          any(),
-        ),
-      ).thenReturn(0)
-      whenever(objectMapper.writeValueAsString(any())).thenReturn("hash1")
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc1" }
-
-      prisonerDifferenceService.handleDifferences(prisoner1, someOffenderBooking(), prisoner2)
-
-      verifyNoInteractions(prisonerHashRepository)
-      verifyNoInteractions(domainEventsEmitter)
-    }
-
-    @Test
-    fun `should raise no-change telemetry if there are no changes using hash`() {
-      whenever(objectMapper.writeValueAsString(any())).thenReturn("a_string")
-      val prisoner = Prisoner().apply { pncNumber = "somePnc1" }
-
-      prisonerDifferenceService.handleDifferences(prisoner, someOffenderBooking(), prisoner)
-
-      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED_OS_NO_CHANGE"), anyMap(), isNull())
-    }
-
-    @Test
     fun `should raise no-change telemetry if there are no changes using database`() {
       whenever(
         prisonerHashRepository.upsertIfChanged(anyString(), anyString(), any()),
@@ -126,7 +98,7 @@ class PrisonerDifferenceServiceTest {
 
       prisonerDifferenceService.handleDifferences(prisoner, someOffenderBooking(), prisoner)
 
-      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED_DB_NO_CHANGE"), anyMap(), isNull())
+      verify(telemetryClient).trackEvent(eq(PRISONER_DATABASE_NO_CHANGE.toString()), anyMap(), isNull())
     }
   }
 
