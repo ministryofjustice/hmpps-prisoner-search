@@ -186,7 +186,7 @@ class MaintainIndexService(
 
   private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>) =
     nomisService.getOffender(prisonerNumber)?.let { ob ->
-      prisonerSynchroniserService.reindex(ob, activeIndices)
+      prisonerSynchroniserService.reindex(ob, activeIndices, "MAINTAIN")
     }
       ?: prisonerRepository.get(prisonerNumber, activeIndices)
         ?.run {

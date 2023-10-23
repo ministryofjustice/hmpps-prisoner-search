@@ -411,7 +411,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     await untilAsserted { verify(prisonerDifferenceService, times(2)).prisonerHasChanged(anyOrNull(), any()) }
 
     // expecting 1 update
-    await untilAsserted { verify(prisonerDifferenceService).handleDifferences(anyOrNull(), any(), any()) }
+    await untilAsserted { verify(prisonerDifferenceService).handleDifferences(anyOrNull(), any(), any(), any()) }
 
     // but there is only 1 message on the domain queue because the last update was ignored
     assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)

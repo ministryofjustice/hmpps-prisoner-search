@@ -46,12 +46,13 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
           eventType = eventType,
           description = "some desc",
         ),
+        eventType,
       )
     }
 
     @Test
     internal fun `failed request`() {
-      whenever(indexListenerService.incentiveChange(any())).thenThrow(RuntimeException("something went wrong"))
+      whenever(indexListenerService.incentiveChange(any(), any())).thenThrow(RuntimeException("something went wrong"))
 
       assertThatThrownBy {
         listener.processDomainEvent(
@@ -109,12 +110,13 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
           eventType = eventType,
           description = "some desc",
         ),
+        eventType,
       )
     }
 
     @Test
     internal fun `failed request`() {
-      whenever(indexListenerService.restrictedPatientChange(any())).thenThrow(RuntimeException("something went wrong"))
+      whenever(indexListenerService.restrictedPatientChange(any(), any())).thenThrow(RuntimeException("something went wrong"))
 
       assertThatThrownBy {
         listener.processDomainEvent(

@@ -5,6 +5,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -12,6 +13,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isA
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -21,10 +23,10 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
-import java.util.*
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
@@ -48,7 +50,7 @@ internal class PrisonerSynchroniserServiceTest {
     internal fun `will save prisoner to repository`() {
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
-      service.reindex(booking, listOf(GREEN))
+      service.reindex(booking, listOf(GREEN), "event")
 
       verify(prisonerRepository).save(isA(), isA())
     }
@@ -57,7 +59,7 @@ internal class PrisonerSynchroniserServiceTest {
     internal fun `will save prisoner to current index`() {
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
-      service.reindex(booking, listOf(GREEN))
+      service.reindex(booking, listOf(GREEN), "event")
 
       verify(prisonerRepository).save(isA(), check { assertThat(it).isEqualTo(GREEN) })
     }
@@ -67,11 +69,21 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(false)
-      service.reindex(booking, listOf(GREEN))
+      service.reindex(booking, listOf(GREEN), "event")
 
-      verify(prisonerDifferenceService, never()).handleDifferences(any(), any(), any())
+      verify(prisonerDifferenceService, never()).handleDifferences(any(), any(), any(), any())
       verify(prisonerRepository, never()).save(any(), any())
-      verify(telemetryClient).trackEvent(TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE.name, mapOf("prisonerNumber" to "A1234AA"), null)
+      verify(telemetryClient).trackEvent(
+        eq(PRISONER_OPENSEARCH_NO_CHANGE.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "12345"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
     }
 
     @Test
@@ -79,7 +91,7 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
-      service.reindex(booking, listOf(GREEN))
+      service.reindex(booking, listOf(GREEN), "event")
 
       verify(prisonerDifferenceService).handleDifferences(
         eq(existingPrisoner),
@@ -87,6 +99,7 @@ internal class PrisonerSynchroniserServiceTest {
         check {
           assertThat(it.prisonerNumber).isEqualTo(booking.offenderNo)
         },
+        eq("event"),
       )
     }
 
@@ -101,7 +114,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.reindex(prisonBooking, listOf(GREEN))
+      service.reindex(prisonBooking, listOf(GREEN), "event")
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -112,7 +125,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.reindex(noLivingUnitBooking, listOf(GREEN))
+      service.reindex(noLivingUnitBooking, listOf(GREEN), "event")
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -128,7 +141,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.reindex(outsidePrisoner, listOf(GREEN))
+      service.reindex(outsidePrisoner, listOf(GREEN), "event")
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
     }
@@ -147,7 +160,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
 
-      assertThatThrownBy { service.reindex(outsidePrisoner, listOf(GREEN)) }.hasMessage("not today thank you")
+      assertThatThrownBy { service.reindex(outsidePrisoner, listOf(GREEN), "event") }.hasMessage("not today thank you")
 
       verify(prisonerRepository).save(isA(), isA())
     }
@@ -158,7 +171,7 @@ internal class PrisonerSynchroniserServiceTest {
         bookingId = null,
       )
 
-      service.reindex(noBookingId, listOf(GREEN))
+      service.reindex(noBookingId, listOf(GREEN), "event")
 
       verifyNoInteractions(incentivesService)
     }
@@ -169,7 +182,7 @@ internal class PrisonerSynchroniserServiceTest {
         bookingId = 12345L,
       )
 
-      service.reindex(bookingIdBooking, listOf(GREEN))
+      service.reindex(bookingIdBooking, listOf(GREEN), "event")
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
@@ -180,7 +193,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
 
-      assertThatThrownBy { service.reindex(booking, listOf(GREEN)) }.hasMessage("not today thank you")
+      assertThatThrownBy { service.reindex(booking, listOf(GREEN), "event") }.hasMessage("not today thank you")
 
       verify(prisonerRepository).save(isA(), isA())
     }
@@ -390,7 +403,7 @@ internal class PrisonerSynchroniserServiceTest {
 
       verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
       verify(prisonerRepository).save(any(), eq(GREEN))
-      verify(prisonerDifferenceService).handleDifferences(any(), any(), any())
+      verify(prisonerDifferenceService).handleDifferences(any(), any(), any(), any())
     }
   }
 

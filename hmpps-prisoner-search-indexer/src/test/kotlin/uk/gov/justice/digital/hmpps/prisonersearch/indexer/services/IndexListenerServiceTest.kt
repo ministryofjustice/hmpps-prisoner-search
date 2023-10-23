@@ -42,13 +42,14 @@ internal class IndexListenerServiceTest {
       )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
           eventType = "some.iep.update",
           description = "some desc",
         ),
+        "some.iep.update",
       )
 
       verify(prisonerSynchroniserService).reindex(
@@ -56,6 +57,7 @@ internal class IndexListenerServiceTest {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("some.iep.update"),
       )
     }
 
@@ -70,6 +72,7 @@ internal class IndexListenerServiceTest {
           eventType = "some.iep.update",
           description = "some desc",
         ),
+        "some.iep.update",
       )
 
       verifyNoInteractions(prisonerSynchroniserService)
@@ -92,6 +95,7 @@ internal class IndexListenerServiceTest {
           eventType = "some.iep.update",
           description = "some desc",
         ),
+        "some.iep.update",
       )
 
       verifyNoInteractions(prisonerSynchroniserService)
@@ -107,13 +111,14 @@ internal class IndexListenerServiceTest {
       )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.restrictedPatientChange(
         RestrictedPatientMessage(
           additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
           eventType = "some.iep.update",
           description = "some desc",
         ),
+        "some.iep.update",
       )
 
       verify(prisonerSynchroniserService).reindex(
@@ -121,6 +126,7 @@ internal class IndexListenerServiceTest {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("some.iep.update"),
       )
     }
 
@@ -135,6 +141,7 @@ internal class IndexListenerServiceTest {
           eventType = "some.iep.update",
           description = "some desc",
         ),
+        "some.iep.update",
       )
 
       verifyNoInteractions(prisonerSynchroniserService)
@@ -157,6 +164,7 @@ internal class IndexListenerServiceTest {
           eventType = "some.iep.update",
           description = "some desc",
         ),
+        "some.iep.update",
       )
 
       verifyNoInteractions(prisonerSynchroniserService)
@@ -173,14 +181,15 @@ internal class IndexListenerServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
-      indexListenerService.externalMovement(anExternalMovement())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
 
       verify(prisonerSynchroniserService).reindex(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("EXTERNAL_MOVEMENT"),
       )
     }
 
@@ -190,7 +199,7 @@ internal class IndexListenerServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
       )
-      indexListenerService.externalMovement(anExternalMovement())
+      indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
 
       verifyNoInteractions(prisonerSynchroniserService)
     }
@@ -206,7 +215,7 @@ internal class IndexListenerServiceTest {
       )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      indexListenerService.externalMovement(anExternalMovement())
+      indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
 
       verifyNoInteractions(prisonerSynchroniserService)
     }
@@ -224,14 +233,15 @@ internal class IndexListenerServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
-      indexListenerService.offenderBookingChange(anOffenderBookingChange())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
       verify(prisonerSynchroniserService).reindex(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("BOOKING_CHANGE"),
       )
     }
 
@@ -240,7 +250,7 @@ internal class IndexListenerServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
       )
-      indexListenerService.offenderBookingChange(anOffenderBookingChange())
+      indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
       verifyNoInteractions(prisonerSynchroniserService)
     }
@@ -256,7 +266,7 @@ internal class IndexListenerServiceTest {
       )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      indexListenerService.offenderBookingChange(anOffenderBookingChange())
+      indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
       verifyNoInteractions(prisonerSynchroniserService)
     }
@@ -277,14 +287,15 @@ internal class IndexListenerServiceTest {
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
       whenever(nomisService.getMergedIdentifiersByBookingId(any())).thenReturn(null)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
-      indexListenerService.offenderBookNumberChange(anOffenderBookingChange())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.offenderBookNumberChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
       verify(prisonerSynchroniserService).reindex(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("BOOKING_CHANGE"),
       )
     }
 
@@ -299,7 +310,7 @@ internal class IndexListenerServiceTest {
           BookingIdentifier("type", "MERGE2"),
         ),
       )
-      indexListenerService.offenderBookNumberChange(anOffenderBookingChange())
+      indexListenerService.offenderBookNumberChange(anOffenderBookingChange(), "OFFENDER_CHANGE")
 
       verify(prisonerSynchroniserService).delete("MERGE1")
       verify(prisonerSynchroniserService).delete("MERGE2")
@@ -314,7 +325,7 @@ internal class IndexListenerServiceTest {
   inner class offenderChange {
     @Test
     fun `will create an event for missing offender id display`() {
-      indexListenerService.offenderChange(anOffenderChanged(null))
+      indexListenerService.offenderChange(anOffenderChanged(null), "OFFENDER_CHANGE")
 
       verify(telemetryClient).trackEvent(
         "MISSING_OFFENDER_ID_DISPLAY",
@@ -332,14 +343,15 @@ internal class IndexListenerServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
-      indexListenerService.offenderChange(anOffenderChanged("A1234BC"))
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.offenderChange(anOffenderChanged("A1234BC"), "OFFENDER_CHANGE")
 
       verify(prisonerSynchroniserService).reindex(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("OFFENDER_CHANGE"),
       )
     }
 
@@ -354,7 +366,7 @@ internal class IndexListenerServiceTest {
   inner class maybeDeleteOffender {
     @Test
     fun `will create an event for missing offender id display`() {
-      indexListenerService.maybeDeleteOffender(anOffenderChanged(null))
+      indexListenerService.maybeDeleteOffender(anOffenderChanged(null), "OFFENDER_CHANGE")
 
       verify(telemetryClient).trackEvent(
         "MISSING_OFFENDER_ID_DISPLAY",
@@ -371,21 +383,22 @@ internal class IndexListenerServiceTest {
       )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any())
-      indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"))
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
       verify(prisonerSynchroniserService).reindex(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
+        eq("OFFENDER-DELETED"),
       )
     }
 
     @Test
     fun `will delete on OFFENDER-DELETED event if no longer exists`() {
       whenever(nomisService.getOffender(any())).thenReturn(null)
-      indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"))
+      indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
       verify(prisonerSynchroniserService).delete("A123BC")
     }
@@ -401,7 +414,7 @@ internal class IndexListenerServiceTest {
       )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      indexListenerService.maybeDeleteOffender(anOffenderChanged("A1234BC"))
+      indexListenerService.maybeDeleteOffender(anOffenderChanged("A1234BC"), "OFFENDER-CHANGED")
 
       verifyNoInteractions(prisonerSynchroniserService)
     }
