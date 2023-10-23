@@ -18,10 +18,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_MISSING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_CREATED
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_DATABASE_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED_DB_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED_NO_DIFFERENCES
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED_OS_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
@@ -67,15 +66,14 @@ class PrisonerDifferenceService(
     offenderBooking: OffenderBooking,
     prisoner: Prisoner,
   ) {
-    prisoner.hash().takeIf { previousPrisonerSnapshot?.hash() != it }
-      ?.run {
-        takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
-          generateDiffEvent(previousPrisonerSnapshot, offenderBooking, prisoner)
-          generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner)
-          prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
-          alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
-        } ?: raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo)
-      } ?: raiseNoDifferencesTelemetry(offenderBooking.offenderNo)
+    prisoner.hash().run {
+      takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
+        generateDiffEvent(previousPrisonerSnapshot, offenderBooking, prisoner)
+        generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner)
+        prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
+        alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+      } ?: raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo)
+    }
   }
 
   fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) =
@@ -199,13 +197,9 @@ class PrisonerDifferenceService(
       )
     }
 
-  private fun raiseNoDifferencesTelemetry(offenderNo: String) =
-    // the prisoner hash from the previous record stored in open search is unchanged
-    telemetryClient.trackPrisonerEvent(PRISONER_UPDATED_OS_NO_CHANGE, offenderNo)
-
   private fun raiseDatabaseHashUnchangedTelemetry(offenderNo: String) =
     // the prisoner hash stored in the database is unchanged
-    telemetryClient.trackPrisonerEvent(PRISONER_UPDATED_DB_NO_CHANGE, offenderNo)
+    telemetryClient.trackPrisonerEvent(PRISONER_DATABASE_NO_CHANGE, offenderNo)
 
   private fun raiseCreatedTelemetry(offenderNo: String) =
     telemetryClient.trackPrisonerEvent(PRISONER_CREATED, offenderNo)

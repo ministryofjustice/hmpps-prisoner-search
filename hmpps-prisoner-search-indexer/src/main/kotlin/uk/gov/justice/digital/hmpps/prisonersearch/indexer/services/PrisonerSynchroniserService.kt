@@ -36,6 +36,8 @@ class PrisonerSynchroniserService(
     if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner)
+    } else {
+      telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE, ob.offenderNo)
     }
 
     incentiveLevel.onFailure { throw it }
