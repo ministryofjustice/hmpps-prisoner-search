@@ -7,7 +7,7 @@
 *WE STRONGLY ADVISE, WHEN RUNNING LOCALLY, TO POINT AT SERVICES IN THE T3/DEV ENVIRONMENT*
 
 Since the indexer has a number of dependencies that themselves have dependencies, it is recommended that when running
-locally you point mostly at services running in T3. The exception is pointing at localstack for AWS services, 
+locally you point mostly at services running in T3. The exception is pointing at localstack for AWS services,
 but HMPPS Auth, Prison Api, incentives services, restricted patients are best used directly on T3 dev environment.
 The docker-compose.yml file is provided as reference but the dependencies of dependencies are not shown and are subject to change.
 To run against T3 dependencies the environment variables as shown in the helm_deploy/values-dev.yaml file for paths can be used.
@@ -33,7 +33,7 @@ To then run prisoner offender search from the command line:
 ```
 SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
-Alternatively create a Spring Boot run configuration with active profile of `dev` and main class 
+Alternatively create a Spring Boot run configuration with active profile of `dev` and main class
 `uk.gov.justice.digital.hmpps.prisonersearch.search.HmppsPrisonerSearch`.
 
 #### Running the tests

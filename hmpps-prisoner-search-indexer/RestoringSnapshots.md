@@ -1,26 +1,85 @@
 # Restoring from Snapshots
 
+See [OpenSearch access](./OpenSearchAccess.md) for how to connect to the OpenSearch cluster.  This document assumes that
+a port forward is in place.  The instructions below also assume that the current kubernetes cluster has been set:
+```shell
+kubectl config set-context --current --namespace="hmpps-prisoner-search-<<env>>"
+```
+
+To see what snapshots are available and have been registered for the repository run:
+```shell
+http http://localhost:19200/_snapshot
+```
+The `cs-automated-enc` is the AWS automated snapshot - `enc` shows that it is encrypted at rest.
+
+## Automatic snapshots
+AWS automatically snapshots the OpenSearch instances every hour into an S3 bucket that only that instance can see.
+
+### Closing the indices
+In order to restore from a snapshot all existing indices must either be closed or deleted.  Also it makes it easier if
+the indexer is shutdown otherwise indices will be created if any events come through and the indexer will error if the
+indices are then closed.
+```shell
+kubectl scale --replicas=0 deployment hmpps-prisoner-search-indexer
+```
+will shutdown the indexer.  Wait till the pods have then terminated before running any more commands.
+```shell
+http POST http://localhost:19200/_all/_close\?expand_wildcards\=all
+```
+will close all the indices - including the hidden by default `.opensearch` indices.  Running:
+```shell
+http http://localhost:19200/_cat/indices\?expand_wildcards\=all
+```
+should then hopefully show that all the indices are then closed.
+
+### Restoring from automated snapshot
+To see the list of snapshots run:
+```shell
+http http://localhost:19200/_snapshot/cs-automated-enc/_all
+```
+To then restore from a snapshot run:
+```shell
+http POST http://localhost:19200/_snapshot/cs-automated-enc/<<snapshot id>>/_restore
+```
+where the `<<snapshot id>>` is a snapshot identified from the list in the first step.
+Progress can be monitored by running
+```shell
+http http://localhost:19200/_cat/recovery\?v
+```
+Once the snapshot restore has been completed ensure that all of the indices are then open and if necessary open them:
+```shell
+http POST http://localhost:19200/_all/_open\?expand_wildcards\=all
+```
+It is worth ensuring that all the indices are then also in the `green` state.
+
+Finally scale the indexer back up - `4` for production and `2` normally for dev and pre-prod:
+```shell
+kubectl scale --replicas=4 deployment hmpps-prisoner-search-indexer
+```
 ## Snapshot cronjobs
-There are two kubernetes cronjobs
-1. A scheduled job runs at 2.30am each day to take a snapshot of the whole cluster.
-2. A scheduled job runs every four hours in pre-production only.  This checks to see if there is a newer version of
-the NOMIS database since the last restore and if so then does another restore.  Pre-production has access to the
+There are two kubernetes snapshot cronjobs:
+1. The `hmpps-prisoner-search-indexer-opensearch-snapshot` runs early every morning to take a snapshot
+of the whole cluster and store in a S3 bucket.
+2. The `hmpps-prisoner-search-indexer-opensearch-restore` runs every four hours in pre-production only.  This is so that
+the pre-production index can be kept in sync with the NOMIS database.  The job checks to see if there is a newer version
+of the NOMIS database since the last restore and if so then does another restore.  Pre-production has access to the
 production snapshot s3 bucket and uses that to restore the latest production snapshot created by step 1.
 
-#### Manually running the create snapshot cronjob
+### Manually running the create snapshot cronjob
 ```shell
-kubectl create job --from=cronjob/prisoner-offender-search-elasticsearch-snapshot prisoner-offender-search-elasticsearch-snapshot-<user>
+kubectl create job --from=cronjob/hmpps-prisoner-search-indexer-opensearch-snapshot hmpps-prisoner-search-indexer-opensearch-snapshot-<<user>>
 ```
 will trigger the job to create a snapshot called latest.
 Job progress can then be seen by running `kubectl logs -f` on the newly created pod.
 
-#### Manually running the restore snapshot cronjob
-The restore cronjob script only runs if there is a newer NOMIS database so we need to override the configuration to ensure to force the run.
-We do that by using `jq` to amend the json and adding in the `FORCE_RUN=true` parameter.
+### Manually running the restore snapshot cronjob
+The restore cronjob script only runs if there is a newer NOMIS database so we need to override the configuration to
+ensure to force the run. We do that by using `jq` to amend the json and adding in the `FORCE_RUN=true` parameter.
 
 In dev and production there is only one snapshot repository so
 ```shell
-kubectl create job --dry-run=client --from=cronjob/prisoner-offender-search-elasticsearch-restore prisoner-offender-search-elasticsearch-restore-<user> -o "json" | jq ".spec.template.spec.containers[0].env += [{ \"name\": \"FORCE_RUN\", \"value\": \"true\"}]" | kubectl apply -f -
+kubectl create job --dry-run=client --from=cronjob/hmpps-prisoner-search-indexer-opensearch-restore hmpps-prisoner-search-indexer-opensearch-restore-<<user>> -o "json" \
+  | jq ".spec.template.spec.containers[0].env += [{ \"name\": \"FORCE_RUN\", \"value\": \"true\"}]" | kubectl apply -f -
 ```
 will trigger the job to restore the snapshot called latest.
 Job progress can then be seen by running `kubectl logs -f` on the newly created pod.
@@ -29,105 +88,54 @@ The default for the cronjob in pre-production is to restore from production.  If
 will suffice.  However, if it required to restore from the previous pre-production snapshot then we need to clear the
 `NAMESPACE_OVERRIDE` environment variable so that it doesn't try to restore from production instead.
 ```shell
-kubectl create job --dry-run=client --from=cronjob/prisoner-offender-search-elasticsearch-restore prisoner-offender-search-elasticsearch-restore-pgp -o "json" | jq "(.spec.template.spec.containers[0].env += [{ \"name\": \"FORCE_RUN\", \"value\": \"true\"}]) | (.spec.template.spec.containers[0].env[] | select(.name==\"NAMESPACE_OVERRIDE\").value) |= \"\"" | kubectl apply -f -
+kubectl create job --dry-run=client --from=cronjob/hmpps-prisoner-search-indexer-opensearch-restore hmpps-prisoner-search-indexer-opensearch-restore-<<user>> -o "json" \
+  | jq "(.spec.template.spec.containers[0].env += [{ \"name\": \"FORCE_RUN\", \"value\": \"true\"}]) | (.spec.template.spec.containers[0].env[] | select(.name==\"NAMESPACE_OVERRIDE\").value) |= \"\"" \
+  | kubectl apply -f -
 ```
 
 The last successful restore information is stored in a `restore-status` index.  To find out when the last restore ran:
 ```
-http GET http://localhost:9200/restore-status/_doc/1
+http http://localhost:19200/restore-status/_doc/1
 ```
 
-### Restore from a snapshot (if both indexes have become corrupt/empty)
+### Restore from a manual snapshot (if both indexes have become corrupt/empty)
+It would normally be preferable to restore from an automated snapshot since they are taken every hour, whereas the
+snapshot cronjob is only run once a day.  However it may be that automated snapshots are not available.
 
-If we are restoring from the snapshot it means that the current index and other index are broken, we need to delete them to be able to restore from the snapshot.
-At 2.30am we have a scheduled job that takes the snapshot of the whole cluster which is called `latest` and this should be restored.
+If the indexes are broken then it is likely that the snapshot repository information has all been removed too.  Running
+```shell
+http http://localhost:19200/_snapshot
+```
+will show the available snapshots.  If there aren't any snapshots available then the manual s3 bucket will need to be
+added.  Using the two `os-snapshot-xxx` secrets in the namespace run:
+```shell
+http POST http://localhost:19200/_snapshot/<<namespace>> type="s3" settings:="{
+    \"bucket\": \"<<bucket_name within os-snapshot-bucket secret>>\",
+    \"region\": \"eu-west-2\",
+    \"role_arn\": \"<<secret snapshot_role_arn within os-snapshot-role secret>>\",
+    \"base_path\": \"<<NAMESPACE>>\",
+    \"readonly\": \"true\"
+    }"
+```
+to add all the available snapshots in read only mode.  This is advisable if attempting to restore a snapshot from
+production to pre-production.
+Then follow the steps in [Restoring from automated snapshot](#restoring-from-automated-snapshot) above.
 
-1. To restore we need to port-forward to the es instance (replace NAMESPACE with the affected namespace)
-   ```shell
-   kubectl -n <NAMESPACE> port-forward $(kubectl -n <NAMESPACE> get pods | grep aws-es-proxy-cloud-platform | grep Running | head -1 | awk '{print $1}') 9200:9200
-   ```
-2. If the indexes are broken then it is likely that the snapshot repository information has all been removed too.  Running
-   ```shell
-   http http://localhost:9200/_snapshot
-   ```
-   will show the available snapshots.  If the snapshots aren't available then running
-   ```shell
-   http POST http://localhost:9200/_snapshot/$NAMESPACE type="s3" settings:="{
-             \"bucket\": \"${secret bucket_name within es-snapshot-bucket}\",
-             \"region\": \"eu-west-2\",
-             \"role_arn\": \"${secret snapshot_role_arn within es-snapshot-role}\",
-             \"base_path\": \"$NAMESPACE\",
-             \"readonly\": \"true\"
-             }"
-   ```
-   will add all the available snapshots in read only mode.
+### To take a manual snapshot, perform the following steps:
 
-3. Delete the current indexes
-   ```shell
-   http DELETE http://localhost:9200/_all
-   ```
-4. Check that the indices have all been removed
-   ```shell
-   http http://localhost:9200/_cat/indices
-   ```
-   If you wait any length of time between the delete and restore then the `.kibana` ones might get recreated,
-   you'll need to delete them again otherwise the restore will fail.
-   If necessary you might need to do steps 2 and 4 at the same time so that it doesn't get recreated inbetween.
-5. Then we can start the restore (SNAPSHOT_NAME for the overnight snapshot is `latest`)
-   ```shell
-   http POST 'http://localhost:9200/_snapshot/<NAMESPACE>/<SNAPSHOT_NAME>/_restore' include_global_state=true
-   ```
+You can't take a snapshot if one is currently in progress. To check, run the following command:
 
-   The `include_global_state: true` is set true so that we copy the global state of the cluster snapshot over. The default for restoring,
-   however, is `include_global_state: false`. If only restoring a single index, it could be bad to overwrite the global state but as we are
-   restoring the full cluster we set it to true.
+```shell
+http 'http://localhost:19200/_snapshot/_status
+```
 
-6. The indices will be yellow until they are all restored - again check they are completed with
-   ```shell
-   http http://localhost:9200/_cat/indices
-   ```
-#### To view the state of the indexes while restoring from a snapshot
+Run the following command to take a manual snapshot:
+```shell
+http PUT 'http://localhost:19200/_snapshot/<<NAMESPACE>>/snapshot-name
+```
+You can now use the restore commands above to restore the snapshot if needed.
 
-##### Cluster health
-
-`http 'http://localhost:9200/_cluster/health'`
-
-The cluster health status is: green, yellow or red. On the shard level, a red status indicates that the specific shard is not allocated in the cluster, yellow means that the primary shard is allocated but replicas are not, and green means that all shards are allocated. The index level status is controlled by the worst shard status. The cluster status is controlled by the worst index status.
-
-##### Shards
-`http 'http://localhost:9200/_cat/shards'`
-
-The shards command is the detailed view of what nodes contain which shards. It will tell you if it’s a primary or replica, the number of docs, the bytes it takes on disk, and the node where it’s located.
-
-##### Recovery
-`http 'http://localhost:9200/_cat/recovery'`
-
-Returns information about ongoing and completed shard recoveries
-
-#### To take a manual snapshot, perform the following steps:
-
-1. You can't take a snapshot if one is currently in progress. To check, run the following command:
-
-   `http 'http://localhost:9200/_snapshot/_status'`
-2. Run the following command to take a manual snapshot:
-
-   `http PUT 'http://localhost:9200/_snapshot/<NAMESPACE>/snapshot-name'`
-
-you can now use the restore commands above to restore the snapshot if needed
-
-##### To remove a snapshot
-`http DELETE 'http://localhost:9200/_snapshot/<NAMESPACE>/snapshot-name'`
-
-#### Other command which will help when looking at restoring a snapshot
-
-To see all snapshot repositories, run the following command (normally there will only be one, as we have one per namespace):
-
-`http 'http://localhost:9200/_snapshot?pretty'`
-
-In the pre-production namespace there will be a pre-production snapshot repository and also the production repository.
-The latter is used for the restore and should be set to `readonly` so that it can't be overwritten with
-pre-production data.
-
-To see all snapshots for the namespace run the following command:
-
-`http 'http://localhost:9200/_snapshot/<NAMESPACE>/_all?pretty'`
+### To remove a snapshot
+```shell
+http DELETE 'http://localhost:19200/_snapshot/<<NAMESPACE>>/snapshot-name
+```

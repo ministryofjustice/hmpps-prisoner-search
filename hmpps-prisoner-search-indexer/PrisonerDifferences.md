@@ -3,14 +3,14 @@
 The cronjob `hmpps-prisoner-search-indexer-full-index-refresh` runs every Monday, Wednesday and Friday evening at 19:00 UTC.
 This calls the `/refresh-index/automated` endpoint to kick off a full index refresh.
 
-The index refresh starts by calling Prison API to retrieve all the prisoners in NOMIS and add each one to the index 
+The index refresh starts by calling Prison API to retrieve all the prisoners in NOMIS and add each one to the index
 queue.  For every message (prisoner) in the index queue it will then compare the OpenSearch index with NOMIS.
 If there are no differences then no further action will be taken for that message.  If there are differences then:
 1. An application insights telemetry event will be raised with summary details of the differences
 2. Full details will be written to the `prisoner_differences` postgres database table
 3. The latest prisoner details will then be written to the index
 4. Events will be generated as a result of the changes to the prisoner
-5. A slack alert will be generated with a link to the application insights difference query. Note that only one slack 
+5. A slack alert will be generated with a link to the application insights difference query. Note that only one slack
 alert will be generated during a cronjob run even though there could be multiple events.
 
 ## Telemetry events
@@ -25,8 +25,8 @@ customEvents
 ```
 
 ## Querying detailed prisoner differences
-Calling the `/prisoner-differences` endpoint without any parameters will return all differences that have been found 
-in the last 24 hours.  Additionally `from` and `to` parameters can be added to limit the results to specific time 
+Calling the `/prisoner-differences` endpoint without any parameters will return all differences that have been found
+in the last 24 hours.  Additionally `from` and `to` parameters can be added to limit the results to specific time
 periods e.g. `from=2023-10-02T19:20:35.672232Z`.
 
 The difference format is
@@ -35,7 +35,7 @@ The difference format is
 ```
 
 ## Investigating prisoner differences
-It is important to investigate any differences in case we are missing a trigger in NOMIS or not listening to a new 
+It is important to investigate any differences in case we are missing a trigger in NOMIS or not listening to a new
 event.
 
 ### False positives
@@ -49,7 +49,7 @@ wording.  Similarly, we don't listen to reference data changes so if a hospital 
 generate prisoner changes.
 
 ### Investigating events
-When a difference is discovered for a prisoner this needs to be investigated.  Start by seeing if there have been any 
+When a difference is discovered for a prisoner this needs to be investigated.  Start by seeing if there have been any
 recent updates to their record in the indexer:
 ```kusto
 let prisoner="<<prisoner number>>";
@@ -58,7 +58,7 @@ customEvents
 | where (customDimensions.prisonerNumber == prisoner or customDimensions.["additionalInformation.nomsNumber"] == prisoner)
 | where timestamp > ago(3d)
 ```
-This will hopefully show, not only the recent difference run, but also any updates that have taken place in the last 
+This will hopefully show, not only the recent difference run, but also any updates that have taken place in the last
 few days and the categories that have changed.  It will also show the events that triggered the changes, as well as
 displaying the `bookingId`.
 This information can then be used to cross-reference with prisoner events to see what events were raised at that time:
