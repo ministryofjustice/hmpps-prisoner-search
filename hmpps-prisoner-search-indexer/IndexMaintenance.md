@@ -2,7 +2,7 @@
 
 ## Index rebuilds
 
-This service maintains two indexes `prisoner-search-green` and `prisoner-search-blue` know in the code 
+This service maintains two indexes `prisoner-search-green` and `prisoner-search-blue` know in the code
 as `GREEN` and `BLUE`.
 
 In normal running one of these indexes will be "active" while the other is dormant and not in use.
