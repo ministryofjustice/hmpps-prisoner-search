@@ -11,8 +11,12 @@ There are 3 main events (`name` field):
 * `PRISONER_UPDATED` if a prisoner has changed
 * `PRISONER_OPENSEARCH_NO_CHANGE` if the OpenSearch index hash already contains the changes
 * `PRISONER_DATABASE_NO_CHANGE` if the OpenSearch index is different but the database hash is the same.
-OpenSearch is eventually consistent so we use the postgres database to ensure that we don't generate
-the same domain event twice.
+We first check OpenSearch to see if the prisoner has changed, but since does not guarantee consistency it could 
+be that a separate thread has already written a new version of the prisoner and we haven't been able to read it yet.
+We therefore store the prisoner hash in a postgres database too, which since it is
+[ACID compliant](https://en.wikipedia.org/wiki/ACID) will guarantee that we only perform an update of the prisoner
+if it has changed.  This is then used to ensure that we don't generate a new domain event when there have been no
+additional changes to the prisoner.
 
 The `customDimensions.event` will provide information as to what event triggered the change.
 * `REFRESH` indicates the trigger was the three times a week index refresh - see
