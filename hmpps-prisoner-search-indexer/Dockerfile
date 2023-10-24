@@ -11,8 +11,7 @@ RUN ./gradlew --no-daemon :hmpps-prisoner-search-indexer:assemble
 RUN apt-get update && apt-get install -y curl
 RUN curl https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem  > root.crt
 
-# Temporarily switch to jdk so can analyze out of memory issues
-FROM eclipse-temurin:20-jdk-jammy
+FROM eclipse-temurin:20-jre-jammy
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
 
 ARG BUILD_NUMBER

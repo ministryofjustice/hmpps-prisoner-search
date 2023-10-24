@@ -70,11 +70,11 @@ services:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=nomis-hsqldb
 
-  restricted-patients:
+  restricted-patients-api:
     image: quay.io/hmpps/hmpps-restricted-patients-api:latest
     networks:
       - hmpps
-    container_name: restricted-patients
+    container_name: restricted-patients-api
     depends_on:
       - hmpps-auth
       - prison-api
