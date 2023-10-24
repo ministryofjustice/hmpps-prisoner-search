@@ -14,18 +14,20 @@ If there are no differences then no further action will be taken for that messag
 alert will be generated during a cronjob run even though there could be multiple events.
 
 ## Telemetry events
-Summary events of the last index refresh can be found by running
+If a slack alert is generated then clicking `View` on the alert will show the differences in application insights.
+Note that this will default to the `Custom` timestamp range so might not show all the differences in that cronjob run.
+Alternatively a summary of the last index refresh can be found by running
 ```kusto
 customEvents
 | where cloud_RoleName == 'hmpps-prisoner-search-indexer'
 | where name in ("DIFFERENCE_REPORTED", "DIFFERENCE_MISSING")
-| where timestamp > ago(24h)
+| where timestamp > ago(1d)
 ```
 
 ## Querying detailed prisoner differences
-Calling the `/prisoner-differences` endpoint without any parameters will return all differences that have been found in the last
-24 hours.  Additionally `from` and `to` parameters can be added to limit the results to specific time periods e.g. 
-`from=2023-10-02T19:20:35.672232Z`.
+Calling the `/prisoner-differences` endpoint without any parameters will return all differences that have been found 
+in the last 24 hours.  Additionally `from` and `to` parameters can be added to limit the results to specific time 
+periods e.g. `from=2023-10-02T19:20:35.672232Z`.
 
 The difference format is
 ```
@@ -43,7 +45,8 @@ Sometimes the differences will be because of sentence wording changes e.g.
 ```
 which indicates that the sentence wording has been updated - this will then affect all prisoners have that most serious
 offence.  We don't currently listen to sentence wording changes, instead we rely on the index refresh to correct the
-wording.
+wording.  Similarly, we don't listen to reference data changes so if a hospital name is changed this can
+generate prisoner changes.
 
 ### Investigating events
 When a difference is discovered for a prisoner this needs to be investigated.  Start by seeing if there have been any 
@@ -56,17 +59,9 @@ customEvents
 | where timestamp > ago(3d)
 ```
 This will hopefully show, not only the recent difference run, but also any updates that have taken place in the last 
-few days and the categories that have changed.
-
-Choosing one of the `operation_Id` values and selecting
-```
-dependencies
-| where operation_Id == "<<operation id>>"
-| where target == "incentives-api.hmpps.service.justice.gov.uk"
-| where timestamp > ago(3d)
-```
-will then provide the `bookingId` in the `name` column.  This can then be used to see what prisoner events were raised
-in that time
+few days and the categories that have changed.  It will also show the events that triggered the changes, as well as
+displaying the `bookingId`.
+This information can then be used to cross-reference with prisoner events to see what events were raised at that time:
 ```
 customEvents
 | where cloud_RoleName == 'hmpps-prisoner-events'
