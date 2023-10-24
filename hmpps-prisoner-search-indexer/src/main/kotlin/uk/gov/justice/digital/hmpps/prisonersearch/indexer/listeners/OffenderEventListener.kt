@@ -37,6 +37,8 @@ class OffenderEventListener(
     )
     private val offenderEvent = setOf(
       "ASSESSMENT-UPDATED",
+      "KEY_DATE_ADJUSTMENT_UPSERTED",
+      "KEY_DATE_ADJUSTMENT_DELETED",
       "OFFENDER-INSERTED",
       "OFFENDER-UPDATED",
       "OFFENDER_ALIAS-CHANGED",
@@ -44,6 +46,8 @@ class OffenderEventListener(
       "OFFENDER_DETAILS-CHANGED",
       "OFFENDER_IDENTIFIER-UPDATED",
       "OFFENDER_PHYSICAL_DETAILS-CHANGED",
+      "SENTENCE_ADJUSTMENT_UPSERTED",
+      "SENTENCE_ADJUSTMENT_DELETED",
     )
   }
 
