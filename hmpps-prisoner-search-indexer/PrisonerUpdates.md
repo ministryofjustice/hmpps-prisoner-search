@@ -2,7 +2,7 @@
 
 This service subscribes to both domain events and prison offender events topics using separate queues.
 
-When an event is published AWS puts a message is put onto one of our event queues.
+When an event is published AWS puts a message onto one of our event queues.
 The event queue then processes that message - the latest prisoner record is retrieved via the Prison API,
 augmented with incentives and restricted patient data and upserted into the prisoner index.
 See [Useful Queries](./UsefulQueries.md) for information on how to view the events in Application Insights.
