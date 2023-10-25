@@ -1,7 +1,10 @@
 # Prisoner Differences
 
-The cronjob `hmpps-prisoner-search-indexer-full-index-refresh` runs every Monday, Wednesday and Friday evening at 19:00 UTC.
-This calls the `/refresh-index/automated` endpoint to kick off a full index refresh.
+The cronjob 
+[hmpps-prisoner-search-indexer-full-index-refresh](./helm_deploy/hmpps-prisoner-search-indexer/templates/full-index-refresh-cronjob.yaml)
+runs every Monday, Wednesday and Friday evening at 19:00 UTC.
+This calls the `/refresh-index/automated` endpoint to kick off a full index refresh.  The endpoint
+is also available to run manually at `/refresh-index`.
 
 The index refresh starts by calling Prison API to retrieve all the prisoners in NOMIS and add each one to the index
 queue.  For every message (prisoner) in the index queue it will then compare the OpenSearch index with NOMIS.
