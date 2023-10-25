@@ -51,3 +51,16 @@ dependencies
 | where operation_Name == "syscon-devs-hmpps_prisoner_search_index_queue"
 | where target == "prison-api-dev.prison.service.justice.gov.uk"
 ```
+
+## Investigating queue processing
+We listen to both prison and domain events.  For the queue listener requests the `url` will be blank, so we use that 
+to show only those requests:
+```kusto
+requests
+| where cloud_RoleName == 'hmpps-prisoner-search-indexer'
+| where url == ""
+| where timestamp > ago(1d)
+| summarize totalCount=sum(itemCount) by bin(timestamp, 5m), name
+| render timechart
+```
+This is useful to see if there is an issue with one of the queues.

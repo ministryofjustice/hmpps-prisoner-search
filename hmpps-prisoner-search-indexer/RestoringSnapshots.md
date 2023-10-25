@@ -1,6 +1,6 @@
 # Restoring from Snapshots
 
-See [OpenSearch access](./OpenSearchAccess.md) for how to connect to the OpenSearch cluster.  This document assumes that
+See [OpenSearch Access](./OpenSearchAccess.md) for how to connect to the OpenSearch cluster.  This document assumes that
 a port forward is in place.  The instructions below also assume that the current kubernetes cluster has been set:
 ```shell
 kubectl config set-context --current --namespace="hmpps-prisoner-search-<<env>>"
@@ -56,6 +56,11 @@ Finally scale the indexer back up - `4` for production and `2` normally for dev 
 ```shell
 kubectl scale --replicas=4 deployment hmpps-prisoner-search-indexer
 ```
+
+Note that the restoring from backup will not include any recent prisoner changes.  It would then be necessary to either
+run a full re-index or alternatively run an index refresh to ensure that the newly restrored index contains all the 
+same data as NOMIS. See [Index Maintenance](./IndexMaintenance.md) and [Prisoner Differences](./PrisonerDifferences.md).
+
 ## Snapshot cronjobs
 There are two kubernetes snapshot cronjobs:
 1. The `hmpps-prisoner-search-indexer-opensearch-snapshot` runs early every morning to take a snapshot
