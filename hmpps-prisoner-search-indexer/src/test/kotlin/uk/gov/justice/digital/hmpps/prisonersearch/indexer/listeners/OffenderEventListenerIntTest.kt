@@ -36,6 +36,27 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `will republish an ASSESSMENT_UPDATED event and then process`() {
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    val bookingId = 12349L
+    val prisonerNumber = "O7189FD"
+    prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder()
+        .queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderChangedMessage(prisonerNumber, "ASSESSMENT-UPDATED"))
+        .build(),
+    )
+
+    await untilAsserted {
+      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
+      assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
+    }
+  }
+
+  @Test
   fun `will delete merge records and insert new prisoner record on booking number change`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val oldPrisonerNumber = "O7089FE" // record to be removed
@@ -75,12 +96,21 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(prisonerNumber)
     }
   }
+  private fun validOffenderBookingChangedMessage(bookingId: Long, eventType: String) = validMessage(
+    eventType = eventType,
+    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-03-25T11:24:32.935401\",\"bookingId\":\"$bookingId\",\"nomisEventType\":\"S1_RESULT\"}""",
+  )
 
-  private fun validOffenderBookingChangedMessage(bookingId: Long, eventType: String) = """
+  private fun validOffenderChangedMessage(prisonerNumber: String, eventType: String) = validMessage(
+    eventType = eventType,
+    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"$prisonerNumber\",\"offenderId\":\"2345612\",\"nomisEventType\":\"S1_RESULT\"}""",
+  )
+
+  private fun validMessage(eventType: String, message: String) = """
           {
             "Type": "Notification",
             "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
-            "Message": "{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-03-25T11:24:32.935401\",\"bookingId\":\"$bookingId\",\"nomisEventType\":\"S1_RESULT\"}",
+            "Message": "$message",
             "MessageAttributes": {
               "eventType": {
                 "Type": "String",

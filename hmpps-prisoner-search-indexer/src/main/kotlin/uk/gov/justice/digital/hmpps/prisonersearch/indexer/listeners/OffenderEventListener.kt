@@ -10,11 +10,14 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.Companion.REPUBLISH_SUFFIX
 
 @Service
 class OffenderEventListener(
   private val objectMapper: ObjectMapper,
   private val indexListenerService: IndexListenerService,
+  private val offenderEventQueueService: OffenderEventQueueService,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -36,7 +39,7 @@ class OffenderEventListener(
       "SENTENCING-CHANGED",
     )
     private val offenderEvent = setOf(
-      "ASSESSMENT-UPDATED",
+      "ASSESSMENT-UPDATED_$REPUBLISH_SUFFIX",
       "KEY_DATE_ADJUSTMENT_UPSERTED",
       "KEY_DATE_ADJUSTMENT_DELETED",
       "OFFENDER-INSERTED",
@@ -60,6 +63,7 @@ class OffenderEventListener(
       log.debug("Received message {} type {}", messageId, eventType)
 
       when (eventType) {
+        "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
         in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
         in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message), eventType)
         "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)

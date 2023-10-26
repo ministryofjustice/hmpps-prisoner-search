@@ -20,12 +20,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.ExternalPris
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBookingChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderChangedMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 
 @JsonTest
 internal class OffenderEventListenerTest(@Autowired private val objectMapper: ObjectMapper) {
   private val indexListenerService = mock<IndexListenerService>()
+  private val offenderEventQueueService = mock<OffenderEventQueueService>()
 
-  private val listener = OffenderEventListener(objectMapper, indexListenerService)
+  private val listener = OffenderEventListener(objectMapper, indexListenerService, offenderEventQueueService)
 
   private val logAppender = findLogAppender(OffenderEventListener::class.java)
 
@@ -63,7 +65,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     @ValueSource(
       strings = [
         "OFFENDER-INSERTED", "OFFENDER-UPDATED", "OFFENDER_DETAILS-CHANGED", "OFFENDER_ALIAS-CHANGED",
-        "OFFENDER_PHYSICAL_DETAILS-CHANGED", "OFFENDER_IDENTIFIER-UPDATED", "ASSESSMENT-UPDATED",
+        "OFFENDER_PHYSICAL_DETAILS-CHANGED", "OFFENDER_IDENTIFIER-UPDATED", "ASSESSMENT-UPDATED_REPUBLISHED",
       ],
     )
     internal fun `will call service for offender change`(eventType: String) {
@@ -90,6 +92,14 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         ),
         eventType,
       )
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["ASSESSMENT-UPDATED"])
+    internal fun `will call republish message for assessment updated`(eventType: String) {
+      val requestJson = validOffenderChangedMessage(eventType)
+      listener.processOffenderEvent(requestJson)
+      verify(offenderEventQueueService).republishMessageWithDelay(requestJson, eventType)
     }
 
     @Test
