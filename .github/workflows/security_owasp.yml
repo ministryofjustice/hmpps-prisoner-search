@@ -35,5 +35,5 @@ jobs:
         parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
     - uses: actions/upload-artifact@v3
       with:
-        name: gradle-owasp-dependency-check
+        name: gradle-owasp-dependency-check-${{ inputs.subproject }}
         path: ${{ inputs.subproject }}/build/reports/dependency-check-report.html
