@@ -29,7 +29,7 @@ class OffenderEventQueueService(
         .delaySeconds(republishDelayInSeconds)
         .build(),
     ).get().also {
-      log.info("Sent populate index message request {}", it.messageId())
+      log.info("Republished message of type {} with delay {} with id {}", eventType, republishDelayInSeconds, it.messageId())
     }
   }
 
