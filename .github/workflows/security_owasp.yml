@@ -29,11 +29,11 @@ jobs:
     - uses: github/codeql-action/upload-sarif@v2
       if: success() || steps.owasp.conclusion == 'failure'
       with:
-        sarif_file: ${{ env.parent_directory }}/build/reports/dependency-check-report.sarif
+        sarif_file: ${{ inputs.subproject }}/build/reports/dependency-check-report.sarif
         category: gradle-owasp-dependency-check
       env:
         parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
     - uses: actions/upload-artifact@v3
       with:
         name: gradle-owasp-dependency-check
-        path: ${{ env.parent_directory }}/build/reports/dependency-check-report.html
+        path: ${{ inputs.subproject }}/build/reports/dependency-check-report.html

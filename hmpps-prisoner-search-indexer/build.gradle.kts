@@ -9,6 +9,7 @@ configurations {
 }
 
 dependencies {
+  runtimeOnly("org.hsqldb:hsqldb:2.5.1")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.2.0")
 
@@ -57,8 +58,4 @@ tasks {
       jvmTarget = "20"
     }
   }
-}
-
-dependencyCheck {
-  suppressionFiles.add("dependency-check-suppress-opensearch.xml")
 }
