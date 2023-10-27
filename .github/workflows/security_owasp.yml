@@ -33,4 +33,7 @@ jobs:
         category: gradle-owasp-dependency-check
       env:
         parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
-
+    - uses: actions/upload-artifact@v3
+      with:
+        name: gradle-owasp-dependency-check
+        path: ${{ env.parent_directory }}/build/reports/dependency-check-report.html
