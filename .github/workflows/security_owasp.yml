@@ -26,7 +26,6 @@ jobs:
     - name: Run gradle OWASP
       id: owasp
       run: ./gradlew ${{ inputs.subproject }}:dependencyCheckAnalyze
-      continue-on-error: true
     - uses: github/codeql-action/upload-sarif@v2
       if: success() || steps.owasp.conclusion == 'failure'
       with:
@@ -35,8 +34,44 @@ jobs:
       env:
         parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
     - uses: actions/upload-artifact@v3
+      if: success() || steps.owasp.conclusion == 'failure'
       with:
         name: gradle-owasp-dependency-check-${{ inputs.subproject }}
         path: ${{ env.parent_directory }}/build/reports/dependency-check-report.html
       env:
         parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
+    - uses: slackapi/slack-github-action@v1.24.0
+      if: failure()
+      with:
+        payload: |
+          {
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ":no_entry: Failed GitHub Action:"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Job:*\n${{ github.job }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Repo:*\n${{ github.repository }}"
+                  }
+                ]
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
