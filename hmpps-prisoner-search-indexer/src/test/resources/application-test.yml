@@ -70,3 +70,6 @@ index-build:
 diff:
   events: true
   prefix: test.
+
+republish:
+  delayInSeconds: 0
