@@ -58,7 +58,3 @@ tasks {
     }
   }
 }
-
-dependencyCheck {
-  suppressionFiles.add("dependency-check-suppress-opensearch.xml")
-}
