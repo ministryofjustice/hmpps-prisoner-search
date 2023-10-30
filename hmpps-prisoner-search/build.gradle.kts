@@ -14,8 +14,6 @@ dependencies {
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   implementation("org.springframework.data:spring-data-elasticsearch:5.1.5")
@@ -32,6 +30,7 @@ dependencies {
 
   implementation(project(":common"))
 
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
