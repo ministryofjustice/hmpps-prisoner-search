@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import java.time.Duration
+import kotlin.apply as kotlinApply
 
 @Configuration
 @EnableAsync
@@ -27,67 +28,28 @@ class WebClientConfiguration(
 ) {
 
   @Bean
-  fun hmppsAuthHealthWebClient(): WebClient = healthWebClient(hmppsAuthBaseUri)
+  fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthBaseUri, healthTimeout)
 
   @Bean
-  fun prisonApiHealthWebClient(): WebClient = healthWebClient(prisonApiBaseUri)
-
-  private fun healthWebClient(url: String): WebClient = WebClient.builder()
-    .baseUrl(url)
-    .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(healthTimeout)))
-    .build()
+  fun prisonApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(prisonApiBaseUri, healthTimeout)
 
   @Bean
-  fun prisonApiWebClient(
-    authorizedClientManager: OAuth2AuthorizedClientManager,
-    webClientBuilder: WebClient.Builder,
-  ): WebClient {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
-      it.setDefaultClientRegistrationId("prison-api")
-    }
-
-    return webClientBuilder
-      .baseUrl(prisonApiBaseUri)
-      .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
-      .filter(oauth2Client).build()
-  }
+  fun prisonApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
+    builder.authorisedWebClient(authorizedClientManager, registrationId = "prison-api", url = prisonApiBaseUri, timeout)
 
   @Bean
-  fun restrictedPatientsHealthWebClient(): WebClient = healthWebClient(restrictedPatientBaseUrl)
+  fun restrictedPatientsHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(restrictedPatientBaseUrl, healthTimeout)
 
   @Bean
-  fun restrictedPatientsWebClient(
-    authorizedClientManager: OAuth2AuthorizedClientManager,
-    webClientBuilder: WebClient.Builder,
-  ): WebClient {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
-      it.setDefaultClientRegistrationId("restricted-patients-api")
-    }
-
-    return webClientBuilder
-      .baseUrl(restrictedPatientBaseUrl)
-      .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
-      .filter(oauth2Client).build()
-  }
+  fun restrictedPatientsWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
+    builder.authorisedWebClient(authorizedClientManager, registrationId = "restricted-patients-api", url = restrictedPatientBaseUrl, timeout)
 
   @Bean
-  fun incentivesHealthWebClient(): WebClient = healthWebClient(incentivesBaseUri)
+  fun incentivesHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(incentivesBaseUri, healthTimeout)
 
   @Bean
-  fun incentivesWebClient(
-    authorizedClientManager: OAuth2AuthorizedClientManager,
-    webClientBuilder: WebClient.Builder,
-  ): WebClient {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).also {
-      it.setDefaultClientRegistrationId("incentives-api")
-    }
-
-    return webClientBuilder
-      .baseUrl(incentivesBaseUri)
-      .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
-      .filter(oauth2Client)
-      .build()
-  }
+  fun incentivesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
+    builder.authorisedWebClient(authorizedClientManager, registrationId = "incentives-api", url = incentivesBaseUri, timeout)
 
   @Bean
   fun authorizedClientManager(
@@ -98,6 +60,22 @@ class WebClientConfiguration(
     return AuthorizedClientServiceOAuth2AuthorizedClientManager(
       clientRegistrationRepository,
       oAuth2AuthorizedClientService,
-    ).also { it.setAuthorizedClientProvider(authorizedClientProvider) }
+    ).kotlinApply { setAuthorizedClientProvider(authorizedClientProvider) }
   }
 }
+
+fun WebClient.Builder.authorisedWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, registrationId: String, url: String, timeout: Duration): WebClient {
+  val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).kotlinApply {
+    setDefaultClientRegistrationId(registrationId)
+  }
+
+  return baseUrl(url)
+    .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
+    .filter(oauth2Client)
+    .build()
+}
+
+fun WebClient.Builder.healthWebClient(url: String, healthTimeout: Duration): WebClient =
+  baseUrl(url)
+    .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(healthTimeout)))
+    .build()
