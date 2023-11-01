@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   kotlin("plugin.spring")
@@ -9,8 +11,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 }
 
-java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(20))
+kotlin {
+  jvmToolchain(21)
 }
 
 tasks {
@@ -18,9 +20,9 @@ tasks {
   jar { enabled = true }
   copyAgent { enabled = false }
 
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+  withType<KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "20"
+      jvmTarget = "21"
     }
   }
 }
