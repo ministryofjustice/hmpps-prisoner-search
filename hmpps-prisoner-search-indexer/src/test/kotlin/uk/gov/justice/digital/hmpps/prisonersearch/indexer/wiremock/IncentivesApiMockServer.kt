@@ -25,7 +25,7 @@ class IncentivesMockServer : WireMockServer(8096) {
 
   fun stubNotFound() {
     stubFor(
-      get(urlPathMatching("/iep/reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
         .willReturn(
           aResponse()
             .withStatus(404),
@@ -40,7 +40,7 @@ class IncentivesMockServer : WireMockServer(8096) {
     nextReviewDate: String = "2023-11-18",
   ) {
     stubFor(
-      get(urlPathMatching("/iep/reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -68,7 +68,7 @@ class IncentivesMockServer : WireMockServer(8096) {
 
   fun verifyGetCurrentIncentiveRequest(bookingId: Long) {
     verify(
-      getRequestedFor(urlEqualTo("/iep/reviews/booking/$bookingId?with-details=false")),
+      getRequestedFor(urlEqualTo("/incentive-reviews/booking/$bookingId?with-details=false")),
     )
   }
 }

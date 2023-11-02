@@ -34,7 +34,7 @@ internal class IncentivesServiceTest {
       incentivesService.getCurrentIncentive(123456L)
 
       incentivesApi.verify(
-        getRequestedFor(urlEqualTo("/iep/reviews/booking/123456?with-details=false"))
+        getRequestedFor(urlEqualTo("/incentive-reviews/booking/123456?with-details=false"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
 
       )

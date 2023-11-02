@@ -38,7 +38,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
     prisoners.forEach {
       stubGetOffender(it)
       stubFor(
-        WireMock.get(WireMock.urlPathEqualTo("/iep/reviews/booking/${it.bookingId}"))
+        WireMock.get(WireMock.urlPathEqualTo("/incentive-reviews/booking/${it.bookingId}"))
           .willReturn(
             WireMock.aResponse()
               .withHeader("Content-Type", "application/json")
