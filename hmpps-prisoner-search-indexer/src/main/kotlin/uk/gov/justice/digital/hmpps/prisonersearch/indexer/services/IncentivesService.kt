@@ -12,7 +12,7 @@ class IncentivesService(
   private val incentivesWebClient: WebClient,
 ) {
   fun getCurrentIncentive(bookingId: Long): IncentiveLevel? =
-    incentivesWebClient.get().uri("/iep/reviews/booking/{bookingId}?with-details=false", bookingId)
+    incentivesWebClient.get().uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
       .retrieve()
       .bodyToMono(IncentiveLevel::class.java)
       .onErrorResume(WebClientResponseException.NotFound::class.java) {
