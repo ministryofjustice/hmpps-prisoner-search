@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   kotlin("plugin.spring")
@@ -20,7 +22,7 @@ dependencies {
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.30.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.31.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
@@ -41,14 +43,14 @@ dependencies {
   testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
 }
 
-java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(20))
+kotlin {
+  jvmToolchain(21)
 }
 
 tasks {
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+  withType<KotlinCompile> {
     kotlinOptions {
-      jvmTarget = "20"
+      jvmTarget = "21"
     }
   }
 }

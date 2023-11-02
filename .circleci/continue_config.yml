@@ -21,7 +21,7 @@ jobs:
   validate-common:
     executor:
       name: hmpps/java
-      tag: "20.0"
+      tag: "21.0"
     steps:
       - checkout
       - restore_cache:
@@ -45,7 +45,7 @@ jobs:
         type: string
     executor:
       name: hmpps/localstack
-      jdk_tag: "20.0"
+      jdk_tag: "21.0"
       localstack_tag: "2.3"
       localstack_type: "localstack"
       services: "opensearch,sns,sqs"
@@ -80,7 +80,7 @@ jobs:
         type: string
     executor:
       name: hmpps/java_localstack_postgres
-      jdk_tag: "20.0"
+      jdk_tag: "21.0"
       localstack_tag: "2.3"
       localstack_type: "localstack"
       services: "opensearch,sns,sqs"
