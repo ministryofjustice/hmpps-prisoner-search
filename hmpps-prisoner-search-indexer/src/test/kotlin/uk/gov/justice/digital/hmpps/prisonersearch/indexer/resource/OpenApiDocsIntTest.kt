@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 import io.swagger.v3.parser.OpenAPIV3Parser
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
@@ -34,13 +35,23 @@ class OpenApiDocsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `the swagger json is valid`() {
+  fun `the open api json contains documentation`() {
     webTestClient.get()
       .uri("/v3/api-docs")
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
-      .expectBody().jsonPath("messages").doesNotExist()
+      .expectBody().jsonPath("paths").isNotEmpty
+  }
+
+  @Test
+  fun `the open api json contains the version number`() {
+    webTestClient.get()
+      .uri("/v3/api-docs")
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().jsonPath("info.version").isEqualTo(DateTimeFormatter.ISO_DATE.format(LocalDate.now()))
   }
 
   @Test
@@ -51,29 +62,18 @@ class OpenApiDocsIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `the swagger json contains the version number`() {
-    webTestClient.get()
-      .uri("/v3/api-docs")
-      .accept(MediaType.APPLICATION_JSON)
-      .exchange()
-      .expectStatus().isOk
-      .expectBody().jsonPath("info.version").isEqualTo(DateTimeFormatter.ISO_DATE.format(LocalDate.now()))
-  }
-
-  @Test
-  fun `the security scheme is setup for bearer tokens`() {
-    val bearerJwts = JSONArray()
-    bearerJwts.addAll(listOf("read", "write"))
+  fun `a security scheme is setup for a HMPPS Auth token with the ROLE_PRISONER_INDEX role`() {
     webTestClient.get()
       .uri("/v3/api-docs")
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .jsonPath("$.components.securitySchemes.bearer-jwt.type").isEqualTo("http")
-      .jsonPath("$.components.securitySchemes.bearer-jwt.scheme").isEqualTo("bearer")
-      .jsonPath("$.components.securitySchemes.bearer-jwt.bearerFormat").isEqualTo("JWT")
-      .jsonPath("$.security[0].bearer-jwt")
-      .isEqualTo(bearerJwts)
+      .jsonPath("$.components.securitySchemes.prisoner-index-role.type").isEqualTo("http")
+      .jsonPath("$.components.securitySchemes.prisoner-index-role.scheme").isEqualTo("bearer")
+      .jsonPath("$.components.securitySchemes.prisoner-index-role.bearerFormat").isEqualTo("JWT")
+      .jsonPath("$.components.securitySchemes.prisoner-index-role.description").value(containsString("ROLE_PRISONER_INDEX"))
+      .jsonPath("$.security[0].prisoner-index-role")
+      .isEqualTo(JSONArray().apply { addAll(listOf("read", "write")) })
   }
 }

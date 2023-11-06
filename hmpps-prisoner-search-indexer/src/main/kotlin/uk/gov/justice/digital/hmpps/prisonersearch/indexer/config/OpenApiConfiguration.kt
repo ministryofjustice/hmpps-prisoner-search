@@ -37,16 +37,11 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     )
     .components(
       Components().addSecuritySchemes(
-        "bearer-jwt",
-        SecurityScheme()
-          .type(SecurityScheme.Type.HTTP)
-          .scheme("bearer")
-          .bearerFormat("JWT")
-          .`in`(SecurityScheme.In.HEADER)
-          .name("Authorization"),
+        "prisoner-index-role",
+        SecurityScheme().addBearerJwtRequirement("ROLE_PRISONER_INDEX"),
       ),
     )
-    .addSecurityItem(SecurityRequirement().addList("bearer-jwt", listOf("read", "write")))
+    .addSecurityItem(SecurityRequirement().addList("prisoner-index-role", listOf("read", "write")))
 
   @Bean
   fun openAPICustomiser(): OpenApiCustomizer = OpenApiCustomizer {
@@ -68,3 +63,11 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     }
   }
 }
+
+private fun SecurityScheme.addBearerJwtRequirement(role: String): SecurityScheme =
+  type(SecurityScheme.Type.HTTP)
+    .scheme("bearer")
+    .bearerFormat("JWT")
+    .`in`(SecurityScheme.In.HEADER)
+    .name("Authorization")
+    .description("A HMPPS Auth access token with the `$role` role.")

@@ -149,7 +149,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .consumeWith(System.out::println)
       .jsonPath("$.[?(@.nomsNumber=='A9999AA')].differences")
       .isEqualTo("[[releaseDate: 2023-01-02, null]]")
       .jsonPath("$.[?(@.nomsNumber=='A7089EY')].differences").value<JSONArray> {
