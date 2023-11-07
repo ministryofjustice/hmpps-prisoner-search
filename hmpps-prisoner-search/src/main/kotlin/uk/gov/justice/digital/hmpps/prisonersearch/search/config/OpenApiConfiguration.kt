@@ -25,7 +25,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .servers(
       listOf(
         Server().url("https://prisoner-search-dev.prison.service.justice.gov.uk/").description("Development"),
-        Server().url("https://prisoner-search-preprod.prison.service.justice.gov.uk/").description("Pre-Productionk"),
+        Server().url("https://prisoner-search-preprod.prison.service.justice.gov.uk/").description("Pre-Production"),
         Server().url("https://prisoner-search.prison.service.justice.gov.uk/").description("Production"),
         Server().url("http://localhost:8080").description("Local"),
       ),
@@ -49,62 +49,28 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     )
     .info(
       Info().title("Prisoner Search").version(version)
-        .description(this.javaClass.getResource("/documentation/service-description.html").readText())
+        .description(this.javaClass.getResource("/documentation/service-description.html")!!.readText())
         .contact(Contact().name("HMPPS Digital Studio").email("feedback@digital.justice.gov.uk")),
     )
     .components(
       Components().addSecuritySchemes(
         "view-prisoner-data-role",
-        SecurityScheme()
-          .type(SecurityScheme.Type.HTTP)
-          .scheme("bearer")
-          .bearerFormat("JWT")
-          .`in`(SecurityScheme.In.HEADER)
-          .name("Authorization")
-          .description("A HMPPS Auth access token with the `ROLE_VIEW_PRISONER_DATA` role."),
+        SecurityScheme().addBearerJwtRequirement("ROLE_VIEW_PRISONER_DATA"),
       ).addSecuritySchemes(
         "prisoner-search-role",
-        SecurityScheme()
-          .type(SecurityScheme.Type.HTTP)
-          .scheme("bearer")
-          .bearerFormat("JWT")
-          .`in`(SecurityScheme.In.HEADER)
-          .name("Authorization")
-          .description("A HMPPS Auth access token with the `ROLE_PRISONER_SEARCH` role."),
+        SecurityScheme().addBearerJwtRequirement("ROLE_PRISONER_SEARCH"),
       ).addSecuritySchemes(
         "global-search-role",
-        SecurityScheme()
-          .type(SecurityScheme.Type.HTTP)
-          .scheme("bearer")
-          .bearerFormat("JWT")
-          .`in`(SecurityScheme.In.HEADER)
-          .name("Authorization")
-          .description("A HMPPS Auth access token with the `ROLE_GLOBAL_SEARCH` role."),
+        SecurityScheme().addBearerJwtRequirement("ROLE_GLOBAL_SEARCH"),
       ).addSecuritySchemes(
         "prisoner-in-prison-search-role",
-        SecurityScheme()
-          .type(SecurityScheme.Type.HTTP)
-          .scheme("bearer")
-          .bearerFormat("JWT")
-          .`in`(SecurityScheme.In.HEADER)
-          .name("Authorization")
-          .description("A HMPPS Auth access token with the `ROLE_PRISONER_IN_PRISON_SEARCH` role."),
-      ).addSecuritySchemes(
-        "prisoner-index-role",
-        SecurityScheme()
-          .type(SecurityScheme.Type.HTTP)
-          .scheme("bearer")
-          .bearerFormat("JWT")
-          .`in`(SecurityScheme.In.HEADER)
-          .name("Authorization")
-          .description("A HMPPS Auth access token with the `PRISONER_INDEX` role."),
+        SecurityScheme().addBearerJwtRequirement("ROLE_PRISONER_IN_PRISON_SEARCH"),
       ),
     )
     .addSecurityItem(SecurityRequirement().addList("view-prisoner-data-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("global-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-in-prison-search-role", listOf("read")))
-    .addSecurityItem(SecurityRequirement().addList("prisoner-index-role", listOf("read", "write")))
 
   @Bean
   fun openAPICustomiser(): OpenApiCustomizer = OpenApiCustomizer {
@@ -126,3 +92,11 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     }
   }
 }
+
+private fun SecurityScheme.addBearerJwtRequirement(role: String): SecurityScheme =
+  type(SecurityScheme.Type.HTTP)
+    .scheme("bearer")
+    .bearerFormat("JWT")
+    .`in`(SecurityScheme.In.HEADER)
+    .name("Authorization")
+    .description("A HMPPS Auth access token with the `$role` role.")
