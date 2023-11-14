@@ -14,7 +14,6 @@ generic-service:
     prum-test-platform-1: 18.134.149.68/32
     prum-test-platform-2: 18.133.201.123/32
     prum-test-platform-3: 52.56.76.34/32
-    groups: []
 
 generic-prometheus-alerts:
   businessHoursOnly: true
