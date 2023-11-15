@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@7
+  hmpps: ministryofjustice/hmpps@8
 
 parameters:
   releases-slack-channel:
@@ -163,6 +163,8 @@ workflows:
           name: deploy_dev-indexer
           env: "dev"
           jira_update: true
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
           context:
             - hmpps-common-vars
           k8s_deployment_name: hmpps-prisoner-search-indexer
@@ -187,6 +189,8 @@ workflows:
           env: "preprod"
           jira_update: true
           jira_env_type: staging
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
           context:
             - hmpps-common-vars
             - hmpps-prisoner-search-preprod
@@ -205,6 +209,8 @@ workflows:
           env: "prod"
           jira_update: true
           jira_env_type: production
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
           slack_notification: true
           context:
             - hmpps-common-vars
@@ -239,6 +245,8 @@ workflows:
           name: deploy_dev-search
           env: "dev"
           jira_update: true
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
           context:
             - hmpps-common-vars
           helm_dir: hmpps-prisoner-search/helm_deploy
@@ -260,6 +268,8 @@ workflows:
           env: "preprod"
           jira_update: true
           jira_env_type: staging
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
           context:
             - hmpps-common-vars
             - hmpps-prisoner-search-preprod
@@ -275,6 +285,8 @@ workflows:
           env: "prod"
           jira_update: true
           jira_env_type: production
+          pipeline_id: <<pipeline.id>>
+          pipeline_number: <<pipeline.number>>
           slack_notification: true
           context:
             - hmpps-common-vars

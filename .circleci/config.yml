@@ -2,7 +2,7 @@ version: 2.1
 setup: true
 orbs:
   path-filtering: circleci/path-filtering@0.1.6 # Dynamic config must be enabled. See https://circleci.com/docs/2.0/dynamic-config
-  hmpps: ministryofjustice/hmpps@7
+  hmpps: ministryofjustice/hmpps@8
 
 parameters:
   alerts-slack-channel:
