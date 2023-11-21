@@ -92,6 +92,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.nonDtoReleaseDate = ob.sentenceDetail?.nonDtoReleaseDate
   this.nonDtoReleaseDateType = ob.sentenceDetail?.nonDtoReleaseDateType
   this.tariffDate = ob.sentenceDetail?.tariffDate
+  this.releaseOnTemporaryLicenceDate = ob.sentenceDetail?.releaseOnTemporaryLicenceDate
 
   this.receptionDate = ob.receptionDate
   this.paroleEligibilityDate = ob.sentenceDetail?.paroleEligibilityDate

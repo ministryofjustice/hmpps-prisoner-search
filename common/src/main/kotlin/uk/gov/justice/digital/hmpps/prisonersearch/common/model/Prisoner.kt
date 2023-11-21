@@ -281,6 +281,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.SENTENCE)
   var tariffDate: LocalDate? = null
 
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  @Schema(description = "Release on Temporary Licence Date", example = "2023-05-01")
+  @DiffableProperty(DiffCategory.SENTENCE)
+  var releaseOnTemporaryLicenceDate: LocalDate? = null
+
   @Schema(
     description = "current prison or outside with last movement information.",
     example = "Outside - released from Leeds",
