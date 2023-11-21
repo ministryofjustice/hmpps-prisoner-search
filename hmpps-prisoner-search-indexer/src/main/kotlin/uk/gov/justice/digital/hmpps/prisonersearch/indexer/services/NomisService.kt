@@ -21,7 +21,7 @@ class NomisService(
         .build()
     }
     .httpRequest {
-      it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
+      it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(2))
     }
     .retrieve()
     .bodyToMono(PrisonerNumberPage::class.java)
