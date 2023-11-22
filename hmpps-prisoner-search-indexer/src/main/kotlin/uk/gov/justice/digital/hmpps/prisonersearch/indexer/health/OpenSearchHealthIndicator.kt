@@ -1,15 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
-import org.opensearch.data.client.orhlc.OpenSearchRestTemplate
 import org.springframework.boot.actuate.health.AbstractHealthIndicator
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.Status
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth
 import org.springframework.stereotype.Component
 
-@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 @Component
-class OpenSearchHealthIndicator(private val template: OpenSearchRestTemplate) : AbstractHealthIndicator() {
+class OpenSearchHealthIndicator(private val template: ElasticsearchOperations) : AbstractHealthIndicator() {
   override fun doHealthCheck(builder: Health.Builder): Unit =
     processResponse(builder, template.cluster().health())
 
