@@ -9,7 +9,7 @@ services:
       - localstack
       - hmpps-auth
     ports:
-      - "8080:8080"
+      - "8091:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
     environment:
@@ -26,7 +26,7 @@ services:
       - DB_PASS=pos
 
   hmpps-prisoner-search-indexer:
-    image: quay.io/hmpps/hmpps-prisoner-search-indexer:latest
+    image: quay.io/hmpps/hmpps-prisoner-search-indexer:2023-11-17.2633.35f0e67
     networks:
       - hmpps
     container_name: hmpps-prisoner-search-indexer
@@ -35,17 +35,23 @@ services:
       - prison-api
       - hmpps-auth
     ports:
-      - "8080:8080"
+      - "8092:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
-      - API_BASE_URL_OAUTH=http://oauth:8080/auth
-      - API_BASE_URL_NOMIS=http://prison-api:8080
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_PRISON_API=http://prison-api:8080
+      - API_BASE_URL_RESTRICTED_PATIENTS=http://restricted-patients-api:8080
+      - API_BASE_URL_INCENTIVES=http://hmpps-incentives-api:8080
       - SQS_ENDPOINT_URL=http://localstack-psi:4566
-      - OAUTH_CLIENT_ID=prisoner-offender-search-client
-      - OAUTH_CLIENT_SECRET=clientsecret
+      - PRISON_API_CLIENT_ID=prisoner-offender-search-client
+      - PRISON_API_CLIENT_SECRET=clientsecret
+      - RESTRICTED_PATIENTS_CLIENT_ID=prisoner-offender-search-client
+      - RESTRICTED_PATIENTS_CLIENT_SECRET=clientsecret
+      - INCENTIVES_CLIENT_ID=prisoner-offender-search-client
+      - INCENTIVES_CLIENT_SECRET=clientsecret
       - OPENSEARCH_URIS=http://localstack-psi:4566
       - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
       - OPENSEARCH_PATHPREFIX=/opensearch/eu-west-2/os01
@@ -69,6 +75,7 @@ services:
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=nomis-hsqldb
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://hmpps-auth:8080/auth/.well-known/jwks.json
 
   restricted-patients-api:
     image: quay.io/hmpps/hmpps-restricted-patients-api:latest
@@ -84,8 +91,11 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
     environment:
       - SERVER_PORT=8080
-      - SPRING_PROFILES_ACTIVE=dev
-      - PRISON_API_ENDPOINT_URL=http://prison-api:8093
+      - SPRING_PROFILES_ACTIVE=dev,localstack
+      - PRISON_API_ENDPOINT_URL=http://prison-api:8080
+      - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
+      - PRISONER_SEARCH_API_ENDPOINT_URL=http://hmpps-prisoner-search:8080
+      - OAUTH_ENDPOINT_URL=http://hmpps-auth:8080/auth
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
@@ -99,6 +109,7 @@ services:
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
+      - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
 
   hmpps-incentives-api:
     image: quay.io/hmpps/hmpps-incentives-api:latest
@@ -107,13 +118,20 @@ services:
     container_name: hmpps-incentives-api
     depends_on:
       - hmpps-auth
+      - incentives-db
     ports:
       - "8096:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
     environment:
       - SERVER_PORT=8080
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=dev,localstack
+      - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_PRISON=http://prison-api:8080
+      - API_BASE_URL_OFFENDER_SEARCH=http://hmpps-prisoner-search:8080
+      - SPRING_FLYWAY_URL=jdbc:postgresql://incentives-db:5432/incentives?sslmode=prefer
+      - SPRING_R2DBC_URL=r2dbc:postgresql://incentives-db:5432/incentives?sslmode=prefer
 
   localstack:
     image: localstack/localstack:2.3
@@ -134,12 +152,26 @@ services:
     networks:
       - hmpps
     container_name: hpsi-db
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=pos
       - POSTGRES_USER=pos
       - POSTGRES_DB=pos
+
+  incentives-db:
+    image: postgres:15
+    networks:
+      - hmpps
+    container_name: incentives-db
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=incentives
+      - POSTGRES_USER=incentives
+      - POSTGRES_DB=incentives
 
 networks:
   hmpps:
