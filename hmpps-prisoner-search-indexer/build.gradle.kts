@@ -35,12 +35,12 @@ dependencies {
 
   implementation(project(":common"))
 
-  runtimeOnly("org.postgresql:postgresql:42.6.0")
+  runtimeOnly("org.postgresql:postgresql:42.7.0")
   runtimeOnly("org.flywaydb:flyway-core")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.18") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.19") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.19")

@@ -26,7 +26,7 @@ services:
       - DB_PASS=pos
 
   hmpps-prisoner-search-indexer:
-    image: quay.io/hmpps/hmpps-prisoner-search-indexer:2023-11-17.2633.35f0e67
+    image: quay.io/hmpps/hmpps-prisoner-search-indexer:latest
     networks:
       - hmpps
     container_name: hmpps-prisoner-search-indexer
