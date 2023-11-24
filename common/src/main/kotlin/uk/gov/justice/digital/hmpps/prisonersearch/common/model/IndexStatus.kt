@@ -68,6 +68,12 @@ data class IndexStatus(
     otherIndexState = IndexState.BUILDING,
   )
 
+  fun toBuildAbsent(): IndexStatus = this.copy(
+    otherIndexStartBuildTime = null,
+    otherIndexEndBuildTime = null,
+    otherIndexState = IndexState.ABSENT,
+  )
+
   fun toBuildComplete(): IndexStatus = this.copy(
     otherIndexEndBuildTime = LocalDateTime.now(),
     otherIndexState = IndexState.COMPLETED,

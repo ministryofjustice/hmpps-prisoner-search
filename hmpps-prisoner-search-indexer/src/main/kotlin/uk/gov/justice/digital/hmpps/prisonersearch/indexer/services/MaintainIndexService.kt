@@ -44,9 +44,10 @@ class MaintainIndexService(
   }
 
   private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
-    indexStatusService.markBuildInProgress()
+    indexStatusService.markBuildAbsent()
     createIfDoesntExist(indexStatus.currentIndex)
     resetAndCreate(indexStatus.otherIndex)
+    indexStatusService.markBuildInProgress()
     indexQueueService.sendPopulateIndexMessage(indexStatus.otherIndex)
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
