@@ -97,6 +97,42 @@ class IndexStatusServiceTest {
   }
 
   @Nested
+  inner class MarkBuildAbsent {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexStatusRepository.save(any<IndexStatus>())).thenAnswer { it.getArgument(0) }
+    }
+
+    @Test
+    fun `Already building index does nothing`() {
+      val existingIndexInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
+      whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexInProgress))
+
+      indexStatusService.markBuildAbsent()
+
+      verify(indexStatusRepository, never()).save(any())
+    }
+
+    @Test
+    fun `Not currently absent index saves status building`() {
+      val existingIndexNotInProgress = IndexStatus(currentIndex = SyncIndex.GREEN, otherIndexState = IndexState.CANCELLED)
+      whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexNotInProgress))
+
+      val newIndexStatus = indexStatusService.markBuildAbsent()
+
+      verify(indexStatusRepository).save(
+        check { savedIndexStatus ->
+          assertThat(savedIndexStatus.otherIndex).isEqualTo(SyncIndex.BLUE)
+          assertThat(savedIndexStatus.otherIndexStartBuildTime).isNull()
+          assertThat(savedIndexStatus.otherIndexState).isEqualTo(IndexState.ABSENT)
+        },
+      )
+
+      assertThat(newIndexStatus).isNotNull
+    }
+  }
+
+  @Nested
   inner class MarkBuildComplete {
     @BeforeEach
     internal fun setUp() {

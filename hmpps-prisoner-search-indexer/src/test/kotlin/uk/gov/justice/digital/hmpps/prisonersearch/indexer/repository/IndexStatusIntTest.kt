@@ -22,12 +22,22 @@ class IndexStatusIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Should save index status to repository`() {
+  fun `Should save build in progress index status to repository`() {
     indexStatusService.markBuildInProgress()
 
     val actual = getActualIndexStatus()
     assertThat(actual.otherIndexState).isEqualTo(IndexState.BUILDING)
     assertThat(actual.otherIndexStartBuildTime).isNotNull()
+  }
+
+  @Test
+  fun `Should save build absent status to repository`() {
+    indexStatusService.markBuildAbsent()
+
+    val actual = getActualIndexStatus()
+    assertThat(actual.otherIndexState).isEqualTo(IndexState.ABSENT)
+    assertThat(actual.otherIndexStartBuildTime).isNull()
+    assertThat(actual.otherIndexEndBuildTime).isNull()
   }
 
   @Test

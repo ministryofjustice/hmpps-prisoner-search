@@ -28,38 +28,44 @@ class IndexStatusService(private val indexStatusRepository: IndexStatusRepositor
       false
     }
 
-  fun getIndexStatus(): IndexStatus =
-    indexStatusRepository.findById(INDEX_STATUS_ID).orElseThrow()
+  fun getIndexStatus(): IndexStatus = indexStatusRepository.findById(INDEX_STATUS_ID).orElseThrow()
 
-  fun markBuildInProgress(): IndexStatus {
-    val currentIndexStatus = getIndexStatus()
+  fun markBuildAbsent(): IndexStatus = getIndexStatus().let { currentIndexStatus ->
     if (currentIndexStatus.inProgress().not()) {
-      return indexStatusRepository.save(currentIndexStatus.toBuildInProgress())
+      indexStatusRepository.save(currentIndexStatus.toBuildAbsent())
+    } else {
+      currentIndexStatus
     }
-    return currentIndexStatus
   }
 
-  fun markBuildCompleteAndSwitchIndex(): IndexStatus {
-    val currentIndexStatus = getIndexStatus()
-    if (currentIndexStatus.inProgress()) {
-      return indexStatusRepository.save(currentIndexStatus.toBuildComplete().toSwitchIndex())
+  fun markBuildInProgress(): IndexStatus = getIndexStatus().let { currentIndexStatus ->
+    if (currentIndexStatus.inProgress().not()) {
+      indexStatusRepository.save(currentIndexStatus.toBuildInProgress())
+    } else {
+      currentIndexStatus
     }
-    return currentIndexStatus
   }
 
-  fun switchIndex(): IndexStatus {
-    val currentIndexStatus = getIndexStatus()
+  fun markBuildCompleteAndSwitchIndex(): IndexStatus = getIndexStatus().let { currentIndexStatus ->
     if (currentIndexStatus.inProgress()) {
-      return indexStatusRepository.save(currentIndexStatus.toBuildCancelled().toSwitchIndex())
+      indexStatusRepository.save(currentIndexStatus.toBuildComplete().toSwitchIndex())
+    } else {
+      currentIndexStatus
     }
-    return indexStatusRepository.save(getIndexStatus().toSwitchIndex())
   }
 
-  fun markBuildCancelled(): IndexStatus {
-    val currentIndexStatus = getIndexStatus()
+  fun switchIndex(): IndexStatus = getIndexStatus().let { currentIndexStatus ->
+    indexStatusRepository.save(
+      (if (currentIndexStatus.inProgress()) currentIndexStatus.toBuildCancelled() else getIndexStatus())
+        .toSwitchIndex(),
+    )
+  }
+
+  fun markBuildCancelled(): IndexStatus = getIndexStatus().let { currentIndexStatus ->
     if (currentIndexStatus.inProgress()) {
-      return indexStatusRepository.save(currentIndexStatus.toBuildCancelled())
+      indexStatusRepository.save(currentIndexStatus.toBuildCancelled())
+    } else {
+      currentIndexStatus
     }
-    return currentIndexStatus
   }
 }
