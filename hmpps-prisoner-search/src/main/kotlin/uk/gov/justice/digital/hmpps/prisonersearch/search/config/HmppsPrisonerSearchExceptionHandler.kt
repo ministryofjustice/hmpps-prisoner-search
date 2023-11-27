@@ -12,11 +12,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.NotFoundException
 
 @RestControllerAdvice
-class HmppsPrisonerSearchIndexerExceptionHandler {
+class HmppsPrisonerSearchExceptionHandler {
   @ExceptionHandler(BadRequestException::class)
   fun handleBadRequestException(e: BadRequestException): ResponseEntity<ErrorResponse> =
     ResponseEntity
@@ -68,12 +69,16 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
       ).also { log.info("Response status exception with message {}", e.message) }
 
   @ExceptionHandler(NotFoundException::class)
-  fun handleEntityNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> {
-    return ResponseEntity
-      .status(HttpStatus.NOT_FOUND)
-      .contentType(MediaType.APPLICATION_JSON)
-      .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), developerMessage = e.message))
-  }
+  fun handleEntityNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(HttpStatus.NOT_FOUND)
+    .contentType(MediaType.APPLICATION_JSON)
+    .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), developerMessage = e.message))
+
+  @ExceptionHandler(NoResourceFoundException::class)
+  fun handleEntityNotFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(HttpStatus.NOT_FOUND)
+    .contentType(MediaType.APPLICATION_JSON)
+    .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), developerMessage = e.message))
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? =

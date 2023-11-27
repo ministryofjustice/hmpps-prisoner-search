@@ -18,7 +18,7 @@ import java.util.UUID
 class JwtAuthHelper {
   private val keyPair: KeyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
 
-  fun setAuthorisation(user: String = "prisoner-search-indexer-client", roles: List<String> = listOf()): (HttpHeaders) -> Unit {
+  fun setAuthorisation(user: String = "prisoner-search-client", roles: List<String> = listOf()): (HttpHeaders) -> Unit {
     val token = createJwt(
       subject = user,
       scope = listOf("read"),
