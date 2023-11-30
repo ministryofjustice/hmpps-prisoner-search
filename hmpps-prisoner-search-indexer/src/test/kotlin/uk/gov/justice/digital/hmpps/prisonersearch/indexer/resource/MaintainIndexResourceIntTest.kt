@@ -21,7 +21,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -44,7 +43,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotF
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
-@AutoConfigureWebTestClient(timeout = "PT60M")
 class MaintainIndexResourceIntTest : IntegrationTestBase() {
   @SpyBean
   private lateinit var maintainIndexService: MaintainIndexService
