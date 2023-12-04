@@ -15,7 +15,7 @@ services:
     environment:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=dev
-      - API_BASE_URL_OAUTH=http://oauth:8080/auth
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
       - SQS_ENDPOINT_URL=http://localstack-psi:4566
       - OPENSEARCH_URIS=http://localstack-psi:4566
       - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
@@ -76,6 +76,7 @@ services:
       - SERVER_PORT=8080
       - SPRING_PROFILES_ACTIVE=nomis-hsqldb
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://hmpps-auth:8080/auth/.well-known/jwks.json
+      - SMOKE_TEST_AWARE=true
 
   restricted-patients-api:
     image: quay.io/hmpps/hmpps-restricted-patients-api:latest
@@ -125,13 +126,17 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
     environment:
       - SERVER_PORT=8080
-      - SPRING_PROFILES_ACTIVE=dev,localstack
+      - SPRING_PROFILES_ACTIVE=localstack
       - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
       - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
       - API_BASE_URL_PRISON=http://prison-api:8080
       - API_BASE_URL_OFFENDER_SEARCH=http://hmpps-prisoner-search:8080
       - SPRING_FLYWAY_URL=jdbc:postgresql://incentives-db:5432/incentives?sslmode=prefer
-      - SPRING_R2DBC_URL=r2dbc:postgresql://incentives-db:5432/incentives?sslmode=prefer
+      - SPRING_R2DBC_URL=r2dbc:postgresql://incentives-db:5432/incentives?sslmode=disable
+      - SPRING_FLYWAY_USER=incentives
+      - SPRING_FLYWAY_PASSWORD=incentives
+      - SPRING_R2DBC_USERNAME=incentives
+      - SPRING_R2DBC_PASSWORD=incentives
 
   localstack:
     image: localstack/localstack:2.3
