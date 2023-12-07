@@ -186,10 +186,6 @@ workflows:
           jdk_tag: "21.0"
           requires:
             - deploy_dev-indexer
-      - request-preprod-approval:
-          type: approval
-          requires:
-            - smoke_test-indexer
       - hmpps/deploy_env:
           name: deploy_preprod-indexer
           env: "preprod"
@@ -205,7 +201,7 @@ workflows:
           release_name: hmpps-prisoner-search-indexer
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
           requires:
-            - request-preprod-approval
+            - smoke_test-indexer
       - request-prod-approval:
           type: approval
           requires:
@@ -272,10 +268,6 @@ workflows:
           jdk_tag: "21.0"
           requires:
             - deploy_dev-search
-      - request-preprod-approval:
-          type: approval
-          requires:
-            - smoke_test-search
       - hmpps/deploy_env:
           name: deploy_preprod-search
           env: "preprod"
@@ -288,7 +280,7 @@ workflows:
             - hmpps-prisoner-search-preprod
           helm_dir: hmpps-prisoner-search/helm_deploy
           requires:
-            - request-preprod-approval
+            - smoke_test-search
       - request-prod-approval:
           type: approval
           requires:
