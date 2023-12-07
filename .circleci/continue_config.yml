@@ -151,6 +151,11 @@ workflows:
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
           chart_name: hmpps-prisoner-search-indexer
 
+      - hmpps/smoke_test:
+          name: deleteme_smoke_test-indexer
+          context: hmpps-smoketest-common-vars
+          jdk_tag: "21.0"
+
       - hmpps/build_multiplatform_docker:
           name: build_docker-indexer
           image_name: quay.io/hmpps/hmpps-prisoner-search-indexer
@@ -180,10 +185,16 @@ workflows:
             - build_docker-indexer
             - helm_lint-indexer
           helm_timeout: 5m
+      - hmpps/smoke_test:
+          name: smoke_test-indexer
+          context: hmpps-smoketest-common-vars
+          jdk_tag: "21.0"
+          requires:
+            - deploy_dev-indexer
       - request-preprod-approval:
           type: approval
           requires:
-            - deploy_dev-indexer
+            - smoke_test-indexer
       - hmpps/deploy_env:
           name: deploy_preprod-indexer
           env: "preprod"
@@ -259,10 +270,16 @@ workflows:
             - build_docker-search
             - helm_lint-search
           helm_timeout: 5m
+      - hmpps/smoke_test:
+          name: smoke_test-search
+          context: hmpps-smoketest-common-vars
+          jdk_tag: "21.0"
+          requires:
+            - deploy_dev-search
       - request-preprod-approval:
           type: approval
           requires:
-            - deploy_dev-search
+            - smoke_test-search
       - hmpps/deploy_env:
           name: deploy_preprod-search
           env: "preprod"

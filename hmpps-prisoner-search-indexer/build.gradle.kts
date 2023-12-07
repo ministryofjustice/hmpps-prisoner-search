@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -9,6 +11,17 @@ plugins {
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
+
+testing {
+  suites {
+    register<JvmTestSuite>("testSmoke") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
