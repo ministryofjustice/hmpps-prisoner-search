@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -8,6 +10,17 @@ plugins {
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
+
+testing {
+  suites {
+    register<JvmTestSuite>("testSmoke") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -33,6 +46,9 @@ dependencies {
   implementation(project(":common"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+  testImplementation("org.springframework.boot:spring-boot-starter-security")
+  testImplementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.19") {
