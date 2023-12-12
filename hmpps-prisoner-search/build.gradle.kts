@@ -24,16 +24,16 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:1.2.1")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.3.0")
   implementation("com.google.code.gson:gson:2.10.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:5.1.5")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.2.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.32.0")
 

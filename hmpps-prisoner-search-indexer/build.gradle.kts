@@ -25,7 +25,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:1.2.1")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.3.0")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -34,9 +34,9 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:5.1.5")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.2.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.1.1")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.32.0")
@@ -48,7 +48,7 @@ dependencies {
 
   implementation(project(":common"))
 
-  runtimeOnly("org.postgresql:postgresql:42.7.0")
+  runtimeOnly("org.postgresql:postgresql:42.7.1")
   runtimeOnly("org.flywaydb:flyway-core")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
