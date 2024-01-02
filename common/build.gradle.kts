@@ -5,6 +5,10 @@ plugins {
   kotlin("plugin.spring")
 }
 
+dependencyCheck {
+  suppressionFiles.add("dependency-check-suppress-json.xml")
+}
+
 dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:5.2.0")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")

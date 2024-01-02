@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <!-- suppress as we don't pass untrusted json into it -->
+  <suppress>
+    <notes><![CDATA[
+      file name: parsson-1.0.0.jar
+      ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.eclipse\.parsson/parsson@.*$</packageUrl>
+    <cve>CVE-2023-4043</cve>
+  </suppress>
+</suppressions>
