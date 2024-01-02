@@ -12,6 +12,10 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
+dependencyCheck {
+  suppressionFiles.add("dependency-check-suppress-json.xml")
+}
+
 testing {
   suites {
     register<JvmTestSuite>("testSmoke") {
