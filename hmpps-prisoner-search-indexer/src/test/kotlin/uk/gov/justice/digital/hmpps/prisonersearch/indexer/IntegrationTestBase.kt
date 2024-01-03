@@ -194,6 +194,18 @@ abstract class IntegrationTestBase {
         hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, offenderQueueSqsDlqClient)
       }
 
+    @Bean("publish-sqs-client")
+    fun publishSqsClient(
+      hmppsSqsProperties: HmppsSqsProperties,
+      @Qualifier("publish-sqs-dlq-client") publishSqsDlqClient: SqsAsyncClient,
+
+    ): SqsAsyncClient =
+      with(hmppsSqsProperties) {
+        val config = queues["publish"]
+          ?: throw MissingQueueException("HmppsSqsProperties config for publish not found")
+        hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, publishSqsDlqClient)
+      }
+
     @Bean("hmppsdomainqueue-sqs-client")
     fun hmppsDomainQueueSqsClient(
       hmppsSqsProperties: HmppsSqsProperties,

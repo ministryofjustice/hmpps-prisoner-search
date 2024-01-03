@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.atLeast
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
@@ -32,7 +33,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.data.repository.findByIdOrNull
 import software.amazon.awssdk.services.sns.SnsAsyncClient
-import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
 import software.amazon.awssdk.services.sqs.model.Message
@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiMoc
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.Duration
 
 class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @SpyBean
@@ -66,6 +67,10 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @SpyBean
   @Qualifier("hmppseventtopic-sns-client")
   private lateinit var hmppsEventTopicSnsClient: SnsAsyncClient
+
+  @SpyBean
+  @Qualifier("publish-sqs-client")
+  private lateinit var publishQueueSqsClient: SqsAsyncClient
 
   @SpyBean
   private lateinit var prisonerDifferenceService: PrisonerDifferenceService
@@ -218,6 +223,35 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThatJson(updateMsgBody).node("eventType").isEqualTo("test.prisoner-offender-search.prisoner.updated")
     assertThatJson(updateMsgBody).node("additionalInformation.nomsNumber").isEqualTo("A1239DD")
     assertThatJson(updateMsgBody).node("additionalInformation.categoriesChanged").isArray.containsExactlyInAnyOrder("PERSONAL_DETAILS")
+  }
+
+  @Test
+  fun `e2e - will delay sending domain events to the topic`() {
+    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
+
+    // update the prisoner on ES
+    prisonApi.stubFor(
+      get(urlEqualTo("/api/offenders/A1239DD"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              PrisonerBuilder(
+                prisonerNumber = "A1239DD",
+                bookingId = null,
+                firstName = "NEW_NAME",
+              ).toOffenderBooking(),
+            ),
+        ),
+    )
+    val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
+
+    offenderQueueSqsClient.sendMessage(message)
+    await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
+    await atLeast Duration.ofSeconds(1) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
+
+    val updateMsgBody = readNextDomainEventMessage()
+    assertThatJson(updateMsgBody).node("eventType").isEqualTo("test.prisoner-offender-search.prisoner.updated")
   }
 
   @Test
@@ -442,7 +476,8 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThat(insertedPrisonerEventHash).isNotNull
 
     // update the prisoner on ES BUT fail to send an event
-    doThrow(RuntimeException("Failed to send event")).whenever(hmppsEventTopicSnsClient).publish(any<PublishRequest>())
+    doThrow(RuntimeException("Failed to send event")).whenever(publishQueueSqsClient)
+      .sendMessage(any<SendMessageRequest>())
     prisonApi.stubFor(
       get(urlEqualTo("/api/offenders/A1239DD"))
         .willReturn(
@@ -459,7 +494,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
     offenderQueueSqsClient.sendMessage(message)
     await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
-    await untilAsserted { verify(hmppsEventTopicSnsClient).publish(any<PublishRequest>()) }
+    await untilAsserted { verify(publishQueueSqsClient).sendMessage(any<SendMessageRequest>()) }
 
     // The prisoner hash update should have been rolled back
     val prisonerEventHashAfterAttemptedUpdate =
@@ -494,6 +529,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     purgeHmppsEventsQueue()
 
     Mockito.reset(hmppsEventTopicSnsClient)
+    Mockito.reset(publishQueueSqsClient)
     Mockito.reset(prisonerDifferenceService)
   }
 

@@ -109,3 +109,6 @@ diff:
 
 republish:
   delayInSeconds: 5
+
+publish:
+  delayInSeconds: 2
