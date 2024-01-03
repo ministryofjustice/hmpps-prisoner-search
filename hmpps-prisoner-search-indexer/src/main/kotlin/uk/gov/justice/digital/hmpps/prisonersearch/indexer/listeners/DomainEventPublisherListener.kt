@@ -25,7 +25,6 @@ class DomainEventPublisherListener(
   @SqsListener("publish", factory = "hmppsQueueContainerFactoryProxy")
   @WithSpan(value = "syscon-devs-hmpps_prisoner_search_publish_queue", kind = SpanKind.SERVER)
   fun publish(eventJson: String) {
-    println(eventJson)
     val event = fromJson<DomainEvent>(eventJson)
 
     val request = PublishRequest.builder()
