@@ -23,6 +23,8 @@ generic-prometheus-alerts:
     - "syscon-devs-preprod-hmpps_prisoner_search_domain_queue"
     - "syscon-devs-preprod-hmpps_prisoner_search_offender_dlq"
     - "syscon-devs-preprod-hmpps_prisoner_search_offender_queue"
+    - "syscon-devs-preprod-hmpps_prisoner_search_publish_queue_dl"
+    - "syscon-devs-preprod-hmpps_prisoner_search_publish_queue"
   sqsAlertsOldestThreshold: 10
   sqsAlertsTotalMessagesThreshold: 1
 

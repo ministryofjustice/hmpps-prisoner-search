@@ -69,6 +69,10 @@ generic-service:
       HMPPS_SQS_QUEUES_OFFENDERQUEUE_QUEUE_NAME: "sqs_queue_name"
     sqs-offender-event-dlq-secret:
       HMPPS_SQS_QUEUES_OFFENDERQUEUE_DLQ_NAME: "sqs_queue_name"
+    prisoner-search-publish-dlq:
+      HMPPS_SQS_QUEUES_PUBLISH_DLQ_NAME: "sqs_queue_name"
+    prisoner-search-publish-queue:
+      HMPPS_SQS_QUEUES_PUBLISH_QUEUE_NAME: "sqs_queue_name"
     rds-instance-output:
       DB_SERVER: "rds_instance_address"
       DB_NAME: "database_name"
