@@ -53,6 +53,9 @@ hmpps.sqs:
     offenderqueue:
       queueName: offender-queue
       dlqName: offender-dlq
+    publish:
+      queueName: publish-queue
+      dlqName: publish-dlq
   topics:
     hmppseventtopic:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps-event-topic
