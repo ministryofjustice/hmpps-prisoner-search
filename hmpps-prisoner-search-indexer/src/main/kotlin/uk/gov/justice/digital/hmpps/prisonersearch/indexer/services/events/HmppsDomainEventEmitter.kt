@@ -73,7 +73,7 @@ class HmppsDomainEventEmitter(
       .build()
 
     runCatching {
-      publishSqsClient.sendMessage(request).join()
+      publishSqsClient.sendMessage(request).get()
       telemetryClient.trackEvent(event.eventType, event.asMap(), null)
     }.onFailure(onFailure)
   }
