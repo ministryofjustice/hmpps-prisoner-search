@@ -15,16 +15,20 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import software.amazon.awssdk.services.sns.SnsAsyncClient
-import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION
+import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
-import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import java.util.concurrent.CompletableFuture
 
 /*
  * Most test scenarios are covered by the integration tests in HmppsDomainEventsEmitterIntTest
@@ -37,13 +41,24 @@ class HmppsDomainEventsEmitterTest {
   private val clock = mock<Clock>()
   private val telemetryClient = mock<TelemetryClient>()
   private val hmppsDomainEventEmitter =
-    HmppsDomainEventEmitter(objectMapper, hmppsQueueService, diffProperties, clock, telemetryClient)
-  private val topicSnsClient = mock<SnsAsyncClient>()
-  private val hmppsEventsTopic = HmppsTopic("hmppseventstopic", "some_arn", topicSnsClient)
+    HmppsDomainEventEmitter(objectMapper, hmppsQueueService, diffProperties, clock, telemetryClient, 0)
+  private val publishSqsClient = mock<SqsAsyncClient>()
+  private val publishQueue = HmppsQueue("publish", queueName = "some_queue", sqsClient = publishSqsClient)
 
   @BeforeEach
   fun `setup mocks`() {
-    whenever(hmppsQueueService.findByTopicId(anyString())).thenReturn(hmppsEventsTopic)
+    whenever(publishSqsClient.getQueueUrl(any<GetQueueUrlRequest>())).thenReturn(
+      CompletableFuture.completedFuture(
+        GetQueueUrlResponse.builder().queueUrl("some_url").build(),
+      ),
+    )
+    whenever(hmppsQueueService.findByQueueId(anyString())).thenReturn(publishQueue)
+    whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(
+      CompletableFuture.completedFuture(
+        SendMessageResponse.builder().build(),
+      ),
+    )
+
     Clock.fixed(Instant.parse("2022-09-16T10:40:34Z"), ZoneId.of("UTC")).also {
       whenever(clock.instant()).thenReturn(it.instant())
       whenever(clock.zone).thenReturn(it.zone)
@@ -52,20 +67,10 @@ class HmppsDomainEventsEmitterTest {
 
   @Nested
   inner class PrisonerDifferenceEvent {
-    @Test
-    fun `should include event type as a message attribute`() {
-      hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()))
-
-      verify(topicSnsClient).publish(
-        check<PublishRequest> {
-          assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("test.prisoner-offender-search.prisoner.updated")
-        },
-      )
-    }
 
     @Test
     fun `should not swallow exceptions`() {
-      whenever(topicSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException::class.java)
+      whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
         hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()))
@@ -76,19 +81,8 @@ class HmppsDomainEventsEmitterTest {
   @Nested
   inner class PrisonerCreatedEvent {
     @Test
-    fun `should include event type as a message attribute`() {
-      hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender")
-
-      verify(topicSnsClient).publish(
-        check<PublishRequest> {
-          assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("test.prisoner-offender-search.prisoner.created")
-        },
-      )
-    }
-
-    @Test
     fun `should not swallow exceptions`() {
-      whenever(topicSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException::class.java)
+      whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
         hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender")
@@ -98,17 +92,6 @@ class HmppsDomainEventsEmitterTest {
 
   @Nested
   inner class PrisonerReceivedEvent {
-    @Test
-    fun `should include event type as a message attribute`() {
-      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI")
-
-      verify(topicSnsClient).publish(
-        check<PublishRequest> {
-          assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("test.prisoner-offender-search.prisoner.received")
-        },
-      )
-    }
-
     @Test
     fun `should also log event`() {
       hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI")
@@ -129,7 +112,7 @@ class HmppsDomainEventsEmitterTest {
 
     @Test
     fun `should swallow exceptions and indicate a manual fix is required`() {
-      whenever(topicSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException::class.java)
+      whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI")
       verify(telemetryClient).trackEvent(
@@ -147,17 +130,6 @@ class HmppsDomainEventsEmitterTest {
 
   @Nested
   inner class PrisonerAlertsUpdatedEvent {
-    @Test
-    fun `should include event type as a message attribute`() {
-      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf())
-
-      verify(topicSnsClient).publish(
-        check<PublishRequest> {
-          assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("test.prisoner-offender-search.prisoner.alerts-updated")
-        },
-      )
-    }
-
     @Test
     fun `should also log event`() {
       hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA", "XT"), setOf("ZZ"))
@@ -179,7 +151,7 @@ class HmppsDomainEventsEmitterTest {
 
     @Test
     fun `should swallow exceptions and indicate a manual fix is required`() {
-      whenever(topicSnsClient.publish(any<PublishRequest>())).thenThrow(RuntimeException::class.java)
+      whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf())
 

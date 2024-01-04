@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
-import software.amazon.awssdk.services.sns.model.MessageAttributeValue
-import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_SEND_FAILURE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.DomainEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.CREATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_ALERTS_UPDATED_EVENT_TYPE
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
+import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.time.Clock
 import java.time.Instant
@@ -35,13 +37,11 @@ class HmppsDomainEventEmitter(
   private val diffProperties: DiffProperties,
   private val clock: Clock?,
   private val telemetryClient: TelemetryClient,
+  @Value("\${publish.delayInSeconds}") private val publishDelayInSeconds: Int,
 ) {
-
-  private val hmppsDomainTopic by lazy {
-    hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw IllegalStateException("hmppseventtopic not found")
-  }
-  private val topicArn by lazy { hmppsDomainTopic.arn }
-  private val topicSnsClient by lazy { hmppsDomainTopic.snsClient }
+  private val publishQueue by lazy { hmppsQueueService.findByQueueId("publish") as HmppsQueue }
+  private val publishSqsClient by lazy { publishQueue.sqsClient }
+  private val publishQueueUrl by lazy { publishQueue.queueUrl }
 
   fun <T : PrisonerAdditionalInformation> defaultFailureHandler(event: PrisonerDomainEvent<T>, exception: Throwable) {
     log.error(
@@ -65,17 +65,15 @@ class HmppsDomainEventEmitter(
       detailUrl = this.detailUrl,
     )
 
-    val request = PublishRequest.builder()
-      .topicArn(topicArn)
-      .message(objectMapper.writeValueAsString(event))
-      .messageAttributes(
-        mapOf(
-          "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(event.eventType).build(),
-        ),
-      ).build()
+    val domainEvent = DomainEvent(eventType = event.eventType, body = objectMapper.writeValueAsString(event))
+
+    val request = SendMessageRequest.builder().queueUrl(publishQueueUrl)
+      .messageBody(objectMapper.writeValueAsString(domainEvent))
+      .delaySeconds(publishDelayInSeconds)
+      .build()
 
     runCatching {
-      topicSnsClient.publish(request)
+      publishSqsClient.sendMessage(request).get()
       telemetryClient.trackEvent(event.eventType, event.asMap(), null)
     }.onFailure(onFailure)
   }

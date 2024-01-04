@@ -77,3 +77,6 @@ diff:
 
 republish:
   delayInSeconds: 0
+
+publish:
+  delayInSeconds: 1
