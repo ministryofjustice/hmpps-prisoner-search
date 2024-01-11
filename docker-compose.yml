@@ -153,7 +153,7 @@ services:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
 
   hpsi-db:
-    image: postgres:15
+    image: postgres:16
     networks:
       - hmpps
     container_name: hpsi-db
@@ -166,7 +166,7 @@ services:
       - POSTGRES_DB=pos
 
   incentives-db:
-    image: postgres:15
+    image: postgres:16
     networks:
       - hmpps
     container_name: incentives-db
