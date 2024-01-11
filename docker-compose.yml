@@ -139,7 +139,7 @@ services:
       - SPRING_R2DBC_PASSWORD=incentives
 
   localstack:
-    image: localstack/localstack:2.3
+    image: localstack/localstack:3
     networks:
       - hmpps
     container_name: localstack-psi
