@@ -1,4 +1,4 @@
-@file:Suppress("ktlint:filename")
+@file:Suppress("ktlint:standard:filename")
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
@@ -143,6 +143,7 @@ private fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let 
   CurrentIncentive(
     level = uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel(it.iepCode, it.iepLevel),
     nextReviewDate = it.nextReviewDate,
-    dateTime = it.iepTime.withNano(0), // ES only stores to the second
+    // ES only stores to the second
+    dateTime = it.iepTime.withNano(0),
   )
 }

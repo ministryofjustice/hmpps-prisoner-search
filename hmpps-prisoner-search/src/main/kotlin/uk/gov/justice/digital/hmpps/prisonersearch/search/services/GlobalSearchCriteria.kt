@@ -40,5 +40,4 @@ enum class Gender(val value: String?) {
   NK("known"),
   NS("specified"),
   ALL("ALL"),
-  ;
 }

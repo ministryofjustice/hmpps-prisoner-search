@@ -10,7 +10,15 @@ import kotlin.reflect.full.findAnnotations
 annotation class DiffableProperty(val type: DiffCategory)
 
 enum class DiffCategory {
-  IDENTIFIERS, PERSONAL_DETAILS, ALERTS, STATUS, LOCATION, SENTENCE, RESTRICTED_PATIENT, INCENTIVE_LEVEL, PHYSICAL_DETAILS
+  IDENTIFIERS,
+  PERSONAL_DETAILS,
+  ALERTS,
+  STATUS,
+  LOCATION,
+  SENTENCE,
+  RESTRICTED_PATIENT,
+  INCENTIVE_LEVEL,
+  PHYSICAL_DETAILS,
 }
 
 internal fun getDiffResult(prisoner: Prisoner, other: Prisoner): DiffResult<Prisoner> =

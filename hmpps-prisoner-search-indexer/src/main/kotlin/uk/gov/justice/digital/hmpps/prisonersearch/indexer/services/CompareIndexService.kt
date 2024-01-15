@@ -32,7 +32,7 @@ class CompareIndexService(
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
-    private const val cutoff = 50
+    private const val CUTOFF = 50
   }
 
   fun doIndexSizeCheck(): SizeCheck {
@@ -132,5 +132,5 @@ class CompareIndexService(
   }
 
   private fun toLogMessage(onlyList: List<String>): String =
-    if (onlyList.size <= cutoff) onlyList.toString() else onlyList.slice(IntRange(0, cutoff)).toString() + "..."
+    if (onlyList.size <= CUTOFF) onlyList.toString() else onlyList.slice(IntRange(0, CUTOFF)).toString() + "..."
 }

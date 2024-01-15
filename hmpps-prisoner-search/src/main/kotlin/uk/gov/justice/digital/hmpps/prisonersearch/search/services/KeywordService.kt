@@ -240,9 +240,9 @@ class KeywordService(
   }
 
   /*
-  ** Some fields are defined as @Keyword in the ES mapping annotations so will not match when the query
-  ** tokens are provided in lower or mixed case. Detect these and replace with an uppercase variant.
-  */
+   ** Some fields are defined as @Keyword in the ES mapping annotations so will not match when the query
+   ** tokens are provided in lower or mixed case. Detect these and replace with an uppercase variant.
+   */
 
   private fun addUppercaseKeywordTokens(tokens: String?): String? {
     if (tokens.isNullOrEmpty()) {

@@ -399,9 +399,12 @@ class PhysicalDetailResourceTest : AbstractSearchDataIntegrationTest() {
     fun `lenient find by height and weight`(): Unit = physicalDetailSearch(
       detailRequest = PhysicalDetailRequest(minWeight = 80, maxWeight = 150, maxHeight = 200, lenient = true, prisonIds = listOf("MDI")),
       expectedPrisoners = listOf(
-        "H7090BB", // matches on height and weight so appears first
-        "H1090AA", // matches only on weight
-        "H7089EY", // matches only on weight
+        // matches on height and weight so appears first
+        "H7090BB",
+        // matches only on weight
+        "H1090AA",
+        // matches only on weight
+        "H7089EY",
       ),
     )
   }
@@ -473,10 +476,14 @@ class PhysicalDetailResourceTest : AbstractSearchDataIntegrationTest() {
         lenient = true,
       ),
       expectedPrisoners = listOf(
-        "G7090AD", // gender not known
-        "G7090AC", // ethnicity white: any other
-        "G7089EZ", // alias gender not known
-        "G7090BA", // alias ethnicity white: any other
+        // gender not known
+        "G7090AD",
+        // ethnicity white: any other
+        "G7090AC",
+        // alias gender not known
+        "G7089EZ",
+        // alias ethnicity white: any other
+        "G7090BA",
       ),
     )
   }
