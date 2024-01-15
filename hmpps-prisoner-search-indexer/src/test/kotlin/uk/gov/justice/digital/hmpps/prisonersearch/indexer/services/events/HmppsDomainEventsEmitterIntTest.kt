@@ -395,12 +395,13 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
+              // technically the alert should be end dated but this will work equally well
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 alertCodes = listOf("W" to "WO"),
               ).toOffenderBooking(),
-            ), // technically the alert should be end dated but this will work equally well
+            ),
         ),
     )
     offenderQueueSqsClient.sendMessage(

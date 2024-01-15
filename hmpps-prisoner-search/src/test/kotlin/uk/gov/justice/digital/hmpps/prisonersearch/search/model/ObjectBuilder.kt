@@ -133,7 +133,8 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
         alertCodeDescription = "Code description for $code",
         alertType = type,
         alertTypeDescription = "Type Description for $type",
-        expired = false, // In search all alerts are not expired and active
+        // In search all alerts are not expired and active
+        expired = false,
         active = true,
         dateCreated = LocalDate.now(),
       )
@@ -206,10 +207,10 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
   }
 
 fun PrisonerBuilder.toPrisoner(): Prisoner =
-  Prisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)
+  toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)
 
 private fun getOffenderBookingTemplate(): OffenderBooking =
   GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
 
-fun Prisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictedPatient?) =
+fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictedPatient?) =
   Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }

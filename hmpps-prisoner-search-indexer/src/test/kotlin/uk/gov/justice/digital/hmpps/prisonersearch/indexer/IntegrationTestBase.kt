@@ -186,7 +186,6 @@ abstract class IntegrationTestBase {
     fun offenderQueueSqsClient(
       hmppsSqsProperties: HmppsSqsProperties,
       @Qualifier("offenderqueue-sqs-dlq-client") offenderQueueSqsDlqClient: SqsAsyncClient,
-
     ): SqsAsyncClient =
       with(hmppsSqsProperties) {
         val config = queues["offenderqueue"]
@@ -198,7 +197,6 @@ abstract class IntegrationTestBase {
     fun publishSqsClient(
       hmppsSqsProperties: HmppsSqsProperties,
       @Qualifier("publish-sqs-dlq-client") publishSqsDlqClient: SqsAsyncClient,
-
     ): SqsAsyncClient =
       with(hmppsSqsProperties) {
         val config = queues["publish"]
@@ -285,7 +283,8 @@ data class PrisonerBuilder(
           alertCodeDescription = "Code description for $code",
           alertType = type,
           alertTypeDescription = "Type Description for $type",
-          expired = false, // In search all alerts are not expired and active
+          // In search all alerts are not expired and active
+          expired = false,
           active = true,
           dateCreated = LocalDate.now(),
         )

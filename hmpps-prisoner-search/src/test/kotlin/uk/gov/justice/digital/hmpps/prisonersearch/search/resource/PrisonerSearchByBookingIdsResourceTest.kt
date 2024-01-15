@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.toPrisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 
 class PrisonerSearchByBookingIdsResourceTest : AbstractSearchDataIntegrationTest() {
@@ -15,7 +15,7 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchDataIntegrationTest
     var prisoners = ArrayList<Prisoner>()
     prisonerNumbers.forEachIndexed { bookingId: Int, prisonNumber: String ->
       val offenderBooking = getOffenderBooking(prisonNumber, bookingId.toLong())
-      val prisoner = Prisoner(offenderBooking, null, null)
+      val prisoner = toPrisoner(offenderBooking, null, null)
       prisoners.add(prisoner)
     }
     loadPrisoners(prisoners)

@@ -1,4 +1,4 @@
-@file:Suppress("ktlint:filename")
+@file:Suppress("ktlint:standard:filename")
 
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto
 
@@ -12,11 +12,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-fun Prisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictedPatient?) =
-  Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
-fun Prisoner(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevelDto?>, restrictedPatientData: RestrictedPatient?) =
-  Prisoner().apply { this.translate(existingPrisoner, ob, incentiveLevel, restrictedPatientData) }
 
 fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevelDto?>, restrictedPatientData: RestrictedPatient?) {
   this.prisonerNumber = ob.offenderNo
@@ -112,6 +107,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incenti
   this.locationDescription = restrictedPatientData
     ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
     ?: ob.locationDescription
+
   // get the most serious offence for this booking
   this.mostSeriousOffence =
     ob.offenceHistory?.firstOrNull { off -> off.mostSerious && off.bookingId == ob.bookingId }?.offenceDescription
@@ -135,7 +131,8 @@ private fun IncentiveLevelDto?.toCurrentIncentive(): CurrentIncentive? = this?.l
   CurrentIncentive(
     level = IncentiveLevel(it.iepCode, it.iepLevel),
     nextReviewDate = it.nextReviewDate,
-    dateTime = it.iepTime.withNano(0), // ES only stores to the second
+    // ES only stores to the second
+    dateTime = it.iepTime.withNano(0),
   )
 }
 data class IncentiveLevelDto(

@@ -228,7 +228,8 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
       ),
       expectedCount = 2,
       expectedPrisoners = listOf(
-        "A7090AF", // Alias
+        // Alias
+        "A7090AF",
         "A7090BA",
       ),
     )
@@ -259,14 +260,22 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
       ),
       expectedCount = 8,
       expectedPrisoners = listOf(
-        "A7090AA", // JONES, ERIC
-        "A7090AB", // JONES, SAM
-        "A7090AC", // JONES, SAM
-        "A7090AD", // JONES, SAM
-        "A7090BA", // JONES, SAM
-        "A7090BB", // JONES, SAM
-        "A7090BC", // JONES, SAM
-        "A1090AA", // JONES, ZAC
+        // JONES, ERIC
+        "A7090AA",
+        // JONES, SAM
+        "A7090AB",
+        // JONES, SAM
+        "A7090AC",
+        // JONES, SAM
+        "A7090AD",
+        // JONES, SAM
+        "A7090BA",
+        // JONES, SAM
+        "A7090BB",
+        // JONES, SAM
+        "A7090BC",
+        // JONES, ZAC
+        "A1090AA",
       ),
     )
   }

@@ -135,8 +135,14 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report multiple differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; croNumber = "someCro1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        croNumber = "someCro1"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+      }
 
       assertThat(prisoner1.diff(prisoner2).diffs)
         .extracting("fieldName", "left", "right")
@@ -148,8 +154,14 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report differences of different property types`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; firstName = "firstName1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; firstName = "firstName2" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        firstName = "firstName1"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        firstName = "firstName2"
+      }
 
       assertThat(prisoner1.diff(prisoner2).diffs)
         .extracting("fieldName", "left", "right")
@@ -249,8 +261,16 @@ class PrisonerDifferenceServiceTest {
   inner class GetDifferencesByCategory {
     @Test
     fun `should report zero differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc"; croNumber = "someCro"; firstName = "someName" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc"; croNumber = "someCro"; firstName = "someName" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc"
+        croNumber = "someCro"
+        firstName = "someName"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc"
+        croNumber = "someCro"
+        firstName = "someName"
+      }
 
       val diffsByType = prisonerDifferenceService.getDifferencesByCategory(prisoner1, prisoner2)
 
@@ -259,8 +279,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report single difference`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; croNumber = "someCro"; firstName = "someName" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro"; firstName = "someName" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        croNumber = "someCro"
+        firstName = "someName"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro"
+        firstName = "someName"
+      }
 
       val diffsByType = prisonerDifferenceService.getDifferencesByCategory(prisoner1, prisoner2)
 
@@ -275,8 +303,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should allow null differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc"; croNumber = null; firstName = "someName" }
-      val prisoner2 = Prisoner().apply { pncNumber = null; croNumber = "someCro"; firstName = "someName" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc"
+        croNumber = null
+        firstName = "someName"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = null
+        croNumber = "someCro"
+        firstName = "someName"
+      }
 
       val diffsByType = prisonerDifferenceService.getDifferencesByCategory(prisoner1, prisoner2)
 
@@ -292,8 +328,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report multiple differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; croNumber = "someCro1"; firstName = "someName" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2"; firstName = "someName" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        croNumber = "someCro1"
+        firstName = "someName"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+        firstName = "someName"
+      }
 
       val diffsByType = prisonerDifferenceService.getDifferencesByCategory(prisoner1, prisoner2)
 
@@ -309,8 +353,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report multiple differences of multiple property types`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; croNumber = "someCro1"; firstName = "someName1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2"; firstName = "someName2" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        croNumber = "someCro1"
+        firstName = "someName1"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+        firstName = "someName2"
+      }
 
       val diffsByType = prisonerDifferenceService.getDifferencesByCategory(prisoner1, prisoner2)
 
@@ -416,8 +468,14 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report null differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc"; croNumber = null }
-      val prisoner2 = Prisoner().apply { pncNumber = null; croNumber = "someCro" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc"
+        croNumber = null
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = null
+        croNumber = "someCro"
+      }
 
       prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
 
@@ -432,8 +490,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report multiple differences of multiple types`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; croNumber = "someCro1"; firstName = "someFirstName1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2"; firstName = "someFirstName2" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        croNumber = "someCro1"
+        firstName = "someFirstName1"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+        firstName = "someFirstName2"
+      }
 
       prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
 
@@ -449,7 +515,11 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should send telemetry created event`() {
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2"; firstName = "someFirstName2" }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+        firstName = "someFirstName2"
+      }
 
       prisonerDifferenceService.generateDiffTelemetry(null, someOffenderBooking().copy(bookingId = 12345), prisoner2, "eventType")
 
@@ -507,7 +577,10 @@ class PrisonerDifferenceServiceTest {
         pncNumber = "somePnc1"
         prisonerNumber = "A1234ZZ"
       }
-      val prisoner2 = Prisoner().apply { prisonerNumber = "A1234ZZ"; pncNumber = "somePnc2" }
+      val prisoner2 = Prisoner().apply {
+        prisonerNumber = "A1234ZZ"
+        pncNumber = "somePnc2"
+      }
 
       prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
 
@@ -531,8 +604,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report null differences`() {
-      val prisoner1 = Prisoner().apply { prisonerNumber = "A1234BC"; pncNumber = "somePnc"; croNumber = null }
-      val prisoner2 = Prisoner().apply { prisonerNumber = "A1234BC"; pncNumber = null; croNumber = "someCro" }
+      val prisoner1 = Prisoner().apply {
+        prisonerNumber = "A1234BC"
+        pncNumber = "somePnc"
+        croNumber = null
+      }
+      val prisoner2 = Prisoner().apply {
+        prisonerNumber = "A1234BC"
+        pncNumber = null
+        croNumber = "someCro"
+      }
 
       prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
 
@@ -656,8 +737,14 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report null differences`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc"; croNumber = null }
-      val prisoner2 = Prisoner().apply { pncNumber = null; croNumber = "someCro" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc"
+        croNumber = null
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = null
+        croNumber = "someCro"
+      }
 
       prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
 
@@ -671,8 +758,16 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should report multiple types`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1"; croNumber = "someCro1"; firstName = "someFirstName1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2"; firstName = "someFirstName2" }
+      val prisoner1 = Prisoner().apply {
+        pncNumber = "somePnc1"
+        croNumber = "someCro1"
+        firstName = "someFirstName1"
+      }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+        firstName = "someFirstName2"
+      }
 
       prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
 
@@ -686,7 +781,11 @@ class PrisonerDifferenceServiceTest {
 
     @Test
     fun `should send created event`() {
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2"; croNumber = "someCro2"; firstName = "someFirstName2" }
+      val prisoner2 = Prisoner().apply {
+        pncNumber = "somePnc2"
+        croNumber = "someCro2"
+        firstName = "someFirstName2"
+      }
 
       prisonerDifferenceService.generateDiffEvent(null, someOffenderBooking(), prisoner2)
 
