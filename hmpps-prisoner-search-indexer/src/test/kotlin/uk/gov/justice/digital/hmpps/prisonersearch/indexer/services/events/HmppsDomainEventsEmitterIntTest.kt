@@ -247,7 +247,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
 
     offenderQueueSqsClient.sendMessage(message)
-    await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
     await atLeast Duration.ofSeconds(1) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
     val updateMsgBody = readNextDomainEventMessage()
