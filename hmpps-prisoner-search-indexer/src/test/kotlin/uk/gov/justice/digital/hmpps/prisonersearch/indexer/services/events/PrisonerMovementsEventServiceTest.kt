@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.RETURN_FROM_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TEMPORARY_ABSENCE_RETURN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED_TO_HOSPITAL
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.SENT_TO_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.TEMPORARY_ABSENCE_RELEASE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.TRANSFERRED
@@ -370,6 +371,19 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         prisonId = "BXI",
       )
     }
+
+    @Test
+    internal fun `will emit release event with reason of released to hospital when released to hospital`() {
+      val prisoner = releasedPrisonerToHospital()
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+
+      verify(domainEventsEmitter).emitPrisonerReleaseEvent(
+        offenderNo = OFFENDER_NO,
+        reason = RELEASED_TO_HOSPITAL,
+        prisonId = "BXI",
+      )
+    }
   }
 
   private fun newPrisoner() = prisoner("/receive-state-changes/new-prisoner.json")
@@ -387,6 +401,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
   private fun recalledPrisoner(prisonId: String = "NMI") = prisoner("/receive-state-changes/recalled.json").apply {
     this.prisonId = prisonId
   }
+  private fun releasedPrisonerToHospital() = prisoner("/receive-state-changes/released-to-hospital.json")
 
   private fun prisonerBeingTransferred() = prisoner("/receive-state-changes/transfer-out.json")
   private fun prisonerTransferredIn(prisonId: String = "WWI") =
