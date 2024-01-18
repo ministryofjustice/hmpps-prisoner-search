@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TRANSFERRED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED_TO_HOSPITAL
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.SENT_TO_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.TEMPORARY_ABSENCE_RELEASE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Possi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.TAPReturn
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.TransferIn
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementOutChange.Released
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementOutChange.ReleasedToHospital
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementOutChange.SentToCourt
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementOutChange.TAPRelease
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementOutChange.TransferOut
@@ -86,8 +84,6 @@ class PrisonerMovementsEventService(
         SentToCourt(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
       } else if (prisoner.isTAPOutMovement(previousPrisonerSnapshot)) {
         TAPRelease(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isReleaseToHospital(previousPrisonerSnapshot)) {
-        ReleasedToHospital(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
       } else if (prisoner.isRelease(previousPrisonerSnapshot)) {
         Released(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
       } else if (
@@ -164,12 +160,6 @@ private fun Prisoner.isRelease(previousPrisonerSnapshot: Prisoner?) =
     this.status == "INACTIVE OUT" &&
     previousPrisonerSnapshot?.active == true
 
-private fun Prisoner.isReleaseToHospital(previousPrisonerSnapshot: Prisoner?) =
-  this.lastMovementTypeCode == "REL" &&
-    this.lastMovementReasonCode == "HP" &&
-    this.status == "INACTIVE OUT" &&
-    previousPrisonerSnapshot?.active == true
-
 private fun Prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot: Prisoner?) =
   this.inOutStatus == "IN" &&
     this.status != previousPrisonerSnapshot?.status
@@ -212,7 +202,6 @@ sealed class PossibleMovementChange {
       MovementOutChange(offenderNo, prisonId, TEMPORARY_ABSENCE_RELEASE)
 
     class Released(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, RELEASED)
-    class ReleasedToHospital(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, RELEASED_TO_HOSPITAL)
     class SentToCourt(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, SENT_TO_COURT)
   }
 
