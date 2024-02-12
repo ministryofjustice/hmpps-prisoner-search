@@ -27,8 +27,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 class ReferenceDataResource(private val referenceDataService: ReferenceDataService) {
   @Operation(
     summary = "*** BETA *** Reference data search",
-    description = """BETA endpoint - reference data returned reflects the data assigned to prisoners rather than all the possible
-      values.  Only to be used for searching existing data purposes.
+    description = """BETA endpoint - reference data returned reflects the data assigned to prisoners
+      rather than all the possible values.
+      Only to be used for searching existing data purposes.
+      Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
       """,
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [

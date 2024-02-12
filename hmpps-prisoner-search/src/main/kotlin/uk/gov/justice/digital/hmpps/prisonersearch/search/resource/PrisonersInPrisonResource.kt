@@ -37,8 +37,7 @@ class PrisonersInPrisonResource(private val searchService: PrisonersInPrisonServ
 
   @Operation(
     summary = "Search for prisoners within a particular prison establishment",
-    description = """ 
-      This search is optimised for clients that have a simple search term typically containing the prisoner's name
+    description = """This search is optimised for clients that have a simple search term typically containing the prisoner's name
       or prisoner number. The user typically is certain the prisoner is within the establishment and knows key information 
       about the prisoner.
       

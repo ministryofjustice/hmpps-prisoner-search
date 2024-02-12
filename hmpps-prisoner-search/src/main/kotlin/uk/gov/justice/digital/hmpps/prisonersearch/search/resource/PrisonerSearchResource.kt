@@ -46,27 +46,46 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
     prisonerSearchService.findBySearchCriteria(prisonSearch.toSearchCriteria())
 
   @PostMapping("/match-prisoners")
-  @Operation(summary = "Match prisoners by criteria, searching by prisoner identifier or name and returning results for the criteria matched first. Typically used when the matching data is of high quality where the first match is expected to be a near perfect match.", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Operation(
+    summary = "Match prisoners by criteria",
+    description = """Search by prisoner identifier or name and returning results for the criteria matched first.
+        Typically used when the matching data is of high quality where the first match is expected to be a near perfect match.
+        Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
+        """,
+  )
   @Tag(name = "Matching")
   @Tag(name = "Popular")
   fun findByCriteria(@Parameter(required = true) @RequestBody searchCriteria: SearchCriteria) =
     prisonerSearchService.findBySearchCriteria(searchCriteria)
 
   @PostMapping("/possible-matches")
-  @Operation(summary = "Search for possible matches by criteria, searching by prison number, PNC number, and/or name and date of birth, returning collated results by order of search. This will also search aliases for possible matches. Use when there is manual input, e.g. a user can select the correct match from search results.", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Operation(
+    summary = "Search for possible matches by criteria",
+    description = """Search by prison number, PNC number, and/or name and date of birth, returning collated results by order of search.
+       This will also search aliases for possible matches. 
+       Use when there is manual input, e.g. a user can select the correct match from search results.
+       Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
+       """,
+  )
   @Tag(name = "Matching")
   fun findPossibleMatchesBySearchCriteria(@Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria) =
     prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria)
 
   @PostMapping("/prisoner-numbers")
-  @Operation(summary = "Match prisoners by a list of prisoner numbers", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Operation(
+    summary = "Match prisoners by a list of prisoner numbers",
+    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+  )
   @Tag(name = "Batch")
   @Tag(name = "Popular")
   fun findByNumbers(@Parameter(required = true) @Valid @RequestBody criteria: PrisonerNumbers) =
     prisonerSearchService.findBy(criteria)
 
   @PostMapping("/booking-ids")
-  @Operation(summary = "Match prisoners by a list of booking ids", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Operation(
+    summary = "Match prisoners by a list of booking ids",
+    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+  )
   @Tag(name = "Batch")
   fun findByIds(@Parameter(required = true) @Valid @RequestBody criteria: BookingIds) =
     prisonerSearchService.findBy(criteria)
@@ -85,13 +104,20 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
   ) = prisonerSearchService.findByReleaseDate(criteria, pageable)
 
   @GetMapping("/prison/{prisonId}")
-  @Operation(summary = "Get all prisoners in a prison, including restricted patients supported by a POM", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Operation(
+    summary = "Get all prisoners in a prison, including restricted patients supported by a POM",
+    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+  )
   @Tag(name = "Batch")
   @Tag(name = "Popular")
   fun findByPrison(
     @Valid @PathVariable
     prisonId: String,
-    @RequestParam("include-restricted-patients", required = false, defaultValue = "false") includeRestrictedPatients: Boolean,
+    @RequestParam(
+      "include-restricted-patients",
+      required = false,
+      defaultValue = "false",
+    ) includeRestrictedPatients: Boolean,
     @ParameterObject @PageableDefault
     pageable: Pageable,
   ) = prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients)
