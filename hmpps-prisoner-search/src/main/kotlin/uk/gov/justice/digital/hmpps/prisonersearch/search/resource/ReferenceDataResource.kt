@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataService
 
@@ -26,20 +27,19 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 class ReferenceDataResource(private val referenceDataService: ReferenceDataService) {
   @Operation(
     summary = "*** BETA *** Reference data search",
-    description = """
-      BETA endpoint - reference data returned reflects the data assigned to prisoners rather than all the possible
+    description = """BETA endpoint - reference data returned reflects the data assigned to prisoners rather than all the possible
       values.  Only to be used for searching existing data purposes.
       """,
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [
       ApiResponse(
         responseCode = "200",
-        description = "Search successfully performed",
+        description = "Reference data search successfully performed",
         content = [Content(mediaType = "application/json", schema = Schema(implementation = ReferenceDataResponse::class))],
       ),
       ApiResponse(
         responseCode = "400",
-        description = "Incorrect information provided to perform prisoner match",
+        description = "Reference data search for attribute that isn't mapped",
         content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
       ),
       ApiResponse(
@@ -49,7 +49,7 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Incorrect permissions to search for prisoner data",
+        description = "Incorrect permissions to retrieve reference data",
         content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
       ),
     ],
@@ -58,6 +58,6 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
   @Tag(name = "Reference data")
   fun referenceData(
     @Valid @PathVariable
-    attribute: String,
+    attribute: ReferenceDataAttribute,
   ): ReferenceDataResponse = referenceDataService.findReferenceData(attribute)
 }
