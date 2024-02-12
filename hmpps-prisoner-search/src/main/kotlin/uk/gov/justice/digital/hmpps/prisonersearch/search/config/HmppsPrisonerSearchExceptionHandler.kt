@@ -11,9 +11,9 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.AttributeNotFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.NotFoundException
 
@@ -45,8 +45,8 @@ class HmppsPrisonerSearchExceptionHandler {
       ).also { log.info("MethodArgumentNotValid exception: {}", e.message) }
   }
 
-  @ExceptionHandler(AttributeNotFoundException::class)
-  fun handleAttributeNotFoundException(e: AttributeNotFoundException): ResponseEntity<ErrorResponse> {
+  @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
     log.debug("Bad request (400) returned", e)
     return ResponseEntity
       .status(BAD_REQUEST)
@@ -56,7 +56,7 @@ class HmppsPrisonerSearchExceptionHandler {
           userMessage = "Method argument failure: ${e.message}",
           developerMessage = e.message,
         ),
-      ).also { log.info("AttributeNotFoundException exception: {}", e.message) }
+      ).also { log.info("MethodArgumentTypeMismatchException exception: {}", e.message) }
   }
 
   @ExceptionHandler(ValidationException::class)

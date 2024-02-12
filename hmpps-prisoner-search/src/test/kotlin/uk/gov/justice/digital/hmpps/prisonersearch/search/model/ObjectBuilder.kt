@@ -61,6 +61,8 @@ data class PhysicalMarkBuilder(
 data class ProfileInformationBuilder(
   val religion: String? = null,
   val nationality: String? = null,
+  val youthOffender: Boolean? = false,
+  val maritalStatus: String? = null,
 )
 data class BodyPartBuilder(
   val bodyPart: String,
@@ -202,6 +204,12 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       }
       this.profileInformation?.nationality?.let {
         pi.add(ProfileInformation(type = "NAT", question = "Nationality?", resultValue = it))
+      }
+      this.profileInformation?.youthOffender?.let {
+        pi.add(ProfileInformation(type = "YOUTH", question = "Youth Offender?", resultValue = if (it) "YES" else "NO"))
+      }
+      this.profileInformation?.maritalStatus?.let {
+        pi.add(ProfileInformation(type = "MARITAL", question = "Marital Status?", resultValue = it))
       }
     },
   ).let {

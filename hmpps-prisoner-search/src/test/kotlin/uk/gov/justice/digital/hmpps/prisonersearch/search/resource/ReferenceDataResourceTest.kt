@@ -46,6 +46,8 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         profileInformation = ProfileInformationBuilder(
           religion = "Jedi Knight",
           nationality = "British",
+          youthOffender = true,
+          maritalStatus = "Single-not married/in civil partnership",
         ),
       ),
       PrisonerBuilder(
@@ -72,6 +74,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         profileInformation = ProfileInformationBuilder(
           religion = "Agnostic",
           nationality = "Irish",
+          maritalStatus = "Married",
         ),
       ),
       PrisonerBuilder(
@@ -190,21 +193,24 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
 
   private fun attributeData(): Stream<Arguments> =
     Stream.of(
-      arguments("build", listOf("Proportional", "Muscular", "Obese")),
-      arguments("ethnicity", listOf("White: Any other background", "Prefer not to say")),
+      arguments("build", listOf("Muscular", "Obese", "Proportional")),
+      // arguments("category", listOf("White: Any other background", "Prefer not to say")),
+      // arguments("csra", listOf("White: Any other background", "Prefer not to say")),
+      arguments("ethnicity", listOf("Prefer not to say", "White: Any other background")),
       arguments("facialHair", listOf("Clean Shaven", "Goatee Beard", "Not Asked")),
       arguments("gender", listOf("Female", "Male", "Not Known / Not Recorded")),
-      arguments("hairColour", listOf("Red", "Balding", "Mouse")),
+      arguments("hairColour", listOf("Balding", "Mouse", "Red")),
       arguments("imprisonmentStatusDescription", listOf("Life imprisonment")),
       arguments("inOutStatus", listOf("IN")),
-      arguments("leftEyeColour", listOf("Hazel", "Brown", "Missing")),
+      arguments("leftEyeColour", listOf("Brown", "Hazel", "Missing")),
       arguments("legalStatus", listOf("REMAND")),
+      arguments("maritalStatus", listOf("Married", "Single-not married/in civil partnership")),
       arguments("nationality", listOf("British", "Irish")),
       arguments("religion", listOf("Agnostic", "Jedi Knight")),
-      arguments("rightEyeColour", listOf("Green", "Clouded", "Missing")),
-      arguments("shapeOfFace", listOf("Round", "Bullet", "Oval")),
+      arguments("rightEyeColour", listOf("Clouded", "Green", "Missing")),
+      arguments("shapeOfFace", listOf("Bullet", "Oval", "Round")),
       arguments("status", listOf("ACTIVE IN")),
-      arguments("youthOffender", listOf("false")),
+      arguments("youthOffender", listOf("false", "true")),
     )
 
   @ParameterizedTest
@@ -226,7 +232,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
       .expectBody(ReferenceDataResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(response.data).extracting("key").containsExactlyInAnyOrderElementsOf(expectedResults)
+    assertThat(response.data).extracting("key").containsExactlyElementsOf(expectedResults)
     assertThat(response.data).size().isEqualTo(expectedResults.size)
   }
 }
