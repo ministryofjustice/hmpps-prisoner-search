@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.Offend
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
@@ -36,6 +37,7 @@ data class PrisonerBuilder(
   val aliases: List<AliasBuilder> = listOf(),
   val physicalCharacteristics: PhysicalCharacteristicBuilder? = null,
   val physicalMarks: PhysicalMarkBuilder? = null,
+  val profileInformation: ProfileInformationBuilder? = null,
   val currentIncentive: CurrentIncentive? = null,
 )
 
@@ -54,6 +56,11 @@ data class PhysicalMarkBuilder(
   val other: List<BodyPartBuilder>? = null,
   val scar: List<BodyPartBuilder>? = null,
   val tattoo: List<BodyPartBuilder>? = null,
+)
+
+data class ProfileInformationBuilder(
+  val religion: String? = null,
+  val nationality: String? = null,
 )
 data class BodyPartBuilder(
   val bodyPart: String,
@@ -187,6 +194,14 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       }
       this.physicalMarks?.scar?.forEach {
         pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
+      }
+    },
+    profileInformation = mutableListOf<ProfileInformation>().also { pi ->
+      this.profileInformation?.religion?.let {
+        pi.add(ProfileInformation(type = "RELF", question = "Religion", resultValue = it))
+      }
+      this.profileInformation?.nationality?.let {
+        pi.add(ProfileInformation(type = "NAT", question = "Nationality?", resultValue = it))
       }
     },
   ).let {
