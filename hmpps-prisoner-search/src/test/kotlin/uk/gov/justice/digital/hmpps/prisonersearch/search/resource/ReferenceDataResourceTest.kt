@@ -15,6 +15,25 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalCharacte
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalMarkBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.ProfileInformationBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.build
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.category
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.csra
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.ethnicity
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.facialHair
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.gender
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.hairColour
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.imprisonmentStatusDescription
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.inOutStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.leftEyeColour
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.legalStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.maritalStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.nationality
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.religion
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.rightEyeColour
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.shapeOfFace
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.status
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import java.util.stream.Stream
 
@@ -49,6 +68,8 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
           youthOffender = true,
           maritalStatus = "Single-not married/in civil partnership",
         ),
+        category = "C",
+        csra = "High",
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AC",
@@ -76,6 +97,8 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
           nationality = "Irish",
           maritalStatus = "Married",
         ),
+        category = "Q",
+        csra = "Low",
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AD",
@@ -193,32 +216,39 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
 
   private fun attributeData(): Stream<Arguments> =
     Stream.of(
-      arguments("build", listOf("Muscular", "Obese", "Proportional")),
-      // arguments("category", listOf("White: Any other background", "Prefer not to say")),
-      // arguments("csra", listOf("White: Any other background", "Prefer not to say")),
-      arguments("ethnicity", listOf("Prefer not to say", "White: Any other background")),
-      arguments("facialHair", listOf("Clean Shaven", "Goatee Beard", "Not Asked")),
-      arguments("gender", listOf("Female", "Male", "Not Known / Not Recorded")),
-      arguments("hairColour", listOf("Balding", "Mouse", "Red")),
-      arguments("imprisonmentStatusDescription", listOf("Life imprisonment")),
-      arguments("inOutStatus", listOf("IN")),
-      arguments("leftEyeColour", listOf("Brown", "Hazel", "Missing")),
-      arguments("legalStatus", listOf("REMAND")),
-      arguments("maritalStatus", listOf("Married", "Single-not married/in civil partnership")),
-      arguments("nationality", listOf("British", "Irish")),
-      arguments("religion", listOf("Agnostic", "Jedi Knight")),
-      arguments("rightEyeColour", listOf("Clouded", "Green", "Missing")),
-      arguments("shapeOfFace", listOf("Bullet", "Oval", "Round")),
-      arguments("status", listOf("ACTIVE IN")),
-      arguments("youthOffender", listOf("false", "true")),
+      arguments(build, listOf("Muscular", "Obese", "Proportional")),
+      arguments(category, listOf("C", "Q")),
+      arguments(csra, listOf("High", "Low")),
+      arguments(ethnicity, listOf("Prefer not to say", "White: Any other background")),
+      arguments(facialHair, listOf("Clean Shaven", "Goatee Beard", "Not Asked")),
+      arguments(gender, listOf("Female", "Male", "Not Known / Not Recorded")),
+      arguments(hairColour, listOf("Balding", "Mouse", "Red")),
+      arguments(imprisonmentStatusDescription, listOf("Life imprisonment")),
+      arguments(inOutStatus, listOf("IN")),
+      arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing")),
+      arguments(legalStatus, listOf("REMAND")),
+      arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership")),
+      arguments(nationality, listOf("British", "Irish")),
+      arguments(religion, listOf("Agnostic", "Jedi Knight")),
+      arguments(rightEyeColour, listOf("Clouded", "Green", "Missing")),
+      arguments(shapeOfFace, listOf("Bullet", "Oval", "Round")),
+      arguments(status, listOf("ACTIVE IN")),
+      arguments(youthOffender, listOf("false", "true")),
     )
 
   @ParameterizedTest
   @MethodSource("attributeData")
-  fun `find by attribute`(attribute: String, expectedResults: List<String>): Unit = referenceDataRequest(
-    attribute = attribute,
+  fun `find by attribute`(attribute: ReferenceDataAttribute, expectedResults: List<String>): Unit = referenceDataRequest(
+    attribute = attribute.name,
     expectedResults = expectedResults,
   )
+
+  @Test
+  fun `ensure all attributes are tested`() {
+    assertThat(ReferenceDataAttribute.entries.map { it.name }).containsExactlyInAnyOrderElementsOf(
+      attributeData().toList().map { it.get()[0].toString() },
+    )
+  }
 
   private fun referenceDataRequest(
     attribute: String,

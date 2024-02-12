@@ -39,6 +39,8 @@ data class PrisonerBuilder(
   val physicalMarks: PhysicalMarkBuilder? = null,
   val profileInformation: ProfileInformationBuilder? = null,
   val currentIncentive: CurrentIncentive? = null,
+  val category: String? = null,
+  val csra: String? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -199,19 +201,21 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       }
     },
     profileInformation = mutableListOf<ProfileInformation>().also { pi ->
-      this.profileInformation?.religion?.let {
+      profileInformation?.religion?.let {
         pi.add(ProfileInformation(type = "RELF", question = "Religion", resultValue = it))
       }
-      this.profileInformation?.nationality?.let {
+      profileInformation?.nationality?.let {
         pi.add(ProfileInformation(type = "NAT", question = "Nationality?", resultValue = it))
       }
-      this.profileInformation?.youthOffender?.let {
+      profileInformation?.youthOffender?.let {
         pi.add(ProfileInformation(type = "YOUTH", question = "Youth Offender?", resultValue = if (it) "YES" else "NO"))
       }
-      this.profileInformation?.maritalStatus?.let {
+      profileInformation?.maritalStatus?.let {
         pi.add(ProfileInformation(type = "MARITAL", question = "Marital Status?", resultValue = it))
       }
     },
+    categoryCode = category,
+    csra = csra,
   ).let {
     if (released) {
       it.copy(
