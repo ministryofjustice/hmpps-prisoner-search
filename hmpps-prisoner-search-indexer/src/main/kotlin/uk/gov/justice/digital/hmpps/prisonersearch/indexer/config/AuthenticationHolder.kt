@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.config
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.AuthAwareAuthenticationToken
+import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 
 @Component
 class AuthenticationHolder {
