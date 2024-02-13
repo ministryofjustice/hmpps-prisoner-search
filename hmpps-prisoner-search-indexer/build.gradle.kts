@@ -28,14 +28,10 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.3.0")
 
-  implementation("org.springframework.boot:spring-boot-starter-security")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:0.0.5")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("org.springframework.data:spring-data-elasticsearch:5.2.2")
