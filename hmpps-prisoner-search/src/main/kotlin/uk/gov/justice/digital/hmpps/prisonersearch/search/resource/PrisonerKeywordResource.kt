@@ -37,8 +37,7 @@ class PrisonerKeywordResource(private val keywordService: KeywordService) {
 
   @Operation(
     summary = "Search for prisoners by keyword or identifiers within a list of prisons and return a paginated result set",
-    description = """ 
-      Words and identifiers can be provided in either or mixed case and will be matched against all indexed text and keyword fields.
+    description = """Words and identifiers can be provided in either or mixed case and will be matched against all indexed text and keyword fields.
       Identifiers within the [and, or, not, exact] terms are detected and converted to the appropriate case.
       Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
       """,

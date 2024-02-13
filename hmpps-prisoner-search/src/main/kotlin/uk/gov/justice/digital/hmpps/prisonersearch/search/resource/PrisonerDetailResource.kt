@@ -30,8 +30,7 @@ class PrisonerDetailResource(private val prisonerDetailService: PrisonerDetailSe
 
   @Operation(
     summary = "Find prisoners by exact or wildcard terms for specified fields and return a paginated result set",
-    description = """
-      Search terms and identifiers can be provided in either or mixed case and are converted to the appropriate case.
+    description = """Search terms and identifiers can be provided in either or mixed case and are converted to the appropriate case.
       This endpoint will find both exact values (full term matched) or wildcards supporting the '*' and '?' symbols.
       The '*' symbol will match any number of characters e.g. firstName='J*' will match 'John', 'Jane', and 'James'.  
       The '?' symbol will match any letter substituted at that position. e.g. firstName='t?ny' will match 'Tony' and 'Tiny'

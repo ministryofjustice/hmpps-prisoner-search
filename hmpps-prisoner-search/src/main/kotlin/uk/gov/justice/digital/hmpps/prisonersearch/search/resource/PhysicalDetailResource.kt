@@ -31,9 +31,7 @@ class PhysicalDetailResource(private val physicalDetailService: PhysicalDetailSe
 
   @Operation(
     summary = "*** BETA *** Physical details search for prisoners within a prison / group of prisons - returns a paginated result set",
-    description = """
-      BETA endpoint - physical details are not currently re-indexed if they change so results will be out of date / incorrect.
-      Search by physical details.
+    description = """BETA endpoint - subject to change. Search by physical details.
       If a cell location is provided then only one prison can be supplied, otherwise multiple prisons are allowed.
       If lenient is set to false (default) then all supplied physical details must match in order for results to be returned.
       If lenient is set to true then at least one physical detail must match.
