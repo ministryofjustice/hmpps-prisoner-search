@@ -1,16 +1,15 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
 import java.time.LocalDate
 
-class AttributeSearchRequestTest {
-
-  private val objectMapper = jsonMapper { addModules(kotlinModule(), JavaTimeModule()) }
+@JsonTest
+class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
 
   @Test
   fun `firstName is John`() {
