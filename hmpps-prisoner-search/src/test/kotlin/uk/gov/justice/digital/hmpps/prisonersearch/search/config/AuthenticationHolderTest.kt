@@ -29,10 +29,10 @@ class AuthenticationHolderTest {
 
   private fun setAuthentication() {
     val auth: Authentication = AuthAwareAuthenticationToken(
-      Mockito.mock(Jwt::class.java),
-      "UserName",
-      "clientID",
-      emptySet(),
+      jwt = Mockito.mock(Jwt::class.java),
+      userName = "UserName",
+      clientId = "clientID",
+      authorities = emptySet(),
     )
     SecurityContextHolder.getContext().authentication = auth
   }
