@@ -38,7 +38,7 @@ dependencies {
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.2.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.1")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.32.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -51,8 +51,8 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.7.1")
   runtimeOnly("org.flywaydb:flyway-core")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.20") {
     exclude(group = "io.swagger.core.v3")
   }
@@ -60,7 +60,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.3.1")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.2")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.4")
   testImplementation("com.google.code.gson:gson:2.10.1")
 }
 
