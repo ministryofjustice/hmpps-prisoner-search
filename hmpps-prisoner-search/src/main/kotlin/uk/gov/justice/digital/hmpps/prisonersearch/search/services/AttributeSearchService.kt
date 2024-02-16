@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.PrisonerSearchResource
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
@@ -40,6 +41,7 @@ class AttributeSearchService {
     getAllMatchers(request.matchers).forEach { validateMatcher(it) }
     getAllTextMatchers(request.matchers).forEach { it.validate() }
     getAllIntegerMatchers(request.matchers).forEach { it.validate() }
+    getAllDateMatchers(request.matchers).forEach { it.validate() }
   }
 
   private fun validateMatcher(matcher: Matcher) {
@@ -47,7 +49,6 @@ class AttributeSearchService {
       matcher.booleanMatchers.isNullOrEmpty() &&
       matcher.integerMatchers.isNullOrEmpty() &&
       matcher.dateMatchers.isNullOrEmpty() &&
-      matcher.bodyPartMatchers.isNullOrEmpty() &&
       matcher.children.isNullOrEmpty()
     ) {
       throw AttributeSearchException("Matchers must not be empty")
@@ -75,10 +76,19 @@ class AttributeSearchService {
   private fun getAllIntegerMatchers(matcher: List<Matcher>): List<IntegerMatcher> {
     val allIntegerMatchers = mutableListOf<IntegerMatcher>()
     matcher.forEach {
-      it.integerMatchers?.let { textMatchers -> allIntegerMatchers.addAll(textMatchers) }
+      it.integerMatchers?.let { integerMatchers -> allIntegerMatchers.addAll(integerMatchers) }
       it.children?.let { children -> allIntegerMatchers.addAll(getAllIntegerMatchers(children)) }
     }
     return allIntegerMatchers
+  }
+
+  private fun getAllDateMatchers(matcher: List<Matcher>): List<DateMatcher> {
+    val allDateMatchers = mutableListOf<DateMatcher>()
+    matcher.forEach {
+      it.dateMatchers?.let { dateMatchers -> allDateMatchers.addAll(dateMatchers) }
+      it.children?.let { children -> allDateMatchers.addAll(getAllDateMatchers(children)) }
+    }
+    return allDateMatchers
   }
 
   private fun TextMatcher.validate() {
@@ -111,6 +121,28 @@ class AttributeSearchService {
     if (minValue != null && maxValue != null) {
       val min = if (minInclusive) minValue else minValue + 1
       val max = if (maxInclusive) maxValue else maxValue - 1
+      if (max < min) {
+        throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
+      }
+    }
+  }
+
+  private fun DateMatcher.validate() {
+    attributeTypes[attribute]
+      ?.also {
+        if (it != AttributeType.DATE) {
+          throw AttributeSearchException("Attribute $attribute is not an date attribute")
+        }
+      }
+      ?: throw AttributeSearchException("Unknown attribute: $attribute")
+
+    if (minValue == null && maxValue == null) {
+      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
+    }
+
+    if (minValue != null && maxValue != null) {
+      val min = if (minInclusive) minValue else minValue.plusDays(1)
+      val max = if (maxInclusive) maxValue else maxValue.minusDays(1)
       if (max < min) {
         throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
       }
