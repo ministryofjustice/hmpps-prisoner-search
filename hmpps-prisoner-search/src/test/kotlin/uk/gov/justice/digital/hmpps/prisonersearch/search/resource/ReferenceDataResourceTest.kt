@@ -15,6 +15,8 @@ import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.cache.CacheManager
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
@@ -32,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.hairColour
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.imprisonmentStatusDescription
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.inOutStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.incentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.leftEyeColour
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.legalStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.maritalStatus
@@ -43,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
+import java.time.LocalDateTime
 import java.util.stream.Stream
 
 class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
@@ -83,6 +87,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         ),
         category = "C",
         csra = "High",
+        currentIncentive = CurrentIncentive(level = IncentiveLevel(code = "ENH", description = "Enhanced"), dateTime = LocalDateTime.now()),
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AC",
@@ -112,6 +117,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         ),
         category = "Q",
         csra = "Low",
+        currentIncentive = CurrentIncentive(level = IncentiveLevel(code = "BAS", description = "Basic"), dateTime = LocalDateTime.now()),
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AD",
@@ -237,6 +243,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
       arguments(gender, listOf("Female", "Male", "Not Known / Not Recorded")),
       arguments(hairColour, listOf("Balding", "Mouse", "Red")),
       arguments(imprisonmentStatusDescription, listOf("Life imprisonment")),
+      arguments(incentiveLevel, listOf("Basic", "Enhanced")),
       arguments(inOutStatus, listOf("IN")),
       arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing")),
       arguments(legalStatus, listOf("REMAND")),

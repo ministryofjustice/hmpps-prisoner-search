@@ -52,7 +52,7 @@ data class ReferenceDataResponse(val data: List<ReferenceData> = emptyList())
 data class ReferenceData(val key: String)
 
 @Suppress("EnumEntryName")
-enum class ReferenceDataAttribute(keyword: Boolean = true) {
+enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null) {
   build,
   category,
   csra,
@@ -61,6 +61,7 @@ enum class ReferenceDataAttribute(keyword: Boolean = true) {
   gender,
   hairColour,
   imprisonmentStatusDescription,
+  incentiveLevel(field = "currentIncentive.level.description.keyword"),
   inOutStatus,
   leftEyeColour,
   legalStatus,
@@ -73,5 +74,9 @@ enum class ReferenceDataAttribute(keyword: Boolean = true) {
   youthOffender(keyword = false),
   ;
 
-  val field: String = if (keyword) "$name.keyword" else name
+  val field: String = when {
+    field != null -> field
+    keyword -> "$name.keyword"
+    else -> name
+  }
 }
