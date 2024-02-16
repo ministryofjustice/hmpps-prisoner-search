@@ -10,8 +10,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.BooleanMa
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matchers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TypeMatcher
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
@@ -41,165 +42,47 @@ class AttributeSearchService {
       throw AttributeSearchException("At least one matcher must be provided")
     }
     getAllMatchers(request.matchers).forEach { validateMatcher(it) }
-    getAllTextMatchers(request.matchers).forEach { it.validate() }
-    getAllBooleanMatchers(request.matchers).forEach { it.validate() }
-    getAllIntegerMatchers(request.matchers).forEach { it.validate() }
-    getAllDateMatchers(request.matchers).forEach { it.validate() }
-    getAllDateTimeMatchers(request.matchers).forEach { it.validate() }
+    listOf(TextMatcher::class, BooleanMatcher::class, IntegerMatcher::class, DateMatcher::class, DateTimeMatcher::class)
+      .forEach { matcherClass ->
+        getAllMatchers(matcherClass, request.matchers).forEach { matcher -> matcher.validate(attributeTypes) }
+      }
   }
 
-  private fun validateMatcher(matcher: Matcher) {
-    if (matcher.textMatchers.isNullOrEmpty() &&
-      matcher.booleanMatchers.isNullOrEmpty() &&
-      matcher.integerMatchers.isNullOrEmpty() &&
-      matcher.dateMatchers.isNullOrEmpty() &&
-      matcher.dateTimeMatchers.isNullOrEmpty() &&
-      matcher.children.isNullOrEmpty()
+  private fun validateMatcher(matchers: Matchers) {
+    if (matchers.textMatchers.isNullOrEmpty() &&
+      matchers.booleanMatchers.isNullOrEmpty() &&
+      matchers.integerMatchers.isNullOrEmpty() &&
+      matchers.dateMatchers.isNullOrEmpty() &&
+      matchers.dateTimeMatchers.isNullOrEmpty() &&
+      matchers.children.isNullOrEmpty()
     ) {
       throw AttributeSearchException("Matchers must not be empty")
     }
   }
 
-  private fun getAllMatchers(matcher: List<Matcher>): List<Matcher> {
-    val allMatchers = mutableListOf<Matcher>()
-    matcher.forEach {
+  private fun getAllMatchers(matchers: List<Matchers>): List<Matchers> {
+    val allMatchers = mutableListOf<Matchers>()
+    matchers.forEach {
       allMatchers.add(it)
-      it.children?.let { children -> allMatchers.addAll(getAllMatchers(children)) }
+      it.children?.also { children -> allMatchers.addAll(getAllMatchers(children)) }
     }
     return allMatchers
   }
 
-  private fun getAllTextMatchers(matcher: List<Matcher>): List<TextMatcher> {
-    val allTextMatchers = mutableListOf<TextMatcher>()
-    matcher.forEach {
-      it.textMatchers?.let { textMatchers -> allTextMatchers.addAll(textMatchers) }
-      it.children?.let { children -> allTextMatchers.addAll(getAllTextMatchers(children)) }
-    }
-    return allTextMatchers
-  }
-
-  private fun getAllBooleanMatchers(matcher: List<Matcher>): List<BooleanMatcher> {
-    val allBooleanMatchers = mutableListOf<BooleanMatcher>()
-    matcher.forEach {
-      it.booleanMatchers?.let { booleanMatchers -> allBooleanMatchers.addAll(booleanMatchers) }
-      it.children?.let { children -> allBooleanMatchers.addAll(getAllBooleanMatchers(children)) }
-    }
-    return allBooleanMatchers
-  }
-
-  private fun getAllIntegerMatchers(matcher: List<Matcher>): List<IntegerMatcher> {
-    val allIntegerMatchers = mutableListOf<IntegerMatcher>()
-    matcher.forEach {
-      it.integerMatchers?.let { integerMatchers -> allIntegerMatchers.addAll(integerMatchers) }
-      it.children?.let { children -> allIntegerMatchers.addAll(getAllIntegerMatchers(children)) }
-    }
-    return allIntegerMatchers
-  }
-
-  private fun getAllDateMatchers(matcher: List<Matcher>): List<DateMatcher> {
-    val allDateMatchers = mutableListOf<DateMatcher>()
-    matcher.forEach {
-      it.dateMatchers?.let { dateMatchers -> allDateMatchers.addAll(dateMatchers) }
-      it.children?.let { children -> allDateMatchers.addAll(getAllDateMatchers(children)) }
-    }
-    return allDateMatchers
-  }
-
-  private fun getAllDateTimeMatchers(matcher: List<Matcher>): List<DateTimeMatcher> {
-    val allDateTimeMatchers = mutableListOf<DateTimeMatcher>()
-    matcher.forEach {
-      it.dateTimeMatchers?.let { dateTimeMatchers -> allDateTimeMatchers.addAll(dateTimeMatchers) }
-      it.children?.let { children -> allDateTimeMatchers.addAll(getAllDateTimeMatchers(children)) }
-    }
-    return allDateTimeMatchers
-  }
-
-  private fun TextMatcher.validate() {
-    attributeTypes[attribute]
-      ?.also {
-        if (it != AttributeType.STRING) {
-          throw AttributeSearchException("Attribute $attribute is not a text attribute")
-        }
+  @Suppress("UNCHECKED_CAST")
+  private fun <T : TypeMatcher> getAllMatchers(type: KClass<T>, matchers: List<Matchers>): List<T> {
+    val allMatchers = mutableListOf<T>()
+    matchers.forEach {
+      when(type) {
+        TextMatcher::class -> it.textMatchers?.also { textMatchers -> allMatchers.addAll(textMatchers as List<T>) }
+        BooleanMatcher::class -> it.booleanMatchers?.also { booleanMatchers -> allMatchers.addAll(booleanMatchers as List<T>) }
+        IntegerMatcher::class -> it.integerMatchers?.also { integerMatchers -> allMatchers.addAll(integerMatchers as List<T>) }
+        DateMatcher::class -> it.dateMatchers?.also { dateMatchers -> allMatchers.addAll(dateMatchers as List<T>) }
+        DateTimeMatcher::class -> it.dateTimeMatchers?.also { dateTimeMatchers -> allMatchers.addAll(dateTimeMatchers as List<T>) }
       }
-      ?: throw AttributeSearchException("Unknown attribute: $attribute")
-
-    if (searchTerm.isBlank()) {
-      throw AttributeSearchException("Attribute $attribute must not have a blank search term")
+      it.children?.also { children -> allMatchers.addAll(getAllMatchers(type, children)) }
     }
-  }
-
-  private fun BooleanMatcher.validate() {
-    attributeTypes[attribute]
-      ?.also {
-        if (it != AttributeType.BOOLEAN) {
-          throw AttributeSearchException("Attribute $attribute is not a boolean attribute")
-        }
-      }
-      ?: throw AttributeSearchException("Unknown attribute: $attribute")
-  }
-
-  private fun IntegerMatcher.validate() {
-    attributeTypes[attribute]
-      ?.also {
-        if (it != AttributeType.INTEGER) {
-          throw AttributeSearchException("Attribute $attribute is not an integer attribute")
-        }
-      }
-      ?: throw AttributeSearchException("Unknown attribute: $attribute")
-
-    if (minValue == null && maxValue == null) {
-      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
-    }
-
-    if (minValue != null && maxValue != null) {
-      val min = if (minInclusive) minValue else minValue + 1
-      val max = if (maxInclusive) maxValue else maxValue - 1
-      if (max < min) {
-        throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
-      }
-    }
-  }
-
-  private fun DateMatcher.validate() {
-    attributeTypes[attribute]
-      ?.also {
-        if (it != AttributeType.DATE) {
-          throw AttributeSearchException("Attribute $attribute is not a date attribute")
-        }
-      }
-      ?: throw AttributeSearchException("Unknown attribute: $attribute")
-
-    if (minValue == null && maxValue == null) {
-      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
-    }
-
-    if (minValue != null && maxValue != null) {
-      val min = if (minInclusive) minValue else minValue.plusDays(1)
-      val max = if (maxInclusive) maxValue else maxValue.minusDays(1)
-      if (max < min) {
-        throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
-      }
-    }
-  }
-
-  private fun DateTimeMatcher.validate() {
-    attributeTypes[attribute]
-      ?.also {
-        if (it != AttributeType.DATE_TIME) {
-          throw AttributeSearchException("Attribute $attribute is not a datetime attribute")
-        }
-      }
-      ?: throw AttributeSearchException("Unknown attribute: $attribute")
-
-    if (minValue == null && maxValue == null) {
-      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
-    }
-
-    if (minValue != null && maxValue != null) {
-      if (maxValue < minValue) {
-        throw AttributeSearchException("Attribute $attribute max value $maxValue less than min value $minValue")
-      }
-    }
+    return allMatchers
   }
 
   private companion object {

@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.JoinType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matchers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextCondition
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
 import java.time.LocalDate
@@ -39,7 +39,7 @@ class AttributeSearchServiceTest {
 
       @Test
       fun `should not allow a matcher with no contents`() {
-        val request = AttributeSearchRequest(listOf(Matcher(JoinType.AND)))
+        val request = AttributeSearchRequest(listOf(Matchers(JoinType.AND)))
 
         assertThrows<AttributeSearchException> {
           service.validate(request)
@@ -52,9 +52,9 @@ class AttributeSearchServiceTest {
       fun `should not allow child matchers with no contents`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
-              children = listOf(Matcher(JoinType.AND)),
+              children = listOf(Matchers(JoinType.AND)),
             ),
           ),
         )
@@ -70,13 +70,13 @@ class AttributeSearchServiceTest {
       fun `should not allow deep nested child matchers with no contents`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               children = listOf(
-                Matcher(
+                Matchers(
                   JoinType.AND,
                   children = listOf(
-                    Matcher(JoinType.AND),
+                    Matchers(JoinType.AND),
                   ),
                 ),
               ),
@@ -98,7 +98,7 @@ class AttributeSearchServiceTest {
       fun `should allow simple attribute`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("firstName", TextCondition.IS, "value"),
@@ -116,7 +116,7 @@ class AttributeSearchServiceTest {
       fun `should not allow unknown attributes`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("unknownAttribute", TextCondition.IS, "value"),
@@ -136,7 +136,7 @@ class AttributeSearchServiceTest {
       fun `should allow attributes in lists of objects`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("aliases.firstName", TextCondition.IS, "value"),
@@ -154,7 +154,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes from lists that don't exist`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("aliases.unknown", TextCondition.IS, "value"),
@@ -174,7 +174,7 @@ class AttributeSearchServiceTest {
       fun `should allow attributes in nested objects`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("currentIncentive.level.code", TextCondition.IS, "value"),
@@ -192,7 +192,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes from nested objects that don't exist`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("currentIncentive.level.unknown", TextCondition.IS, "value"),
@@ -215,7 +215,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes of the wrong type`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("heightCentimetres", TextCondition.IS, "value"),
@@ -235,7 +235,7 @@ class AttributeSearchServiceTest {
       fun `should not allow blank value`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("firstName", TextCondition.IS, ""),
@@ -255,7 +255,7 @@ class AttributeSearchServiceTest {
       fun `should not allow blank value in a list of objects`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("aliases.firstName", TextCondition.IS, ""),
@@ -275,7 +275,7 @@ class AttributeSearchServiceTest {
       fun `should not allow blank value in a nested object`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               textMatchers = listOf(
                 TextMatcher("currentIncentive.level.code", TextCondition.IS, ""),
@@ -298,7 +298,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes of the wrong type`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               booleanMatchers = listOf(
                 BooleanMatcher("firstName", true),
@@ -318,7 +318,7 @@ class AttributeSearchServiceTest {
       fun `should allow boolean attributes`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               booleanMatchers = listOf(
                 BooleanMatcher("recall", true),
@@ -339,7 +339,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes of the wrong type`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               integerMatchers = listOf(
                 IntegerMatcher("firstName", minValue = 150),
@@ -359,7 +359,7 @@ class AttributeSearchServiceTest {
       fun `should not allow missing min and max values`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               integerMatchers = listOf(
                 IntegerMatcher("heightCentimetres"),
@@ -379,7 +379,7 @@ class AttributeSearchServiceTest {
       fun `should not allow max less than min`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               integerMatchers = listOf(
                 IntegerMatcher("heightCentimetres", minValue = 150, maxValue = 149),
@@ -399,7 +399,7 @@ class AttributeSearchServiceTest {
       fun `should allow min equal to max if both inclusive`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               integerMatchers = listOf(
                 IntegerMatcher("heightCentimetres", minValue = 150, minInclusive = true, maxValue = 150, maxInclusive = true),
@@ -417,7 +417,7 @@ class AttributeSearchServiceTest {
       fun `should not allow max less than min when exclusive`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               integerMatchers = listOf(
                 // this means 150 < heightCentimetres < 151 which is impossible
@@ -445,7 +445,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes of the wrong type`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateMatchers = listOf(
                 DateMatcher("firstName", minValue = today),
@@ -465,7 +465,7 @@ class AttributeSearchServiceTest {
       fun `should not allow missing min and max values`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateMatchers = listOf(
                 DateMatcher("releaseDate"),
@@ -485,7 +485,7 @@ class AttributeSearchServiceTest {
       fun `should not allow max less than min`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateMatchers = listOf(
                 DateMatcher("releaseDate", minValue = today, maxValue = yesterday),
@@ -505,7 +505,7 @@ class AttributeSearchServiceTest {
       fun `should allow min equal to max if both inclusive`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateMatchers = listOf(
                 DateMatcher("releaseDate", minValue = today, minInclusive = true, maxValue = today, maxInclusive = true),
@@ -523,7 +523,7 @@ class AttributeSearchServiceTest {
       fun `should not allow max less than min when exclusive`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateMatchers = listOf(
                 // this means today < releaseDate < tomorrow which is impossible
@@ -549,7 +549,7 @@ class AttributeSearchServiceTest {
       fun `should not allow attributes of the wrong type`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateTimeMatchers = listOf(
                 DateTimeMatcher("firstName", minValue = now.minusDays(7)),
@@ -569,7 +569,7 @@ class AttributeSearchServiceTest {
       fun `should not allow missing min and max values`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateTimeMatchers = listOf(
                 DateTimeMatcher("currentIncentive.dateTime"),
@@ -591,7 +591,7 @@ class AttributeSearchServiceTest {
         val max = now.minusSeconds(1)
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateTimeMatchers = listOf(
                 DateTimeMatcher("currentIncentive.dateTime", minValue = min, maxValue = max),
@@ -611,7 +611,7 @@ class AttributeSearchServiceTest {
       fun `should allow min equal to max`() {
         val request = AttributeSearchRequest(
           listOf(
-            Matcher(
+            Matchers(
               JoinType.AND,
               dateTimeMatchers = listOf(
                 DateTimeMatcher("currentIncentive.dateTime", minValue = now, maxValue = now),

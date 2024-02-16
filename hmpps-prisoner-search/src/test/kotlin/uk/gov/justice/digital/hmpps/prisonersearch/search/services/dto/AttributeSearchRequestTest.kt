@@ -34,7 +34,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -77,7 +77,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -137,7 +137,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -147,7 +147,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
               ),
             ),
             children = listOf(
-              Matcher(
+              Matchers(
                 joinType = JoinType.OR,
                 textMatchers = listOf(
                   TextMatcher(
@@ -217,10 +217,10 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.OR,
             children = listOf(
-              Matcher(
+              Matchers(
                 joinType = JoinType.AND,
                 textMatchers = listOf(
                   TextMatcher(
@@ -235,7 +235,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                   ),
                 ),
               ),
-              Matcher(
+              Matchers(
                 joinType = JoinType.AND,
                 textMatchers = listOf(
                   TextMatcher(
@@ -286,7 +286,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -336,7 +336,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -388,7 +388,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -446,7 +446,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -502,7 +502,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -559,7 +559,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -624,7 +624,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
             textMatchers = listOf(
               TextMatcher(
@@ -634,7 +634,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
               ),
             ),
             children = listOf(
-              Matcher(
+              Matchers(
                 joinType = JoinType.OR,
                 textMatchers = listOf(
                   TextMatcher(
