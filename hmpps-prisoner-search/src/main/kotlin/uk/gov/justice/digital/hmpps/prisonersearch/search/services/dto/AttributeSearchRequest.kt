@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class AttributeSearchRequest(
   val matchers: List<Matcher>,
@@ -12,6 +13,7 @@ data class Matcher(
   val booleanMatchers: List<BooleanMatcher>? = null,
   val integerMatchers: List<IntegerMatcher>? = null,
   val dateMatchers: List<DateMatcher>? = null,
+  val dateTimeMatchers: List<DateTimeMatcher>? = null,
   val children: List<Matcher>? = null,
 )
 
@@ -40,6 +42,12 @@ data class DateMatcher(
   val minInclusive: Boolean = true,
   val maxValue: LocalDate? = null,
   val maxInclusive: Boolean = true,
+)
+
+data class DateTimeMatcher(
+  val attribute: String,
+  val minValue: LocalDateTime? = null,
+  val maxValue: LocalDateTime? = null,
 )
 
 enum class JoinType {
