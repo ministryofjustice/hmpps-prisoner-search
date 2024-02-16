@@ -28,4 +28,8 @@ class CacheConfig(private val referenceDataService: ReferenceDataService) : Cach
         referenceDataService.findReferenceData(it as ReferenceDataAttribute)
       },
   )
+
+  // cache required by hmpps-kotlin-lib
+  @Bean
+  fun jwksCache(): Cache = CaffeineCache("jwks", Caffeine.newBuilder().maximumSize(1).build())
 }
