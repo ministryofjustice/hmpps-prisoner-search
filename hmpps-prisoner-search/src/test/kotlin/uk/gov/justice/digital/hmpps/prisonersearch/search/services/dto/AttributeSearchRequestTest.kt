@@ -170,7 +170,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
   }
 
   @Test
-  fun `(firstName is John AND lastName is Smith) OR (firstName is Jack AND lastName is Smythe)`() {
+  fun `(firstName is John AND lastName is Smith) OR (firstName is Jack AND lastName is not Jones)`() {
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """{
              "matchers": [

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextCondition
@@ -282,6 +283,108 @@ class AttributeSearchServiceTest {
           service.validate(request)
         }.also {
           assertThat(it.message).contains("currentIncentive.level.code").contains("blank")
+        }
+      }
+    }
+
+    @Nested
+    inner class IntegerMatchers {
+      @Test
+      fun `should not allow attributes of the wrong type`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              integerMatchers = listOf(
+                IntegerMatcher("firstName", minValue = 150),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("firstName").contains("integer attribute")
+        }
+      }
+
+      @Test
+      fun `should not allow missing min and max values`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              integerMatchers = listOf(
+                IntegerMatcher("heightCentimetres"),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("heightCentimetres").contains("must have at least 1 min or max value")
+        }
+      }
+
+      @Test
+      fun `should not allow max less than min`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              integerMatchers = listOf(
+                IntegerMatcher("heightCentimetres", minValue = 150, maxValue = 149),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("heightCentimetres").contains("max value 149 less than min value 150")
+        }
+      }
+
+      @Test
+      fun `should allow min equal to max if both inclusive`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              integerMatchers = listOf(
+                IntegerMatcher("heightCentimetres", minValue = 150, minInclusive = true, maxValue = 150, maxInclusive = true),
+              ),
+            ),
+          ),
+        )
+
+        assertDoesNotThrow {
+          service.validate(request)
+        }
+      }
+
+      @Test
+      fun `should not allow max less than min when exclusive`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              integerMatchers = listOf(
+                // this means 150 < heightCentimetres < 151 which is impossible
+                IntegerMatcher("heightCentimetres", minValue = 150, minInclusive = false, maxValue = 151, maxInclusive = false),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("heightCentimetres").contains("max value 150 less than min value 151")
         }
       }
     }
