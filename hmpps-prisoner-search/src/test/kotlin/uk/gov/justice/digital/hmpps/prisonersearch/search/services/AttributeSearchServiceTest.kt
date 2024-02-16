@@ -6,11 +6,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextCondition
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
+import java.time.LocalDate
 
 class AttributeSearchServiceTest {
 
@@ -385,6 +387,112 @@ class AttributeSearchServiceTest {
           service.validate(request)
         }.also {
           assertThat(it.message).contains("heightCentimetres").contains("max value 150 less than min value 151")
+        }
+      }
+    }
+
+    @Nested
+    inner class DateMatchers {
+      private val today = LocalDate.now()
+      private val yesterday = today.minusDays(1)
+      private val tomorrow = today.plusDays(1)
+
+      @Test
+      fun `should not allow attributes of the wrong type`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateMatchers = listOf(
+                DateMatcher("firstName", minValue = today),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("firstName").contains("date attribute")
+        }
+      }
+
+      @Test
+      fun `should not allow missing min and max values`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateMatchers = listOf(
+                DateMatcher("releaseDate"),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("releaseDate").contains("must have at least 1 min or max value")
+        }
+      }
+
+      @Test
+      fun `should not allow max less than min`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateMatchers = listOf(
+                DateMatcher("releaseDate", minValue = today, maxValue = yesterday),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("releaseDate").contains("max value $yesterday less than min value $today")
+        }
+      }
+
+      @Test
+      fun `should allow min equal to max if both inclusive`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateMatchers = listOf(
+                DateMatcher("releaseDate", minValue = today, minInclusive = true, maxValue = today, maxInclusive = true),
+              ),
+            ),
+          ),
+        )
+
+        assertDoesNotThrow {
+          service.validate(request)
+        }
+      }
+
+      @Test
+      fun `should not allow max less than min when exclusive`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateMatchers = listOf(
+                // this means today < releaseDate < tomorrow which is impossible
+                DateMatcher("releaseDate", minValue = today, minInclusive = false, maxValue = tomorrow, maxInclusive = false),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("releaseDate").contains("max value $today less than min value $tomorrow")
         }
       }
     }

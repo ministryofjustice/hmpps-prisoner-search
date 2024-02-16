@@ -527,7 +527,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
   }
 
   @Test
-  fun `firstName is John AND tattoo on shoulder is dragon`() {
+  fun `firstName is John AND tattoo on shoulder contains dragon`() {
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """{
              "matchers": [
@@ -538,13 +538,16 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
-                   }
-                 ],
-                 "bodyPartMatchers": [
+                   },
                    {
-                     "attribute": "tattoo",
-                     "bodyPart": "shoulder",
-                     "comment": "dragon"
+                     "attribute": "tattoos.bodyPart",
+                     "condition": "IS",
+                     "searchTerm": "shoulder"
+                   },
+                   {
+                     "attribute": "tattoos.comment",
+                     "condition": "CONTAINS",
+                     "searchTerm": "dragon"
                    }
                  ]
                }
@@ -564,12 +567,15 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-            ),
-            bodyPartMatchers = listOf(
-              BodyPartMatcher(
-                attribute = "tattoo",
-                bodyPart = "shoulder",
-                comment = "dragon",
+              TextMatcher(
+                attribute = "tattoos.bodyPart",
+                condition = TextCondition.IS,
+                searchTerm = "shoulder",
+              ),
+              TextMatcher(
+                attribute = "tattoos.comment",
+                condition = TextCondition.CONTAINS,
+                searchTerm = "dragon",
               ),
             ),
           ),
@@ -595,14 +601,16 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                  "children" : [
                    {
                      "joinType": "OR",
-                     "bodyPartMatchers": [
+                     "textMatchers": [
                        {
-                         "attribute": "scar",
-                         "bodyPart": "face"
+                         "attribute": "scars.bodyPart",
+                         "condition": "IS",
+                         "searchTerm": "face"
                        },
                        {
-                         "attribute": "scar",
-                         "bodyPart": "head"
+                         "attribute": "scars.bodyPart",
+                         "condition": "IS",
+                         "searchTerm": "head"
                        }
                      ]
                    }
@@ -628,14 +636,16 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
             children = listOf(
               Matcher(
                 joinType = JoinType.OR,
-                bodyPartMatchers = listOf(
-                  BodyPartMatcher(
-                    attribute = "scar",
-                    bodyPart = "face",
+                textMatchers = listOf(
+                  TextMatcher(
+                    attribute = "scars.bodyPart",
+                    condition = TextCondition.IS,
+                    searchTerm = "face",
                   ),
-                  BodyPartMatcher(
-                    attribute = "scar",
-                    bodyPart = "head",
+                  TextMatcher(
+                    attribute = "scars.bodyPart",
+                    condition = TextCondition.IS,
+                    searchTerm = "head",
                   ),
                 ),
               ),

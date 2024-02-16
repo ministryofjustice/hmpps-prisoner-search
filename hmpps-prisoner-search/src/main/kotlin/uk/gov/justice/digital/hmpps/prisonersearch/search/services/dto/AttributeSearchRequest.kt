@@ -12,7 +12,6 @@ data class Matcher(
   val booleanMatchers: List<BooleanMatcher>? = null,
   val integerMatchers: List<IntegerMatcher>? = null,
   val dateMatchers: List<DateMatcher>? = null,
-  val bodyPartMatchers: List<BodyPartMatcher>? = null,
   val children: List<Matcher>? = null,
 )
 
@@ -43,12 +42,6 @@ data class DateMatcher(
   val maxInclusive: Boolean = true,
 )
 
-data class BodyPartMatcher(
-  val attribute: String,
-  val bodyPart: String? = null,
-  val comment: String? = null,
-)
-
 enum class JoinType {
   AND,
   OR,
@@ -57,4 +50,5 @@ enum class JoinType {
 enum class TextCondition {
   IS,
   IS_NOT,
+  CONTAINS,
 }
