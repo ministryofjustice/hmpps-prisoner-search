@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.PrisonerSearchResource
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
@@ -40,8 +42,10 @@ class AttributeSearchService {
     }
     getAllMatchers(request.matchers).forEach { validateMatcher(it) }
     getAllTextMatchers(request.matchers).forEach { it.validate() }
+    getAllBooleanMatchers(request.matchers).forEach { it.validate() }
     getAllIntegerMatchers(request.matchers).forEach { it.validate() }
     getAllDateMatchers(request.matchers).forEach { it.validate() }
+    getAllDateTimeMatchers(request.matchers).forEach { it.validate() }
   }
 
   private fun validateMatcher(matcher: Matcher) {
@@ -49,6 +53,7 @@ class AttributeSearchService {
       matcher.booleanMatchers.isNullOrEmpty() &&
       matcher.integerMatchers.isNullOrEmpty() &&
       matcher.dateMatchers.isNullOrEmpty() &&
+      matcher.dateTimeMatchers.isNullOrEmpty() &&
       matcher.children.isNullOrEmpty()
     ) {
       throw AttributeSearchException("Matchers must not be empty")
@@ -73,6 +78,15 @@ class AttributeSearchService {
     return allTextMatchers
   }
 
+  private fun getAllBooleanMatchers(matcher: List<Matcher>): List<BooleanMatcher> {
+    val allBooleanMatchers = mutableListOf<BooleanMatcher>()
+    matcher.forEach {
+      it.booleanMatchers?.let { booleanMatchers -> allBooleanMatchers.addAll(booleanMatchers) }
+      it.children?.let { children -> allBooleanMatchers.addAll(getAllBooleanMatchers(children)) }
+    }
+    return allBooleanMatchers
+  }
+
   private fun getAllIntegerMatchers(matcher: List<Matcher>): List<IntegerMatcher> {
     val allIntegerMatchers = mutableListOf<IntegerMatcher>()
     matcher.forEach {
@@ -91,6 +105,15 @@ class AttributeSearchService {
     return allDateMatchers
   }
 
+  private fun getAllDateTimeMatchers(matcher: List<Matcher>): List<DateTimeMatcher> {
+    val allDateTimeMatchers = mutableListOf<DateTimeMatcher>()
+    matcher.forEach {
+      it.dateTimeMatchers?.let { dateTimeMatchers -> allDateTimeMatchers.addAll(dateTimeMatchers) }
+      it.children?.let { children -> allDateTimeMatchers.addAll(getAllDateTimeMatchers(children)) }
+    }
+    return allDateTimeMatchers
+  }
+
   private fun TextMatcher.validate() {
     attributeTypes[attribute]
       ?.also {
@@ -103,6 +126,16 @@ class AttributeSearchService {
     if (searchTerm.isBlank()) {
       throw AttributeSearchException("Attribute $attribute must not have a blank search term")
     }
+  }
+
+  private fun BooleanMatcher.validate() {
+    attributeTypes[attribute]
+      ?.also {
+        if (it != AttributeType.BOOLEAN) {
+          throw AttributeSearchException("Attribute $attribute is not a boolean attribute")
+        }
+      }
+      ?: throw AttributeSearchException("Unknown attribute: $attribute")
   }
 
   private fun IntegerMatcher.validate() {
@@ -131,7 +164,7 @@ class AttributeSearchService {
     attributeTypes[attribute]
       ?.also {
         if (it != AttributeType.DATE) {
-          throw AttributeSearchException("Attribute $attribute is not an date attribute")
+          throw AttributeSearchException("Attribute $attribute is not a date attribute")
         }
       }
       ?: throw AttributeSearchException("Unknown attribute: $attribute")
@@ -145,6 +178,26 @@ class AttributeSearchService {
       val max = if (maxInclusive) maxValue else maxValue.minusDays(1)
       if (max < min) {
         throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
+      }
+    }
+  }
+
+  private fun DateTimeMatcher.validate() {
+    attributeTypes[attribute]
+      ?.also {
+        if (it != AttributeType.DATE_TIME) {
+          throw AttributeSearchException("Attribute $attribute is not a datetime attribute")
+        }
+      }
+      ?: throw AttributeSearchException("Unknown attribute: $attribute")
+
+    if (minValue == null && maxValue == null) {
+      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
+    }
+
+    if (minValue != null && maxValue != null) {
+      if (maxValue < minValue) {
+        throw AttributeSearchException("Attribute $attribute max value $maxValue less than min value $minValue")
       }
     }
   }

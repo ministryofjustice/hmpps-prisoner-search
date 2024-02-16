@@ -6,13 +6,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextCondition
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class AttributeSearchServiceTest {
 
@@ -290,6 +293,47 @@ class AttributeSearchServiceTest {
     }
 
     @Nested
+    inner class BooleanMatchers {
+      @Test
+      fun `should not allow attributes of the wrong type`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              booleanMatchers = listOf(
+                BooleanMatcher("firstName", true),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("firstName").contains("boolean attribute")
+        }
+      }
+
+      @Test
+      fun `should allow boolean attributes`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              booleanMatchers = listOf(
+                BooleanMatcher("recall", true),
+              ),
+            ),
+          ),
+        )
+
+        assertDoesNotThrow {
+          service.validate(request)
+        }
+      }
+    }
+
+    @Nested
     inner class IntegerMatchers {
       @Test
       fun `should not allow attributes of the wrong type`() {
@@ -493,6 +537,91 @@ class AttributeSearchServiceTest {
           service.validate(request)
         }.also {
           assertThat(it.message).contains("releaseDate").contains("max value $today less than min value $tomorrow")
+        }
+      }
+    }
+
+    @Nested
+    inner class DateTimeMatchers {
+      private val now = LocalDateTime.now()
+
+      @Test
+      fun `should not allow attributes of the wrong type`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateTimeMatchers = listOf(
+                DateTimeMatcher("firstName", minValue = now.minusDays(7)),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("firstName").contains("datetime attribute")
+        }
+      }
+
+      @Test
+      fun `should not allow missing min and max values`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateTimeMatchers = listOf(
+                DateTimeMatcher("currentIncentive.dateTime"),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("currentIncentive.dateTime").contains("must have at least 1 min or max value")
+        }
+      }
+
+      @Test
+      fun `should not allow max less than min`() {
+        val min = now
+        val max = now.minusSeconds(1)
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateTimeMatchers = listOf(
+                DateTimeMatcher("currentIncentive.dateTime", minValue = min, maxValue = max),
+              ),
+            ),
+          ),
+        )
+
+        assertThrows<AttributeSearchException> {
+          service.validate(request)
+        }.also {
+          assertThat(it.message).contains("currentIncentive.dateTime").contains("max value $max less than min value $min")
+        }
+      }
+
+      @Test
+      fun `should allow min equal to max`() {
+        val request = AttributeSearchRequest(
+          listOf(
+            Matcher(
+              JoinType.AND,
+              dateTimeMatchers = listOf(
+                DateTimeMatcher("currentIncentive.dateTime", minValue = now, maxValue = now),
+              ),
+            ),
+          ),
+        )
+
+        assertDoesNotThrow {
+          service.validate(request)
         }
       }
     }
