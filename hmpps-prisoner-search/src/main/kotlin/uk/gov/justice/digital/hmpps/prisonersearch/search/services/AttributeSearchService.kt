@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.PrisonerSearchResource
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
 import java.time.LocalDate
@@ -37,7 +38,8 @@ class AttributeSearchService {
       throw AttributeSearchException("At least one matcher must be provided")
     }
     getAllMatchers(request.matchers).forEach { validateMatcher(it) }
-    getAllTextMatchers(request.matchers).forEach { validateTextMatcher(it) }
+    getAllTextMatchers(request.matchers).forEach { it.validate() }
+    getAllIntegerMatchers(request.matchers).forEach { it.validate() }
   }
 
   private fun validateMatcher(matcher: Matcher) {
@@ -70,17 +72,48 @@ class AttributeSearchService {
     return allTextMatchers
   }
 
-  private fun validateTextMatcher(textMatcher: TextMatcher) {
-    attributeTypes[textMatcher.attribute]
+  private fun getAllIntegerMatchers(matcher: List<Matcher>): List<IntegerMatcher> {
+    val allIntegerMatchers = mutableListOf<IntegerMatcher>()
+    matcher.forEach {
+      it.integerMatchers?.let { textMatchers -> allIntegerMatchers.addAll(textMatchers) }
+      it.children?.let { children -> allIntegerMatchers.addAll(getAllIntegerMatchers(children)) }
+    }
+    return allIntegerMatchers
+  }
+
+  private fun TextMatcher.validate() {
+    attributeTypes[attribute]
       ?.also {
         if (it != AttributeType.STRING) {
-          throw AttributeSearchException("Attribute ${textMatcher.attribute} is not a text attribute")
+          throw AttributeSearchException("Attribute $attribute is not a text attribute")
         }
       }
-      ?: throw AttributeSearchException("Unknown attribute: ${textMatcher.attribute}")
+      ?: throw AttributeSearchException("Unknown attribute: $attribute")
 
-    if (textMatcher.searchTerm.isBlank()) {
-      throw AttributeSearchException("Attribute ${textMatcher.attribute} must not have a blank search term")
+    if (searchTerm.isBlank()) {
+      throw AttributeSearchException("Attribute $attribute must not have a blank search term")
+    }
+  }
+
+  private fun IntegerMatcher.validate() {
+    attributeTypes[attribute]
+      ?.also {
+        if (it != AttributeType.INTEGER) {
+          throw AttributeSearchException("Attribute $attribute is not an integer attribute")
+        }
+      }
+      ?: throw AttributeSearchException("Unknown attribute: $attribute")
+
+    if (minValue == null && maxValue == null) {
+      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
+    }
+
+    if (minValue != null && maxValue != null) {
+      val min = if (minInclusive) minValue else minValue + 1
+      val max = if (maxInclusive) maxValue else maxValue - 1
+      if (max < min) {
+        throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
+      }
     }
   }
 
