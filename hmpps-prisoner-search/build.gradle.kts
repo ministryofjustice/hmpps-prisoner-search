@@ -43,6 +43,8 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:1.2.1")
   implementation("org.awaitility:awaitility-kotlin:4.2.0")
 
+  implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+
   implementation(project(":common"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")

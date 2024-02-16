@@ -28,8 +28,8 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
   @Operation(
     summary = "*** BETA *** Reference data search",
     description = """BETA endpoint - reference data returned reflects the data assigned to prisoners
-      rather than all the possible values.
-      Only to be used for searching existing data purposes.
+      rather than all the possible values.  Only to be used for searching existing data purposes.
+      This method will also cache all reference data results for an hour.
       Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
       """,
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
@@ -61,5 +61,5 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
   fun referenceData(
     @Valid @PathVariable
     attribute: ReferenceDataAttribute,
-  ): ReferenceDataResponse = referenceDataService.findReferenceData(attribute)
+  ): ReferenceDataResponse = referenceDataService.findReferenceDataCached(attribute)
 }

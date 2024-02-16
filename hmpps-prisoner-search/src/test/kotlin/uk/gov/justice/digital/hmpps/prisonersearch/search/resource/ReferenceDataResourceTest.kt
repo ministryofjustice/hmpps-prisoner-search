@@ -8,6 +8,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.reset
+import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.cache.CacheManager
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
@@ -35,9 +42,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.status
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import java.util.stream.Stream
 
 class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
+  @SpyBean
+  private lateinit var elasticsearchClient: SearchClient
+
+  @Autowired
+  private lateinit var cacheManager: CacheManager
 
   override fun loadPrisonerData() {
     val prisonerData = listOf(
@@ -248,6 +261,31 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
     assertThat(ReferenceDataAttribute.entries.map { it.name }).containsExactlyInAnyOrderElementsOf(
       attributeData().toList().map { it.get()[0].toString() },
     )
+  }
+
+  private fun forceElasticError() {
+    doThrow(RuntimeException("gone wrong")).whenever(elasticsearchClient).search(any())
+  }
+
+  @Test
+  fun `test caching of attribute values`() {
+    cacheManager.getCache("referenceData")?.clear()
+
+    // pre-check to ensure that forcing elastic error causes search to fail
+    forceElasticError()
+    webTestClient.get().uri("/reference-data/${leftEyeColour.name}")
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().is5xxServerError
+
+    // so that we can check caching then works
+    reset(elasticsearchClient)
+    referenceDataRequest(attribute = leftEyeColour.name, expectedResults = listOf("Brown", "Hazel", "Missing"))
+
+    // and no exception is thrown
+    forceElasticError()
+    referenceDataRequest(attribute = leftEyeColour.name, expectedResults = listOf("Brown", "Hazel", "Missing"))
   }
 
   private fun referenceDataRequest(
