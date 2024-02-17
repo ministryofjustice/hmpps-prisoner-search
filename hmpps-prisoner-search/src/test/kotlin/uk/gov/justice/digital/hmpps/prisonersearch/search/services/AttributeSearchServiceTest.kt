@@ -5,15 +5,17 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.AttributeSearchRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.BooleanMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.DateTimeMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.IntegerMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.JoinType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Matchers
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextCondition
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.TextMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntegerMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TextCondition
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -100,8 +102,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("firstName", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("firstName", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -118,8 +120,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("unknownAttribute", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("unknownAttribute", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -138,8 +140,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("aliases.firstName", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("aliases.firstName", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -156,8 +158,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("aliases.unknown", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("aliases.unknown", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -176,8 +178,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("currentIncentive.level.code", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("currentIncentive.level.code", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -194,8 +196,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("currentIncentive.level.unknown", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("currentIncentive.level.unknown", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -210,15 +212,15 @@ class AttributeSearchServiceTest {
     }
 
     @Nested
-    inner class TextMatchers {
+    inner class StringMatchers {
       @Test
       fun `should not allow attributes of the wrong type`() {
         val request = AttributeSearchRequest(
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("heightCentimetres", TextCondition.IS, "value"),
+              stringMatchers = listOf(
+                StringMatcher("heightCentimetres", TextCondition.IS, "value"),
               ),
             ),
           ),
@@ -237,8 +239,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("firstName", TextCondition.IS, ""),
+              stringMatchers = listOf(
+                StringMatcher("firstName", TextCondition.IS, ""),
               ),
             ),
           ),
@@ -257,8 +259,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("aliases.firstName", TextCondition.IS, ""),
+              stringMatchers = listOf(
+                StringMatcher("aliases.firstName", TextCondition.IS, ""),
               ),
             ),
           ),
@@ -277,8 +279,8 @@ class AttributeSearchServiceTest {
           listOf(
             Matchers(
               JoinType.AND,
-              textMatchers = listOf(
-                TextMatcher("currentIncentive.level.code", TextCondition.IS, ""),
+              stringMatchers = listOf(
+                StringMatcher("currentIncentive.level.code", TextCondition.IS, ""),
               ),
             ),
           ),
