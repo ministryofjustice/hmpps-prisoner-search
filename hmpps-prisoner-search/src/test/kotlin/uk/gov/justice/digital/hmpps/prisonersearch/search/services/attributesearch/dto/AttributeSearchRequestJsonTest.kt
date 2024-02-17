@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto
+package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.dto
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -12,12 +12,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntegerMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TextCondition
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TextCondition
 import java.time.LocalDate
 
 @JsonTest
-class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
+class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) {
 
   @Test
   fun `firstName is John`() {

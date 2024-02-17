@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeType
 import java.time.LocalDate
 
 data class DateMatcher(
@@ -11,11 +10,7 @@ data class DateMatcher(
   val maxValue: LocalDate? = null,
   val maxInclusive: Boolean = true,
 ) : TypeMatcher {
-  override fun validate(attributeType: AttributeType) {
-    if (attributeType != AttributeType.DATE) {
-      throw AttributeSearchException("Attribute $attribute is not a date attribute")
-    }
-
+  override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
     }

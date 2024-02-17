@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeType
 
 data class IntegerMatcher(
   override val attribute: String,
@@ -10,11 +9,7 @@ data class IntegerMatcher(
   val maxValue: Int? = null,
   val maxInclusive: Boolean = true,
 ) : TypeMatcher {
-  override fun validate(attributeType: AttributeType) {
-    if (attributeType != AttributeType.INTEGER) {
-      throw AttributeSearchException("Attribute $attribute is not an integer attribute")
-    }
-
+  override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
     }

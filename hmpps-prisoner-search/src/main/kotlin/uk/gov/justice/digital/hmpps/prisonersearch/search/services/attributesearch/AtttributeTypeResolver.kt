@@ -1,9 +1,19 @@
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
-fun getAttributes(kClass: KClass<*>): Map<String, AttributeType> {
+@Configuration
+class AttributeTypeResolver {
+  @Bean
+  fun attributes(): Attributes = getAttributes(Prisoner::class)
+}
+
+internal fun getAttributes(kClass: KClass<*>): Attributes {
   val map = mutableMapOf<String, AttributeType>()
   kClass.memberProperties.forEach { prop ->
     findTypes(prop, map)
@@ -17,7 +27,7 @@ private fun findTypes(
   prefix: String = "",
 ) {
   when (getPropertyType(prop)) {
-    PropertyType.SIMPLE -> map["${prefix}${prop.name}"] = AttributeType.findType(getPropertyClass(prop))
+    PropertyType.SIMPLE -> map["${prefix}${prop.name}"] = AttributeType.findByClass(getPropertyClass(prop))
     PropertyType.LIST -> {
       getGenericTypeClass(prop).memberProperties
         .forEach { childProp -> findTypes(childProp, map, "${prefix}${prop.name}.") }
