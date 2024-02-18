@@ -6,7 +6,7 @@ data class StringMatcher(
   override val attribute: String,
   val condition: TextCondition,
   val searchTerm: String,
-) : TypeMatcher {
+) : TypeMatcher<String> {
   override fun validate() {
     if (searchTerm.isBlank()) {
       throw AttributeSearchException("Attribute $attribute must not have a blank search term")

@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 
-data class IntegerMatcher(
+data class IntMatcher(
   override val attribute: String,
   val minValue: Int? = null,
   val minInclusive: Boolean = true,
   val maxValue: Int? = null,
   val maxInclusive: Boolean = true,
-) : TypeMatcher {
+) : TypeMatcher<Int> {
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")

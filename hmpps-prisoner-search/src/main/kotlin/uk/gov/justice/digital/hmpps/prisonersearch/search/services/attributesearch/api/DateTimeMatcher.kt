@@ -7,7 +7,7 @@ data class DateTimeMatcher(
   override val attribute: String,
   val minValue: LocalDateTime? = null,
   val maxValue: LocalDateTime? = null,
-) : TypeMatcher {
+) : TypeMatcher<LocalDateTime> {
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")

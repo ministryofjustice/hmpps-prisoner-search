@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
-import getAttributes
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,7 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntegerMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
@@ -34,12 +33,13 @@ class AttributeSearchServiceTest {
             children = listOf(
               Matchers(JoinType.AND),
             ),
+
           ),
         ),
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("empty")
       }
@@ -64,7 +64,7 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("empty")
       }
@@ -89,7 +89,7 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("firstName").contains("blank")
       }
@@ -117,7 +117,7 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("firstName").contains("blank")
       }
@@ -140,7 +140,7 @@ class AttributeSearchServiceTest {
       )
 
       assertDoesNotThrow {
-        service.validate(request)
+        service.search(request)
       }
     }
 
@@ -158,7 +158,7 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("unknownAttribute")
       }
@@ -178,7 +178,7 @@ class AttributeSearchServiceTest {
       )
 
       assertDoesNotThrow {
-        service.validate(request)
+        service.search(request)
       }
     }
 
@@ -196,7 +196,7 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("aliases.unknown")
       }
@@ -216,7 +216,7 @@ class AttributeSearchServiceTest {
       )
 
       assertDoesNotThrow {
-        service.validate(request)
+        service.search(request)
       }
     }
 
@@ -234,7 +234,7 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
         assertThat(it.message).contains("currentIncentive.level.unknown")
       }
@@ -257,9 +257,9 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
-        assertThat(it.message).contains("heightCentimetres").contains("STRING")
+        assertThat(it.message).contains("heightCentimetres").contains("String")
       }
     }
 
@@ -277,9 +277,9 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
-        assertThat(it.message).contains("firstName").contains("BOOLEAN")
+        assertThat(it.message).contains("firstName").contains("Boolean")
       }
     }
 
@@ -289,17 +289,17 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            integerMatchers = listOf(
-              IntegerMatcher("firstName", minValue = 150),
+            intMatchers = listOf(
+              IntMatcher("firstName", minValue = 150),
             ),
           ),
         ),
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
-        assertThat(it.message).contains("firstName").contains("INTEGER")
+        assertThat(it.message).contains("firstName").contains("Int")
       }
     }
 
@@ -318,9 +318,9 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
-        assertThat(it.message).contains("firstName").contains("DATE")
+        assertThat(it.message).contains("firstName").contains("LocalDate")
       }
     }
 
@@ -339,9 +339,9 @@ class AttributeSearchServiceTest {
       )
 
       assertThrows<AttributeSearchException> {
-        service.validate(request)
+        service.search(request)
       }.also {
-        assertThat(it.message).contains("firstName").contains("DATE_TIME")
+        assertThat(it.message).contains("firstName").contains("LocalDateTime")
       }
     }
   }

@@ -3,4 +3,4 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 data class BooleanMatcher(
   override val attribute: String,
   val condition: Boolean,
-) : TypeMatcher
+) : TypeMatcher<Boolean>

@@ -9,7 +9,7 @@ import org.springframework.boot.test.autoconfigure.json.JsonTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntegerMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
@@ -329,10 +329,10 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                      "searchTerm": "John"
                    }
                  ],
-                 "integerMatchers": [
+                 "intMatchers": [
                    {
                      "attribute": "heightCentimetres",
-                     "minValue": 150 
+                     "minValue": 150
                    }
                  ]
                }
@@ -353,8 +353,8 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 searchTerm = "John",
               ),
             ),
-            integerMatchers = listOf(
-              IntegerMatcher(
+            intMatchers = listOf(
+              IntMatcher(
                 attribute = "heightCentimetres",
                 minValue = 150,
                 minInclusive = true,
@@ -380,7 +380,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                      "searchTerm": "John"
                    }
                  ],
-                 "integerMatchers": [
+                 "intMatchers": [
                    {
                      "attribute": "shoeSize",
                      "minValue": 11,
@@ -405,8 +405,8 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 searchTerm = "John",
               ),
             ),
-            integerMatchers = listOf(
-              IntegerMatcher(
+            intMatchers = listOf(
+              IntMatcher(
                 attribute = "shoeSize",
                 minValue = 11,
                 minInclusive = true,

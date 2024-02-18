@@ -9,7 +9,7 @@ data class DateMatcher(
   val minInclusive: Boolean = true,
   val maxValue: LocalDate? = null,
   val maxInclusive: Boolean = true,
-) : TypeMatcher {
+) : TypeMatcher<LocalDate> {
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
