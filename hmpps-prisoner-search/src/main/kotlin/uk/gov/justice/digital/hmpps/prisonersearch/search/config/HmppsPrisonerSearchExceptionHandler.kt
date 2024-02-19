@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -70,6 +71,18 @@ class HmppsPrisonerSearchExceptionHandler {
           developerMessage = e.message,
         ),
       ).also { log.info("Validation exception: {}", e.message) }
+
+  @ExceptionHandler(HttpMessageNotReadableException::class)
+  fun handleValidationException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> =
+    ResponseEntity
+      .status(BAD_REQUEST)
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST,
+          userMessage = "Failed to parse request: ${e.message}",
+          developerMessage = e.message,
+        ),
+      ).also { log.info("Failed to parse request: {}", e.message) }
 
   @ExceptionHandler(ResponseStatusException::class)
   fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse?>? =
