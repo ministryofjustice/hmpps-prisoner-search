@@ -17,31 +17,24 @@ class AttributeResolver {
   fun attributes(): Attributes = getAttributes(Prisoner::class)
 }
 
-internal fun getAttributes(kClass: KClass<*>): Attributes {
-  val map = mutableMapOf<String, KClass<*>>()
-  kClass.memberProperties.forEach { prop ->
-    findTypes(prop, map)
-  }
-  return map.toMap()
-}
+internal fun getAttributes(kClass: KClass<*>): Attributes =
+  kClass.memberProperties.flatMap { prop -> findTypes(prop) }.toMap()
 
 private fun findTypes(
   prop: KProperty1<*, *>,
-  map: MutableMap<String, KClass<*>>,
   prefix: String = "",
-) {
+): List<Pair<String, KClass<*>>> =
   when (getPropertyType(prop)) {
-    PropertyType.SIMPLE -> map["${prefix}${prop.name}"] = getPropertyClass(prop)
+    PropertyType.SIMPLE -> listOf("${prefix}${prop.name}" to getPropertyClass(prop))
     PropertyType.LIST -> {
       getGenericTypeClass(prop).memberProperties
-        .forEach { childProp -> findTypes(childProp, map, "${prefix}${prop.name}.") }
+        .flatMap { childProp -> findTypes(childProp, "${prefix}${prop.name}.") }
     }
     PropertyType.COMPLEX -> {
       getPropertyClass(prop).memberProperties
-        .forEach { childProp -> findTypes(childProp, map, "${prefix}${prop.name}.") }
+        .flatMap { childProp -> findTypes(childProp, "${prefix}${prop.name}.") }
     }
   }
-}
 
 private fun getGenericTypeClass(prop: KProperty1<*, *>) = prop.returnType.genericType()
 
