@@ -1,8 +1,18 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(
+  JsonSubTypes.Type(value = BooleanMatcher::class, name = "Boolean"),
+  JsonSubTypes.Type(value = DateMatcher::class, name = "Date"),
+  JsonSubTypes.Type(value = DateTimeMatcher::class, name = "DateTime"),
+  JsonSubTypes.Type(value = IntMatcher::class, name = "Int"),
+  JsonSubTypes.Type(value = StringMatcher::class, name = "String"),
+)
 sealed interface TypeMatcher<S> {
   val attribute: String
   fun validate() {}

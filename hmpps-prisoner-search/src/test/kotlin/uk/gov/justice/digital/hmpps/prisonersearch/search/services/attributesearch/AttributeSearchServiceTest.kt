@@ -79,7 +79,7 @@ class AttributeSearchServiceTest {
             children = listOf(
               Matchers(
                 JoinType.AND,
-                stringMatchers = listOf(
+                matchers = listOf(
                   StringMatcher("firstName", TextCondition.IS, ""),
                 ),
               ),
@@ -107,7 +107,7 @@ class AttributeSearchServiceTest {
                 children = listOf(
                   Matchers(
                     JoinType.AND,
-                    stringMatchers = listOf(StringMatcher("firstName", TextCondition.IS, "")),
+                    matchers = listOf(StringMatcher("firstName", TextCondition.IS, "")),
                   ),
                 ),
               ),
@@ -132,7 +132,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("firstName", TextCondition.IS, "value"),
             ),
           ),
@@ -150,7 +150,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("unknownAttribute", TextCondition.IS, "value"),
             ),
           ),
@@ -170,7 +170,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("aliases.firstName", TextCondition.IS, "value"),
             ),
           ),
@@ -188,7 +188,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("aliases.unknown", TextCondition.IS, "value"),
             ),
           ),
@@ -208,7 +208,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("currentIncentive.level.code", TextCondition.IS, "value"),
             ),
           ),
@@ -226,7 +226,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("currentIncentive.level.unknown", TextCondition.IS, "value"),
             ),
           ),
@@ -249,7 +249,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher("heightCentimetres", TextCondition.IS, "value"),
             ),
           ),
@@ -269,7 +269,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            booleanMatchers = listOf(
+            matchers = listOf(
               BooleanMatcher("firstName", true),
             ),
           ),
@@ -289,7 +289,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            intMatchers = listOf(
+            matchers = listOf(
               IntMatcher("firstName", minValue = 150),
             ),
           ),
@@ -310,7 +310,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            dateMatchers = listOf(
+            matchers = listOf(
               DateMatcher("firstName", minValue = today),
             ),
           ),
@@ -331,7 +331,7 @@ class AttributeSearchServiceTest {
         listOf(
           Matchers(
             JoinType.AND,
-            dateTimeMatchers = listOf(
+            matchers = listOf(
               DateTimeMatcher("firstName", minValue = now.minusDays(7)),
             ),
           ),

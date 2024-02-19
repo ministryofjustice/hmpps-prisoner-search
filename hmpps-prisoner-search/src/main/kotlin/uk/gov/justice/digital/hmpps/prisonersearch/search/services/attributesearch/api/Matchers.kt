@@ -4,11 +4,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 
 data class Matchers(
   val joinType: JoinType,
-  val stringMatchers: List<StringMatcher>? = null,
-  val booleanMatchers: List<BooleanMatcher>? = null,
-  val intMatchers: List<IntMatcher>? = null,
-  val dateMatchers: List<DateMatcher>? = null,
-  val dateTimeMatchers: List<DateTimeMatcher>? = null,
+  val matchers: List<TypeMatcher<*>>? = null,
   val children: List<Matchers>? = null,
 ) {
   fun validate() {
@@ -18,8 +14,9 @@ data class Matchers(
   }
 
   fun typeMatchers(): List<TypeMatcher<*>> =
-    listOfNotNull(stringMatchers, booleanMatchers, intMatchers, dateMatchers, dateTimeMatchers)
-      .flatten()
+//    listOfNotNull(stringMatchers, booleanMatchers, intMatchers, dateMatchers, dateTimeMatchers)
+//      .flatten()
+    matchers ?: emptyList()
 }
 
 fun List<Matchers>.getAllMatchers(): List<Matchers> {

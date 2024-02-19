@@ -39,7 +39,7 @@ class AttributeSearchRequestTest {
       listOf(
         Matchers(
           JoinType.AND,
-          stringMatchers = listOf(StringMatcher("missingAttribute", TextCondition.IS, "value")),
+          matchers = listOf(StringMatcher("missingAttribute", TextCondition.IS, "value")),
         ),
       ),
     )

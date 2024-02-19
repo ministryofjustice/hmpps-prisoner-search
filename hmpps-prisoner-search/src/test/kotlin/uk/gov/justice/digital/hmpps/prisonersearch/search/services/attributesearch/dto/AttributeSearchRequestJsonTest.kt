@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.json.JsonTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
@@ -26,8 +27,9 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
             "matchers": [
               {
                 "joinType": "AND",
-                "stringMatchers": [
+                "matchers": [
                   {
+                    "type": "String",
                     "attribute": "firstName",
                     "condition": "IS",
                     "searchTerm": "John"
@@ -44,7 +46,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
@@ -64,13 +66,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
             "matchers": [
               {
                 "joinType": "AND",
-                "stringMatchers": [
+                "matchers": [
                   {
+                    "type": "String",
                     "attribute": "firstName",
                     "condition": "IS",
                     "searchTerm": "John"
                   },
                   {
+                    "type": "String",
                     "attribute": "lastName",
                     "condition": "IS",
                     "searchTerm": "Smith"
@@ -87,7 +91,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
@@ -112,8 +116,9 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
             "matchers": [
               {
                 "joinType": "AND",
-                "stringMatchers": [
+                "matchers": [
                   {
+                    "type": "String",
                     "attribute": "firstName",
                     "condition": "IS",
                     "searchTerm": "John"
@@ -122,13 +127,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 "children" : [
                   {
                     "joinType": "OR",
-                    "stringMatchers": [
+                    "matchers": [
                       {
+                        "type": "String",
                         "attribute": "lastName",
                         "condition": "IS",
                         "searchTerm": "Smith"
                       },
                       {
+                        "type": "String",
                         "attribute": "lastName",
                         "condition": "IS",
                         "searchTerm": "Jones"
@@ -147,7 +154,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
@@ -157,7 +164,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
             children = listOf(
               Matchers(
                 joinType = JoinType.OR,
-                stringMatchers = listOf(
+                matchers = listOf(
                   StringMatcher(
                     attribute = "lastName",
                     condition = TextCondition.IS,
@@ -187,13 +194,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                   "children": [
                     {
                       "joinType": "AND",
-                      "stringMatchers": [
+                      "matchers": [
                         {
+                          "type": "String",
                           "attribute": "firstName",
                           "condition": "IS",
                           "searchTerm": "John"
                         },
                         {
+                          "type": "String",
                           "attribute": "lastName",
                           "condition": "IS",
                           "searchTerm": "Smith"
@@ -202,13 +211,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                     },
                     {
                       "joinType": "AND",
-                      "stringMatchers": [
+                      "matchers": [
                         {
+                          "type": "String",
                           "attribute": "firstName",
                           "condition": "IS",
                           "searchTerm": "Jack"
                         },
                         {
+                          "type": "String",
                           "attribute": "lastName",
                           "condition": "IS_NOT",
                           "searchTerm": "Jones"
@@ -230,7 +241,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
             children = listOf(
               Matchers(
                 joinType = JoinType.AND,
-                stringMatchers = listOf(
+                matchers = listOf(
                   StringMatcher(
                     attribute = "firstName",
                     condition = TextCondition.IS,
@@ -245,7 +256,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
               ),
               Matchers(
                 joinType = JoinType.AND,
-                stringMatchers = listOf(
+                matchers = listOf(
                   StringMatcher(
                     attribute = "firstName",
                     condition = TextCondition.IS,
@@ -272,15 +283,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                    "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
-                   }
-                 ],
-                 "booleanMatchers": [
+                   },
                    {
+                     "type": "Boolean",
                      "attribute": "recall",
                      "condition": true
                    }
@@ -296,14 +307,12 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-            ),
-            booleanMatchers = listOf(
               BooleanMatcher(
                 attribute = "recall",
                 condition = true,
@@ -322,15 +331,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                     "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
-                   }
-                 ],
-                 "intMatchers": [
+                   },
                    {
+                     "type": "Int",
                      "attribute": "heightCentimetres",
                      "minValue": 150
                    }
@@ -346,14 +355,12 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-            ),
-            intMatchers = listOf(
               IntMatcher(
                 attribute = "heightCentimetres",
                 minValue = 150,
@@ -373,15 +380,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                     "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
-                   }
-                 ],
-                 "intMatchers": [
+                   },
                    {
+                     "type": "Int",
                      "attribute": "shoeSize",
                      "minValue": 11,
                      "maxValue": 12
@@ -398,14 +405,12 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-            ),
-            intMatchers = listOf(
               IntMatcher(
                 attribute = "shoeSize",
                 minValue = 11,
@@ -427,23 +432,24 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                     "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
-                   }
-                 ],
-                 "dateMatchers": [
+                   },
                    {
+                     "type": "Date",
                      "attribute": "receptionDate",
                      "minValue": "2023-01-01"
                    },
-                    {
-                      "attribute": "releaseDate",
-                      "maxValue": "2024-01-01",
-                      "maxInclusive": false
-                    }
+                   {
+                     "type": "Date",
+                     "attribute": "releaseDate",
+                     "maxValue": "2024-01-01",
+                     "maxInclusive": false
+                   }
                  ]
                }
              ]
@@ -456,14 +462,12 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-            ),
-            dateMatchers = listOf(
               DateMatcher(
                 attribute = "receptionDate",
                 minValue = LocalDate.parse("2023-01-01"),
@@ -481,21 +485,69 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
   }
 
   @Test
+  fun `firstName is John AND currentIncentive dateTime after 2023-01-01`() {
+    val request = objectMapper.readValue<AttributeSearchRequest>(
+      """{
+             "matchers": [
+               {
+                 "joinType": "AND",
+                 "matchers": [
+                   {
+                     "type": "String",
+                     "attribute": "firstName",
+                     "condition": "IS",
+                     "searchTerm": "John"
+                   },
+                   {
+                     "type": "DateTime",
+                     "attribute": "currentIncentive.dateTime",
+                     "minValue": "2023-01-01T00:00:00"
+                   }
+                 ]
+               }
+             ]
+          }
+      """.trimIndent(),
+    )
+
+    assertThat(request).isEqualTo(
+      AttributeSearchRequest(
+        matchers = listOf(
+          Matchers(
+            joinType = JoinType.AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = TextCondition.IS,
+                searchTerm = "John",
+              ),
+              DateTimeMatcher(
+                attribute = "currentIncentive.dateTime",
+                minValue = LocalDate.parse("2023-01-01").atStartOfDay(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+  }
+
+  @Test
   fun `firstName is John AND receptionDate is 2023-01-01`() {
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """{
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                     "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
-                   }
-                 ],
-                 "dateMatchers": [
+                   },
                    {
+                     "type": "Date",
                      "attribute": "receptionDate",
                      "minValue": "2023-01-01",
                      "maxValue": "2023-01-01"
@@ -512,14 +564,12 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-            ),
-            dateMatchers = listOf(
               DateMatcher(
                 attribute = "receptionDate",
                 minValue = LocalDate.parse("2023-01-01"),
@@ -541,18 +591,21 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                     "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
                    },
                    {
+                     "type": "String",
                      "attribute": "tattoos.bodyPart",
                      "condition": "IS",
                      "searchTerm": "shoulder"
                    },
                    {
+                     "type": "String",
                      "attribute": "tattoos.comment",
                      "condition": "CONTAINS",
                      "searchTerm": "dragon"
@@ -569,7 +622,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
@@ -599,8 +652,9 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
              "matchers": [
                {
                  "joinType": "AND",
-                 "stringMatchers": [
+                 "matchers": [
                    {
+                     "type": "String",
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
@@ -609,13 +663,15 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                  "children" : [
                    {
                      "joinType": "OR",
-                     "stringMatchers": [
+                     "matchers": [
                        {
+                         "type": "String",
                          "attribute": "scars.bodyPart",
                          "condition": "IS",
                          "searchTerm": "face"
                        },
                        {
+                         "type": "String",
                          "attribute": "scars.bodyPart",
                          "condition": "IS",
                          "searchTerm": "head"
@@ -634,7 +690,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
         matchers = listOf(
           Matchers(
             joinType = JoinType.AND,
-            stringMatchers = listOf(
+            matchers = listOf(
               StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
@@ -644,7 +700,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
             children = listOf(
               Matchers(
                 joinType = JoinType.OR,
-                stringMatchers = listOf(
+                matchers = listOf(
                   StringMatcher(
                     attribute = "scars.bodyPart",
                     condition = TextCondition.IS,
