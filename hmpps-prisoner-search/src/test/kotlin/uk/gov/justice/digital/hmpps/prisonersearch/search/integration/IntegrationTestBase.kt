@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
 import java.time.Duration
 
 @ExtendWith(HmppsAuthApiExtension::class)
@@ -24,6 +25,9 @@ abstract class IntegrationTestBase {
 
   @SpyBean
   lateinit var telemetryClient: TelemetryClient
+
+  @SpyBean
+  lateinit var attributeSearchService: AttributeSearchService
 
   @Autowired
   lateinit var gson: Gson
