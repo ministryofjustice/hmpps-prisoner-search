@@ -21,7 +21,7 @@ class DateMatcherTest {
     assertThrows<AttributeSearchException> {
       matcher.validate()
     }.also {
-      assertThat(it.message).contains("releaseDate").contains("must have at least 1 min or max value")
+      assertThat(it.message).contains("releaseDate").contains("must have a min or max value")
     }
   }
 

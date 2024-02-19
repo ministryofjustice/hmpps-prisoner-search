@@ -12,7 +12,7 @@ data class DateMatcher(
 ) : TypeMatcher<LocalDate> {
   override fun validate() {
     if (minValue == null && maxValue == null) {
-      throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
+      throw AttributeSearchException("Attribute $attribute must have a min or max value")
     }
 
     if (minValue != null && maxValue != null) {

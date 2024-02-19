@@ -4,41 +4,31 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 
 data class Matchers(
   val joinType: JoinType,
-  val stringMatchers: List<StringMatcher>? = null,
-  val booleanMatchers: List<BooleanMatcher>? = null,
-  val intMatchers: List<IntMatcher>? = null,
-  val dateMatchers: List<DateMatcher>? = null,
-  val dateTimeMatchers: List<DateTimeMatcher>? = null,
+  val matchers: List<TypeMatcher<*>>? = null,
   val children: List<Matchers>? = null,
 ) {
   fun validate() {
-    if (typeMatchers().isEmpty() && children.isNullOrEmpty()) {
+    if (matchers.isNullOrEmpty() && children.isNullOrEmpty()) {
       throw AttributeSearchException("Matchers must not be empty")
     }
   }
-
-  fun typeMatchers(): List<TypeMatcher<*>> =
-    listOfNotNull(stringMatchers, booleanMatchers, intMatchers, dateMatchers, dateTimeMatchers)
-      .flatten()
 }
 
-fun List<Matchers>.getAllMatchers(): List<Matchers> {
-  val allMatchers = mutableListOf<Matchers>()
-  forEach {
-    allMatchers.add(it)
-    it.children?.also { children -> allMatchers.addAll(children.getAllMatchers()) }
-  }
-  return allMatchers
-}
+fun List<Matchers>.getAllMatchers(): List<Matchers> =
+  fold<Matchers, MutableList<Matchers>>(mutableListOf()) { allMatchers, matcher ->
+    allMatchers.apply {
+      add(matcher)
+      addAll(matcher.children?.getAllMatchers() ?: emptyList())
+    }
+  }.toList()
 
-fun List<Matchers>.getAllTypeMatchers(): List<TypeMatcher<*>> {
-  val allMatchers = mutableListOf<TypeMatcher<*>>()
-  forEach {
-    allMatchers.addAll(it.typeMatchers())
-    it.children?.also { children -> allMatchers.addAll(children.getAllTypeMatchers()) }
-  }
-  return allMatchers
-}
+fun List<Matchers>.getAllTypeMatchers(): List<TypeMatcher<*>> =
+  fold<Matchers, MutableList<TypeMatcher<*>>>(mutableListOf()) { allTypeMatchers, matcher ->
+    allTypeMatchers.apply {
+      addAll(matcher.matchers ?: emptyList())
+      addAll(matcher.children?.getAllTypeMatchers() ?: emptyList())
+    }
+  }.toList()
 
 enum class JoinType {
   AND,
