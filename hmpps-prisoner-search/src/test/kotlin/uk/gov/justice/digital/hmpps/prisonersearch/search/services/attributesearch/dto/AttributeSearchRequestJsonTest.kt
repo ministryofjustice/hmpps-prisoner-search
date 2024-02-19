@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto
+package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.dto
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -6,10 +6,18 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TextCondition
 import java.time.LocalDate
 
 @JsonTest
-class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
+class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) {
 
   @Test
   fun `firstName is John`() {
@@ -18,7 +26,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
             "matchers": [
               {
                 "joinType": "AND",
-                "textMatchers": [
+                "stringMatchers": [
                   {
                     "attribute": "firstName",
                     "condition": "IS",
@@ -34,10 +42,10 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
@@ -56,7 +64,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
             "matchers": [
               {
                 "joinType": "AND",
-                "textMatchers": [
+                "stringMatchers": [
                   {
                     "attribute": "firstName",
                     "condition": "IS",
@@ -77,15 +85,15 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-              TextMatcher(
+              StringMatcher(
                 attribute = "lastName",
                 condition = TextCondition.IS,
                 searchTerm = "Smith",
@@ -104,7 +112,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
             "matchers": [
               {
                 "joinType": "AND",
-                "textMatchers": [
+                "stringMatchers": [
                   {
                     "attribute": "firstName",
                     "condition": "IS",
@@ -114,7 +122,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                 "children" : [
                   {
                     "joinType": "OR",
-                    "textMatchers": [
+                    "stringMatchers": [
                       {
                         "attribute": "lastName",
                         "condition": "IS",
@@ -137,25 +145,25 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
             ),
             children = listOf(
-              Matcher(
+              Matchers(
                 joinType = JoinType.OR,
-                textMatchers = listOf(
-                  TextMatcher(
+                stringMatchers = listOf(
+                  StringMatcher(
                     attribute = "lastName",
                     condition = TextCondition.IS,
                     searchTerm = "Smith",
                   ),
-                  TextMatcher(
+                  StringMatcher(
                     attribute = "lastName",
                     condition = TextCondition.IS,
                     searchTerm = "Jones",
@@ -179,7 +187,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                   "children": [
                     {
                       "joinType": "AND",
-                      "textMatchers": [
+                      "stringMatchers": [
                         {
                           "attribute": "firstName",
                           "condition": "IS",
@@ -194,7 +202,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                     },
                     {
                       "joinType": "AND",
-                      "textMatchers": [
+                      "stringMatchers": [
                         {
                           "attribute": "firstName",
                           "condition": "IS",
@@ -217,33 +225,33 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.OR,
             children = listOf(
-              Matcher(
+              Matchers(
                 joinType = JoinType.AND,
-                textMatchers = listOf(
-                  TextMatcher(
+                stringMatchers = listOf(
+                  StringMatcher(
                     attribute = "firstName",
                     condition = TextCondition.IS,
                     searchTerm = "John",
                   ),
-                  TextMatcher(
+                  StringMatcher(
                     attribute = "lastName",
                     condition = TextCondition.IS,
                     searchTerm = "Smith",
                   ),
                 ),
               ),
-              Matcher(
+              Matchers(
                 joinType = JoinType.AND,
-                textMatchers = listOf(
-                  TextMatcher(
+                stringMatchers = listOf(
+                  StringMatcher(
                     attribute = "firstName",
                     condition = TextCondition.IS,
                     searchTerm = "Jack",
                   ),
-                  TextMatcher(
+                  StringMatcher(
                     attribute = "lastName",
                     condition = TextCondition.IS_NOT,
                     searchTerm = "Jones",
@@ -264,7 +272,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
@@ -286,10 +294,10 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
@@ -314,17 +322,17 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
                    }
                  ],
-                 "integerMatchers": [
+                 "intMatchers": [
                    {
                      "attribute": "heightCentimetres",
-                     "minValue": 150 
+                     "minValue": 150
                    }
                  ]
                }
@@ -336,17 +344,17 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
             ),
-            integerMatchers = listOf(
-              IntegerMatcher(
+            intMatchers = listOf(
+              IntMatcher(
                 attribute = "heightCentimetres",
                 minValue = 150,
                 minInclusive = true,
@@ -365,14 +373,14 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
                      "searchTerm": "John"
                    }
                  ],
-                 "integerMatchers": [
+                 "intMatchers": [
                    {
                      "attribute": "shoeSize",
                      "minValue": 11,
@@ -388,17 +396,17 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
             ),
-            integerMatchers = listOf(
-              IntegerMatcher(
+            intMatchers = listOf(
+              IntMatcher(
                 attribute = "shoeSize",
                 minValue = 11,
                 minInclusive = true,
@@ -419,7 +427,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
@@ -446,10 +454,10 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
@@ -479,7 +487,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
@@ -502,10 +510,10 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
@@ -533,7 +541,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
@@ -559,20 +567,20 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
-              TextMatcher(
+              StringMatcher(
                 attribute = "tattoos.bodyPart",
                 condition = TextCondition.IS,
                 searchTerm = "shoulder",
               ),
-              TextMatcher(
+              StringMatcher(
                 attribute = "tattoos.comment",
                 condition = TextCondition.CONTAINS,
                 searchTerm = "dragon",
@@ -591,7 +599,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
              "matchers": [
                {
                  "joinType": "AND",
-                 "textMatchers": [
+                 "stringMatchers": [
                    {
                      "attribute": "firstName",
                      "condition": "IS",
@@ -601,7 +609,7 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
                  "children" : [
                    {
                      "joinType": "OR",
-                     "textMatchers": [
+                     "stringMatchers": [
                        {
                          "attribute": "scars.bodyPart",
                          "condition": "IS",
@@ -624,25 +632,25 @@ class AttributeSearchRequestTest(@Autowired val objectMapper: ObjectMapper) {
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
         matchers = listOf(
-          Matcher(
+          Matchers(
             joinType = JoinType.AND,
-            textMatchers = listOf(
-              TextMatcher(
+            stringMatchers = listOf(
+              StringMatcher(
                 attribute = "firstName",
                 condition = TextCondition.IS,
                 searchTerm = "John",
               ),
             ),
             children = listOf(
-              Matcher(
+              Matchers(
                 joinType = JoinType.OR,
-                textMatchers = listOf(
-                  TextMatcher(
+                stringMatchers = listOf(
+                  StringMatcher(
                     attribute = "scars.bodyPart",
                     condition = TextCondition.IS,
                     searchTerm = "face",
                   ),
-                  TextMatcher(
+                  StringMatcher(
                     attribute = "scars.bodyPart",
                     condition = TextCondition.IS,
                     searchTerm = "head",
