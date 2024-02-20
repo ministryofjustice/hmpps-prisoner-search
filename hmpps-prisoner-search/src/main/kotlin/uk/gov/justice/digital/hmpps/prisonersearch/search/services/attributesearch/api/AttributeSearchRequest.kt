@@ -4,14 +4,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 
 data class AttributeSearchRequest(
-  val matchers: List<Matchers>,
+  val queries: List<Query>,
 ) {
   fun validate(attributes: Attributes) {
-    if (matchers.isEmpty()) {
+    if (queries.isEmpty()) {
       throw AttributeSearchException("At least one matcher must be provided")
     }
-    matchers.getAllMatchers().forEach { it.validate() }
-    matchers.getAllTypeMatchers()
+    queries.getAllQueries().forEach { it.validate() }
+    queries.getAllTypeMatchers()
       .forEach {
         it.validateType(attributes)
         it.validate()
