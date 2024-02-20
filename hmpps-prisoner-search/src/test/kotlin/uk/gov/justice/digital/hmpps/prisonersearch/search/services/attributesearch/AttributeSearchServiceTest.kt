@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matchers
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Query
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TextCondition
 import java.time.LocalDate
@@ -23,15 +23,15 @@ class AttributeSearchServiceTest {
   private val service = AttributeSearchService(getAttributes(Prisoner::class))
 
   @Nested
-  inner class Matchers {
+  inner class Query {
     @Test
-    fun `should not allow child matchers with no contents`() {
+    fun `should not allow subQueries with no contents`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
-            children = listOf(
-              Matchers(JoinType.AND),
+            subQueries = listOf(
+              Query(JoinType.AND),
             ),
 
           ),
@@ -46,16 +46,16 @@ class AttributeSearchServiceTest {
     }
 
     @Test
-    fun `should not allow deep nested child matchers with no contents`() {
+    fun `should not allow deep nested subQueries with no contents`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
-            children = listOf(
-              Matchers(
+            subQueries = listOf(
+              Query(
                 JoinType.AND,
-                children = listOf(
-                  Matchers(JoinType.AND),
+                subQueries = listOf(
+                  Query(JoinType.AND),
                 ),
               ),
             ),
@@ -74,10 +74,10 @@ class AttributeSearchServiceTest {
     fun `should validate attributes in nested matchers`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
-            children = listOf(
-              Matchers(
+            subQueries = listOf(
+              Query(
                 JoinType.AND,
                 matchers = listOf(
                   StringMatcher("firstName", TextCondition.IS, ""),
@@ -99,13 +99,13 @@ class AttributeSearchServiceTest {
     fun `should validate attributes from a deep nested matcher`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
-            children = listOf(
-              Matchers(
+            subQueries = listOf(
+              Query(
                 JoinType.AND,
-                children = listOf(
-                  Matchers(
+                subQueries = listOf(
+                  Query(
                     JoinType.AND,
                     matchers = listOf(StringMatcher("firstName", TextCondition.IS, "")),
                   ),
@@ -130,7 +130,7 @@ class AttributeSearchServiceTest {
     fun `should allow simple attribute`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("firstName", TextCondition.IS, "value"),
@@ -148,7 +148,7 @@ class AttributeSearchServiceTest {
     fun `should not allow unknown attributes`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("unknownAttribute", TextCondition.IS, "value"),
@@ -168,7 +168,7 @@ class AttributeSearchServiceTest {
     fun `should allow attributes in lists of objects`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("aliases.firstName", TextCondition.IS, "value"),
@@ -186,7 +186,7 @@ class AttributeSearchServiceTest {
     fun `should not allow attributes from lists that don't exist`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("aliases.unknown", TextCondition.IS, "value"),
@@ -206,7 +206,7 @@ class AttributeSearchServiceTest {
     fun `should allow attributes in nested objects`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("currentIncentive.level.code", TextCondition.IS, "value"),
@@ -224,7 +224,7 @@ class AttributeSearchServiceTest {
     fun `should not allow attributes from nested objects that don't exist`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("currentIncentive.level.unknown", TextCondition.IS, "value"),
@@ -247,7 +247,7 @@ class AttributeSearchServiceTest {
     fun `should not allow a String matcher for non-string attributes`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               StringMatcher("heightCentimetres", TextCondition.IS, "value"),
@@ -267,7 +267,7 @@ class AttributeSearchServiceTest {
     fun `should not allow a Boolean matcher for non-boolean attributes`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               BooleanMatcher("firstName", true),
@@ -287,7 +287,7 @@ class AttributeSearchServiceTest {
     fun `should not allow an Integer matcher for non-integer attributes`() {
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               IntMatcher("firstName", minValue = 150),
@@ -308,7 +308,7 @@ class AttributeSearchServiceTest {
       val today = LocalDate.now()
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               DateMatcher("firstName", minValue = today),
@@ -329,7 +329,7 @@ class AttributeSearchServiceTest {
       val now = LocalDateTime.now()
       val request = AttributeSearchRequest(
         listOf(
-          Matchers(
+          Query(
             JoinType.AND,
             matchers = listOf(
               DateTimeMatcher("firstName", minValue = now.minusDays(7)),

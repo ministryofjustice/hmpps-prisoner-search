@@ -25,7 +25,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       }
     """.trimIndent(),
   ) = """{
-    "matchers": [
+    "queries": [
       {
         "joinType": "AND",
         "matchers": [$matchers]
@@ -195,7 +195,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("true")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("true")
           },
         )
       }
@@ -208,7 +208,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$today")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$today")
           },
         )
       }
@@ -221,7 +221,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$now")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$now")
           },
         )
       }
@@ -234,7 +234,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("1234")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("1234")
           },
         )
       }
@@ -291,7 +291,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as BooleanMatcher).condition).isTrue()
+            assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isTrue()
           },
         )
       }
@@ -322,7 +322,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as BooleanMatcher).condition).isTrue()
+            assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isTrue()
           },
         )
       }
@@ -335,7 +335,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as BooleanMatcher).condition).isFalse()
+            assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isFalse()
           },
         )
       }
@@ -414,7 +414,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as DateMatcher).minValue?.year).isEqualTo(1970)
+            assertThat((it.queries.first().matchers?.first() as DateMatcher).minValue?.year).isEqualTo(1970)
           },
         )
       }
@@ -427,7 +427,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as DateMatcher).maxValue).isEqualTo(now.toLocalDate())
+            assertThat((it.queries.first().matchers?.first() as DateMatcher).maxValue).isEqualTo(now.toLocalDate())
           },
         )
       }
@@ -626,7 +626,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.matchers.first().matchers?.first() as IntMatcher).minValue).isEqualTo(140)
+            assertThat((it.queries.first().matchers?.first() as IntMatcher).minValue).isEqualTo(140)
           },
         )
       }
