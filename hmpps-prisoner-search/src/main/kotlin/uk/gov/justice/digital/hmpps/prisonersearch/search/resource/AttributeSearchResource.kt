@@ -58,7 +58,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       <br/>
       <pre>
       {
-        "queries": [
+        "query":
           {
             "joinType"" "AND",
             "matchers": [
@@ -76,7 +76,6 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
               }
             ],
           }
-        ]
       }
       </pre>
       <h4>Search for all prisoners received since 1st Jan 2024 with a dragon tattoo on either their arm or shoulder</h4>
@@ -87,7 +86,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       <br/>
       <pre>
       {
-        "queries": [
+        "query":
           {
             "joinType"" "AND",
             "matchers": [
@@ -137,7 +136,6 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
                   }
                 ]    
               }
-            ]
           }
         ]
       }
