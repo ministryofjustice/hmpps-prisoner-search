@@ -14,6 +14,7 @@ import kotlin.reflect.KType
   JsonSubTypes.Type(value = StringMatcher::class, name = "String"),
 )
 sealed interface TypeMatcher<S> {
+  val type: String
   val attribute: String
   fun validate() {}
   fun genericType(): KClass<*> = this::class.genericType()

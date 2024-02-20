@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 
@@ -10,9 +11,9 @@ class AttributeSearchService(
   private val attributes: Attributes,
 ) {
 
-  fun search(request: AttributeSearchRequest) {
+  fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.unpaged()) {
     request.validate(attributes)
-    log.info("searchByAttributes called with request: $request")
+    log.info("searchByAttributes called with request: $request, pageable: $pageable")
   }
 
   private companion object {
