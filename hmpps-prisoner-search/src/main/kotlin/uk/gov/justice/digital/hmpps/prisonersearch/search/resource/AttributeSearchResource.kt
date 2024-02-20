@@ -34,29 +34,29 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @PostMapping
   @Tag(name = "Attribute search")
   @Operation(
-    summary = "WIP - DO NOT USE!!! Search for prisoners by attributes",
-    description = """This endpoint allows you to create queries over all attributes from the [Prisoner] record. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
-      
-      The request contains a query to search on one or more attributes using a list of matchers. For example attribute "lastName""
-      requires a [StringMatcher] so we can query on "lastName IS Smith". Other type matchers include [IntMatcher], [BooleanMatcher],
-      [DateMatcher] and [DateTimeMatcher]. We have the facility to easily create additional matchers as required, for example 
+    summary = "*** WIP - DO NOT USE!!! *** Search for prisoners by attributes",
+    description = """<p>This endpoint allows you to create queries over all attributes from the <em>Prisoner</em> record. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.</p>
+      <p>The request contains a query to search on one or more attributes using a list of matchers. For example attribute "lastName""
+      requires a <em>StringMatcher</em> so we can query on <strong>"lastName IS Smith"</strong>. Other type matchers include <em>IntMatcher</em>, <em>BooleanMatcher</em>,
+      <em>DateMatcher</em> and <em>DateTimeMatcher</em>. We have the facility to easily create additional matchers as required, for example 
       we may end up with a PNCMatcher that handles any format of PNC number.
-      
-      Each query can also contain a list of sub-queries. Each sub-query can be considered as a separate query in brackets.
+      </p>
+      <p>Each query can also contain a list of sub-queries. Each sub-query can be considered as a separate query in brackets.
       Combining multiple sub-queries gives us the ability to create complex searches using any combination of a prisoner's 
-      attributes. For example we can model queries such as "lastName IS Smith AND (prisonId IS MDI OR prisonId IS LEI)".
-      
-      To find all attributes that can be searched for please refer to the [Prisoner] record. Attributes from lists can be
-      searched for with dot notation, e.g. "attribute=aliases.firstName" or "attribute=tattoos.bodyPart". Attributes from
-      complex objects can also be searched for with dot notation, e.g. "attribute=currentIncentive.level.code".
-      
-      Example Requests:
-      
-      Search for all prisoners in Moorland with a height between 150 and 180cm
-      
-      Query: "prisonId IS "MDI" AND (heightCentimetres BETWEEN 150 AND 180)"
-      
+      attributes. For example we can model queries such as <strong>"lastName IS Smith AND (prisonId IS MDI OR prisonId IS LEI)"</strong>.
+      </p>
+      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record. Attributes from lists can be
+      searched for with dot notation, e.g. <strong>"attribute=aliases.firstName"</strong> or <strong>"attribute=tattoos.bodyPart"</strong>. 
+      Attributes from complex objects can also be searched for with dot notation, e.g. <strong>"attribute=currentIncentive.level.code"</strong>.
+      </p>
+      <h3>Example Requests</h3>
+      <h4>Search for all prisoners in Moorland with a height between 150 and 180cm</h4>
+      <br/>
+      Query: <strong>"prisonId IS "MDI" AND (heightCentimetres BETWEEN 150 AND 180)"</strong>
+      <br/>
       JSON request:
+      <br/>
+      <pre>
       {
         "queries": [
           {
@@ -78,13 +78,14 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
           }
         ]
       }
-      
-      
-      Search for all prisoners received since 1st Jan 2024 with a dragon tattoo on either their arm or shoulder
-      
-      Query: "receptionDate >= 2024-01-01 AND ((tattoos.bodyPart IS "arm" AND tattoos.comment CONTAINS "dragon" ) OR (tattoos.bodyPart IS "shoulder" AND tattoos.comment CONTAINS "dragon"))"
-      
+      </pre>
+      <h4>Search for all prisoners received since 1st Jan 2024 with a dragon tattoo on either their arm or shoulder</h4>
+      <br/>
+      Query: <strong>"receptionDate >= 2024-01-01 AND ((tattoos.bodyPart IS "arm" AND tattoos.comment CONTAINS "dragon" ) OR (tattoos.bodyPart IS "shoulder" AND tattoos.comment CONTAINS "dragon"))"</strong>
+      <br/>
       JSON request:
+      <br/>
+      <pre>
       {
         "queries": [
           {
@@ -140,7 +141,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
           }
         ]
       }
-      
+      </pre>
     """,
     security = [SecurityRequirement(name = "ROLE_GLOBAL_SEARCH"), SecurityRequirement(name = "ROLE_PRISONER_SEARCH")],
     responses = [
