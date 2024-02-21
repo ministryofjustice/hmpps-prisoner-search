@@ -667,4 +667,54 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       .bodyValue(body)
       .exchange()
   }
+
+  @Nested
+  inner class GetAttributes {
+    @Test
+    fun `should be unauthorized without valid token`() {
+      webTestClient.get()
+        .uri("/attribute-search/attributes")
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `should be forbidden without a role`() {
+      webTestClient.get()
+        .uri("/attribute-search/attributes")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation())
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `should be forbidden with wrong role`() {
+      webTestClient.get()
+        .uri("/attribute-search/attributes")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("ROLE_UNKNOWN")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `should return attributes`() {
+      webTestClient.get()
+        .uri("/attribute-search/attributes")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("$['firstName']").isEqualTo("String")
+        .jsonPath("$['recall']").isEqualTo("Boolean")
+        .jsonPath("$['heightCentimetres']").isEqualTo("Int")
+        .jsonPath("$['releaseDate']").isEqualTo("LocalDate")
+        .jsonPath("$['currentIncentive.dateTime']").isEqualTo("LocalDateTime")
+        .jsonPath("$['currentIncentive.level.code']").isEqualTo("String")
+        .jsonPath("$['aliases.firstName']").isEqualTo("String")
+    }
+  }
 }

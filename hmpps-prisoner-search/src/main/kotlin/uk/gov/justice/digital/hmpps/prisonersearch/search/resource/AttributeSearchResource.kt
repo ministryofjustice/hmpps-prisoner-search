@@ -13,6 +13,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
+
+typealias AttributeTypes = Map<String, String>
 
 @RestController
 @Validated
@@ -169,4 +172,34 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
     @ParameterObject @PageableDefault pageable: Pageable,
   ) =
     attributeSearchService.search(request, pageable)
+
+  @GetMapping("/attributes")
+  @Tag(name = "Attribute search")
+  @Operation(
+    summary = "*** WIP - DO NOT USE!!! *** Retrieve all attributes supported by the attribute search",
+    description = "Returns all attributes that can be passed into the attribute search including their type.",
+    security = [SecurityRequirement(name = "ROLE_GLOBAL_SEARCH"), SecurityRequirement(name = "ROLE_PRISONER_SEARCH")],
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Search successfully performed",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Incorrect information provided to perform an attribute search",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to this endpoint",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  fun getAttributes(): AttributeTypes = attributeSearchService.getAttributes()
 }
