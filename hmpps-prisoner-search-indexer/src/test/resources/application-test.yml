@@ -62,7 +62,7 @@ hmpps.sqs:
     publish:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
-      dlqMaxReceiveCount: 1
+      dlqMaxReceiveCount: 2
   topics:
     hmppseventtopic:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
