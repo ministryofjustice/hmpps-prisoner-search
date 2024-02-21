@@ -36,7 +36,7 @@ class DomainEventPublisherListener(
         ),
       ).build()
 
-    topicSnsClient.publish(request)
+    topicSnsClient.publish(request).join()
   }
 }
 
