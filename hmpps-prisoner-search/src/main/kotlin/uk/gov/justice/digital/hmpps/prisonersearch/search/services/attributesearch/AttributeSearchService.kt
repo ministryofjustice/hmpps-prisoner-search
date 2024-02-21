@@ -16,6 +16,10 @@ class AttributeSearchService(
     log.info("searchByAttributes called with request: $request, pageable: $pageable")
   }
 
+  fun getAttributes() = attributes.map { it.key to it.value.toString().lastWord() }.toMap()
+
+  private fun String.lastWord() = split(".").last()
+
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
