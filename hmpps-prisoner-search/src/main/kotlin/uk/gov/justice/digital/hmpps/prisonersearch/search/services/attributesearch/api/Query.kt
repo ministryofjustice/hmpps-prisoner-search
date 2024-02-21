@@ -17,6 +17,13 @@ data class Query(
       throw AttributeSearchException("Query must not be empty")
     }
   }
+
+  override fun toString(): String {
+    val matchersString = matchers?.joinToString(" ${joinType.name} ") { it.toString() } ?: ""
+    val subQueriesString = subQueries?.joinToString(" ${joinType.name} ") { "($it)" } ?: ""
+    val join = if (matchersString.isNotEmpty() && subQueriesString.isNotEmpty()) " ${joinType.name} " else ""
+    return "$matchersString$join$subQueriesString"
+  }
 }
 
 fun List<Query>.getAllQueries(): List<Query> =

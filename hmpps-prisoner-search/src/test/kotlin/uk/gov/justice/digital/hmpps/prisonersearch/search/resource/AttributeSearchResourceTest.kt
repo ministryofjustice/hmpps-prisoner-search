@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
@@ -659,13 +661,69 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
           }
       }
     }
+  }
 
-    private fun WebTestClient.attributeSearch(body: String) = post()
-      .uri("/attribute-search")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
-      .bodyValue(body)
-      .exchange()
+  @Nested
+  inner class Telemetry {
+    @Test
+    fun `should track query`() {
+      webTestClient.attributeSearch(
+        """
+        {
+          "query": {
+            "joinType": "AND",
+            "matchers": [
+              {
+                "type": "String",
+                "attribute": "firstName",
+                "condition": "IS",
+                "searchTerm": "John"
+              }
+            ]
+          }
+        }
+        """.trimIndent(),
+      )
+        .expectStatus().isOk
+
+      verify(telemetryClient).trackEvent(
+        eq("POSAttributeSearch"),
+        check {
+          assertThat(it["query"]).isEqualTo("firstName = John")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should track invalid query`() {
+      webTestClient.attributeSearch(
+        """
+        {
+          "query": {
+            "joinType": "AND",
+            "matchers": [
+              {
+                "type": "String",
+                "attribute": "heightCentimetres",
+                "condition": "IS",
+                "searchTerm": "John"
+              }
+            ]
+          }
+        }
+        """.trimIndent(),
+      )
+        .expectStatus().isBadRequest
+
+      verify(telemetryClient).trackEvent(
+        eq("POSAttributeSearch"),
+        check {
+          assertThat(it["query"]).isEqualTo("heightCentimetres = John")
+        },
+        isNull(),
+      )
+    }
   }
 
   @Nested
@@ -717,4 +775,11 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         .jsonPath("$['aliases.firstName']").isEqualTo("String")
     }
   }
+
+  private fun WebTestClient.attributeSearch(body: String) = post()
+    .uri("/attribute-search")
+    .header("Content-Type", "application/json")
+    .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+    .bodyValue(body)
+    .exchange()
 }
