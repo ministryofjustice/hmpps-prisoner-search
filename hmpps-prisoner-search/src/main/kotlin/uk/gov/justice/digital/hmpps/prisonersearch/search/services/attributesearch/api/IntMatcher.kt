@@ -43,4 +43,14 @@ data class IntMatcher(
       }
     }
   }
+
+  override fun toString() =
+    if (minValue != null && maxValue != null && minValue == maxValue) {
+      "$attribute = $minValue"
+    } else {
+      val min = minValue?.let { attribute + if (minInclusive) " >= $minValue" else " > $minValue" } ?: ""
+      val max = maxValue?.let { attribute + if (maxInclusive) " <= $maxValue" else " < $maxValue" } ?: ""
+      val join = if (minValue !== null && maxValue != null) " AND " else ""
+      if (join.isEmpty()) "$min$join$max" else "($min$join$max)"
+    }
 }

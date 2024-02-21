@@ -36,4 +36,11 @@ data class DateTimeMatcher(
       }
     }
   }
+
+  override fun toString(): String {
+    val min = minValue?.let { "$attribute > $minValue" } ?: ""
+    val max = maxValue?.let { "$attribute < $maxValue" } ?: ""
+    val join = if (minValue !== null && maxValue != null) " AND " else ""
+    return if (join.isEmpty()) "$min$join$max" else "($min$join$max)"
+  }
 }

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
+import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
@@ -9,9 +10,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 @Component
 class AttributeSearchService(
   private val attributes: Attributes,
+  private val telemetryClient: TelemetryClient,
 ) {
 
   fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.unpaged()) {
+    telemetryClient.trackEvent("POSAttributeSearch", mapOf("query" to request.query.toString()), null)
     request.validate(attributes)
     log.info("searchByAttributes called with request: $request, pageable: $pageable")
   }

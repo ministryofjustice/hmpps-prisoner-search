@@ -20,6 +20,15 @@ data class StringMatcher(
       throw AttributeSearchException("Attribute $attribute must not have a blank search term")
     }
   }
+
+  override fun toString(): String {
+    val condition = when (condition) {
+      StringCondition.IS -> "="
+      StringCondition.IS_NOT -> "!="
+      StringCondition.CONTAINS -> "CONTAINS"
+    }
+    return "$attribute $condition $searchTerm"
+  }
 }
 
 @Schema(description = "The condition to apply to the attribute")

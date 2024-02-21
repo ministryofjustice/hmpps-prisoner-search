@@ -11,4 +11,6 @@ data class BooleanMatcher(
 ) : TypeMatcher<Boolean> {
   @Schema(description = "Must be Boolean", example = "Boolean")
   override val type: String = "Boolean"
+
+  override fun toString() = "$attribute = $condition"
 }
