@@ -1,13 +1,30 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import java.time.LocalDateTime
 
+@Schema(
+  description = """A matcher for a date time attribute from the Prisoner record.
+  
+  For a between clause use both the min and max values.
+  
+  For < enter only the max value.
+  
+  For > enter only the min value.
+""",
+)
 data class DateTimeMatcher(
+  @Schema(description = "The attribute to search on", example = "currentIncentive.dateTime")
   override val attribute: String,
+  @Schema(description = "The minimum value to match", example = "2024-01-01T09:00:00Z")
   val minValue: LocalDateTime? = null,
+  @Schema(description = "The maximum value to match", example = "2024-01-31T21:00:00Z")
   val maxValue: LocalDateTime? = null,
 ) : TypeMatcher<LocalDateTime> {
+  @Schema(description = "Must be DateTime", example = "DateTime")
+  override val type: String = "DateTime"
+
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
