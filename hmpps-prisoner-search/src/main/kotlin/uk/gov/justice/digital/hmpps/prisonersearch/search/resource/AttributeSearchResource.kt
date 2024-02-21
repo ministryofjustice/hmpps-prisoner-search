@@ -48,7 +48,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       Combining multiple sub-queries gives us the ability to create complex searches using any combination of a prisoner's 
       attributes. For example we can model queries such as <strong>"lastName IS Smith AND (prisonId IS MDI OR prisonId IS LEI)"</strong>.
       </p>
-      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record. Attributes from lists can be
+      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record or get them from endpoint <string>GET /attribute-search/attributes</strong>. Attributes from lists can be
       searched for with dot notation, e.g. <strong>"attribute=aliases.firstName"</strong> or <strong>"attribute=tattoos.bodyPart"</strong>. 
       Attributes from complex objects can also be searched for with dot notation, e.g. <strong>"attribute=currentIncentive.level.code"</strong>.
       </p>
