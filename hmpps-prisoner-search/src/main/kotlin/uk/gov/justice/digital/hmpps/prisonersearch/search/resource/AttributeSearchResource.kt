@@ -144,7 +144,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       }
       </pre>
     """,
-    security = [SecurityRequirement(name = "ROLE_GLOBAL_SEARCH"), SecurityRequirement(name = "ROLE_PRISONER_SEARCH")],
+    security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -178,16 +178,11 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @Operation(
     summary = "*** WIP - DO NOT USE!!! *** Retrieve all attributes supported by the attribute search",
     description = "Returns all attributes that can be passed into the attribute search including their type.",
-    security = [SecurityRequirement(name = "ROLE_GLOBAL_SEARCH"), SecurityRequirement(name = "ROLE_PRISONER_SEARCH")],
+    security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [
       ApiResponse(
         responseCode = "200",
         description = "Search successfully performed",
-      ),
-      ApiResponse(
-        responseCode = "400",
-        description = "Incorrect information provided to perform an attribute search",
-        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
       ),
       ApiResponse(
         responseCode = "401",
