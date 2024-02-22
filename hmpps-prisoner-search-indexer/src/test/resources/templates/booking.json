@@ -68,5 +68,6 @@
   "status": "ACTIVE IN",
   "legalStatus": "REMAND",
   "imprisonmentStatus": "LIFE",
-  "imprisonmentStatusDescription": "Life imprisonment"
+  "imprisonmentStatusDescription": "Life imprisonment",
+  "lastLocationId": "WWI"
 }
