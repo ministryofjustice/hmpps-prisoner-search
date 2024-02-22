@@ -60,10 +60,10 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       JSON request:
       <br/>
       <pre>
-      {
-        "query":
+        {
+          "query":
           {
-            "joinType"" "AND",
+            "joinType": "AND",
             "matchers": [
               {
                 "type": "String",
@@ -77,9 +77,9 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
                 "minValue": 150,
                 "maxValue": 180
               }
-            ],
+            ]
           }
-      }
+        }      
       </pre>
       <h4>Search for all prisoners received since 1st Jan 2024 with a dragon tattoo on either their arm or shoulder</h4>
       <br/>
@@ -90,59 +90,59 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       <pre>
       {
         "query":
-          {
-            "joinType"" "AND",
-            "matchers": [
-              {
-                "type": "Date",
-                "attribute": "receptionDate",
-                "minValue": "2024-01-01"
-              }
-            [,
-            "subQueries": [
-              {
-                "joinType"" "OR",
-                "subQueries": [
-                  {
-                    "joinType"" "AND",
-                    "matchers": [
-                      {
-                        "type": "String",
-                        "attribute": "tattoos.bodyPart",
-                        "condition": "IS",
-                        "searchTerm": "arm"
-                      },
-                      {
-                        "type": "String",
-                        "attribute": "tattoos.comment",
-                        "condition": "CONTAINS",
-                        "searchTerm": "dragon"
-                      }
-                    ]
-                  },
-                  {
-                    "joinType"" "AND",
-                    "matchers": [
-                      {
-                        "type": "String",
-                        "attribute": "tattoos.bodyPart",
-                        "condition": "IS",
-                        "searchTerm": "shoulder"
-                      },
-                      {
-                        "type": "String",
-                        "attribute": "tattoos.comment",
-                        "condition": "CONTAINS",
-                        "searchTerm": "dragon"
-                      }
-                    ]
-                  }
-                ]    
-              }
-          }
-        ]
+        {
+          "joinType": "AND",
+          "matchers": [
+            {
+              "type": "Date",
+              "attribute": "receptionDate",
+              "minValue": "2024-01-01"
+            }
+          ],
+          "subQueries": [
+            {
+              "joinType": "OR",
+              "subQueries": [
+                {
+                  "joinType": "AND",
+                  "matchers": [
+                    {
+                      "type": "String",
+                      "attribute": "tattoos.bodyPart",
+                      "condition": "IS",
+                      "searchTerm": "arm"
+                    },
+                    {
+                      "type": "String",
+                      "attribute": "tattoos.comment",
+                      "condition": "CONTAINS",
+                      "searchTerm": "dragon"
+                    }
+                  ]
+                },
+                {
+                  "joinType": "AND",
+                  "matchers": [
+                    {
+                      "type": "String",
+                      "attribute": "tattoos.bodyPart",
+                      "condition": "IS",
+                      "searchTerm": "shoulder"
+                    },
+                    {
+                      "type": "String",
+                      "attribute": "tattoos.comment",
+                      "condition": "CONTAINS",
+                      "searchTerm": "dragon"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
       }
-      </pre>
+    </pre>
     """,
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [
