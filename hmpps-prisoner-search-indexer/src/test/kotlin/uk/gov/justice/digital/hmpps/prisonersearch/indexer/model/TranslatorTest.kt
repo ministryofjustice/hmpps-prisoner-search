@@ -288,14 +288,14 @@ class TranslatorTest {
   }
 
   @Test
-  fun `should map last location ID`() {
+  fun `should map last prison ID`() {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(lastLocationId = "LEI"),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.lastLocationId).isEqualTo("LEI")
+    assertThat(prisoner.lastPrisonId).isEqualTo("LEI")
   }
 
   @Nested

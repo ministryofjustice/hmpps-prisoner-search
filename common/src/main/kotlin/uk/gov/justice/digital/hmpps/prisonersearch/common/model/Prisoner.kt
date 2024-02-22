@@ -123,9 +123,9 @@ open class Prisoner : Diffable<Prisoner> {
   var prisonId: String? = null
 
   @Field(type = FieldType.Keyword)
-  @Schema(description = "The last location of the prisoner", example = "MDI")
+  @Schema(description = "The last prison for the prisoner (which is the same as the prisonId if they are still inside prison)", example = "MDI")
   @DiffableProperty(DiffCategory.LOCATION)
-  var lastLocationId: String? = null
+  var lastPrisonId: String? = null
 
   @Schema(description = "Prison Name", example = "HMP Leeds")
   @DiffableProperty(DiffCategory.LOCATION)
