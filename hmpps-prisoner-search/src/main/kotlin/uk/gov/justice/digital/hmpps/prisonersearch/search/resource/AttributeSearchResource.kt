@@ -81,6 +81,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
           }
         }      
       </pre>
+      <br/>
       <h4>Search for all prisoners received since 1st Jan 2024 with a dragon tattoo on either their arm or shoulder</h4>
       <br/>
       Query: <strong>"receptionDate >= 2024-01-01 AND ((tattoos.bodyPart IS "arm" AND tattoos.comment CONTAINS "dragon" ) OR (tattoos.bodyPart IS "shoulder" AND tattoos.comment CONTAINS "dragon"))"</strong>
