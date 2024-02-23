@@ -290,7 +290,7 @@ class TranslatorTest {
   @Test
   fun `should map last prison ID`() {
     val prisoner = Prisoner().translate(
-      ob = aBooking().copy(lastLocationId = "LEI"),
+      ob = aBooking().copy(latestLocationId = "LEI"),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )

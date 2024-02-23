@@ -43,5 +43,5 @@ data class OffenderBooking(
   val personalCareNeeds: List<PersonalCareNeed>? = null,
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
-  val lastLocationId: String? = null,
+  val latestLocationId: String? = null,
 )
