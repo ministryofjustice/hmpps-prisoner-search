@@ -287,6 +287,17 @@ class TranslatorTest {
     assertThat(prisoner.locationDescription).isEqualTo("OUT")
   }
 
+  @Test
+  fun `should map last prison ID`() {
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(lastLocationId = "LEI"),
+      incentiveLevel = Result.success(null),
+      restrictedPatientData = Result.success(null),
+    )
+
+    assertThat(prisoner.lastPrisonId).isEqualTo("LEI")
+  }
+
   @Nested
   inner class WithIncentiveLevelFailure {
     @Test
