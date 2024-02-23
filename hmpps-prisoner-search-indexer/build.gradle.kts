@@ -30,7 +30,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 dependencies {
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.3.0")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:0.1.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:0.1.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -48,7 +48,7 @@ dependencies {
 
   implementation(project(":common"))
 
-  runtimeOnly("org.postgresql:postgresql:42.7.1")
+  runtimeOnly("org.postgresql:postgresql:42.7.2")
   runtimeOnly("org.flywaydb:flyway-core")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
@@ -57,10 +57,10 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.20")
-  testImplementation("org.wiremock:wiremock-standalone:3.4.0")
+  testImplementation("org.wiremock:wiremock-standalone:3.4.1")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.4")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.7")
   testImplementation("com.google.code.gson:gson:2.10.1")
 }
 
