@@ -235,32 +235,37 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
 
   private fun attributeData(): Stream<Arguments> =
     Stream.of(
-      arguments(build, listOf("Muscular", "Obese", "Proportional")),
-      arguments(category, listOf("C", "Q")),
-      arguments(csra, listOf("High", "Low")),
-      arguments(ethnicity, listOf("Prefer not to say", "White: Any other background")),
-      arguments(facialHair, listOf("Clean Shaven", "Goatee Beard", "Not Asked")),
-      arguments(gender, listOf("Female", "Male", "Not Known / Not Recorded")),
-      arguments(hairColour, listOf("Balding", "Mouse", "Red")),
-      arguments(imprisonmentStatusDescription, listOf("Life imprisonment")),
-      arguments(incentiveLevel, listOf("Basic", "Enhanced")),
-      arguments(inOutStatus, listOf("IN")),
-      arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing")),
-      arguments(legalStatus, listOf("REMAND")),
-      arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership")),
-      arguments(nationality, listOf("British", "Irish")),
-      arguments(religion, listOf("Agnostic", "Jedi Knight")),
-      arguments(rightEyeColour, listOf("Clouded", "Green", "Missing")),
-      arguments(shapeOfFace, listOf("Bullet", "Oval", "Round")),
-      arguments(status, listOf("ACTIVE IN")),
-      arguments(youthOffender, listOf("false", "true")),
+      arguments(build, listOf("Muscular", "Obese", "Proportional"), null),
+      arguments(category, listOf("C", "Q"), null),
+      arguments(csra, listOf("High", "Low"), null),
+      arguments(ethnicity, listOf("Prefer not to say", "White: Any other background"), null),
+      arguments(facialHair, listOf("Clean Shaven", "Goatee Beard", "Not Asked"), null),
+      arguments(gender, listOf("Female", "Male", "Not Known / Not Recorded"), null),
+      arguments(hairColour, listOf("Balding", "Mouse", "Red"), null),
+      arguments(imprisonmentStatusDescription, listOf("Life imprisonment"), null),
+      arguments(incentiveLevel, listOf("Basic", "Enhanced"), null),
+      arguments(inOutStatus, listOf("IN"), listOf("Inside")),
+      arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing"), null),
+      arguments(legalStatus, listOf("REMAND"), listOf("Remand")),
+      arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership"), null),
+      arguments(nationality, listOf("British", "Irish"), null),
+      arguments(religion, listOf("Agnostic", "Jedi Knight"), null),
+      arguments(rightEyeColour, listOf("Clouded", "Green", "Missing"), null),
+      arguments(shapeOfFace, listOf("Bullet", "Oval", "Round"), null),
+      arguments(status, listOf("ACTIVE IN"), listOf("Active Inside")),
+      arguments(youthOffender, listOf("false", "true"), listOf("No", "Yes")),
     )
 
   @ParameterizedTest
   @MethodSource("attributeData")
-  fun `find by attribute`(attribute: ReferenceDataAttribute, expectedResults: List<String>): Unit = referenceDataRequest(
+  fun `find by attribute`(
+    attribute: ReferenceDataAttribute,
+    expectedValues: List<String>,
+    expectedLabels: List<String>? = null,
+  ): Unit = referenceDataRequest(
     attribute = attribute.name,
-    expectedResults = expectedResults,
+    expectedValues = expectedValues,
+    expectedLabels = expectedLabels ?: expectedValues,
   )
 
   @Test
@@ -288,16 +293,17 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
 
     // so that we can check caching then works
     reset(elasticsearchClient)
-    referenceDataRequest(attribute = leftEyeColour.name, expectedResults = listOf("Brown", "Hazel", "Missing"))
+    referenceDataRequest(attribute = leftEyeColour.name, expectedValues = listOf("Brown", "Hazel", "Missing"))
 
     // and no exception is thrown
     forceElasticError()
-    referenceDataRequest(attribute = leftEyeColour.name, expectedResults = listOf("Brown", "Hazel", "Missing"))
+    referenceDataRequest(attribute = leftEyeColour.name, expectedValues = listOf("Brown", "Hazel", "Missing"))
   }
 
   private fun referenceDataRequest(
     attribute: String,
-    expectedResults: List<String> = emptyList(),
+    expectedValues: List<String> = emptyList(),
+    expectedLabels: List<String> = expectedValues,
   ) {
     val response = webTestClient.get().uri("/reference-data/$attribute")
       .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
@@ -307,7 +313,8 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
       .expectBody(ReferenceDataResponse::class.java)
       .returnResult().responseBody!!
 
-    assertThat(response.data).extracting("key").containsExactlyElementsOf(expectedResults)
-    assertThat(response.data).size().isEqualTo(expectedResults.size)
+    assertThat(response.data).extracting("value").containsExactlyElementsOf(expectedValues)
+    assertThat(response.data).extracting("label").containsExactlyElementsOf(expectedLabels)
+    assertThat(response.data).size().isEqualTo(expectedValues.size)
   }
 }
