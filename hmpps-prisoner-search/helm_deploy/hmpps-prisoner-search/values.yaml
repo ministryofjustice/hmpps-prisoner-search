@@ -26,7 +26,8 @@ generic-service:
   namespace_secrets:
     hmpps-prisoner-search:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
-
+      PRISON_API_CLIENT_ID: "PRISON_API_CLIENT_ID"
+      PRISON_API_CLIENT_SECRET: "PRISON_API_CLIENT_SECRET"
     opensearch:
       OPENSEARCH_URIS: "url"
 
