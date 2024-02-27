@@ -16,6 +16,7 @@ generic-service:
 
 generic-prometheus-alerts:
   businessHoursOnly: true
+  alertSeverity: syscon-nonprod
   rdsAlertsDatabases:
     cloud-platform-12e2a73b0333ffab: "prisoner search indexer"
   sqsAlertsQueueNames:
