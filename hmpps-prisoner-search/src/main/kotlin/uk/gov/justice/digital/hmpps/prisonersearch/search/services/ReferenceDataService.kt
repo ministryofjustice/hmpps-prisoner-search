@@ -5,8 +5,6 @@ import org.opensearch.common.unit.TimeValue
 import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation
 import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder
 import org.opensearch.search.builder.SearchSourceBuilder
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -29,11 +27,12 @@ class ReferenceDataService(
 
     val searchResponse = elasticsearchClient.search(searchRequest)
     val aggregation: MultiBucketsAggregation = searchResponse.aggregations.get(attribute.name)
-    return ReferenceDataResponse(
-      aggregation.buckets.map {
-        ReferenceData(it.keyAsString)
-      }.sortedBy { it.key },
-    )
+    return aggregation.buckets.map {
+      val key = it.keyAsString
+      ReferenceData(value = key, label = attribute.map?.get(key) ?: key)
+    }.sortedBy { it.label }.let {
+      ReferenceDataResponse(it)
+    }
   }
 
   private fun createSourceBuilder(attribute: ReferenceDataAttribute): SearchSourceBuilder =
@@ -42,17 +41,14 @@ class ReferenceDataService(
       size(0)
       aggregation(TermsAggregationBuilder(attribute.name).size(maxSearchResults).field(attribute.field))
     }
-
-  private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
 }
 
 data class ReferenceDataResponse(val data: List<ReferenceData> = emptyList())
-data class ReferenceData(val key: String)
+
+data class ReferenceData(val value: String, val label: String)
 
 @Suppress("EnumEntryName")
-enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null) {
+enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null, val map: Map<String, String>? = null) {
   build,
   category,
   csra,
@@ -62,16 +58,46 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
   hairColour,
   imprisonmentStatusDescription,
   incentiveLevel(field = "currentIncentive.level.description.keyword"),
-  inOutStatus,
+  inOutStatus(
+    // OFFENDER_BOOKINGS.IN_OUT_STATUS column comment has this as reference code IN_OUT_STS, but that doesn't exist
+    map = mapOf(
+      "IN" to "Inside",
+      "OUT" to "Outside",
+      "TRN" to "Transfer",
+    ),
+  ),
   leftEyeColour,
-  legalStatus,
+  legalStatus(
+    // this is an enum in Prison API anyway
+    map = mapOf(
+      "RECALL" to "Recall",
+      "DEAD" to "Dead",
+      "INDETERMINATE_SENTENCE" to "Indeterminate Sentence",
+      "SENTENCED" to "Sentenced",
+      "CONVICTED_UNSENTENCED" to "Convicted Unsentenced",
+      "CIVIL_PRISONER" to "Civil Prisoner",
+      "IMMIGRATION_DETAINEE" to "Immigration Detainee",
+      "REMAND" to "Remand",
+      "UNKNOWN" to "Unknown",
+      "OTHER" to "Other",
+    ),
+  ),
   maritalStatus,
   nationality,
   religion,
   rightEyeColour,
   shapeOfFace,
-  status(keyword = false),
-  youthOffender(keyword = false),
+  status(
+    keyword = false,
+    // This is a joining in Prison API of the active flag with inOutStatus
+    map = mapOf(
+      "ACTIVE IN" to "Active Inside",
+      "ACTIVE OUT" to "Active Outside",
+      "INACTIVE OUT" to "Inactive Outside",
+      "INACTIVE TRN" to "Inactive Transfer",
+    ),
+  ),
+  youthOffender(keyword = false, map = mapOf("true" to "Yes", "false" to "No")),
   ;
 
   val field: String = when {
