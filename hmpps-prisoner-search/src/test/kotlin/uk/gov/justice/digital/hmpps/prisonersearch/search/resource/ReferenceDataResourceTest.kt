@@ -38,11 +38,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.leftEyeColour
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.legalStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.maritalStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.marksBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.nationality
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.otherMarksBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.religion
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.rightEyeColour
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.scarsBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.shapeOfFace
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.status
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.tattoosBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
@@ -106,7 +110,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         ),
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Finger", "rose"), BodyPartBuilder("Foot")),
-          scar = listOf(BodyPartBuilder("Ankle", "nasty looking scar"), BodyPartBuilder("Knee")),
+          scar = listOf(BodyPartBuilder("Toe", "nasty looking scar"), BodyPartBuilder("Knee")),
           other = listOf(BodyPartBuilder("Nose", "bent to the right")),
           mark = listOf(BodyPartBuilder("Torso", "birthmark on chest")),
         ),
@@ -247,12 +251,16 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
       arguments(inOutStatus, listOf("IN"), listOf("Inside")),
       arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing"), null),
       arguments(legalStatus, listOf("REMAND"), listOf("Remand")),
+      arguments(marksBodyPart, listOf("Lip", "Torso"), null),
       arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership"), null),
       arguments(nationality, listOf("British", "Irish"), null),
+      arguments(otherMarksBodyPart, listOf("Head", "Nose"), null),
       arguments(religion, listOf("Agnostic", "Jedi Knight"), null),
       arguments(rightEyeColour, listOf("Clouded", "Green", "Missing"), null),
+      arguments(scarsBodyPart, listOf("Finger", "Foot", "Knee", "Toe"), null),
       arguments(shapeOfFace, listOf("Bullet", "Oval", "Round"), null),
       arguments(status, listOf("ACTIVE IN"), listOf("Active Inside")),
+      arguments(tattoosBodyPart, listOf("Ankle", "Finger", "Foot", "Knee"), null),
       arguments(youthOffender, listOf("false", "true"), listOf("No", "Yes")),
     )
 
@@ -261,7 +269,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
   fun `find by attribute`(
     attribute: ReferenceDataAttribute,
     expectedValues: List<String>,
-    expectedLabels: List<String>? = null,
+    expectedLabels: List<String>?,
   ): Unit = referenceDataRequest(
     attribute = attribute.name,
     expectedValues = expectedValues,

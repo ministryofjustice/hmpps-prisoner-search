@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit
 @Service
 class ReferenceDataService(
   private val elasticsearchClient: SearchClient,
-  @Value("\${search.detailed.max-results}") private val maxSearchResults: Int = 200,
-  @Value("\${search.detailed.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
+  @Value("\${search.reference.max-results}") private val maxSearchResults: Int = 200,
+  @Value("\${search.reference.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
   // we have implemented a cache loader in CacheConfig so that will call the findReferenceData method below
   @Cacheable(cacheNames = ["referenceData"], key = "#attribute")
@@ -82,10 +82,13 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
       "OTHER" to "Other",
     ),
   ),
+  marksBodyPart(field = "marks.bodyPart.keyword"),
   maritalStatus,
   nationality,
+  otherMarksBodyPart(field = "otherMarks.bodyPart.keyword"),
   religion,
   rightEyeColour,
+  scarsBodyPart(field = "scars.bodyPart.keyword"),
   shapeOfFace,
   status(
     keyword = false,
@@ -97,6 +100,7 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
       "INACTIVE TRN" to "Inactive Transfer",
     ),
   ),
+  tattoosBodyPart(field = "tattoos.bodyPart.keyword"),
   youthOffender(keyword = false, map = mapOf("true" to "Yes", "false" to "No")),
   ;
 

@@ -81,3 +81,6 @@ search:
   detailed:
     timeout-seconds: 10
     max-results: 100
+  reference:
+    timeout-seconds: 10
+    max-results: 300
