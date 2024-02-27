@@ -8,8 +8,8 @@ generic-service:
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
-    HMPPS_AUTH_BASE_URI: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
-    PRISON_API_BASE_URI: "https://prison-api-dev.prison.service.justice.gov.uk"
+    API_BASE_URL_HMPPS_AUTH: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+    API_BASE_URL_PRISON_API: "https://prison-api-dev.prison.service.justice.gov.uk"
 
   scheduledDowntime:
     enabled: true

@@ -10,5 +10,5 @@ generic-service:
     prum-prod-platform-3: 18.170.155.82/32
 
   env:
-    HMPPS_AUTH_BASE_URI: "https://sign-in.hmpps.service.justice.gov.uk/auth"
-    PRISON_API_BASE_URI: "https://api.prison.service.justice.gov.uk"
+    API_BASE_URL_HMPPS_AUTH: "https://sign-in.hmpps.service.justice.gov.uk/auth"
+    API_BASE_URL_PRISON_API: "https://api.prison.service.justice.gov.uk"
