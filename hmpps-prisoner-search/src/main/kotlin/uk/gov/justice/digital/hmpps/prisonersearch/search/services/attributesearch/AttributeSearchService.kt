@@ -16,7 +16,7 @@ class AttributeSearchService(
 ) {
 
   fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.unpaged()): Page<Prisoner> {
-    telemetryClient.trackEvent("POSAttributeSearch", mapOf("query" to request.query.toString()), null)
+    telemetryClient.trackEvent("POSAttributeSearch", mapOf("query" to request.toString()), null)
     request.validate(attributes)
     log.info("searchByAttributes called with request: $request, pageable: $pageable")
     return Page.empty()

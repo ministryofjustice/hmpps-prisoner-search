@@ -5,16 +5,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Query
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 
 class AttributeSearchRequestTest {
 
   @Test
   fun `should validate queries`() {
-    val request = AttributeSearchRequest(Query(JoinType.AND))
+    val request = AttributeSearchRequest()
 
     assertThrows<AttributeSearchException> {
       request.validate(emptyMap())
@@ -26,9 +25,10 @@ class AttributeSearchRequestTest {
   @Test
   fun `should validate type matchers`() {
     val request = AttributeSearchRequest(
-      Query(
-        JoinType.AND,
-        matchers = listOf(StringMatcher("missingAttribute", StringCondition.IS, "value")),
+      queries = listOf(
+        Query(
+          matchers = listOf(StringMatcher("missingAttribute", IS, "value")),
+        ),
       ),
     )
 

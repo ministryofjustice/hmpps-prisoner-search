@@ -27,13 +27,15 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         "searchTerm": "Smith"
       }
     """.trimIndent(),
-  ) = """{
-    "query":
+  ) = """
       {
-        "joinType": "AND",
-        "matchers": [$matchers]
+         "queries": [
+          {
+            "joinType": "AND",
+            "matchers": [$matchers]
+          }
+        ]
       }
-  }
   """.trimIndent()
 
   private val today = LocalDate.now()
@@ -197,7 +199,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as StringMatcher).searchTerm).isEqualTo("true")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("true")
           },
           any(),
         )
@@ -211,7 +213,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as StringMatcher).searchTerm).isEqualTo("$today")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$today")
           },
           any(),
         )
@@ -225,7 +227,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as StringMatcher).searchTerm).isEqualTo("$now")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$now")
           },
           any(),
         )
@@ -239,7 +241,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as StringMatcher).searchTerm).isEqualTo("1234")
+            assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("1234")
           },
           any(),
         )
@@ -297,7 +299,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as BooleanMatcher).condition).isTrue()
+            assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isTrue()
           },
           any(),
         )
@@ -329,7 +331,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as BooleanMatcher).condition).isTrue()
+            assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isTrue()
           },
           any(),
         )
@@ -343,7 +345,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as BooleanMatcher).condition).isFalse()
+            assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isFalse()
           },
           any(),
         )
@@ -423,7 +425,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as DateMatcher).minValue?.year).isEqualTo(1970)
+            assertThat((it.queries.first().matchers?.first() as DateMatcher).minValue?.year).isEqualTo(1970)
           },
           any(),
         )
@@ -437,7 +439,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as DateMatcher).maxValue).isEqualTo(now.toLocalDate())
+            assertThat((it.queries.first().matchers?.first() as DateMatcher).maxValue).isEqualTo(now.toLocalDate())
           },
           any(),
         )
@@ -637,7 +639,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
 
         verify(attributeSearchService).search(
           check {
-            assertThat((it.query.matchers?.first() as IntMatcher).minValue).isEqualTo(140)
+            assertThat((it.queries.first().matchers?.first() as IntMatcher).minValue).isEqualTo(140)
           },
           any(),
         )
@@ -670,17 +672,19 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       webTestClient.attributeSearch(
         """
         {
-          "query": {
-            "joinType": "AND",
-            "matchers": [
-              {
-                "type": "String",
-                "attribute": "firstName",
-                "condition": "IS",
-                "searchTerm": "John"
-              }
-            ]
-          }
+          "queries": [
+            {
+              "joinType": "AND",
+              "matchers": [
+                {
+                  "type": "String",
+                  "attribute": "firstName",
+                  "condition": "IS",
+                  "searchTerm": "John"
+                }
+              ]
+            }
+          ]
         }
         """.trimIndent(),
       )
@@ -700,17 +704,18 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       webTestClient.attributeSearch(
         """
         {
-          "query": {
-            "joinType": "AND",
-            "matchers": [
-              {
-                "type": "String",
-                "attribute": "heightCentimetres",
-                "condition": "IS",
-                "searchTerm": "John"
-              }
-            ]
-          }
+          "queries": [
+            {
+              "matchers": [
+                {
+                  "type": "String",
+                  "attribute": "heightCentimetres",
+                  "condition": "IS",
+                  "searchTerm": "John"
+                }
+              ]
+            }
+          ]
         }
         """.trimIndent(),
       )
