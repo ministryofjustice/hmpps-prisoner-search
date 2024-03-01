@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -12,6 +13,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
@@ -28,7 +30,10 @@ import java.time.LocalDateTime
 class AttributeSearchServiceTest {
 
   private val telemetryClient = mock<TelemetryClient>()
-  private val service = AttributeSearchService(getAttributes(Prisoner::class), telemetryClient)
+  private val elasticsearchClient = mock<SearchClient>()
+  private val mapper = mock<ObjectMapper>()
+
+  private val service = AttributeSearchService(getAttributes(Prisoner::class), elasticsearchClient, mapper, telemetryClient)
 
   @Nested
   inner class ValidateQuery {
