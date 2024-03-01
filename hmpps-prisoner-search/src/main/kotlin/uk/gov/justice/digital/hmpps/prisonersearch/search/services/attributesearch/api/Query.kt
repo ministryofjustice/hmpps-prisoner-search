@@ -1,15 +1,17 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
+import com.fasterxml.jackson.annotation.JsonBackReference
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 
 @Schema(description = "A query to search for prisoners by attributes")
 data class Query(
-  @Schema(description = "The type of join to use when combining the matchers and subQueries", example = "AND")
-  val joinType: JoinType,
+  @Schema(description = "The type of join to use when combining the matchers and subQueries", example = "AND", defaultValue = "AND")
+  val joinType: JoinType = JoinType.AND,
   @Schema(description = "Matchers that will be applied to this query")
   val matchers: List<TypeMatcher<*>>? = null,
   @Schema(description = "A list of sub-queries of type Query that will be combined with the matchers in this query")
+  @JsonBackReference
   val subQueries: List<Query>? = null,
 ) {
   fun validate() {
@@ -41,9 +43,3 @@ fun List<Query>.getAllTypeMatchers(): List<TypeMatcher<*>> =
       addAll(matcher.subQueries?.getAllTypeMatchers() ?: emptyList())
     }
   }.toList()
-
-@Schema(description = "The type of join to use when combining the matchers and subQueries")
-enum class JoinType {
-  AND,
-  OR,
-}

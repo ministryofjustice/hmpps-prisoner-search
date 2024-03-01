@@ -11,9 +11,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Query
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 import java.time.LocalDate
 
@@ -25,9 +27,8 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
-              "joinType": "AND",
               "matchers": [
                 {
                   "type": "String",
@@ -37,19 +38,21 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
             ),
           ),
         ),
@@ -62,7 +65,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -80,24 +83,27 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            StringMatcher(
-              attribute = "lastName",
-              condition = StringCondition.IS,
-              searchTerm = "Smith",
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              StringMatcher(
+                attribute = "lastName",
+                condition = IS,
+                searchTerm = "Smith",
+              ),
             ),
           ),
         ),
@@ -110,7 +116,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -141,34 +147,37 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
             ),
-          ),
-          subQueries = listOf(
-            Query(
-              joinType = JoinType.OR,
-              matchers = listOf(
-                StringMatcher(
-                  attribute = "lastName",
-                  condition = StringCondition.IS,
-                  searchTerm = "Smith",
-                ),
-                StringMatcher(
-                  attribute = "lastName",
-                  condition = StringCondition.IS,
-                  searchTerm = "Jones",
+            subQueries = listOf(
+              Query(
+                joinType = OR,
+                matchers = listOf(
+                  StringMatcher(
+                    attribute = "lastName",
+                    condition = IS,
+                    searchTerm = "Smith",
+                  ),
+                  StringMatcher(
+                    attribute = "lastName",
+                    condition = IS,
+                    searchTerm = "Jones",
+                  ),
                 ),
               ),
             ),
@@ -183,83 +192,78 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "joinType": "OR",
+          "queries": [
             {
-              "joinType": "OR",
-              "subQueries": [
+              "joinType": "AND",
+              "matchers": [
                 {
-                  "joinType": "AND",
-                  "matchers": [
-                    {
-                      "type": "String",
-                      "attribute": "firstName",
-                      "condition": "IS",
-                      "searchTerm": "John"
-                    },
-                    {
-                      "type": "String",
-                      "attribute": "lastName",
-                      "condition": "IS",
-                      "searchTerm": "Smith"
-                    }
-                  ]
+                  "type": "String",
+                  "attribute": "firstName",
+                  "condition": "IS",
+                  "searchTerm": "John"
                 },
                 {
-                  "joinType": "AND",
-                  "matchers": [
-                    {
-                      "type": "String",
-                      "attribute": "firstName",
-                      "condition": "IS",
-                      "searchTerm": "Jack"
-                    },
-                    {
-                      "type": "String",
-                      "attribute": "lastName",
-                      "condition": "IS_NOT",
-                      "searchTerm": "Jones"
-                    }
-                  ]
+                  "type": "String",
+                  "attribute": "lastName",
+                  "condition": "IS",
+                  "searchTerm": "Smith"
+                }
+              ]
+            },
+            {
+              "joinType": "AND",
+              "matchers": [
+                {
+                  "type": "String",
+                  "attribute": "firstName",
+                  "condition": "IS",
+                  "searchTerm": "Jack"
+                },
+                {
+                  "type": "String",
+                  "attribute": "lastName",
+                  "condition": "IS_NOT",
+                  "searchTerm": "Jones"
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.OR,
-          subQueries = listOf(
-            Query(
-              joinType = JoinType.AND,
-              matchers = listOf(
-                StringMatcher(
-                  attribute = "firstName",
-                  condition = StringCondition.IS,
-                  searchTerm = "John",
-                ),
-                StringMatcher(
-                  attribute = "lastName",
-                  condition = StringCondition.IS,
-                  searchTerm = "Smith",
-                ),
+        joinType = OR,
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              StringMatcher(
+                attribute = "lastName",
+                condition = IS,
+                searchTerm = "Smith",
               ),
             ),
-            Query(
-              joinType = JoinType.AND,
-              matchers = listOf(
-                StringMatcher(
-                  attribute = "firstName",
-                  condition = StringCondition.IS,
-                  searchTerm = "Jack",
-                ),
-                StringMatcher(
-                  attribute = "lastName",
-                  condition = StringCondition.IS_NOT,
-                  searchTerm = "Jones",
-                ),
+          ),
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "Jack",
+              ),
+              StringMatcher(
+                attribute = "lastName",
+                condition = StringCondition.IS_NOT,
+                searchTerm = "Jones",
               ),
             ),
           ),
@@ -273,7 +277,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -290,23 +294,26 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            BooleanMatcher(
-              attribute = "recall",
-              condition = true,
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              BooleanMatcher(
+                attribute = "recall",
+                condition = true,
+              ),
             ),
           ),
         ),
@@ -319,7 +326,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -336,24 +343,27 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            IntMatcher(
-              attribute = "heightCentimetres",
-              minValue = 150,
-              minInclusive = true,
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              IntMatcher(
+                attribute = "heightCentimetres",
+                minValue = 150,
+                minInclusive = true,
+              ),
             ),
           ),
         ),
@@ -366,7 +376,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -384,26 +394,29 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
-       }
+          ]
+        }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            IntMatcher(
-              attribute = "shoeSize",
-              minValue = 11,
-              minInclusive = true,
-              maxValue = 12,
-              maxInclusive = true,
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              IntMatcher(
+                attribute = "shoeSize",
+                minValue = 11,
+                minInclusive = true,
+                maxValue = 12,
+                maxInclusive = true,
+              ),
             ),
           ),
         ),
@@ -416,7 +429,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -439,28 +452,31 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
+          ]
         }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            DateMatcher(
-              attribute = "receptionDate",
-              minValue = LocalDate.parse("2023-01-01"),
-            ),
-            DateMatcher(
-              attribute = "releaseDate",
-              maxValue = LocalDate.parse("2024-01-01"),
-              maxInclusive = false,
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              DateMatcher(
+                attribute = "receptionDate",
+                minValue = LocalDate.parse("2023-01-01"),
+              ),
+              DateMatcher(
+                attribute = "releaseDate",
+                maxValue = LocalDate.parse("2024-01-01"),
+                maxInclusive = false,
+              ),
             ),
           ),
         ),
@@ -473,7 +489,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -490,23 +506,26 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
-       }
+          ]
+        }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            DateTimeMatcher(
-              attribute = "currentIncentive.dateTime",
-              minValue = LocalDate.parse("2023-01-01").atStartOfDay(),
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              DateTimeMatcher(
+                attribute = "currentIncentive.dateTime",
+                minValue = LocalDate.parse("2023-01-01").atStartOfDay(),
+              ),
             ),
           ),
         ),
@@ -519,7 +538,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -537,26 +556,29 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
-       }
+          ]
+        }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            DateMatcher(
-              attribute = "receptionDate",
-              minValue = LocalDate.parse("2023-01-01"),
-              minInclusive = true,
-              maxValue = LocalDate.parse("2023-01-01"),
-              maxInclusive = true,
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              DateMatcher(
+                attribute = "receptionDate",
+                minValue = LocalDate.parse("2023-01-01"),
+                minInclusive = true,
+                maxValue = LocalDate.parse("2023-01-01"),
+                maxInclusive = true,
+              ),
             ),
           ),
         ),
@@ -569,7 +591,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
               "joinType": "AND",
               "matchers": [
@@ -593,29 +615,32 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                 }
               ]
             }
-       }
+          ]
+        }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
-            ),
-            StringMatcher(
-              attribute = "tattoos.bodyPart",
-              condition = StringCondition.IS,
-              searchTerm = "shoulder",
-            ),
-            StringMatcher(
-              attribute = "tattoos.comment",
-              condition = StringCondition.CONTAINS,
-              searchTerm = "dragon",
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
+              StringMatcher(
+                attribute = "tattoos.bodyPart",
+                condition = IS,
+                searchTerm = "shoulder",
+              ),
+              StringMatcher(
+                attribute = "tattoos.comment",
+                condition = StringCondition.CONTAINS,
+                searchTerm = "dragon",
+              ),
             ),
           ),
         ),
@@ -628,9 +653,8 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
     val request = objectMapper.readValue<AttributeSearchRequest>(
       """
         {
-          "query":
+          "queries": [
             {
-              "joinType": "AND",
               "matchers": [
                 {
                   "type": "String",
@@ -638,56 +662,55 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
                   "condition": "IS",
                   "searchTerm": "John"
                 }
-              ],
-              "subQueries" : [
+              ]
+            },
+            {
+              "joinType": "OR",
+              "matchers": [
                 {
-                  "joinType": "OR",
-                  "matchers": [
-                    {
-                      "type": "String",
-                      "attribute": "scars.bodyPart",
-                      "condition": "IS",
-                      "searchTerm": "face"
-                    },
-                    {
-                      "type": "String",
-                      "attribute": "scars.bodyPart",
-                      "condition": "IS",
-                      "searchTerm": "head"
-                    }
-                  ]
+                  "type": "String",
+                  "attribute": "scars.bodyPart",
+                  "condition": "IS",
+                  "searchTerm": "face"
+                },
+                {
+                  "type": "String",
+                  "attribute": "scars.bodyPart",
+                  "condition": "IS",
+                  "searchTerm": "head"
                 }
               ]
             }
-       }
+          ]
+        }
       """.trimIndent(),
     )
 
     assertThat(request).isEqualTo(
       AttributeSearchRequest(
-        query = Query(
-          joinType = JoinType.AND,
-          matchers = listOf(
-            StringMatcher(
-              attribute = "firstName",
-              condition = StringCondition.IS,
-              searchTerm = "John",
+        queries = listOf(
+          Query(
+            joinType = AND,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "firstName",
+                condition = IS,
+                searchTerm = "John",
+              ),
             ),
           ),
-          subQueries = listOf(
-            Query(
-              joinType = JoinType.OR,
-              matchers = listOf(
-                StringMatcher(
-                  attribute = "scars.bodyPart",
-                  condition = StringCondition.IS,
-                  searchTerm = "face",
-                ),
-                StringMatcher(
-                  attribute = "scars.bodyPart",
-                  condition = StringCondition.IS,
-                  searchTerm = "head",
-                ),
+          Query(
+            joinType = OR,
+            matchers = listOf(
+              StringMatcher(
+                attribute = "scars.bodyPart",
+                condition = IS,
+                searchTerm = "face",
+              ),
+              StringMatcher(
+                attribute = "scars.bodyPart",
+                condition = IS,
+                searchTerm = "head",
               ),
             ),
           ),

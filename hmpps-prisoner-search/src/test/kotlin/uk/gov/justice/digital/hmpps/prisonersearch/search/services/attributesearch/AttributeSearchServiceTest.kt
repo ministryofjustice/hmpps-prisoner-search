@@ -33,15 +33,8 @@ class AttributeSearchServiceTest {
   @Nested
   inner class ValidateQuery {
     @Test
-    fun `should not allow subQueries with no contents`() {
-      val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          subQueries = listOf(
-            Query(JoinType.AND),
-          ),
-        ),
-      )
+    fun `should not allow queries with no contents`() {
+      val request = AttributeSearchRequest(queries = listOf())
 
       assertThrows<AttributeSearchException> {
         service.search(request)
@@ -51,17 +44,11 @@ class AttributeSearchServiceTest {
     }
 
     @Test
-    fun `should not allow deep nested subQueries with no contents`() {
+    fun `should not allow deep nested queries with no contents`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          subQueries = listOf(
-            Query(
-              JoinType.AND,
-              subQueries = listOf(
-                Query(JoinType.AND),
-              ),
-            ),
+        queries = listOf(
+          Query(
+            subQueries = listOf(),
           ),
         ),
       )
@@ -76,14 +63,10 @@ class AttributeSearchServiceTest {
     @Test
     fun `should validate attributes in nested matchers`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          subQueries = listOf(
-            Query(
-              JoinType.AND,
-              matchers = listOf(
-                StringMatcher("firstName", IS, ""),
-              ),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("firstName", IS, ""),
             ),
           ),
         ),
@@ -99,16 +82,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should validate attributes from a deep nested matcher`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          subQueries = listOf(
-            Query(
-              JoinType.AND,
-              subQueries = listOf(
-                Query(
-                  JoinType.AND,
-                  matchers = listOf(StringMatcher("firstName", IS, "")),
-                ),
+        queries = listOf(
+          Query(
+            subQueries = listOf(
+              Query(
+                matchers = listOf(StringMatcher("firstName", IS, "")),
               ),
             ),
           ),
@@ -128,10 +106,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should allow simple attribute`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("firstName", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("firstName", IS, "value"),
+            ),
           ),
         ),
       )
@@ -144,10 +123,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should not allow unknown attributes`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("unknownAttribute", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("unknownAttribute", IS, "value"),
+            ),
           ),
         ),
       )
@@ -162,10 +142,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should allow attributes in lists of objects`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("aliases.firstName", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("aliases.firstName", IS, "value"),
+            ),
           ),
         ),
       )
@@ -178,10 +159,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should not allow attributes from lists that don't exist`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("aliases.unknown", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("aliases.unknown", IS, "value"),
+            ),
           ),
         ),
       )
@@ -196,10 +178,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should allow attributes in nested objects`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("currentIncentive.level.code", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("currentIncentive.level.code", IS, "value"),
+            ),
           ),
         ),
       )
@@ -212,10 +195,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should not allow attributes from nested objects that don't exist`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("currentIncentive.level.unknown", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("currentIncentive.level.unknown", IS, "value"),
+            ),
           ),
         ),
       )
@@ -233,10 +217,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should not allow a String matcher for non-string attributes`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("heightCentimetres", IS, "value"),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("heightCentimetres", IS, "value"),
+            ),
           ),
         ),
       )
@@ -251,10 +236,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should not allow a Boolean matcher for non-boolean attributes`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            BooleanMatcher(attribute = "firstName", condition = true),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              BooleanMatcher("firstName", true),
+            ),
           ),
         ),
       )
@@ -269,10 +255,11 @@ class AttributeSearchServiceTest {
     @Test
     fun `should not allow an Integer matcher for non-integer attributes`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            IntMatcher("firstName", minValue = 150),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              IntMatcher("firstName", minValue = 150),
+            ),
           ),
         ),
       )
@@ -288,10 +275,11 @@ class AttributeSearchServiceTest {
     fun `should not allow Date matcher for non-date attributes`() {
       val today = LocalDate.now()
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            DateMatcher("firstName", minValue = today),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              DateMatcher("firstName", minValue = today),
+            ),
           ),
         ),
       )
@@ -307,10 +295,11 @@ class AttributeSearchServiceTest {
     fun `should not allow DateTime matcher for non-datetime attributes`() {
       val now = LocalDateTime.now()
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            DateTimeMatcher("firstName", minValue = now.minusDays(7)),
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              DateTimeMatcher("firstName", minValue = now.minusDays(7)),
+            ),
           ),
         ),
       )
@@ -333,14 +322,14 @@ class AttributeSearchServiceTest {
     @Test
     fun `should track invalid query`() {
       val request = AttributeSearchRequest(
-        Query(
-          JoinType.AND,
-          matchers = listOf(
-            StringMatcher("firstName", IS, "Brian"),
+        JoinType.AND,
+        queries = listOf(
+          Query(
+            matchers = listOf(
+              StringMatcher("firstName", IS, "Brian"),
+            ),
           ),
-          subQueries = listOf(
-            Query(JoinType.AND),
-          ),
+          Query(),
         ),
       )
 
@@ -350,7 +339,7 @@ class AttributeSearchServiceTest {
       verify(telemetryClient).trackEvent(
         eq("POSAttributeSearch"),
         check {
-          assertThat(it["query"]).isEqualTo("firstName = Brian AND ()")
+          assertThat(it["query"]).isEqualTo("(firstName = Brian) AND ()")
         },
         isNull(),
       )
@@ -360,7 +349,13 @@ class AttributeSearchServiceTest {
     fun `should track string query equal`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(StringMatcher("firstName", IS, "John"))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                StringMatcher("firstName", IS, "John"),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -377,7 +372,13 @@ class AttributeSearchServiceTest {
     fun `should track string query not equals`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(StringMatcher("firstName", StringCondition.IS_NOT, "John"))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                StringMatcher("firstName", StringCondition.IS_NOT, "John"),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -394,7 +395,13 @@ class AttributeSearchServiceTest {
     fun `should track string query contains`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(StringMatcher("firstName", StringCondition.CONTAINS, "John"))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                StringMatcher("firstName", StringCondition.CONTAINS, "John"),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -411,7 +418,13 @@ class AttributeSearchServiceTest {
     fun `should track boolean query`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(BooleanMatcher("recall", true))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                BooleanMatcher("recall", true),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -428,7 +441,13 @@ class AttributeSearchServiceTest {
     fun `should track int query greater than or equal to`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(IntMatcher("heightCentimetres", minValue = 150))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                IntMatcher("heightCentimetres", minValue = 150),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -445,9 +464,12 @@ class AttributeSearchServiceTest {
     fun `should track int query greater than`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(IntMatcher("heightCentimetres", minValue = 150, minInclusive = false)),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                IntMatcher("heightCentimetres", minValue = 150, minInclusive = false),
+              ),
+            ),
           ),
         ),
       )
@@ -465,7 +487,13 @@ class AttributeSearchServiceTest {
     fun `should track int query less than or equal to`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(IntMatcher("heightCentimetres", maxValue = 150))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                IntMatcher("heightCentimetres", maxValue = 150),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -482,9 +510,12 @@ class AttributeSearchServiceTest {
     fun `should track int query less than`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(IntMatcher("heightCentimetres", maxValue = 150, maxInclusive = false)),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                IntMatcher("heightCentimetres", maxValue = 150, maxInclusive = false),
+              ),
+            ),
           ),
         ),
       )
@@ -502,9 +533,12 @@ class AttributeSearchServiceTest {
     fun `should track int query equals`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(IntMatcher("heightCentimetres", minValue = 150, maxValue = 150)),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                IntMatcher("heightCentimetres", minValue = 150, maxValue = 150),
+              ),
+            ),
           ),
         ),
       )
@@ -522,9 +556,10 @@ class AttributeSearchServiceTest {
     fun `should track int query range`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(IntMatcher("heightCentimetres", minValue = 150, maxValue = 180)),
+          queries = listOf(
+            Query(
+              matchers = listOf(IntMatcher("heightCentimetres", minValue = 150, maxValue = 180)),
+            ),
           ),
         ),
       )
@@ -542,7 +577,11 @@ class AttributeSearchServiceTest {
     fun `should track date query greater than or equal to`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(DateMatcher("releaseDate", minValue = today))),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateMatcher("releaseDate", minValue = today)),
+            ),
+          ),
         ),
       )
 
@@ -559,9 +598,10 @@ class AttributeSearchServiceTest {
     fun `should track date query greater than`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(DateMatcher("releaseDate", minValue = today, minInclusive = false)),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateMatcher("releaseDate", minValue = today, minInclusive = false)),
+            ),
           ),
         ),
       )
@@ -579,7 +619,11 @@ class AttributeSearchServiceTest {
     fun `should track date query less than or equal to`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(DateMatcher("releaseDate", maxValue = today))),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateMatcher("releaseDate", maxValue = today)),
+            ),
+          ),
         ),
       )
 
@@ -596,9 +640,10 @@ class AttributeSearchServiceTest {
     fun `should track date query less than`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(DateMatcher("releaseDate", maxValue = today, maxInclusive = false)),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateMatcher("releaseDate", maxValue = today, maxInclusive = false)),
+            ),
           ),
         ),
       )
@@ -616,9 +661,10 @@ class AttributeSearchServiceTest {
     fun `should track date query equals`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(DateMatcher("releaseDate", minValue = today, maxValue = today)),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateMatcher("releaseDate", minValue = today, maxValue = today)),
+            ),
           ),
         ),
       )
@@ -636,9 +682,10 @@ class AttributeSearchServiceTest {
     fun `should track date query range`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(DateMatcher("releaseDate", minValue = yesterday, maxValue = tomorrow)),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateMatcher("releaseDate", minValue = yesterday, maxValue = tomorrow)),
+            ),
           ),
         ),
       )
@@ -656,7 +703,11 @@ class AttributeSearchServiceTest {
     fun `should track date time query greater than`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(DateTimeMatcher("currentIncentive.dateTime", minValue = now))),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateTimeMatcher("currentIncentive.dateTime", minValue = now)),
+            ),
+          ),
         ),
       )
 
@@ -673,7 +724,11 @@ class AttributeSearchServiceTest {
     fun `should track date time query less than`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(DateTimeMatcher("currentIncentive.dateTime", maxValue = now))),
+          queries = listOf(
+            Query(
+              matchers = listOf(DateTimeMatcher("currentIncentive.dateTime", maxValue = now)),
+            ),
+          ),
         ),
       )
 
@@ -690,7 +745,17 @@ class AttributeSearchServiceTest {
     fun `should track date time query range`() {
       service.search(
         AttributeSearchRequest(
-          Query(joinType = JoinType.AND, matchers = listOf(DateTimeMatcher("currentIncentive.dateTime", minValue = yesterday.atStartOfDay(), maxValue = tomorrow.atStartOfDay()))),
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                DateTimeMatcher(
+                  attribute = "currentIncentive.dateTime",
+                  minValue = yesterday.atStartOfDay(),
+                  maxValue = tomorrow.atStartOfDay(),
+                ),
+              ),
+            ),
+          ),
         ),
       )
 
@@ -707,11 +772,13 @@ class AttributeSearchServiceTest {
     fun `should track multiple matchers with and`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(
-              StringMatcher("lastName", IS, "Smith"),
-              IntMatcher("heightCentimetres", minValue = 150),
+          queries = listOf(
+            Query(
+              joinType = JoinType.AND,
+              matchers = listOf(
+                StringMatcher("lastName", IS, "Smith"),
+                IntMatcher("heightCentimetres", minValue = 150),
+              ),
             ),
           ),
         ),
@@ -730,12 +797,14 @@ class AttributeSearchServiceTest {
     fun `should track multiple matchers with or`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.OR,
-            matchers = listOf(
-              StringMatcher("lastName", IS, "Smith"),
-              IntMatcher("heightCentimetres", minValue = 150),
-              IntMatcher("shoeSize", minValue = 10, maxValue = 10),
+          queries = listOf(
+            Query(
+              joinType = JoinType.OR,
+              matchers = listOf(
+                StringMatcher("lastName", IS, "Smith"),
+                IntMatcher("heightCentimetres", minValue = 150),
+                IntMatcher("shoeSize", minValue = 10, maxValue = 10),
+              ),
             ),
           ),
         ),
@@ -754,18 +823,18 @@ class AttributeSearchServiceTest {
     fun `should track matchers and sub-queries`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(
-              StringMatcher("lastName", IS, "Smith"),
+          joinType = JoinType.AND,
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                StringMatcher("lastName", IS, "Smith"),
+              ),
             ),
-            subQueries = listOf(
-              Query(
-                joinType = JoinType.OR,
-                matchers = listOf(
-                  DateMatcher("receptionDate", minValue = yesterday),
-                  DateMatcher("releaseDate", minValue = today),
-                ),
+            Query(
+              joinType = JoinType.OR,
+              matchers = listOf(
+                DateMatcher("receptionDate", minValue = yesterday),
+                DateMatcher("releaseDate", minValue = today),
               ),
             ),
           ),
@@ -775,7 +844,7 @@ class AttributeSearchServiceTest {
       verify(telemetryClient).trackEvent(
         eq("POSAttributeSearch"),
         check {
-          assertThat(it["query"]).isEqualTo("lastName = Smith AND (receptionDate >= $yesterday OR releaseDate >= $today)")
+          assertThat(it["query"]).isEqualTo("(lastName = Smith) AND (receptionDate >= $yesterday OR releaseDate >= $today)")
         },
         isNull(),
       )
@@ -785,22 +854,20 @@ class AttributeSearchServiceTest {
     fun `should track multiple sub-queries`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.OR,
-            subQueries = listOf(
-              Query(
-                joinType = JoinType.AND,
-                matchers = listOf(
-                  StringMatcher("firstName", IS, "John"),
-                  StringMatcher("lastName", IS, "Smith"),
-                ),
+          joinType = JoinType.OR,
+          queries = listOf(
+            Query(
+              joinType = JoinType.AND,
+              matchers = listOf(
+                StringMatcher("firstName", IS, "John"),
+                StringMatcher("lastName", IS, "Smith"),
               ),
-              Query(
-                joinType = JoinType.AND,
-                matchers = listOf(
-                  StringMatcher("firstName", IS, "John"),
-                  StringMatcher("lastName", IS, "Jones"),
-                ),
+            ),
+            Query(
+              joinType = JoinType.AND,
+              matchers = listOf(
+                StringMatcher("firstName", IS, "John"),
+                StringMatcher("lastName", IS, "Jones"),
               ),
             ),
           ),
@@ -820,32 +887,32 @@ class AttributeSearchServiceTest {
     fun `should track complicated query`() {
       service.search(
         AttributeSearchRequest(
-          Query(
-            joinType = JoinType.AND,
-            matchers = listOf(
-              StringMatcher("firstName", IS, "John"),
-              StringMatcher("lastName", IS, "Jones"),
-            ),
-            subQueries = listOf(
-              Query(
-                joinType = JoinType.OR,
-                matchers = listOf(
-                  DateMatcher("releaseDate", minValue = yesterday, maxValue = tomorrow),
-                  DateMatcher("releaseDate", minValue = today.plusDays(30)),
-                ),
+          joinType = JoinType.AND,
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                StringMatcher("firstName", IS, "John"),
+                StringMatcher("lastName", IS, "Jones"),
               ),
-              Query(
-                joinType = JoinType.AND,
-                matchers = listOf(
-                  DateMatcher("releaseDate", minValue = today, maxValue = today),
-                ),
-                subQueries = listOf(
-                  Query(
-                    joinType = JoinType.OR,
-                    matchers = listOf(
-                      BooleanMatcher("recall", true),
-                      BooleanMatcher("indeterminateSentence", false),
-                    ),
+            ),
+            Query(
+              joinType = JoinType.OR,
+              matchers = listOf(
+                DateMatcher("releaseDate", minValue = yesterday, maxValue = tomorrow),
+                DateMatcher("releaseDate", minValue = today.plusDays(30)),
+              ),
+            ),
+            Query(
+              joinType = JoinType.AND,
+              matchers = listOf(
+                DateMatcher("releaseDate", minValue = today, maxValue = today),
+              ),
+              subQueries = listOf(
+                Query(
+                  joinType = JoinType.OR,
+                  matchers = listOf(
+                    BooleanMatcher("recall", true),
+                    BooleanMatcher("indeterminateSentence", false),
                   ),
                 ),
               ),
@@ -857,7 +924,13 @@ class AttributeSearchServiceTest {
       verify(telemetryClient).trackEvent(
         eq("POSAttributeSearch"),
         check {
-          assertThat(it["query"]).isEqualTo("firstName = John AND lastName = Jones AND ((releaseDate >= $yesterday AND releaseDate <= $tomorrow) OR releaseDate >= ${today.plusDays(30)}) AND (releaseDate = $today AND (recall = true OR indeterminateSentence = false))")
+          assertThat(it["query"]).isEqualTo(
+            "(firstName = John AND lastName = Jones) AND ((releaseDate >= $yesterday AND releaseDate <= $tomorrow) OR releaseDate >= ${
+              today.plusDays(
+                30,
+              )
+            }) AND (releaseDate = $today AND (recall = true OR indeterminateSentence = false))",
+          )
         },
         isNull(),
       )

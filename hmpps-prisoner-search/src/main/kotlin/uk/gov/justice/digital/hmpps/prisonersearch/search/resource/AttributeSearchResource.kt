@@ -39,68 +39,77 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @Operation(
     summary = "*** WIP - DO NOT USE!!! *** Search for prisoners by attributes",
     description = """<p>This endpoint allows you to create queries over all attributes from the <em>Prisoner</em> record. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.</p>
-      <p>The request contains a query to search on one or more attributes using a list of matchers. For example attribute "lastName""
+      <p>The request contains a list of queries to search on one or more attributes using a list of matchers. For example attribute "lastName""
       requires a <em>StringMatcher</em> so we can query on <strong>"lastName IS Smith"</strong>. Other type matchers include <em>IntMatcher</em>, <em>BooleanMatcher</em>,
       <em>DateMatcher</em> and <em>DateTimeMatcher</em>. We have the facility to easily create additional matchers as required, for example 
       we may end up with a PNCMatcher that handles any format of PNC number.
       </p>
       <p>Each query can also contain a list of sub-queries. Each sub-query can be considered as a separate query in brackets.
       Combining multiple sub-queries gives us the ability to create complex searches using any combination of a prisoner's 
-      attributes. For example we can model queries such as <strong>"lastName IS Smith AND (prisonId IS MDI OR prisonId IS LEI)"</strong>.
+      attributes. For example we can model nested queries such as <strong>"lastName IS Smith AND (prisonId IS MDI OR (prisonId IS OUT AND inOutStatus is OUT))"</strong>.
       </p>
       <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record or get them from endpoint <string>GET /attribute-search/attributes</strong>. Attributes from lists can be
       searched for with dot notation, e.g. <strong>"attribute=aliases.firstName"</strong> or <strong>"attribute=tattoos.bodyPart"</strong>. 
       Attributes from complex objects can also be searched for with dot notation, e.g. <strong>"attribute=currentIncentive.level.code"</strong>.
       </p>
+      <p>To assist with debugging queries we publish events in App Insights. To search in App Insights Log Analytics run query: 
+      <pre>
+        AppEvents
+        | where Name == 'POSAttributeSearch'
+      </pre>
+      </p>
       <h3>Example Requests</h3>
+      <p>Note that the default "joinType" is "AND" so it could be omitted from the examples below (but is included for clarity).</p>
       <h4>Search for all prisoners in Moorland with a height between 150 and 180cm</h4>
       <br/>
-      Query: <strong>"prisonId IS "MDI" AND (heightCentimetres BETWEEN 150 AND 180)"</strong>
+      Query: <strong>"prisonId = "MDI" AND (heightCentimetres >= 150 AND heightCentimetres <= 180)"</strong>
       <br/>
       JSON request:
       <br/>
       <pre>
         {
-          "query":
-          {
-            "joinType": "AND",
-            "matchers": [
-              {
-                "type": "String",
-                "attribute": "prisonId",
-                "condition": "IS",
-                "searchTerm": "MDI"
-              },
-              {
-                "type": "Int",
-                "attribute": "heightCentimetres",
-                "minValue": 150,
-                "maxValue": 180
-              }
-            ]
-          }
-        }      
+          "joinType": "AND",
+          "queries": [
+            {
+              "joinType": "AND",
+              "matchers": [
+                {
+                  "type": "String",
+                  "attribute": "prisonId",
+                  "condition": "IS",
+                  "searchTerm": "MDI"
+                },
+                {
+                  "type": "Int",
+                  "attribute": "heightCentimetres",
+                  "minValue": 150,
+                  "maxValue": 180
+                }
+              ]
+            }
+          ]
+        }
       </pre>
       <br/>
       <h4>Search for all prisoners received since 1st Jan 2024 with a dragon tattoo on either their arm or shoulder</h4>
       <br/>
-      Query: <strong>"receptionDate >= 2024-01-01 AND ((tattoos.bodyPart IS "arm" AND tattoos.comment CONTAINS "dragon" ) OR (tattoos.bodyPart IS "shoulder" AND tattoos.comment CONTAINS "dragon"))"</strong>
+      Query: <strong>"(receptionDate >= 2024-01-01) AND ((tattoos.bodyPart = "arm" AND tattoos.comment CONTAINS "dragon" ) OR (tattoos.bodyPart = "shoulder" AND tattoos.comment CONTAINS "dragon"))"</strong>
       <br/>
       JSON request:
       <br/>
       <pre>
-      {
-        "query":
         {
           "joinType": "AND",
-          "matchers": [
+          "queries": [
             {
-              "type": "Date",
-              "attribute": "receptionDate",
-              "minValue": "2024-01-01"
-            }
-          ],
-          "subQueries": [
+              "matchers": [
+                {
+                  "type": "Date",
+                  "attribute": "receptionDate",
+                  "minValue": "2024-01-01"
+                }
+              ]
+            },
             {
               "joinType": "OR",
               "subQueries": [
@@ -142,8 +151,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
             }
           ]
         }
-      }
-    </pre>
+      </pre>
     """,
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [
