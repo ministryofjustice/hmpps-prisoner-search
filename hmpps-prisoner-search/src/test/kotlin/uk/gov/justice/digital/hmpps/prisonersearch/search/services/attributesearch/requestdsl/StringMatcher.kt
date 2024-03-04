@@ -25,7 +25,7 @@ interface StringMatcherDsl
 
 class StringMatcherBuilder(private val stringAssertion: StringAssertion) : StringMatcherDsl {
 
-  fun build(): StringMatcher = with(stringAssertion) { StringMatcher(attribute.toString(), condition, searchTerm) }
+  fun build(): StringMatcher = with(stringAssertion) { StringMatcher(attribute, condition, searchTerm) }
 }
 
 class StringAssertion(
@@ -37,4 +37,4 @@ class StringAssertion(
 @Suppress("ktlint:standard:function-naming")
 internal infix fun String.`is`(value: String) = StringAssertion(this, StringCondition.IS, value)
 internal infix fun String.isNot(value: String) = StringAssertion(this, StringCondition.IS_NOT, value)
-internal infix fun String.contains(value: String) = StringAssertion(this, StringCondition.CONTAINS, value)
+internal infix fun String.has(value: String) = StringAssertion(this, StringCondition.CONTAINS, value)
