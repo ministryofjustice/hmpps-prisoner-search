@@ -15,11 +15,10 @@ import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.cache.CacheManager
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalCharacteristicBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalMarkBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
@@ -50,7 +49,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
-import java.time.LocalDateTime
 import java.util.stream.Stream
 
 class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
@@ -91,7 +89,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         ),
         category = "C",
         csra = "High",
-        currentIncentive = CurrentIncentive(level = IncentiveLevel(code = "ENH", description = "Enhanced"), dateTime = LocalDateTime.now()),
+        currentIncentive = IncentiveLevelBuilder(levelCode = "ENH", levelDescription = "Enhanced"),
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AC",
@@ -121,7 +119,7 @@ class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
         ),
         category = "Q",
         csra = "Low",
-        currentIncentive = CurrentIncentive(level = IncentiveLevel(code = "BAS", description = "Basic"), dateTime = LocalDateTime.now()),
+        currentIncentive = IncentiveLevelBuilder(levelCode = "BAS", levelDescription = "Basic"),
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AD",

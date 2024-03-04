@@ -35,6 +35,10 @@ class StringAssertion(
 )
 
 @Suppress("ktlint:standard:function-naming")
-internal infix fun String.`is`(value: String) = StringAssertion(this, StringCondition.IS, value)
-internal infix fun String.isNot(value: String) = StringAssertion(this, StringCondition.IS_NOT, value)
-internal infix fun String.has(value: String) = StringAssertion(this, StringCondition.CONTAINS, value)
+internal infix fun String.IS(value: String) = StringAssertion(this, StringCondition.IS, value)
+
+@Suppress("ktlint:standard:function-naming")
+internal infix fun String.IS_NOT(value: String) = StringAssertion(this, StringCondition.IS_NOT, value)
+
+@Suppress("ktlint:standard:function-naming")
+internal infix fun String.CONTAINS(value: String) = StringAssertion(this, StringCondition.CONTAINS, value)

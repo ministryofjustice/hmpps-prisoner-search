@@ -9,14 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.CONTAINS
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IS
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IS_NOT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.RequestDsl
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.has
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.`is`
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.isNot
 
 /**
  * Test the attribute search engine.
@@ -52,7 +53,7 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
 
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" `is` "John")
+          stringMatcher("firstName" IS "John")
         }
       }
 
@@ -69,7 +70,7 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
 
       val request = RequestDsl {
         query {
-          stringMatcher("cellLocation" `is` "C-1-2")
+          stringMatcher("cellLocation" IS "C-1-2")
         }
       }
 
@@ -86,8 +87,8 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
 
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" `is` "John")
-          stringMatcher("lastName" `is` "Smith")
+          stringMatcher("firstName" IS "John")
+          stringMatcher("lastName" IS "Smith")
         }
       }
 
@@ -105,8 +106,8 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
       val request = RequestDsl {
         query {
           joinType = OR
-          stringMatcher("firstName" `is` "John")
-          stringMatcher("lastName" `is` "Jones")
+          stringMatcher("firstName" IS "John")
+          stringMatcher("lastName" IS "Jones")
         }
       }
 
@@ -116,13 +117,13 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     @Test
     fun `single IS_NOT`() {
       loadPrisoners(
-        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
-        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", lastName = "Jones"),
+        PrisonerBuilder(prisonerNumber = "A1234AA", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", lastName = "Jones"),
       )
 
       val request = RequestDsl {
         query {
-          stringMatcher("lastName" isNot "Jones")
+          stringMatcher("lastName" IS_NOT "Jones")
         }
       }
 
@@ -139,7 +140,7 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
 
       val request = RequestDsl {
         query {
-          stringMatcher("cellLocation" isNot "C-1-2")
+          stringMatcher("cellLocation" IS_NOT "C-1-2")
         }
       }
 
@@ -149,15 +150,15 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     @Test
     fun `IS_NOT with AND`() {
       loadPrisoners(
-        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
-        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", lastName = "Jones"),
-        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Power"),
+        PrisonerBuilder(prisonerNumber = "A1234AA", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", lastName = "Jones"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", lastName = "Power"),
       )
 
       val request = RequestDsl {
         query {
-          stringMatcher("lastName" isNot "Jones")
-          stringMatcher("lastName" isNot "Power")
+          stringMatcher("lastName" IS_NOT "Jones")
+          stringMatcher("lastName" IS_NOT "Power")
         }
       }
 
@@ -175,8 +176,8 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
       val request = RequestDsl {
         query {
           joinType = OR
-          stringMatcher("firstName" isNot "John")
-          stringMatcher("lastName" isNot "Jones")
+          stringMatcher("firstName" IS_NOT "John")
+          stringMatcher("lastName" IS_NOT "Jones")
         }
       }
 
@@ -186,14 +187,14 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     @Test
     fun `single CONTAINS`() {
       loadPrisoners(
-        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
-        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", lastName = "Jones"),
-        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Taylor-Smith"),
+        PrisonerBuilder(prisonerNumber = "A1234AA", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", lastName = "Jones"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", lastName = "Taylor-Smith"),
       )
 
       val request = RequestDsl {
         query {
-          stringMatcher("lastName" has "Smith")
+          stringMatcher("lastName" CONTAINS "Smith")
         }
       }
 
@@ -211,7 +212,7 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
       // The "-1-2" matches all prisoners, so we're testing that the results must contain the whole search term
       val request = RequestDsl {
         query {
-          stringMatcher("cellLocation" has "C-1-2")
+          stringMatcher("cellLocation" CONTAINS "C-1-2")
         }
       }
 
@@ -221,15 +222,15 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     @Test
     fun `CONTAINS with AND`() {
       loadPrisoners(
-        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
-        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", lastName = "Jones"),
-        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Taylor-Smith"),
+        PrisonerBuilder(prisonerNumber = "A1234AA", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", lastName = "Jones"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", lastName = "Taylor-Smith"),
       )
 
       val request = RequestDsl {
         query {
-          stringMatcher("lastName" has "Taylor")
-          stringMatcher("lastName" has "Smith")
+          stringMatcher("lastName" CONTAINS "Taylor")
+          stringMatcher("lastName" CONTAINS "Smith")
         }
       }
 
@@ -239,16 +240,16 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     @Test
     fun `CONTAINS with OR`() {
       loadPrisoners(
-        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Taylor-Smith"),
-        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", lastName = "Taylor-Jones"),
-        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Taylor"),
+        PrisonerBuilder(prisonerNumber = "A1234AA", lastName = "Taylor-Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", lastName = "Taylor-Jones"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", lastName = "Taylor"),
       )
 
       val request = RequestDsl {
         query {
           joinType = OR
-          stringMatcher("lastName" has "Smith")
-          stringMatcher("lastName" has "Jones")
+          stringMatcher("lastName" CONTAINS "Smith")
+          stringMatcher("lastName" CONTAINS "Jones")
         }
       }
 
@@ -265,9 +266,9 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
 
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" `is` "John")
-          stringMatcher("lastName" has "Taylor")
-          stringMatcher("lastName" isNot "Taylor-Jones")
+          stringMatcher("firstName" IS "John")
+          stringMatcher("lastName" CONTAINS "Taylor")
+          stringMatcher("lastName" IS_NOT "Taylor-Jones")
         }
       }
 
@@ -286,13 +287,242 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
       val request = RequestDsl {
         query {
           joinType = OR
-          stringMatcher("firstName" isNot "Jack")
-          stringMatcher("lastName" has "Jones")
-          stringMatcher("lastName" `is` "Taylor-Smith")
+          stringMatcher("firstName" IS_NOT "Jack")
+          stringMatcher("lastName" CONTAINS "Jones")
+          stringMatcher("lastName" IS "Taylor-Smith")
         }
       }
 
       webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB", "C1234CC")
+    }
+
+    @Test
+    fun `IS with field from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("P" to "P11", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("X" to "XSA", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "XSA", "V" to "V45")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertType" IS "O")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `IS with AND fields from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("P" to "P11", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("X" to "XSA", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "XSA", "V" to "V45")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertType" IS "O")
+          stringMatcher("alerts.alertType" IS "X")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `IS with OR fields from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("P" to "P11", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("X" to "XSA", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "XSA", "V" to "V45")),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          stringMatcher("alerts.alertCode" IS "P11")
+          stringMatcher("alerts.alertCode" IS "V45")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "C1234CC")
+    }
+
+    @Test
+    fun `IS with field from a nested object`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder("STD")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder("ENH")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.code" IS "STD")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `IS with AND fields from a nested object`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder("STD")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder("ENH")),
+      )
+
+      // This doesn't make sense - incentive cannot be both STD and ENH - but just want to make sure it returns nothing
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.code" IS "STD")
+          stringMatcher("currentIncentive.level.code" IS "ENH")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `IS_NOT with field from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("P" to "P11", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("X" to "XSA", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "XSA", "V" to "V45")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertCode" IS_NOT "OPPO")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("C1234CC")
+    }
+
+    @Test
+    fun `IS_NOT with AND fields from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("P" to "P11", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("X" to "XSA", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "XSA", "V" to "V45")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertCode" IS_NOT "OPPO")
+          stringMatcher("alerts.alertCode" IS_NOT "P11")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("C1234CC")
+    }
+
+    @Test
+    fun `IS_NOT with OR fields from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("P" to "P11")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("P" to "P11", "O" to "OPPO", "V" to "V45")),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          stringMatcher("alerts.alertCode" IS_NOT "OPPO")
+          stringMatcher("alerts.alertCode" IS_NOT "P11")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `IS_NOT with field from a nested object`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder("STD")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder("ENH")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.code" IS_NOT "ENH")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `CONTAINS with field from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("C" to "CC1", "P" to "P11")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("C" to "CC2", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "CA", "P" to "P11")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertCode" CONTAINS "CC")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `CONTAINS with AND fields from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("C" to "CC1", "P" to "P11")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("C" to "CC2", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "CA", "P" to "P11")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertCode" CONTAINS "CC")
+          stringMatcher("alerts.alertCode" CONTAINS "OPP")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `CONTAINS with OR fields from an array`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", alertCodes = listOf("C" to "CC1", "P" to "P11")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", alertCodes = listOf("X" to "CA", "O" to "OPPO")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", alertCodes = listOf("X" to "CA", "P" to "P11")),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          stringMatcher("alerts.alertCode" CONTAINS "CC")
+          stringMatcher("alerts.alertCode" CONTAINS "OPP")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `CONTAINS with field from a nested object`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder("STD", "Standard")),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder("ENH", "Enhanced")),
+        PrisonerBuilder(prisonerNumber = "C1234CC", currentIncentive = IncentiveLevelBuilder("EN2", "Enhanced 2")),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "Enhanced")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC")
     }
   }
 

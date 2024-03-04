@@ -13,10 +13,9 @@ import org.mockito.kotlin.verify
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.test.context.TestPropertySource
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
@@ -190,7 +189,11 @@ class PrisonersInPrisonResourceTest : AbstractSearchDataIntegrationTest() {
         agencyId = "TEI",
         dateOfBirth = "1965-07-19",
         cellLocation = "3-1-C-016",
-        currentIncentive = CurrentIncentive(level = IncentiveLevel(code = "STD", description = "Standard"), dateTime = LocalDateTime.of(2022, 1, 1, 12, 0, 0)),
+        currentIncentive = IncentiveLevelBuilder(
+          levelCode = "STD",
+          levelDescription = "Standard",
+          dateTime = LocalDateTime.of(2022, 1, 1, 12, 0, 0),
+        ),
       ),
       PrisonerBuilder(
         prisonerNumber = "A1840AB",
@@ -199,7 +202,11 @@ class PrisonersInPrisonResourceTest : AbstractSearchDataIntegrationTest() {
         agencyId = "TEI",
         dateOfBirth = "1965-07-20",
         cellLocation = "3-1-D-017",
-        currentIncentive = CurrentIncentive(level = IncentiveLevel(code = "ENH", description = "Enhanced"), dateTime = LocalDateTime.of(2023, 1, 1, 12, 0, 0)),
+        currentIncentive = IncentiveLevelBuilder(
+          levelCode = "ENH",
+          levelDescription = "Enhanced",
+          dateTime = LocalDateTime.of(2023, 1, 1, 12, 0, 0),
+        ),
       ),
       PrisonerBuilder(
         prisonerNumber = "A1840AC",
