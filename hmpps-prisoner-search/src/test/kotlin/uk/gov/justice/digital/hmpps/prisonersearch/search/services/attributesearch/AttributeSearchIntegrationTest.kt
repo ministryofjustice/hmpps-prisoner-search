@@ -14,9 +14,16 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.AND_LT
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.AND_LTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.CONTAINS
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.EQ
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.GT
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.GTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IS_NOT
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LT
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.RequestDsl
 
 /**
@@ -519,6 +526,125 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
       val request = RequestDsl {
         query {
           stringMatcher("currentIncentive.level.description" CONTAINS "Enhanced")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC")
+    }
+  }
+
+  @Nested
+  inner class IntMatchers {
+    @Test
+    fun `single equals`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" EQ 160)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single greater than or equal to`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" GTE 170)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `single greater than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" GT 169)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `single less than or equal to`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" LTE 160)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single less than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" LT 161)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `between inclusive`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 159),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "D1234DD", heightCentimetres = 171),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" GTE 160 AND_LTE 170)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC")
+    }
+
+    @Test
+    fun `between exclusive`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 159),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 160),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "D1234DD", heightCentimetres = 171),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" GT 159 AND_LT 171)
         }
       }
 
