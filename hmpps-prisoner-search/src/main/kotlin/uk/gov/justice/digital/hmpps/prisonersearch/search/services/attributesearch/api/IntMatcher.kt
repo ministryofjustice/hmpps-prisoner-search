@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 
 @Schema(
@@ -42,6 +43,19 @@ data class IntMatcher(
         throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
       }
     }
+  }
+
+  override fun buildQuery() = when {
+    minValue != null && maxValue != null -> {
+      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
+    }
+    minValue != null -> {
+      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive)
+    }
+    maxValue != null -> {
+      QueryBuilders.rangeQuery(attribute).to(maxValue).includeUpper(maxInclusive)
+    }
+    else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
   }
 
   override fun toString() =

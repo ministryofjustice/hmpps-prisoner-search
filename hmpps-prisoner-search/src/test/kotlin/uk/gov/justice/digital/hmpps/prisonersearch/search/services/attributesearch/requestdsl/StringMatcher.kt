@@ -14,7 +14,7 @@ annotation class StringMatcherDslMarker
  * ```
  *   val request = RequestDsl {
  *     query {
- *       stringMatcher("attribute" `is` "value")
+ *       stringMatcher("attribute" IS "value")
  *       ...
  *     }
  *   }

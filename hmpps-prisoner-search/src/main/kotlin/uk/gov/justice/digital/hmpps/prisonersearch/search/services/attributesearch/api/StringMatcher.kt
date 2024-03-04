@@ -23,7 +23,7 @@ data class StringMatcher(
     }
   }
 
-  fun buildQuery(): AbstractQueryBuilder<*> = when (condition) {
+  override fun buildQuery(): AbstractQueryBuilder<*> = when (condition) {
     StringCondition.IS -> QueryBuilders.termQuery("$attribute.keyword", searchTerm)
     StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("$attribute.keyword", searchTerm))
     StringCondition.CONTAINS -> QueryBuilders.queryStringQuery("*$searchTerm*").field("$attribute.keyword")
