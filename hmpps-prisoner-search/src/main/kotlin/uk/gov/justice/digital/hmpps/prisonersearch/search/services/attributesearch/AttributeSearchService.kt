@@ -44,8 +44,8 @@ class AttributeSearchService(
       .apply {
         forEach {
           when (joinType) {
-            JoinType.AND -> must(QueryBuilders.matchQuery(it.attribute, it.searchTerm))
-            JoinType.OR -> should(QueryBuilders.matchQuery(it.attribute, it.searchTerm))
+            JoinType.AND -> must(it.buildQuery())
+            JoinType.OR -> should(it.buildQuery())
           }
         }
       }

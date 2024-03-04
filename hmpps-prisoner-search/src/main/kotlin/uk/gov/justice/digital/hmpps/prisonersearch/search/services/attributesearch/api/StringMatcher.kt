@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.index.query.AbstractQueryBuilder
+import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 
 @Schema(description = "A matcher for a string attribute from the prisoner record")
@@ -19,6 +21,12 @@ data class StringMatcher(
     if (searchTerm.isBlank()) {
       throw AttributeSearchException("Attribute $attribute must not have a blank search term")
     }
+  }
+
+  fun buildQuery(): AbstractQueryBuilder<*> = when (condition) {
+    StringCondition.IS -> QueryBuilders.termQuery("$attribute.keyword", searchTerm)
+    StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("$attribute.keyword", searchTerm))
+    StringCondition.CONTAINS -> QueryBuilders.queryStringQuery("*$searchTerm*").field("$attribute.keyword")
   }
 
   override fun toString(): String {
