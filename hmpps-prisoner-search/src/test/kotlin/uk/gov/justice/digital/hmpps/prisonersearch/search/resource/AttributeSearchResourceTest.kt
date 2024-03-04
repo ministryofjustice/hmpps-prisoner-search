@@ -17,6 +17,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+/**
+ * This class tests the attribute search API using raw JSON using a rudimentary JSON request builder. This allows us to test that invalid JSON is rejected.
+ *
+ * For clearer examples of JSON requests see [AttributeSearchRequestJsonTest].
+ */
 class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
   private fun validRequest(
     matchers: String = """
