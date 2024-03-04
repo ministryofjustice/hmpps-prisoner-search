@@ -19,6 +19,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 import java.time.LocalDate
 
+/**
+ * These tests were originally written to help design [AttributeSearchRequest]. They have been retained as they show
+ * examples of what the request object looks like in JSON format.
+ */
 @JsonTest
 class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) {
 
