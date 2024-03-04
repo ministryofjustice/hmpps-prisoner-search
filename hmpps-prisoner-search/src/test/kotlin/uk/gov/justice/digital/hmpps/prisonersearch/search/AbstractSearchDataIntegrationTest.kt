@@ -96,7 +96,7 @@ abstract class AbstractSearchDataIntegrationTest : IntegrationTestBase() {
     waitForPrisonerLoading(prisoners.size)
   }
 
-  private fun waitForPrisonerLoading(expectedCount: Int) {
+  protected fun waitForPrisonerLoading(expectedCount: Int) {
     await untilCallTo {
       prisonerRepository.count(SyncIndex.GREEN)
     } matches { it == expectedCount.toLong() }
