@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
 import org.apache.commons.lang3.RandomStringUtils
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.Alert
@@ -38,7 +37,7 @@ data class PrisonerBuilder(
   val physicalCharacteristics: PhysicalCharacteristicBuilder? = null,
   val physicalMarks: PhysicalMarkBuilder? = null,
   val profileInformation: ProfileInformationBuilder? = null,
-  val currentIncentive: CurrentIncentive? = null,
+  val currentIncentive: IncentiveLevelBuilder? = null,
   val category: String? = null,
   val csra: String? = null,
 )
@@ -76,6 +75,13 @@ data class AliasBuilder(
   val ethnicity: String? = null,
 )
 
+data class IncentiveLevelBuilder(
+  val levelCode: String = "STD",
+  val levelDescription: String = "Standard",
+  val dateTime: LocalDateTime = LocalDateTime.now(),
+  val nextReviewDate: LocalDate? = null,
+)
+
 fun generatePrisonerNumber(): String {
   // generate random string starting with a letter, followed by 4 numbers and 2 letters
   return "${letters(1)}${numbers(4)}${letters(2)}"
@@ -97,19 +103,12 @@ fun numbers(length: Int): String {
 fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevelDto? =
   this.currentIncentive?.let {
     IncentiveLevelDto(
-      iepCode = it.level.code ?: "",
-      iepLevel = it.level.description,
+      iepCode = it.levelCode,
+      iepLevel = it.levelDescription,
       iepTime = it.dateTime,
       nextReviewDate = it.nextReviewDate,
     )
   }
-
-data class IncentiveLevel(
-  val iepCode: String,
-  val iepLevel: String,
-  val iepTime: LocalDateTime,
-  val nextReviewDate: LocalDate?,
-)
 
 fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
   getOffenderBookingTemplate().copy(
