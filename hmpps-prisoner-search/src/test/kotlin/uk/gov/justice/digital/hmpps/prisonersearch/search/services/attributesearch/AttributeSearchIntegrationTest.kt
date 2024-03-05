@@ -1019,6 +1019,200 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     }
   }
 
+  @Nested
+  inner class DateMatchers {
+    @Test
+    fun `single equals`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1990-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" EQ "1989-12-31")
+        }
+      }
+
+      webTestClient.attributeSearch(request)
+        .expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single greater than or equal to`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1990-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" GTE "1990-01-01")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `single greater than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1990-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" GT "1989-12-31")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `single less than or equal to`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1990-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" LTE "1989-12-31")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single less than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1990-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" LT "1990-01-01")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `between inclusive`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-30"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", dateOfBirth = "1990-01-01"),
+        PrisonerBuilder(prisonerNumber = "D1234DD", dateOfBirth = "1990-01-02"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" GTE "1989-12-31" AND_LTE "1990-01-01")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC")
+    }
+
+    @Test
+    fun `between exclusive`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-30"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1989-12-31"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", dateOfBirth = "1990-01-01"),
+        PrisonerBuilder(prisonerNumber = "D1234DD", dateOfBirth = "1990-01-02"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" GT "1989-12-30" AND_LT "1990-01-02")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC")
+    }
+
+    @Test
+    fun `AND with 2 dates`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-30", receptionDate = "2020-12-30"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1989-12-31", receptionDate = "2020-12-31"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", dateOfBirth = "1990-01-01", receptionDate = "2021-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" GTE "1989-12-31")
+          dateMatcher("receptionDate" LT "2021-01-01")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `OR with 2 dates`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-30", receptionDate = "2020-12-30"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1989-12-31", receptionDate = "2020-12-31"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", dateOfBirth = "1990-01-01", receptionDate = "2021-01-01"),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          dateMatcher("dateOfBirth" GT "1989-12-31")
+          dateMatcher("receptionDate" LTE "2020-12-30")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "C1234CC")
+    }
+
+    @Test
+    fun `dates AND strings`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-30", firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1989-12-31", firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", dateOfBirth = "1989-12-31", firstName = "Jack"),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateMatcher("dateOfBirth" EQ "1989-12-31")
+          stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `dates OR strings`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", dateOfBirth = "1989-12-30", firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", dateOfBirth = "1989-12-31", firstName = "Jack"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", dateOfBirth = "1990-01-01", firstName = "Jack"),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          dateMatcher("dateOfBirth" EQ "1989-12-31")
+          stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+  }
+
   private fun youthOffender(condition: Boolean) = ProfileInformationBuilder(youthOffender = condition)
 
   private fun shoeSize(size: Int) = PhysicalCharacteristicBuilder(shoeSize = size)

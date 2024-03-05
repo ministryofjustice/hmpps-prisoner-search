@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl
 
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
@@ -57,6 +58,12 @@ interface QueryDsl {
    */
   @DateTimeMatcherDslMarker
   fun dateTimeMatcher(dateTimeAssertion: DateTimeAssertion): DateTimeMatcher
+
+  /**
+   * A date matcher to match a LocalDate attribute. See [DateMatcherBuilder] for more details.
+   */
+  @DateMatcherDslMarker
+  fun dateMatcher(dateAssertion: DateAssertion): DateMatcher
 }
 
 class QueryBuilder : QueryDsl {
@@ -80,6 +87,11 @@ class QueryBuilder : QueryDsl {
 
   override fun dateTimeMatcher(dateTimeAssertion: DateTimeAssertion): DateTimeMatcher =
     DateTimeMatcherBuilder(dateTimeAssertion)
+      .build()
+      .also { matchers += it }
+
+  override fun dateMatcher(dateAssertion: DateAssertion): DateMatcher =
+    DateMatcherBuilder(dateAssertion)
       .build()
       .also { matchers += it }
 

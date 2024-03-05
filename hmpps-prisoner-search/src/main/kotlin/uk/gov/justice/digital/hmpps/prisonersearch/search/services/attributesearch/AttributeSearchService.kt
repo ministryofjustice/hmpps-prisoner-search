@@ -16,11 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TypeMatcher
 
 @Component
@@ -38,10 +34,8 @@ class AttributeSearchService(
     return doSearch(request, pageable)
   }
 
-  private val supportedMatchers = listOf(StringMatcher::class, IntMatcher::class, BooleanMatcher::class, DateTimeMatcher::class)
-
   private fun doSearch(request: AttributeSearchRequest, pageable: Pageable): Page<Prisoner> =
-    request.queries[0].matchers!!.mapNotNull { if (it::class in supportedMatchers) it else null }
+    request.queries[0].matchers!!
       .buildQuery(request.queries[0].joinType)
       .let { it.search(pageable) }
 
