@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.index.query.AbstractQueryBuilder
+import org.opensearch.index.query.QueryBuilders
 
 @Schema(description = "A matcher for a boolean attribute from the Prisoner record")
 data class BooleanMatcher(
@@ -11,6 +13,8 @@ data class BooleanMatcher(
 ) : TypeMatcher<Boolean> {
   @Schema(description = "Must be Boolean", example = "Boolean")
   override val type: String = "Boolean"
+
+  override fun buildQuery(): AbstractQueryBuilder<*> = QueryBuilders.termQuery(attribute, condition)
 
   override fun toString() = "$attribute = $condition"
 }

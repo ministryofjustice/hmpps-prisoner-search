@@ -10,7 +10,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalCharacteristicBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.ProfileInformationBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
@@ -650,7 +652,204 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
 
       webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC")
     }
+
+    @Test
+    fun `AND with 2 integers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 161, physicalCharacteristics = shoeSize(8)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 161, physicalCharacteristics = shoeSize(9)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 160, physicalCharacteristics = shoeSize(8)),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" GTE 161)
+          intMatcher("shoeSize" LT 9)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `OR with 2 integers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160, physicalCharacteristics = shoeSize(8)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 161, physicalCharacteristics = shoeSize(9)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 162, physicalCharacteristics = shoeSize(10)),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          intMatcher("heightCentimetres" GT 161)
+          intMatcher("shoeSize" LTE 8)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "C1234CC")
+    }
+
+    @Test
+    fun `integers AND strings`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160, firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 161, firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 161, firstName = "Jack"),
+      )
+
+      val request = RequestDsl {
+        query {
+          intMatcher("heightCentimetres" EQ 161)
+          stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `integers OR strings`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 160, firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 161, firstName = "Jack"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 162, firstName = "Jack"),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          intMatcher("heightCentimetres" EQ 161)
+          stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
   }
+
+  @Nested
+  inner class BooleanMatchers {
+    @Test
+    fun `single true`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", recall = true),
+        PrisonerBuilder(prisonerNumber = "B1234BB", recall = false),
+      )
+
+      val request = RequestDsl {
+        query {
+          booleanMatcher("recall" IS true)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single false`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", recall = true),
+        PrisonerBuilder(prisonerNumber = "B1234BB", recall = false),
+      )
+
+      val request = RequestDsl {
+        query {
+          booleanMatcher("recall" IS false)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `booleans with AND`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", recall = true, profileInformation = youthOffender(true)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", recall = true, profileInformation = youthOffender(false)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", recall = false, profileInformation = youthOffender(true)),
+        PrisonerBuilder(prisonerNumber = "D1234DD", recall = false, profileInformation = youthOffender(false)),
+      )
+
+      val request = RequestDsl {
+        query {
+          booleanMatcher("recall" IS true)
+          booleanMatcher("youthOffender" IS false)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `booleans with OR`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", recall = true, profileInformation = youthOffender(true)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", recall = true, profileInformation = youthOffender(false)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", recall = false, profileInformation = youthOffender(true)),
+        PrisonerBuilder(prisonerNumber = "D1234DD", recall = false, profileInformation = youthOffender(false)),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          booleanMatcher("recall" IS true)
+          booleanMatcher("youthOffender" IS true)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB", "C1234CC")
+    }
+
+    @Test
+    fun `booleans AND strings AND integers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", recall = true, firstName = "John", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "B1234BB", recall = true, firstName = "Jack", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "C1234CC", recall = true, firstName = "John", heightCentimetres = 171),
+        PrisonerBuilder(prisonerNumber = "D1234DD", recall = false, firstName = "John", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "E1234EE", recall = false, firstName = "Jack", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "F1234FF", recall = false, firstName = "John", heightCentimetres = 171),
+      )
+
+      val request = RequestDsl {
+        query {
+          booleanMatcher("recall" IS false)
+          stringMatcher("firstName" IS "John")
+          intMatcher("heightCentimetres" EQ 171)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("F1234FF")
+    }
+
+    @Test
+    fun `booleans OR strings OR integers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", recall = true, firstName = "John", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "B1234BB", recall = true, firstName = "Jack", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "C1234CC", recall = true, firstName = "John", heightCentimetres = 171),
+        PrisonerBuilder(prisonerNumber = "D1234DD", recall = false, firstName = "John", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "E1234EE", recall = false, firstName = "Jack", heightCentimetres = 170),
+        PrisonerBuilder(prisonerNumber = "F1234FF", recall = false, firstName = "John", heightCentimetres = 171),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          booleanMatcher("recall" IS false)
+          stringMatcher("firstName" IS "Jack")
+          intMatcher("heightCentimetres" EQ 171)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC", "D1234DD", "E1234EE", "F1234FF")
+    }
+  }
+
+  private fun youthOffender(condition: Boolean) = ProfileInformationBuilder(youthOffender = condition)
+
+  private fun shoeSize(size: Int) = PhysicalCharacteristicBuilder(shoeSize = size)
 
   private fun PrisonerRepository.delete(prisonerNumber: String) = delete(prisonerNumber, SyncIndex.GREEN)
 

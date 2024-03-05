@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl
 
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Query
@@ -43,6 +44,12 @@ interface QueryDsl {
    */
   @IntMatcherDslMarker
   fun intMatcher(intAssertion: IntAssertion): IntMatcher
+
+  /**
+   * A boolean matcher to match a Boolean attribute. See [BooleanMatcherBuilder] for more details.
+   */
+  @BooleanMatcherDslMarker
+  fun booleanMatcher(booleanAssertion: BooleanAssertion): BooleanMatcher
 }
 
 class QueryBuilder : QueryDsl {
@@ -56,6 +63,11 @@ class QueryBuilder : QueryDsl {
 
   override fun intMatcher(intAssertion: IntAssertion) =
     IntMatcherBuilder(intAssertion)
+      .build()
+      .also { matchers += it }
+
+  override fun booleanMatcher(booleanAssertion: BooleanAssertion) =
+    BooleanMatcherBuilder(booleanAssertion)
       .build()
       .also { matchers += it }
 
