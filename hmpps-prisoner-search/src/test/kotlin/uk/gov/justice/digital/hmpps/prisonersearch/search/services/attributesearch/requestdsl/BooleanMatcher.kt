@@ -13,7 +13,7 @@ annotation class BooleanMatcherDslMarker
  * ```
  *   val request = RequestDsl {
  *     query {
- *       booleanMatcher("attribute" IS_BOOL false)
+ *       booleanMatcher("attribute" IS false)
  *       ...
  *     }
  *   }

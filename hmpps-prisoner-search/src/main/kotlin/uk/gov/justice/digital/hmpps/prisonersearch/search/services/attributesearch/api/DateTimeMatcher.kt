@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.index.query.AbstractQueryBuilder
+import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit.SECONDS
 
 @Schema(
   description = """A matcher for a date time attribute from the Prisoner record.
@@ -34,6 +37,23 @@ data class DateTimeMatcher(
       if (maxValue < minValue) {
         throw AttributeSearchException("Attribute $attribute max value $maxValue less than min value $minValue")
       }
+    }
+  }
+
+  override fun buildQuery(): AbstractQueryBuilder<*> {
+    val min = minValue?.truncatedTo(SECONDS)?.toString()
+    val max = maxValue?.truncatedTo(SECONDS)?.toString()
+    return when {
+      min != null && max != null -> {
+        QueryBuilders.rangeQuery(attribute).from(min).to(max)
+      }
+      min != null -> {
+        QueryBuilders.rangeQuery(attribute).from(min)
+      }
+      max != null -> {
+        QueryBuilders.rangeQuery(attribute).to(max)
+      }
+      else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
     }
   }
 

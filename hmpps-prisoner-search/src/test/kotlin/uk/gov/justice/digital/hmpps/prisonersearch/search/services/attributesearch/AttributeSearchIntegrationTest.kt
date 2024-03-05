@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.RequestDsl
+import java.time.LocalDateTime
 
 /**
  * Test the attribute search engine.
@@ -844,6 +845,177 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
       }
 
       webTestClient.attributeSearch(request).expectPrisoners("B1234BB", "C1234CC", "D1234DD", "E1234EE", "F1234FF")
+    }
+  }
+
+  @Nested
+  inner class DateTimeMatchers {
+    private val now = LocalDateTime.now()
+    private val yesterday = now.minusDays(1)
+    private val tomorrow = now.plusDays(1)
+
+    @Test
+    fun `single greater than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1))
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `single less than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateTimeMatcher("currentIncentive.dateTime" LT now.minusHours(1))
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single between`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", currentIncentive = IncentiveLevelBuilder(dateTime = tomorrow)),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1) AND_LT now.plusHours(1))
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `AND with greater than and less than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", currentIncentive = IncentiveLevelBuilder(dateTime = tomorrow)),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1))
+          dateTimeMatcher("currentIncentive.dateTime" LT now.plusHours(1))
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `OR with less than and greater than`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", currentIncentive = IncentiveLevelBuilder(dateTime = tomorrow)),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          dateTimeMatcher("currentIncentive.dateTime" LT now.minusHours(1))
+          dateTimeMatcher("currentIncentive.dateTime" GT now.plusHours(1))
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "C1234CC")
+    }
+
+    @Test
+    fun `AND with a string matcher`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Jack", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "D1234DD", firstName = "Jack", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1))
+          stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `OR with a string matcher`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Jack", currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "D1234DD", firstName = "Jack", currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1))
+          stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB", "D1234DD")
+    }
+
+    @Test
+    fun `AND with an int matcher`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 170, currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170, currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 169, currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "D1234DD", heightCentimetres = 169, currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+      )
+
+      val request = RequestDsl {
+        query {
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1))
+          intMatcher("heightCentimetres" EQ 170)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("B1234BB")
+    }
+
+    @Test
+    fun `OR with an int matcher`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", heightCentimetres = 170, currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "B1234BB", heightCentimetres = 170, currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+        PrisonerBuilder(prisonerNumber = "C1234CC", heightCentimetres = 169, currentIncentive = IncentiveLevelBuilder(dateTime = yesterday)),
+        PrisonerBuilder(prisonerNumber = "D1234DD", heightCentimetres = 169, currentIncentive = IncentiveLevelBuilder(dateTime = now)),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          dateTimeMatcher("currentIncentive.dateTime" GT now.minusHours(1))
+          intMatcher("heightCentimetres" EQ 170)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB", "D1234DD")
     }
   }
 
