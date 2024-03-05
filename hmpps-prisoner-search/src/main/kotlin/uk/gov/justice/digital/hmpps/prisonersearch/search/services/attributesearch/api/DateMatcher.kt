@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.index.query.AbstractQueryBuilder
+import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import java.time.LocalDate
 
@@ -43,6 +45,19 @@ data class DateMatcher(
         throw AttributeSearchException("Attribute $attribute max value $max less than min value $min")
       }
     }
+  }
+
+  override fun buildQuery(): AbstractQueryBuilder<*> = when {
+    minValue != null && maxValue != null -> {
+      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
+    }
+    minValue != null -> {
+      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive)
+    }
+    maxValue != null -> {
+      QueryBuilders.rangeQuery(attribute).to(maxValue).includeUpper(maxInclusive)
+    }
+    else -> throw AttributeSearchException("Attribute $attribute must have a min or max value")
   }
 
   override fun toString() =

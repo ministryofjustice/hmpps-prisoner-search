@@ -41,6 +41,7 @@ data class PrisonerBuilder(
   val category: String? = null,
   val csra: String? = null,
   val recall: Boolean? = null,
+  val receptionDate: String? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -217,6 +218,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
     categoryCode = category,
     csra = csra,
     recall = recall,
+    receptionDate = receptionDate?.let { LocalDate.parse(it) },
   ).let {
     if (released) {
       it.copy(
