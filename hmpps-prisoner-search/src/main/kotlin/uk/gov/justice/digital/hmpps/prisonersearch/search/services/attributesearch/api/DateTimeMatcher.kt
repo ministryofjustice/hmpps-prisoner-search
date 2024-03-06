@@ -5,6 +5,7 @@ import org.opensearch.index.query.AbstractQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit.SECONDS
 
 @Schema(
@@ -41,8 +42,8 @@ data class DateTimeMatcher(
   }
 
   override fun buildQuery(): AbstractQueryBuilder<*> {
-    val min = minValue?.truncatedTo(SECONDS)?.toString()
-    val max = maxValue?.truncatedTo(SECONDS)?.toString()
+    val min = minValue?.truncateToSeconds()
+    val max = maxValue?.truncateToSeconds()
     return when {
       min != null && max != null -> {
         QueryBuilders.rangeQuery(attribute).from(min).to(max)
@@ -56,6 +57,9 @@ data class DateTimeMatcher(
       else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
     }
   }
+
+  private fun LocalDateTime.truncateToSeconds() =
+    truncatedTo(SECONDS).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
   override fun toString(): String {
     val min = minValue?.let { "$attribute > $minValue" } ?: ""
