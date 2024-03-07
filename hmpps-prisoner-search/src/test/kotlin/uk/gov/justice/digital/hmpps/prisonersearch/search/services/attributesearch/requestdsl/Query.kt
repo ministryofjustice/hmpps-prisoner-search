@@ -64,11 +64,18 @@ interface QueryDsl {
    */
   @DateMatcherDslMarker
   fun dateMatcher(dateAssertion: DateAssertion): DateMatcher
+
+  /**
+   * A sub-query to join with or without matchers and other sub-queries. See [QueryBuilder] for more details.
+   */
+  @QueryDslMarker
+  fun subQuery(dsl: QueryDsl.() -> Unit): Query
 }
 
 class QueryBuilder : QueryDsl {
   override var joinType = JoinType.AND
   private val matchers = mutableListOf<TypeMatcher<*>>()
+  private val subQueries = mutableListOf<Query>()
 
   override fun stringMatcher(stringAssertion: StringAssertion) =
     StringMatcherBuilder(stringAssertion)
@@ -95,5 +102,11 @@ class QueryBuilder : QueryDsl {
       .build()
       .also { matchers += it }
 
-  fun build(): Query = Query(joinType, matchers)
+  override fun subQuery(dsl: QueryDsl.() -> Unit): Query =
+    QueryBuilder()
+      .apply(dsl)
+      .build()
+      .also { subQueries += it }
+
+  fun build(): Query = Query(joinType, matchers, subQueries)
 }

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.ProfileInformationBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.AND_LT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.AND_LTE
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.RequestDsl
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -1206,6 +1208,188 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
           joinType = OR
           dateMatcher("dateOfBirth" EQ "1989-12-31")
           stringMatcher("firstName" IS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+  }
+
+  @Nested
+  inner class SubQueries {
+    private val today = LocalDate.now()
+    private val yesterday = today.minusDays(1)
+    private val tomorrow = today.plusDays(1)
+
+    @Test
+    fun `single sub-query`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson"),
+      )
+
+      val request = RequestDsl {
+        query {
+          subQuery {
+            stringMatcher("firstName" IS "John")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single sub-query with multiple matchers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", receptionDate = "$yesterday"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", receptionDate = "$today"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson", receptionDate = "$tomorrow"),
+      )
+
+      val request = RequestDsl {
+        query {
+          subQuery {
+            stringMatcher("firstName" IS "John")
+            dateMatcher("receptionDate" EQ "$yesterday")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `single sub-query with multiple OR matchers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", receptionDate = "$yesterday"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jack", receptionDate = "$today"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson", receptionDate = "$tomorrow"),
+      )
+
+      val request = RequestDsl {
+        query {
+          subQuery {
+            joinType = OR
+            stringMatcher("firstName" IS "John")
+            dateMatcher("receptionDate" EQ "$today")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `multiple sub-queries with AND`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Jones"),
+      )
+
+      val request = RequestDsl {
+        query {
+          subQuery {
+            stringMatcher("firstName" IS "John")
+          }
+          subQuery {
+            stringMatcher("lastName" IS "Smith")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `multiple sub-queries with OR`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson", lastName = "Jones"),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          subQuery {
+            stringMatcher("firstName" IS "John")
+          }
+          subQuery {
+            stringMatcher("firstName" IS "Jeff")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `matcher with single sub-query`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", receptionDate = "$yesterday"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", receptionDate = "$today"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson", receptionDate = "$tomorrow"),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "John")
+          subQuery {
+            dateMatcher("receptionDate" EQ "$yesterday")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `matcher with single sub-query using OR`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", receptionDate = "$yesterday"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jack", receptionDate = "$today"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson", receptionDate = "$tomorrow"),
+      )
+
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          stringMatcher("firstName" IS "John")
+          subQuery {
+            dateMatcher("receptionDate" EQ "$today")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `multiple nested sub-queries`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", receptionDate = "$yesterday"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "John", receptionDate = "$today"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", receptionDate = "$tomorrow"),
+        PrisonerBuilder(prisonerNumber = "D1234DD", firstName = "Johnson", receptionDate = "$today"),
+      )
+
+      // firstName = John AND ((receptionDate = yesterday) OR (receptionDate = today))
+      val request = RequestDsl {
+        query {
+          joinType = JoinType.AND
+          stringMatcher("firstName" IS "John")
+          subQuery {
+            joinType = OR
+            subQuery {
+              dateMatcher("receptionDate" EQ "$yesterday")
+            }
+            subQuery {
+              dateMatcher("receptionDate" EQ "$today")
+            }
+          }
         }
       }
 
