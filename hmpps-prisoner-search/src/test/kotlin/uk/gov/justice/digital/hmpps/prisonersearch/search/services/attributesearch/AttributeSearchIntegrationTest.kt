@@ -1397,6 +1397,127 @@ class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
     }
   }
 
+  @Nested
+  inner class MultipleQueries {
+    @Test
+    fun `AND with basic matchers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Jones"),
+      )
+
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "John")
+        }
+        query {
+          stringMatcher("lastName" IS "Smith")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `OR with basic matchers`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson"),
+      )
+
+      val request = RequestDsl {
+        joinType = OR
+        query {
+          stringMatcher("firstName" IS "John")
+        }
+        query {
+          stringMatcher("firstName" IS "Jeff")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `AND with sub-queries`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "John", lastName = "Jones"),
+      )
+
+      val request = RequestDsl {
+        query {
+          subQuery {
+            stringMatcher("firstName" IS "John")
+          }
+        }
+        query {
+          subQuery {
+            stringMatcher("lastName" IS "Smith")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA")
+    }
+
+    @Test
+    fun `OR with sub-queries`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson"),
+      )
+
+      val request = RequestDsl {
+        joinType = OR
+        query {
+          subQuery {
+            stringMatcher("firstName" IS "John")
+          }
+        }
+        query {
+          subQuery {
+            stringMatcher("firstName" IS "Jeff")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+
+    @Test
+    fun `with matchers and sub-queries`() {
+      loadPrisoners(
+        PrisonerBuilder(prisonerNumber = "A1234AA", firstName = "John", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "B1234BB", firstName = "Jeff", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "C1234CC", firstName = "Johnson", lastName = "Smith"),
+        PrisonerBuilder(prisonerNumber = "D1234DD", firstName = "Jefferson", lastName = "Smith"),
+      )
+
+      val request = RequestDsl {
+        joinType = OR
+        query {
+          stringMatcher("firstName" IS "John")
+          subQuery {
+            stringMatcher("lastName" IS "Smith")
+          }
+        }
+        query {
+          stringMatcher("firstName" IS "Jeff")
+          subQuery {
+            stringMatcher("lastName" IS "Smith")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("A1234AA", "B1234BB")
+    }
+  }
+
   private fun youthOffender(condition: Boolean) = ProfileInformationBuilder(youthOffender = condition)
 
   private fun shoeSize(size: Int) = PhysicalCharacteristicBuilder(shoeSize = size)
