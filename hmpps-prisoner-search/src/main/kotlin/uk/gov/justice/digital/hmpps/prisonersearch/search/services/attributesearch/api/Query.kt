@@ -1,17 +1,19 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
-import com.fasterxml.jackson.annotation.JsonBackReference
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.index.query.BoolQueryBuilder
+import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
 
 @Schema(description = "A query to search for prisoners by attributes")
 data class Query(
   @Schema(description = "The type of join to use when combining the matchers and subQueries", example = "AND", defaultValue = "AND")
-  val joinType: JoinType = JoinType.AND,
+  val joinType: JoinType = AND,
   @Schema(description = "Matchers that will be applied to this query")
   val matchers: List<TypeMatcher<*>>? = null,
   @Schema(description = "A list of sub-queries of type Query that will be combined with the matchers in this query")
-  @JsonBackReference
   val subQueries: List<Query>? = null,
 ) {
   fun validate() {
@@ -19,6 +21,23 @@ data class Query(
       throw AttributeSearchException("Query must not be empty")
     }
   }
+
+  fun buildQuery(): BoolQueryBuilder =
+    QueryBuilders.boolQuery()
+      .apply {
+        matchers?.forEach {
+          when (joinType) {
+            AND -> must(it.buildQuery())
+            OR -> should(it.buildQuery())
+          }
+        }
+        subQueries?.forEach {
+          when (joinType) {
+            AND -> must(it.buildQuery())
+            OR -> should(it.buildQuery())
+          }
+        }
+      }
 
   override fun toString(): String {
     val matchersString = matchers?.joinToString(" ${joinType.name} ") { it.toString() } ?: ""
