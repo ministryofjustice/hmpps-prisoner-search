@@ -1,14 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalCharacteristicBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
@@ -37,11 +35,7 @@ import java.time.LocalDateTime
  * Note that this class builds AttributeSearchRequest instances using the [RequestDsl]. If you want to know how the requests
  * look in JSON format see test class [AttributeSearchRequestJsonTest].
  */
-class AttributeSearchIntegrationTest : AbstractSearchDataIntegrationTest() {
-
-  @Autowired
-  private lateinit var objectMapper: ObjectMapper
-
+class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
   private val prisonerBuilders = mutableListOf<PrisonerBuilder>()
 
   // The super class refreshes the index before this test class runs, but we don't want it to load any prisoners yet

@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
@@ -11,9 +9,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.Integratio
 import java.io.File
 
 class ResourceSecurityTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var context: ApplicationContext
-
   private val unprotectedDefaultMethods = setOf(
     "GET /v3/api-docs.yaml",
     "GET /swagger-ui.html",

@@ -1,15 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.junit.jupiter.api.Test
-import org.springframework.test.context.TestPropertySource
 import org.springframework.web.reactive.function.BodyInserters
-import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.PrisonerNumbers
 
-@TestPropertySource(properties = [ "index.page-size=1000" ])
-class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchDataIntegrationTest() {
-
+class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
     val prisonerData = getTestPrisonerNumbers(12).map { PrisonerBuilder(prisonerNumber = it) }
     loadPrisonersFromBuilders(prisonerData)

@@ -10,27 +10,19 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@TestPropertySource(properties = ["index.page-size=1000"])
-class PrisonersInPrisonResourceTest : AbstractSearchDataIntegrationTest() {
-
-  @SpyBean
-  private lateinit var searchService: PrisonersInPrisonService
-
+class PrisonersInPrisonResourceTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
     val prisonerData = listOf(
       PrisonerBuilder(

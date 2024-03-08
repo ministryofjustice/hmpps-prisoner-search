@@ -12,10 +12,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.whenever
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.cache.CacheManager
-import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
@@ -48,16 +45,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.tattoosBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import java.util.stream.Stream
 
-class ReferenceDataResourceTest : AbstractSearchDataIntegrationTest() {
-  @SpyBean
-  private lateinit var elasticsearchClient: SearchClient
-
-  @Autowired
-  private lateinit var cacheManager: CacheManager
-
+class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
     val prisonerData = listOf(
       PrisonerBuilder(
