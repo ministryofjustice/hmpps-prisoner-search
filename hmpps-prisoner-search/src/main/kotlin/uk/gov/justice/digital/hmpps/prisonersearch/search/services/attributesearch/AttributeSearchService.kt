@@ -7,10 +7,13 @@ import org.opensearch.action.search.SearchRequest
 import org.opensearch.index.query.BoolQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import org.opensearch.search.builder.SearchSourceBuilder
+import org.opensearch.search.sort.FieldSortBuilder
+import org.opensearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -27,7 +30,7 @@ class AttributeSearchService(
   private val telemetryClient: TelemetryClient,
 ) {
 
-  fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.unpaged()): Page<Prisoner> {
+  fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.ofSize(10)): Page<Prisoner> {
     log.info("searchByAttributes called with request: $request, pageable: $pageable")
     telemetryClient.trackEvent("POSAttributeSearch", mapOf("query" to request.toString()), null)
     request.validate(attributes)
@@ -45,11 +48,34 @@ class AttributeSearchService(
     }.search(pageable)
 
   private fun BoolQueryBuilder.search(pageable: Pageable): Page<Prisoner> {
-    val searchSourceBuilder = SearchSourceBuilder().query(this)
+    val searchSourceBuilder = pageable.searchSourceBuilder(this)
     val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
     val searchResponse = elasticsearchClient.search(searchRequest)
     val results = searchResponse.hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
     return PageImpl(results, pageable, searchResponse.hits.totalHits?.value ?: 0)
+  }
+
+  private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder): SearchSourceBuilder {
+    val sortBuilders = sort.map {
+      FieldSortBuilder(getSortableProperty(it)).order(SortOrder.fromString(it.direction.name))
+    }.toList()
+    return SearchSourceBuilder().apply {
+      query(queryBuilder)
+      size(pageSize)
+      from(offset.toInt())
+      sortBuilders.takeIf { it.isNotEmpty() }
+        ?.forEach { sort(it) }
+        ?: sort("prisonerNumber")
+    }
+  }
+
+  private fun getSortableProperty(it: Sort.Order): String? {
+    val type = attributes[it.property] ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
+    return when {
+      it.property == "prisonerNumber" -> "prisonerNumber"
+      type.simpleName == "String" -> "${it.property}.keyword"
+      else -> it.property
+    }
   }
 
   fun getAttributes() = attributes.map { it.key to it.value.toString().lastWord() }.toMap()
