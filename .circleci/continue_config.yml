@@ -52,31 +52,7 @@ jobs:
       - store_artifacts:
           path: common/build/reports/tests
 
-  validate-search-ktlint:
-    parameters:
-      project:
-        type: string
-    executor:
-      name: hmpps/java
-      tag: "21.0"
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
-            - gradle-
-      - run:
-          command: ./gradlew :<< parameters.project >>:check -x test
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
-      - store_test_results:
-          path: << parameters.project >>/build/test-results
-      - store_artifacts:
-          path: << parameters.project >>/build/reports/tests
-
-  validate-search-test-attribute-search:
+  validate-search:
     parameters:
       project:
         type: string
@@ -101,42 +77,7 @@ jobs:
             - gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew :<< parameters.project >>:attributeSearchIntegrationTest
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
-      - store_test_results:
-          path: << parameters.project >>/build/test-results
-      - store_artifacts:
-          path: << parameters.project >>/build/reports/tests
-
-  validate-search-all-other-tests:
-    parameters:
-      project:
-        type: string
-    executor:
-      name: hmpps/localstack
-      jdk_tag: "21.0"
-      localstack_tag: "3"
-      localstack_type: "localstack"
-      services: "opensearch,sns,sqs"
-    steps:
-      - checkout
-      - hmpps/install_aws_cli
-      - hmpps/wait_till_ready
-      - run:
-          name: Set up opensearch domain
-          command: localstack/setup-opensearch.sh
-      - hmpps/wait_till_ready:
-          port: 4566
-          host: os01.eu-west-2.opensearch.localhost.localstack.cloud
-      - restore_cache:
-          keys:
-            - gradle-{{ checksum "<< parameters.project >>/build.gradle.kts" }}
-            - gradle-
-      - run:
-          command: ./gradlew :<< parameters.project >>:allOtherTests
+          command: ./gradlew :<< parameters.project >>:check
       - save_cache:
           paths:
             - ~/.gradle
@@ -298,20 +239,8 @@ workflows:
   build-test-and-deploy-search:
     when: << pipeline.parameters.build-search >>
     jobs:
-      - validate-search-ktlint:
-          name: validate-search-ktlint
-          project: hmpps-prisoner-search
-          filters:
-            tags:
-              ignore: /.*/
-      - validate-search-test-attribute-search:
-          name: validate-search-test-attribute-search
-          project: hmpps-prisoner-search
-          filters:
-            tags:
-              ignore: /.*/
-      - validate-search-all-other-tests:
-          name: validate-search-all-other-tests
+      - validate-search:
+          name: validate-search
           project: hmpps-prisoner-search
           filters:
             tags:
@@ -341,9 +270,7 @@ workflows:
               only:
                 - main
           requires:
-            - validate-search-ktlint
-            - validate-search-test-attribute-search
-            - validate-search-all-other-tests
+            - validate-search
             - build_docker-search
             - helm_lint-search
           helm_timeout: 5m

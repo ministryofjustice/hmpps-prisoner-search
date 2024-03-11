@@ -77,35 +77,3 @@ tasks {
     }
   }
 }
-
-tasks.register<Test>("attributeSearchIntegrationTest") {
-  // Inherit configurations from the existing 'test' task
-  val testTask = tasks.named("test").get() as Test
-  testClassesDirs = testTask.testClassesDirs
-  classpath = testTask.classpath
-
-  useJUnitPlatform()
-
-  // Override test class include patterns if necessary
-  includes.clear()
-  include("**/AttributeSearchIntegrationTest.*")
-
-  // Force the task to always run
-  outputs.upToDateWhen { false }
-}
-
-tasks.register<Test>("allOtherTests") {
-  // Inherit configurations from the existing 'test' task
-  val testTask = tasks.named("test").get() as Test
-  testClassesDirs = testTask.testClassesDirs
-  classpath = testTask.classpath
-
-  useJUnitPlatform()
-
-  // Override test class exclude patterns if necessary
-  excludes.clear()
-  exclude("**/AttributeSearchIntegrationTest.*")
-
-  // Force the task to always run
-  outputs.upToDateWhen { false }
-}

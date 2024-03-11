@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
+import kotlin.reflect.KClass
 
 @Component
 class AttributeSearchService(
@@ -57,7 +58,7 @@ class AttributeSearchService(
 
   private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder): SearchSourceBuilder {
     val sortBuilders = sort.map {
-      FieldSortBuilder(getSortableProperty(it)).order(SortOrder.fromString(it.direction.name))
+      FieldSortBuilder(getSortableAttribute(it)).order(SortOrder.fromString(it.direction.name))
     }.toList()
     return SearchSourceBuilder().apply {
       query(queryBuilder)
@@ -69,14 +70,10 @@ class AttributeSearchService(
     }
   }
 
-  private fun getSortableProperty(it: Sort.Order): String? {
-    val type = attributes[it.property] ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
-    return when {
-      it.property == "prisonerNumber" -> "prisonerNumber"
-      type.simpleName == "String" -> "${it.property}.keyword"
-      else -> it.property
-    }
-  }
+  private fun getSortableAttribute(it: Sort.Order): String =
+    attributes[it.property]
+      ?.let { type -> it.property.openSearchName(type) }
+      ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
 
   fun getAttributes() = attributes.map { it.key to it.value.toString().lastWord() }.toMap()
 
@@ -85,6 +82,12 @@ class AttributeSearchService(
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
+}
+
+internal fun String.openSearchName(type: KClass<*>): String = when {
+  this == "prisonerNumber" -> "prisonerNumber"
+  type == String::class -> "$this.keyword"
+  else -> this
 }
 
 class AttributeSearchException(message: String) : ValidationException(message)
