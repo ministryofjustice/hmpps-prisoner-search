@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.integration
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.cache.CacheManager
+import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpHeaders
 import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -13,7 +16,11 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
 import java.time.Duration
 
@@ -25,16 +32,37 @@ abstract class IntegrationTestBase {
   internal lateinit var jwtAuthHelper: JwtAuthHelper
 
   @SpyBean
-  lateinit var telemetryClient: TelemetryClient
+  internal lateinit var telemetryClient: TelemetryClient
 
   @SpyBean
-  lateinit var attributeSearchService: AttributeSearchService
+  internal lateinit var attributeSearchService: AttributeSearchService
 
   @Autowired
-  lateinit var gson: Gson
+  internal lateinit var gson: Gson
+
+  @Autowired
+  internal lateinit var objectMapper: ObjectMapper
 
   @Autowired
   internal lateinit var webTestClient: WebTestClient
+
+  @Autowired
+  internal lateinit var prisonerRepository: PrisonerRepository
+
+  @Autowired
+  internal lateinit var indexStatusRepository: IndexStatusRepository
+
+  @SpyBean
+  internal lateinit var searchService: PrisonersInPrisonService
+
+  @SpyBean
+  internal lateinit var elasticsearchClient: SearchClient
+
+  @Autowired
+  internal lateinit var cacheManager: CacheManager
+
+  @Autowired
+  internal lateinit var context: ApplicationContext
 
   init {
     SecurityContextHolder.getContext().authentication = TestingAuthenticationToken("user", "pw")

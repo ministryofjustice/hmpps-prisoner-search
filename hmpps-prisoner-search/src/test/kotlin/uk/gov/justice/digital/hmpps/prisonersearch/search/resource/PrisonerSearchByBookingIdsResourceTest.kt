@@ -3,16 +3,16 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.toPrisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 
-class PrisonerSearchByBookingIdsResourceTest : AbstractSearchDataIntegrationTest() {
-
+class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
     val prisonerNumbers = List(12) { i -> "AN$i" }
-    var prisoners = ArrayList<Prisoner>()
+    val prisoners = ArrayList<Prisoner>()
     prisonerNumbers.forEachIndexed { bookingId: Int, prisonNumber: String ->
       val offenderBooking = getOffenderBooking(prisonNumber, bookingId.toLong())
       val prisoner = toPrisoner(offenderBooking, null, null)
@@ -98,6 +98,3 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchDataIntegrationTest
     return templateOffender.copy(offenderNo = offenderNo, bookingId = bookingId)
   }
 }
-
-private fun String.readResourceAsText() =
-  PrisonerSearchByBookingIdsResourceTest::class.java.getResource(this).readText()

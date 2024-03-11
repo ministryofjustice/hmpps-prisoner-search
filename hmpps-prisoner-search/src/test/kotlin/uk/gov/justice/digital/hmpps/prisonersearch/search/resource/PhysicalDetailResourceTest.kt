@@ -5,7 +5,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalCharacteristicBuilder
@@ -16,8 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.BodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PhysicalDetailRequest
 
-class PhysicalDetailResourceTest : AbstractSearchDataIntegrationTest() {
-
+class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
     val prisonerData = listOf(
       // height / weight test data
