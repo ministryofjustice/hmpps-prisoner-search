@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import org.opensearch.index.query.AbstractQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.openSearchName
 
 @Schema(description = "A matcher for a string attribute from the prisoner record")
 data class StringMatcher(
@@ -23,11 +24,14 @@ data class StringMatcher(
     }
   }
 
-  override fun buildQuery(): AbstractQueryBuilder<*> = when (condition) {
-    StringCondition.IS -> QueryBuilders.termQuery("$attribute.keyword", searchTerm)
-    StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("$attribute.keyword", searchTerm))
-    StringCondition.CONTAINS -> QueryBuilders.queryStringQuery("*$searchTerm*").field("$attribute.keyword")
-  }
+  override fun buildQuery(): AbstractQueryBuilder<*> =
+    attribute.openSearchName(String::class).let {
+      when (condition) {
+        StringCondition.IS -> QueryBuilders.termQuery(it, searchTerm)
+        StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(it, searchTerm))
+        StringCondition.CONTAINS -> QueryBuilders.queryStringQuery("*$searchTerm*").field(it)
+      }
+    }
 
   override fun toString(): String {
     val condition = when (condition) {
