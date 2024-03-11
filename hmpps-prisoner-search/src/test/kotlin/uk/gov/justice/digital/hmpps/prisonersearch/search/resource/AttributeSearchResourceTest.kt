@@ -699,6 +699,10 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         eq("POSAttributeSearch"),
         check {
           assertThat(it["query"]).isEqualTo("firstName = John")
+          assertThat(it["pageable"]).isEqualTo("Page request [number: 0, size 10, sort: UNSORTED]")
+          assertThat(it["resultCount"]).isNotNull()
+          assertThat(it["totalHits"]).isNotNull()
+          assertThat(it["timeInMs"]).isNotNull()
         },
         isNull(),
       )
@@ -727,9 +731,10 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         .expectStatus().isBadRequest
 
       verify(telemetryClient).trackEvent(
-        eq("POSAttributeSearch"),
+        eq("POSAttributeSearchError"),
         check {
           assertThat(it["query"]).isEqualTo("heightCentimetres = John")
+          assertThat(it["pageable"]).isEqualTo("Page request [number: 0, size 10, sort: UNSORTED]")
         },
         isNull(),
       )

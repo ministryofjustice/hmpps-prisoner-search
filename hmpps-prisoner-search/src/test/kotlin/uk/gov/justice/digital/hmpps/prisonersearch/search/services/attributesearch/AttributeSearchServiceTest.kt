@@ -354,7 +354,7 @@ class AttributeSearchServiceTest {
         service.search(request)
       }
       verify(telemetryClient).trackEvent(
-        eq("POSAttributeSearch"),
+        eq("POSAttributeSearchError"),
         check {
           assertThat(it["query"]).isEqualTo("(firstName = Brian) AND ()")
         },

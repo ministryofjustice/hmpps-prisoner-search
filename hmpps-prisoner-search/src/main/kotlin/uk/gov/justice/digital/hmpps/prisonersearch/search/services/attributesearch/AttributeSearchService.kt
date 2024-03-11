@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.opensearch.action.search.SearchRequest
+import org.opensearch.action.search.SearchResponse
 import org.opensearch.index.query.BoolQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import org.opensearch.search.builder.SearchSourceBuilder
@@ -33,12 +34,22 @@ class AttributeSearchService(
 
   fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.ofSize(10)): Page<Prisoner> {
     log.info("searchByAttributes called with request: $request, pageable: $pageable")
-    telemetryClient.trackEvent("POSAttributeSearch", mapOf("query" to request.toString()), null)
-    request.validate(attributes)
-    return doSearch(request, pageable)
+    val telemetryMap = mutableMapOf("query" to request.toString(), "pageable" to pageable.toString())
+
+    return try {
+      request.validate(attributes)
+      buildQuery(request)
+        .search(pageable, telemetryMap)
+        .respond(pageable)
+        .also { telemetryClient.trackEvent("POSAttributeSearch", telemetryMap, null) }
+    } catch (e: Exception) {
+      telemetryMap["error"] = e.message.toString()
+      telemetryClient.trackEvent("POSAttributeSearchError", telemetryMap, null)
+      throw e
+    }
   }
 
-  private fun doSearch(request: AttributeSearchRequest, pageable: Pageable): Page<Prisoner> =
+  private fun buildQuery(request: AttributeSearchRequest): BoolQueryBuilder =
     QueryBuilders.boolQuery().apply {
       request.queries.forEach {
         when (request.joinType) {
@@ -46,15 +57,22 @@ class AttributeSearchService(
           OR -> should(it.buildQuery())
         }
       }
-    }.search(pageable)
+    }
 
-  private fun BoolQueryBuilder.search(pageable: Pageable): Page<Prisoner> {
+  private fun BoolQueryBuilder.search(pageable: Pageable, telemetryMap: MutableMap<String, String>): SearchResponse {
     val searchSourceBuilder = pageable.searchSourceBuilder(this)
     val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
-    val searchResponse = elasticsearchClient.search(searchRequest)
-    val results = searchResponse.hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
-    return PageImpl(results, pageable, searchResponse.hits.totalHits?.value ?: 0)
+    return elasticsearchClient.search(searchRequest)
+      .also {
+        telemetryMap["resultCount"] = it.hits.hits.size.toString()
+        telemetryMap["totalHits"] = it.hits.totalHits?.toString() ?: "0"
+        telemetryMap["timeInMs"] = it.took?.toString() ?: "0"
+      }
   }
+
+  private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> =
+    hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
+      .let { PageImpl(it, pageable, hits.totalHits?.value ?: 0) }
 
   private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder): SearchSourceBuilder {
     val sortBuilders = sort.map {
