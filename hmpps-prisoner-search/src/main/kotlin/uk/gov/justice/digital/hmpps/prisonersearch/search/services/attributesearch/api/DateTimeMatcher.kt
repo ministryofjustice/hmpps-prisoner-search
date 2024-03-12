@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import org.opensearch.index.query.AbstractQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit.SECONDS
@@ -41,21 +42,23 @@ data class DateTimeMatcher(
     }
   }
 
-  override fun buildQuery(): AbstractQueryBuilder<*> {
+  override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> {
     val min = minValue?.truncateToSeconds()
     val max = maxValue?.truncateToSeconds()
-    return when {
-      min != null && max != null -> {
-        QueryBuilders.rangeQuery(attribute).from(min).to(max)
+    attributes[attribute]?.let {
+      return when {
+        min != null && max != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).from(min).to(max)
+        }
+        min != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).from(min)
+        }
+        max != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).to(max)
+        }
+        else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
       }
-      min != null -> {
-        QueryBuilders.rangeQuery(attribute).from(min)
-      }
-      max != null -> {
-        QueryBuilders.rangeQuery(attribute).to(max)
-      }
-      else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
-    }
+    } ?: throw AttributeSearchException("Attribute $attribute not recognised")
   }
 
   private fun LocalDateTime.truncateToSeconds() =

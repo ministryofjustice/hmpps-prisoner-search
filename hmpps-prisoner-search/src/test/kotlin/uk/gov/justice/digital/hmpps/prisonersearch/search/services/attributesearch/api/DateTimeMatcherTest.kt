@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.opensearch.index.query.RangeQueryBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attribute
 import java.time.LocalDateTime
 
 class DateTimeMatcherTest {
@@ -14,7 +15,8 @@ class DateTimeMatcherTest {
       maxValue = LocalDateTime.parse("2024-01-31T21:00:00.123"),
     )
 
-    val query = dateTimeMatcher.buildQuery() as RangeQueryBuilder
+    val attributes = mapOf("currentIncentive.dateTime" to Attribute(LocalDateTime::class, "currentIncentive.dateTime"))
+    val query = dateTimeMatcher.buildQuery(attributes) as RangeQueryBuilder
 
     assertThat(query.from()).isEqualTo("2024-01-01T09:00:00")
     assertThat(query.to()).isEqualTo("2024-01-31T21:00:00")

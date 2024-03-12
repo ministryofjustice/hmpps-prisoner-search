@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 import io.swagger.v3.oas.annotations.media.Schema
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 
 @Schema(
   description = """A matcher for an integer attribute from the Prisoner record.
@@ -45,18 +46,21 @@ data class IntMatcher(
     }
   }
 
-  override fun buildQuery() = when {
-    minValue != null && maxValue != null -> {
-      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
-    }
-    minValue != null -> {
-      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive)
-    }
-    maxValue != null -> {
-      QueryBuilders.rangeQuery(attribute).to(maxValue).includeUpper(maxInclusive)
-    }
-    else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
-  }
+  override fun buildQuery(attributes: Attributes) =
+    attributes[attribute]?.let {
+      when {
+        minValue != null && maxValue != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
+        }
+        minValue != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive)
+        }
+        maxValue != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).to(maxValue).includeUpper(maxInclusive)
+        }
+        else -> throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
+      }
+    } ?: throw AttributeSearchException("Attribute $attribute not recognised")
 
   override fun toString() =
     if (minValue != null && maxValue != null && minValue == maxValue) {

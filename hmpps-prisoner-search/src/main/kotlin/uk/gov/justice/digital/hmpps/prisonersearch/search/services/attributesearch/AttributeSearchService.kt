@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
-import kotlin.reflect.KClass
 
 @Component
 class AttributeSearchService(
@@ -53,8 +52,8 @@ class AttributeSearchService(
     QueryBuilders.boolQuery().apply {
       request.queries.forEach {
         when (request.joinType) {
-          AND -> must(it.buildQuery())
-          OR -> should(it.buildQuery())
+          AND -> must(it.buildQuery(attributes))
+          OR -> should(it.buildQuery(attributes))
         }
       }
     }
@@ -90,22 +89,16 @@ class AttributeSearchService(
 
   private fun getSortableAttribute(it: Sort.Order): String =
     attributes[it.property]
-      ?.let { type -> it.property.openSearchName(type) }
+      ?.openSearchName
       ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
 
-  fun getAttributes() = attributes.map { it.key to it.value.toString().lastWord() }.toMap()
+  fun getAttributes() = attributes.map { it.key to it.value.type.toString().lastWord() }.toMap()
 
   private fun String.lastWord() = split(".").last()
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
-}
-
-internal fun String.openSearchName(type: KClass<*>): String = when {
-  this == "prisonerNumber" -> "prisonerNumber"
-  type == String::class -> "$this.keyword"
-  else -> this
 }
 
 class AttributeSearchException(message: String) : ValidationException(message)

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import org.opensearch.index.query.BoolQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
 
@@ -22,19 +23,19 @@ data class Query(
     }
   }
 
-  fun buildQuery(): BoolQueryBuilder =
+  fun buildQuery(attributes: Attributes): BoolQueryBuilder =
     QueryBuilders.boolQuery()
       .apply {
         matchers?.forEach {
           when (joinType) {
-            AND -> must(it.buildQuery())
-            OR -> should(it.buildQuery())
+            AND -> must(it.buildQuery(attributes))
+            OR -> should(it.buildQuery(attributes))
           }
         }
         subQueries?.forEach {
           when (joinType) {
-            AND -> must(it.buildQuery())
-            OR -> should(it.buildQuery())
+            AND -> must(it.buildQuery(attributes))
+            OR -> should(it.buildQuery(attributes))
           }
         }
       }

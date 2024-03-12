@@ -6,15 +6,18 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.data.elasticsearch.annotations.Field
+import org.springframework.data.elasticsearch.annotations.FieldType
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.stream.Stream
-import kotlin.reflect.KClass
 
 class AttributeResolverTest {
   val attributes = getAttributes(Root::class)
 
   private class Root(
+    @Field(type = FieldType.Keyword)
+    val keywordString: String,
     val string: String,
     val boolean: Boolean,
     val integer: Int,
@@ -34,6 +37,7 @@ class AttributeResolverTest {
   )
 
   private class Nested(
+    @Field(type = FieldType.Keyword)
     val code: String,
     val description: String,
   )
@@ -41,36 +45,38 @@ class AttributeResolverTest {
   companion object {
     @JvmStatic
     fun testParameters(): Stream<Arguments> = Stream.of(
-      arguments("string", String::class),
-      arguments("boolean", Boolean::class),
-      arguments("integer", Integer::class),
-      arguments("localDate", LocalDate::class),
-      arguments("localDateTime", LocalDateTime::class),
-      arguments("list.string", String::class),
-      arguments("list.boolean", Boolean::class),
-      arguments("list.integer", Integer::class),
-      arguments("list.localDate", LocalDate::class),
-      arguments("list.localDateTime", LocalDateTime::class),
-      arguments("list.nested.code", String::class),
-      arguments("list.nested.description", String::class),
-      arguments("complex.string", String::class),
-      arguments("complex.boolean", Boolean::class),
-      arguments("complex.integer", Integer::class),
-      arguments("complex.localDate", LocalDate::class),
-      arguments("complex.localDateTime", LocalDateTime::class),
-      arguments("complex.nested.code", String::class),
-      arguments("complex.nested.description", String::class),
+      arguments("keywordString", Attribute(String::class, "keywordString")),
+      arguments("string", Attribute(String::class, "string.keyword")),
+      arguments("boolean", Attribute(Boolean::class, "boolean")),
+      arguments("integer", Attribute(Integer::class, "integer")),
+      arguments("localDate", Attribute(LocalDate::class, "localDate")),
+      arguments("localDateTime", Attribute(LocalDateTime::class, "localDateTime")),
+      arguments("list.string", Attribute(String::class, "list.string.keyword")),
+      arguments("list.boolean", Attribute(Boolean::class, "list.boolean")),
+      arguments("list.integer", Attribute(Integer::class, "list.integer")),
+      arguments("list.localDate", Attribute(LocalDate::class, "list.localDate")),
+      arguments("list.localDateTime", Attribute(LocalDateTime::class, "list.localDateTime")),
+      arguments("list.nested.code", Attribute(String::class, "list.nested.code")),
+      arguments("list.nested.description", Attribute(String::class, "list.nested.description.keyword")),
+      arguments("complex.string", Attribute(String::class, "complex.string.keyword")),
+      arguments("complex.boolean", Attribute(Boolean::class, "complex.boolean")),
+      arguments("complex.integer", Attribute(Integer::class, "complex.integer")),
+      arguments("complex.localDate", Attribute(LocalDate::class, "complex.localDate")),
+      arguments("complex.localDateTime", Attribute(LocalDateTime::class, "complex.localDateTime")),
+      arguments("complex.nested.code", Attribute(String::class, "complex.nested.code")),
+      arguments("complex.nested.description", Attribute(String::class, "complex.nested.description.keyword")),
     )
   }
 
   @ParameterizedTest
   @MethodSource("testParameters")
-  fun `should resolve attributes`(attributeName: String, type: KClass<*>) {
-    assertThat(attributes[attributeName]).isEqualTo(type)
+  fun `should resolve attributes`(attributeName: String, attribute: Attribute) {
+    assertThat(attributes[attributeName]?.type).isEqualTo(attribute.type)
+    assertThat(attributes[attributeName]?.openSearchName).isEqualTo(attribute.openSearchName)
   }
 
   @Test
   fun `should not resolve extra attributes`() {
-    assertThat(attributes.size).isEqualTo(19)
+    assertThat(attributes.size).isEqualTo(20)
   }
 }

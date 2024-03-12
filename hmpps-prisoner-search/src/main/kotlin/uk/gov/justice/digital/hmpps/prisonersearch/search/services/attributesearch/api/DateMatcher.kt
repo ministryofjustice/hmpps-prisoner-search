@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import org.opensearch.index.query.AbstractQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 import java.time.LocalDate
 
 @Schema(
@@ -47,18 +48,21 @@ data class DateMatcher(
     }
   }
 
-  override fun buildQuery(): AbstractQueryBuilder<*> = when {
-    minValue != null && maxValue != null -> {
-      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
-    }
-    minValue != null -> {
-      QueryBuilders.rangeQuery(attribute).from(minValue).includeLower(minInclusive)
-    }
-    maxValue != null -> {
-      QueryBuilders.rangeQuery(attribute).to(maxValue).includeUpper(maxInclusive)
-    }
-    else -> throw AttributeSearchException("Attribute $attribute must have a min or max value")
-  }
+  override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> =
+    attributes[attribute]?.let {
+      when {
+        minValue != null && maxValue != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
+        }
+        minValue != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive)
+        }
+        maxValue != null -> {
+          QueryBuilders.rangeQuery(it.openSearchName).to(maxValue).includeUpper(maxInclusive)
+        }
+        else -> throw AttributeSearchException("Attribute $attribute must have a min or max value")
+      }
+    } ?: throw AttributeSearchException("Attribute $attribute not recognised")
 
   override fun toString() =
     if (minValue != null && maxValue != null && minValue == maxValue) {
