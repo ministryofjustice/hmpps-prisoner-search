@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.opensearch.index.query.AbstractQueryBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -19,7 +20,7 @@ sealed interface TypeMatcher<S> {
   val attribute: String
   fun validate() {}
   fun genericType(): KClass<*> = this::class.genericType()
-  fun buildQuery(): AbstractQueryBuilder<*> = throw NotImplementedError("buildQuery not implemented for ${this::class.simpleName}")
+  fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> = throw NotImplementedError("buildQuery not implemented for ${this::class.simpleName}")
 
   companion object {
     @JvmStatic
