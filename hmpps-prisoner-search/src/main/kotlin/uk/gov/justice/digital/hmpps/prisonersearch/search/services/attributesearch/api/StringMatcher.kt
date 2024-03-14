@@ -27,9 +27,9 @@ data class StringMatcher(
   override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> =
     attributes[attribute]?.let {
       when (condition) {
-        StringCondition.IS -> QueryBuilders.termQuery(it.openSearchName, searchTerm)
-        StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(it.openSearchName, searchTerm))
-        StringCondition.CONTAINS -> QueryBuilders.queryStringQuery("*$searchTerm*").field(it.openSearchName)
+        StringCondition.IS -> QueryBuilders.termQuery(it.openSearchName, searchTerm).caseInsensitive(true)
+        StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(it.openSearchName, searchTerm).caseInsensitive(true))
+        StringCondition.CONTAINS -> QueryBuilders.wildcardQuery(it.openSearchName, "*$searchTerm*").caseInsensitive(true)
       }
     } ?: throw AttributeSearchException("Attribute $attribute not recognised")
 
