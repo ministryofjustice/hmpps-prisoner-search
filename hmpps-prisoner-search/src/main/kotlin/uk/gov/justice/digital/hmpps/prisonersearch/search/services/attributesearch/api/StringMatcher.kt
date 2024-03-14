@@ -12,7 +12,7 @@ data class StringMatcher(
   override val attribute: String,
   @Schema(description = "The condition to apply to the attribute", example = "IS")
   val condition: StringCondition,
-  @Schema(description = "The search term to apply to the attribute", example = "Smith")
+  @Schema(description = "The search term to apply to the attribute. Search terms are not case-sensitive.", example = "Smith")
   val searchTerm: String,
 ) : TypeMatcher<String> {
   @Schema(description = "Must be String", example = "String")
@@ -43,7 +43,14 @@ data class StringMatcher(
   }
 }
 
-@Schema(description = "The condition to apply to the attribute")
+@Schema(
+  description = """The condition to apply to the attribute. 
+  
+  IS and IS_NOT require an exact match (wildcards ? and * will not work).
+  
+  CONTAINS checks for a partial match and respects wildcards ? (single character) and * (zero to many characters).
+  """,
+)
 enum class StringCondition {
   IS,
   IS_NOT,
