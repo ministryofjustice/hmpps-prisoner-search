@@ -41,7 +41,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       dateOfBirth = "1990-01-01",
       heightCentimetres = 181,
       recall = false,
-      currentIncentive = IncentiveLevelBuilder(levelDescription = "I1", dateTime = now.minusDays(2).minusHours(1)),
+      currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 1", dateTime = now.minusDays(2).minusHours(1)),
       alertCodes = listOf("AT1" to "AC1"),
       profileInformation = ProfileInformationBuilder(youthOffender = true),
     ),
@@ -51,7 +51,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       dateOfBirth = "1990-01-02",
       heightCentimetres = 182,
       recall = true,
-      currentIncentive = IncentiveLevelBuilder(levelDescription = "I2", dateTime = now.minusDays(1).minusHours(1)),
+      currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 2", dateTime = now.minusDays(1).minusHours(1)),
       alertCodes = listOf("AT2" to "AC2"),
       profileInformation = ProfileInformationBuilder(youthOffender = false),
     ),
@@ -61,7 +61,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       dateOfBirth = "1990-01-03",
       heightCentimetres = 183,
       recall = false,
-      currentIncentive = IncentiveLevelBuilder(levelDescription = "I3", dateTime = now.minusHours(1)),
+      currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 3", dateTime = now.minusHours(1)),
       alertCodes = listOf("AT3" to "AC3"),
       profileInformation = ProfileInformationBuilder(youthOffender = true),
     ),
@@ -88,11 +88,55 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single IS on an attribute without a keyword defined`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" IS "I1")
+          stringMatcher("currentIncentive.level.description" IS "Incentive level 1")
         }
       }
 
       webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `single IS uppercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "JOHN1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `single IS lowercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "john1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `single IS with single character wildcard does not work`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "john?")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `single IS with multiple character wildcard does not work`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "john*")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
     }
 
     @Test
@@ -132,10 +176,32 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
+    fun `single IS_NOT uppercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS_NOT "JOHN1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P2", "P3")
+    }
+
+    @Test
+    fun `single IS_NOT lowercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS_NOT "john1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P2", "P3")
+    }
+
+    @Test
     fun `single IS_NOT on an attribute without a keyword defined`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" IS_NOT "I1")
+          stringMatcher("currentIncentive.level.description" IS_NOT "Incentive level 1")
         }
       }
 
@@ -160,7 +226,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         query {
           joinType = OR
           stringMatcher("firstName" IS_NOT "John1")
-          stringMatcher("currentIncentive.level.description" IS_NOT "I2")
+          stringMatcher("currentIncentive.level.description" IS_NOT "Incentive level 2")
         }
       }
 
@@ -176,6 +242,116 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       }
 
       webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS uppercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" CONTAINS "JOHN")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS lowercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" CONTAINS "john")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS with single character wildcard`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince?tive level")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS with single character wildcard no match`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince?ve level")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `single CONTAINS with more than one single character wildcard`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince?tive le?el")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS with more than one single character wildcard no match`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince?ve le?el")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `single CONTAINS with a multiple character wildcard`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ve level")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS with a multiple character wildcard nom atch`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ves level")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `single CONTAINS with more than one multiple character wildcards`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ve l*l")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single CONTAINS with more than one multiple character wildcards no match`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ves l*l")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
     }
 
     @Test
@@ -195,7 +371,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       val request = RequestDsl {
         query {
           stringMatcher("firstName" CONTAINS "John")
-          stringMatcher("currentIncentive.level.description" CONTAINS "I1")
+          stringMatcher("currentIncentive.level.description" CONTAINS "level 1")
         }
       }
 
@@ -208,7 +384,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         query {
           joinType = OR
           stringMatcher("firstName" CONTAINS "John1")
-          stringMatcher("currentIncentive.level.description" CONTAINS "I2")
+          stringMatcher("currentIncentive.level.description" CONTAINS "level 2")
         }
       }
 
@@ -282,7 +458,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `IS with field from a nested object`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" IS "I1")
+          stringMatcher("currentIncentive.level.description" IS "Incentive level 1")
         }
       }
 
@@ -291,11 +467,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
     @Test
     fun `IS with AND fields from a nested object`() {
-      // This doesn't make sense - incentive cannot be both I1 and I2 - but just want to make sure it returns nothing
+      // This doesn't make sense - incentive cannot be both Incentive level 1 and 2 - but just want to make sure it returns nothing
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" IS "I1")
-          stringMatcher("currentIncentive.level.description" IS "I2")
+          stringMatcher("currentIncentive.level.description" IS "Incentive level 1")
+          stringMatcher("currentIncentive.level.description" IS "Incentive level 2")
         }
       }
 
@@ -343,7 +519,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `IS_NOT with field from a nested object`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" IS_NOT "I1")
+          stringMatcher("currentIncentive.level.description" IS_NOT "Incentive level 1")
         }
       }
 
@@ -390,7 +566,8 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `CONTAINS with field from a nested object`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" CONTAINS "I1")
+          stringMatcher("currentIncentive.level.description" CONTAINS "Incentive level 1")
+          stringMatcher("currentIncentive.level.description" CONTAINS "Incentive level 1")
         }
       }
 
