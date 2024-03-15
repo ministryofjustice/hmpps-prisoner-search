@@ -64,10 +64,12 @@ class AttributeSearchService(
     return elasticsearchClient.search(searchRequest)
       .also {
         telemetryMap["resultCount"] = it.hits.hits.size.toString()
-        telemetryMap["totalHits"] = it.hits.totalHits?.toString() ?: "0"
-        telemetryMap["timeInMs"] = it.took?.toString() ?: "0"
+        telemetryMap["totalHits"] = it.hits.totalHits?.toString()?.extractInt() ?: "0"
+        telemetryMap["timeInMs"] = it.took?.toString()?.extractInt() ?: "0"
       }
   }
+
+  private fun String.extractInt() = "\\d+".toRegex().find(this)?.value?.toIntOrNull()?.toString()
 
   private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> =
     hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }

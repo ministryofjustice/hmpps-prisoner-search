@@ -700,9 +700,9 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         check {
           assertThat(it["query"]).isEqualTo("firstName = John")
           assertThat(it["pageable"]).isEqualTo("Page request [number: 0, size 10, sort: UNSORTED]")
-          assertThat(it["resultCount"]).isNotNull()
-          assertThat(it["totalHits"]).isNotNull()
-          assertThat(it["timeInMs"]).isNotNull()
+          assertThat(it["resultCount"]?.toInt()).isNotNull()
+          assertThat(it["totalHits"]?.toInt()).isNotNull()
+          assertThat(it["timeInMs"]?.toInt()).isNotNull()
         },
         isNull(),
       )
