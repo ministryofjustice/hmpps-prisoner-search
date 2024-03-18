@@ -623,6 +623,16 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
       expectedPrisoners = listOf("G7089EZ", "G7090AD"),
     )
 
+    // TODO I think this is wrong - neither prisoner has a single tattoo with both Knee and rose
+    @Test
+    fun `searching by tattoos with a body part and a comment on different tattoos`(): Unit = physicalDetailSearch(
+      detailRequest = PhysicalDetailRequest(
+        tattoos = listOf(BodyPart(bodyPart = "Knee", comment = "rose")),
+        prisonIds = listOf("AGI", "LEI"),
+      ),
+      expectedPrisoners = listOf("G7089EZ", "G7090AD"),
+    )
+
     @Test
     fun `searching by tattoos with a comment`(): Unit = physicalDetailSearch(
       detailRequest = PhysicalDetailRequest(

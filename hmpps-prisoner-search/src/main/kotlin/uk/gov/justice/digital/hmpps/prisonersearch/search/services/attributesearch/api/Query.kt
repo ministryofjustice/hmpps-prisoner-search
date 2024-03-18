@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.apache.lucene.search.join.ScoreMode
 import org.opensearch.index.query.BoolQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
@@ -26,11 +27,9 @@ data class Query(
   fun buildQuery(attributes: Attributes): BoolQueryBuilder =
     QueryBuilders.boolQuery()
       .apply {
-        matchers?.forEach {
-          when (joinType) {
-            AND -> must(it.buildQuery(attributes))
-            OR -> should(it.buildQuery(attributes))
-          }
+        when (joinType) {
+          AND -> addAndQueries(attributes)
+          OR -> matchers?.forEach { should(it.buildQuery(attributes)) }
         }
         subQueries?.forEach {
           when (joinType) {
@@ -39,6 +38,32 @@ data class Query(
           }
         }
       }
+
+  private fun BoolQueryBuilder.addAndQueries(attributes: Attributes) {
+    // matchers that aren't for nested fields can be added directly to the bool query
+    matchers
+      ?.findMatchers(attributes, nested = false)
+      ?.forEach { must(it.buildQuery(attributes)) }
+
+    // matchers for nested fields need to be grouped into nested queries
+    matchers
+      ?.findMatchers(attributes, nested = true)
+      ?.groupBy { it.attribute.substringBefore(".") }
+      ?.forEach { (prefix, matchers) ->
+        must(
+          QueryBuilders.nestedQuery(
+            prefix,
+            matchers.fold(QueryBuilders.boolQuery()) { boolQueryBuilder, typeMatcher ->
+              boolQueryBuilder.must(typeMatcher.buildQuery(attributes))
+            },
+            ScoreMode.None,
+          ),
+        )
+      }
+  }
+
+  private fun List<TypeMatcher<*>>.findMatchers(attributes: Attributes, nested: Boolean) =
+    filter { attributes[it.attribute]?.nested == nested }
 
   override fun toString(): String {
     val matchersString = matchers?.joinToString(" ${joinType.name} ") { it.toString() } ?: ""

@@ -16,6 +16,7 @@ typealias Attributes = Map<String, Attribute>
 class Attribute(
   val type: KClass<*>,
   val openSearchName: String,
+  val nested: Boolean = false,
 )
 
 @Configuration
@@ -30,20 +31,21 @@ internal fun getAttributes(kClass: KClass<*>): Attributes =
 private fun findAttributes(
   prop: KProperty1<*, *>,
   prefix: String = "",
+  nested: Boolean = false,
 ): List<Pair<String, Attribute>> =
   when (getPropertyType(prop)) {
     PropertyType.SIMPLE -> {
       getPropertyClass(prop).let { propClass ->
-        listOf("${prefix}${prop.name}" to Attribute(propClass, "${prefix}${getOpenSearchName(prop, propClass)}"))
+        listOf("${prefix}${prop.name}" to Attribute(propClass, "${prefix}${getOpenSearchName(prop, propClass)}", nested))
       }
     }
     PropertyType.LIST -> {
       getGenericTypeClass(prop).memberProperties
-        .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.") }
+        .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
     }
     PropertyType.COMPLEX -> {
       getPropertyClass(prop).memberProperties
-        .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.") }
+        .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
     }
   }
 
@@ -52,16 +54,19 @@ private fun getGenericTypeClass(prop: KProperty1<*, *>) = prop.returnType.generi
 private fun getPropertyClass(prop: KProperty1<*, *>) = prop.returnType.classifier as KClass<*>
 
 private fun getOpenSearchName(prop: KProperty1<*, *>, propClass: KClass<*>): String =
-  if (propClass.simpleName != "String" || (prop.hasFieldAnnotationWithKeyword())) {
+  if (propClass.simpleName != "String" || (prop.hasFieldAnnotation("Keyword"))) {
     prop.name
   } else {
     "${prop.name}.keyword"
   }
 
-private fun KProperty1<*, *>.hasFieldAnnotationWithKeyword(): Boolean {
-  if (javaField?.annotations?.size == 0) return false
+private fun KProperty1<*, *>.hasFieldAnnotation(fieldType: String): Boolean =
+  getFieldType() == fieldType
+
+private fun KProperty1<*, *>.getFieldType(): String? {
+  if (javaField?.annotations?.size == 0) return null
   val name = javaField?.annotations?.firstOrNull { it.annotationClass == Field::class }?.let { it as Field }?.type?.name
-  return name == "Keyword"
+  return name
 }
 
 private enum class PropertyType {
