@@ -5,8 +5,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Of
 import java.time.LocalDate
 
 class OffenderBookingBuilder {
-  fun anOffenderBooking(bookingId: Long? = 12345L) = OffenderBooking(
-    offenderNo = "A1234AA",
+  fun anOffenderBooking(bookingId: Long? = 12345L, offenderNo: String = "A1234AA") = OffenderBooking(
+    offenderNo = offenderNo,
     firstName = "Fred",
     lastName = "Bloggs",
     dateOfBirth = LocalDate.of(1976, 5, 15),

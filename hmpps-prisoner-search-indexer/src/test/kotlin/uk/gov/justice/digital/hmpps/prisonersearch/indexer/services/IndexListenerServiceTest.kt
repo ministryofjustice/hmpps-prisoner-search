@@ -13,6 +13,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -325,7 +326,7 @@ internal class IndexListenerServiceTest {
   inner class offenderChange {
     @Test
     fun `will create an event for missing offender id display`() {
-      indexListenerService.offenderChange(anOffenderChanged(null), "OFFENDER_CHANGE")
+      indexListenerService.offenderChange(anOffenderChanged(null), "OFFENDER_CHANGED")
 
       verify(telemetryClient).trackEvent(
         "MISSING_OFFENDER_ID_DISPLAY",
@@ -366,7 +367,7 @@ internal class IndexListenerServiceTest {
   inner class maybeDeleteOffender {
     @Test
     fun `will create an event for missing offender id display`() {
-      indexListenerService.maybeDeleteOffender(anOffenderChanged(null), "OFFENDER_CHANGE")
+      indexListenerService.maybeDeleteOffender(anOffenderChanged(null), "OFFENDER-DELETED")
 
       verify(telemetryClient).trackEvent(
         "MISSING_OFFENDER_ID_DISPLAY",
@@ -423,6 +424,118 @@ internal class IndexListenerServiceTest {
       eventType = "OFFENDER-DELETED",
       offenderIdDisplay = prisonerNumber,
       offenderId = 1234,
+    )
+  }
+
+  @Nested
+  inner class offenderBookingReassignment {
+    @Test
+    fun `will create an event for missing offender id display`() {
+      indexListenerService.offenderBookingReassigned(
+        anOffenderBookingReassignment(
+          prisonerNumber = null,
+          previousPrisonerNumber = "A1234BC",
+        ),
+        "OFFENDER_BOOKING-REASSIGNED",
+      )
+
+      verify(telemetryClient).trackEvent(
+        "MISSING_OFFENDER_ID_DISPLAY",
+        mapOf("eventType" to "OFFENDER_BOOKING-REASSIGNED", "offenderId" to "1234"),
+        null,
+      )
+      verify(nomisService).getOffender("A1234BC")
+      verifyNoMoreInteractions(nomisService)
+    }
+
+    @Test
+    fun `will create an event for missing previous offender id display`() {
+      indexListenerService.offenderBookingReassigned(
+        anOffenderBookingReassignment(
+          prisonerNumber = "A1234BC",
+          previousPrisonerNumber = null,
+        ),
+        "OFFENDER_BOOKING-REASSIGNED",
+      )
+
+      verify(telemetryClient).trackEvent(
+        "MISSING_OFFENDER_ID_DISPLAY",
+        mapOf("eventType" to "OFFENDER_BOOKING-REASSIGNED", "offenderId" to "1234"),
+        null,
+      )
+      verify(nomisService).getOffender("A1234BC")
+      verifyNoMoreInteractions(nomisService)
+    }
+
+    @Test
+    fun `will reindex on offender booking reassignment`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+      )
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.offenderBookingReassigned(
+        anOffenderBookingReassignment(
+          prisonerNumber = "A1234BC",
+          previousPrisonerNumber = "A1234BC",
+        ),
+        "OFFENDER_BOOKING-REASSIGNED",
+      )
+
+      verify(prisonerSynchroniserService).reindex(
+        check {
+          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
+        },
+        eq(listOf(GREEN)),
+        eq("OFFENDER_BOOKING-REASSIGNED"),
+      )
+      // first booking only sent
+      verifyNoMoreInteractions(prisonerSynchroniserService)
+    }
+
+    @Test
+    fun `will reindex on offender booking reassignment with different previous prison number`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+      )
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      val previousBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = "A2345CD")
+      whenever(nomisService.getOffender("A1234BC")).thenReturn(booking)
+      whenever(nomisService.getOffender("A2345CD")).thenReturn(previousBooking)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      indexListenerService.offenderBookingReassigned(
+        anOffenderBookingReassignment(
+          prisonerNumber = "A1234BC",
+          previousPrisonerNumber = "A2345CD",
+        ),
+        "OFFENDER_BOOKING-REASSIGNED",
+      )
+
+      verify(prisonerSynchroniserService).reindex(
+        check {
+          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
+        },
+        eq(listOf(GREEN)),
+        eq("OFFENDER_BOOKING-REASSIGNED"),
+      )
+
+      verify(prisonerSynchroniserService).reindex(
+        check {
+          assertThat(it.offenderNo).isEqualTo(previousBooking.offenderNo)
+        },
+        eq(listOf(GREEN)),
+        eq("OFFENDER_BOOKING-REASSIGNED"),
+      )
+    }
+
+    private fun anOffenderBookingReassignment(prisonerNumber: String?, previousPrisonerNumber: String?) = OffenderBookingReassignedMessage(
+      offenderId = 1234L,
+      previousOffenderId = 2345L,
+      bookingId = 12345L,
+      offenderIdDisplay = prisonerNumber,
+      previousOffenderIdDisplay = previousPrisonerNumber,
     )
   }
 }

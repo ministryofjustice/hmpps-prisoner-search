@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppend
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.ExternalPrisonerMovementMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBookingChangedMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBookingReassignedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 
@@ -43,7 +44,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     @ParameterizedTest
     @ValueSource(
       strings = [
-        "OFFENDER_BOOKING-CHANGED", "OFFENDER_BOOKING-REASSIGNED", "IMPRISONMENT_STATUS-CHANGED",
+        "OFFENDER_BOOKING-CHANGED", "IMPRISONMENT_STATUS-CHANGED",
         "BED_ASSIGNMENT_HISTORY-INSERTED", "SENTENCE_DATES-CHANGED", "CONFIRMED_RELEASE_DATE-CHANGED",
         "ASSESSMENT-CHANGED", "OFFENDER_PROFILE_DETAILS-INSERTED", "OFFENDER_PROFILE_DETAILS-UPDATED",
         "SENTENCING-CHANGED", "ALERT-INSERTED", "ALERT-UPDATED",
@@ -102,6 +103,23 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
       verify(offenderEventQueueService).republishMessageWithDelay(requestJson, eventType)
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["OFFENDER_BOOKING-REASSIGNED"])
+    internal fun `will call service for booking reassignment`(eventType: String) {
+      val requestJson = validOffenderBookingReassignedMessage(eventType)
+      listener.processOffenderEvent(requestJson)
+      verify(indexListenerService).offenderBookingReassigned(
+        OffenderBookingReassignedMessage(
+          bookingId = 1234L,
+          offenderId = 2345612L,
+          previousOffenderId = 2345611L,
+          offenderIdDisplay = "A123ZZZ",
+          previousOffenderIdDisplay = "A123ZZZ",
+        ),
+        eventType,
+      )
+    }
+
     @Test
     internal fun `failed request`() {
       whenever(indexListenerService.externalMovement(any(), any())).thenThrow(RuntimeException("something went wrong"))
@@ -139,6 +157,11 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   private fun validOffenderChangedMessage(eventType: String) = validMessage(
     eventType = eventType,
     message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"nomisEventType\":\"S1_RESULT\"}""",
+  )
+
+  private fun validOffenderBookingReassignedMessage(eventType: String) = validMessage(
+    eventType = eventType,
+    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"previousOffenderIdDisplay\":\"A123ZZZ\",\"previousOffenderId\":\"2345611\",\"bookingId\":\"1234\",\"nomisEventType\":\"OFF_BKB_UPD\"}""",
   )
 
   private fun validMessage(eventType: String, message: String) = """

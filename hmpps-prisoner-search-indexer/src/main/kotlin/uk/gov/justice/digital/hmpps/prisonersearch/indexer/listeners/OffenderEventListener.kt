@@ -32,7 +32,6 @@ class OffenderEventListener(
       "COURT_SENTENCE-CHANGED",
       "IMPRISONMENT_STATUS-CHANGED",
       "OFFENDER_BOOKING-CHANGED",
-      "OFFENDER_BOOKING-REASSIGNED",
       "OFFENDER_PROFILE_DETAILS-INSERTED",
       "OFFENDER_PROFILE_DETAILS-UPDATED",
       "SENTENCE_DATES-CHANGED",
@@ -69,6 +68,7 @@ class OffenderEventListener(
         "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
         in offenderEvent -> indexListenerService.offenderChange(fromJson(message), eventType)
         "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message), eventType)
+        "OFFENDER_BOOKING-REASSIGNED" -> indexListenerService.offenderBookingReassigned(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }

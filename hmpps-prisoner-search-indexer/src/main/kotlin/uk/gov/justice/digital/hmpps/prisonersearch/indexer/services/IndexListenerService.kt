@@ -55,7 +55,7 @@ class IndexListenerService(
   fun offenderChange(message: OffenderChangedMessage, eventType: String) =
     message.offenderIdDisplay?.run {
       sync(prisonerNumber = this, eventType)
-    } ?: customEventForMissingOffenderIdDisplay(message)
+    } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
 
   fun maybeDeleteOffender(message: OffenderChangedMessage, eventType: String) {
     message.offenderIdDisplay?.run {
@@ -68,7 +68,20 @@ class IndexListenerService(
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
         reindexPrisoner(offender, eventType)
       }
-    } ?: customEventForMissingOffenderIdDisplay(message)
+    } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
+  }
+
+  fun offenderBookingReassigned(message: OffenderBookingReassignedMessage, eventType: String) {
+    message.offenderIdDisplay?.run {
+      sync(prisonerNumber = this, eventType)
+    } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
+
+    // also sync the previous offender if it is different
+    message.previousOffenderIdDisplay?.run {
+      if (this != message.offenderIdDisplay) {
+        sync(prisonerNumber = this, eventType)
+      }
+    } ?: customEventForMissingOffenderIdDisplay(eventType, message.previousOffenderId)
   }
 
   private fun reindexPrisoner(ob: OffenderBooking, eventType: String): Prisoner? =
@@ -93,14 +106,15 @@ class IndexListenerService(
     } ?: null.also { log.warn("Sync requested for prisoner (by booking id) {} not found", bookingId) }
 
   private fun customEventForMissingOffenderIdDisplay(
-    message: OffenderChangedMessage,
+    eventType: String,
+    offenderId: Long,
   ): Prisoner? {
-    val propertiesMap = mapOf(
-      "eventType" to message.eventType,
-      "offenderId" to message.offenderId.toString(),
-    )
-
-    telemetryClient.trackEvent(MISSING_OFFENDER_ID_DISPLAY, propertiesMap)
+    mapOf(
+      "eventType" to eventType,
+      "offenderId" to offenderId.toString(),
+    ).apply {
+      telemetryClient.trackEvent(MISSING_OFFENDER_ID_DISPLAY, this)
+    }
     return null
   }
 
@@ -117,4 +131,12 @@ data class OffenderChangedMessage(
   val eventType: String,
   val offenderId: Long,
   val offenderIdDisplay: String?,
+)
+
+data class OffenderBookingReassignedMessage(
+  val bookingId: Long,
+  val offenderId: Long,
+  val offenderIdDisplay: String?,
+  val previousOffenderId: Long,
+  val previousOffenderIdDisplay: String?,
 )
