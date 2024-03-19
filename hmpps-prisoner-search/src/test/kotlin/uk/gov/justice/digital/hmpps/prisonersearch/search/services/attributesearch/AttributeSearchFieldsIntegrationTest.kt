@@ -108,12 +108,6 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
         comment = "Tribal tattoo",
       ),
     )
-    otherMarks = listOf(
-      BodyPartDetail(
-        bodyPart = "Right Arm",
-        comment = "Burn scar",
-      ),
-    )
     additionalDaysAwarded = 10
     heightCentimetres = 180
     weightKilograms = 88
@@ -205,8 +199,6 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "scars.comment,Scar on left cheek",
     "marks.bodyPart,Left Arm",
     "marks.comment,Tribal tattoo",
-    "otherMarks.bodyPart,Right Arm",
-    "otherMarks.comment,Burn scar",
   )
   fun `string fields`(field: String, value: String) {
     val request = RequestDsl {

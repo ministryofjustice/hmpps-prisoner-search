@@ -172,14 +172,6 @@ class PhysicalDetailService(
           detailQuery.shouldOrMust(lenient, QueryBuilders.matchPhraseQuery("marks.comment", mark.comment))
         }
       }
-      otherMarks?.forEach { other ->
-        other.bodyPart?.let {
-          detailQuery.shouldOrMust(lenient, QueryBuilders.matchPhraseQuery("otherMarks.bodyPart", other.bodyPart))
-        }
-        other.comment?.let {
-          detailQuery.shouldOrMust(lenient, QueryBuilders.matchPhraseQuery("otherMarks.comment", other.comment))
-        }
-      }
     }
 
     return detailQuery

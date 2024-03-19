@@ -501,9 +501,42 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.tattoos).containsExactly(BodyPartDetail("Elbow", "Comment here"), BodyPartDetail("Foot", null))
-    assertThat(prisoner.marks).containsExactly(BodyPartDetail("Ear", "Some comment"))
+    assertThat(prisoner.marks).containsExactly(BodyPartDetail("Ear", "Some comment"), BodyPartDetail("Arm", null))
     assertThat(prisoner.scars).containsExactly(BodyPartDetail("Torso", null))
-    assertThat(prisoner.otherMarks).containsExactly(BodyPartDetail("Arm", null))
+  }
+
+  @Test
+  internal fun `Physical Marks adds tattoos and scars from marks or other marks`() {
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(
+        physicalMarks = listOf(
+          PhysicalMark("Tattoo", "Left", "Elbow", "Upper", "Comment here", null),
+          PhysicalMark("Scar", null, "Torso", null, null, null),
+          PhysicalMark("Mark", null, "Arm", null, "Mark tattoo", null),
+          PhysicalMark("Mark", null, "Shoulder", null, "Mark scar", null),
+          PhysicalMark("Other", "Centre", "Head", null, "Other mark TATTOO", null),
+          PhysicalMark("Other", "Centre", "Hand", null, "Other mark SCAR", null),
+        ),
+      ),
+      incentiveLevel = Result.success(null),
+      restrictedPatientData = Result.success(null),
+    )
+    assertThat(prisoner.tattoos).containsExactlyInAnyOrder(
+      BodyPartDetail("Elbow", "Comment here"),
+      BodyPartDetail("Arm", "Mark tattoo"),
+      BodyPartDetail("Head", "Other mark TATTOO"),
+    )
+    assertThat(prisoner.scars).containsExactlyInAnyOrder(
+      BodyPartDetail("Torso", null),
+      BodyPartDetail("Shoulder", "Mark scar"),
+      BodyPartDetail("Hand", "Other mark SCAR"),
+    )
+    assertThat(prisoner.marks).containsExactlyInAnyOrder(
+      BodyPartDetail("Arm", "Mark tattoo"),
+      BodyPartDetail("Head", "Other mark TATTOO"),
+      BodyPartDetail("Shoulder", "Mark scar"),
+      BodyPartDetail("Hand", "Other mark SCAR"),
+    )
   }
 }
 

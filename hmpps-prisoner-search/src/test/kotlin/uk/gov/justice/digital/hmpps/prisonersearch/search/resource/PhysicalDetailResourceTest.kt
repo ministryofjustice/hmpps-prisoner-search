@@ -73,7 +73,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Ankle", "rose"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -95,7 +94,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Finger", "rose"), BodyPartBuilder("Foot")),
           scar = listOf(BodyPartBuilder("Ankle", "nasty looking scar"), BodyPartBuilder("Knee")),
-          other = listOf(BodyPartBuilder("Nose", "bent to the right")),
           mark = listOf(BodyPartBuilder("Torso", "birthmark on chest")),
         ),
       ),
@@ -116,7 +114,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Ankle", "rose"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -139,7 +136,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Ankle", "dragon"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -161,7 +157,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Knee", "dragon"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -737,47 +732,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
         listOf(mapOf("bodyPart" to "Lip", "comment" to "too much")),
       )
     }
-
-    @Test
-    fun `searching by otherMarks with a body part`(): Unit = physicalDetailSearch(
-      detailRequest = PhysicalDetailRequest(
-        otherMarks = listOf(BodyPart("Head")),
-        prisonIds = listOf("AGI", "LEI"),
-      ),
-      expectedPrisoners = listOf("G7089EZ", "G7090AD", "G7090BA", "G7090BC"),
-    )
-
-    @Test
-    fun `searching by otherMarks with a body part and a comment`(): Unit = physicalDetailSearch(
-      detailRequest = PhysicalDetailRequest(
-        otherMarks = listOf(BodyPart(bodyPart = "Head", comment = "left ear")),
-        prisonIds = listOf("AGI", "LEI"),
-      ),
-      expectedPrisoners = listOf("G7089EZ", "G7090AD", "G7090BA", "G7090BC"),
-    )
-
-    @Test
-    fun `searching by otherMarks with a comment`(): Unit = physicalDetailSearch(
-      detailRequest = PhysicalDetailRequest(
-        otherMarks = listOf(BodyPart(comment = "left ear")),
-        prisonIds = listOf("AGI", "LEI"),
-      ),
-      expectedPrisoners = listOf("G7089EZ", "G7090AD", "G7090BA", "G7090BC"),
-    )
-
-    @Test
-    fun `otherMarks are returned in search results`(): Unit = physicalDetailSearch(
-      detailRequest = PhysicalDetailRequest(
-        ethnicity = "White: Any other background",
-        prisonIds = listOf("AGI", "LEI"),
-      ),
-      expectedPrisoners = listOf("G7090AC", "G7090BA"),
-    ) {
-      assertThat(it).extracting("otherMarks").containsExactly(
-        listOf(mapOf("bodyPart" to "Nose", "comment" to "bent to the right")),
-        listOf(mapOf("bodyPart" to "Head", "comment" to "left ear missing")),
-      )
-    }
   }
 
   @Test
@@ -801,7 +755,6 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
       build = "february",
       tattoos = listOf(BodyPart(bodyPart = "february")),
       scars = listOf(BodyPart(bodyPart = "february")),
-      otherMarks = listOf(BodyPart(bodyPart = "february")),
       marks = listOf(BodyPart(bodyPart = "february")),
     ),
     expectedPrisoners = listOf("H7089EY", "H7089EZ", "H7090BA", "H7090BB", "H1090AA", "G7090BC", "G7089EZ", "G7090AC", "G7090AD", "G7090BA"),

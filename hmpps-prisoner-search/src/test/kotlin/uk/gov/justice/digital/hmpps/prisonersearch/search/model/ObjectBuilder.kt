@@ -56,7 +56,6 @@ data class PhysicalCharacteristicBuilder(
 
 data class PhysicalMarkBuilder(
   val mark: List<BodyPartBuilder>? = null,
-  val other: List<BodyPartBuilder>? = null,
   val scar: List<BodyPartBuilder>? = null,
   val tattoo: List<BodyPartBuilder>? = null,
 )
@@ -193,9 +192,6 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       }
       this.physicalMarks?.mark?.forEach {
         pms.add(PhysicalMark("Mark", null, it.bodyPart, null, it.comment, null))
-      }
-      this.physicalMarks?.other?.forEach {
-        pms.add(PhysicalMark("Other", null, it.bodyPart, null, it.comment, null))
       }
       this.physicalMarks?.scar?.forEach {
         pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
