@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.maritalStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.marksBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.nationality
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.otherMarksBodyPart
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.religion
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.rightEyeColour
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.scarsBodyPart
@@ -68,7 +67,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Ankle", "rose"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
         profileInformation = ProfileInformationBuilder(
@@ -99,7 +97,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Finger", "rose"), BodyPartBuilder("Foot")),
           scar = listOf(BodyPartBuilder("Toe", "nasty looking scar"), BodyPartBuilder("Knee")),
-          other = listOf(BodyPartBuilder("Nose", "bent to the right")),
           mark = listOf(BodyPartBuilder("Torso", "birthmark on chest")),
         ),
         profileInformation = ProfileInformationBuilder(
@@ -128,7 +125,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Ankle", "rose"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -151,7 +147,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Ankle", "dragon"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -173,7 +168,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         physicalMarks = PhysicalMarkBuilder(
           tattoo = listOf(BodyPartBuilder("Knee", "dragon"), BodyPartBuilder("Knee")),
           scar = listOf(BodyPartBuilder("Finger"), BodyPartBuilder("Foot")),
-          other = listOf(BodyPartBuilder("Head", "left ear missing")),
           mark = listOf(BodyPartBuilder("Lip", "too much")),
         ),
       ),
@@ -242,7 +236,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
       arguments(marksBodyPart, listOf("Lip", "Torso"), null),
       arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership"), null),
       arguments(nationality, listOf("British", "Irish"), null),
-      arguments(otherMarksBodyPart, listOf("Head", "Nose"), null),
       arguments(religion, listOf("Agnostic", "Jedi Knight"), null),
       arguments(rightEyeColour, listOf("Clouded", "Green", "Missing"), null),
       arguments(scarsBodyPart, listOf("Finger", "Foot", "Knee", "Toe"), null),

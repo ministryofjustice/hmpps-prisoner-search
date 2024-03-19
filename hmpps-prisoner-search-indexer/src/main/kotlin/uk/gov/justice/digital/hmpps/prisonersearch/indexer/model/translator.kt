@@ -67,8 +67,11 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
       when (pm.type) {
         "Tattoo" -> this.tattoos = this.tattoos?.plus(bodyPart) ?: listOf(bodyPart)
         "Scar" -> this.scars = this.scars?.plus(bodyPart) ?: listOf(bodyPart)
-        "Mark" -> this.marks = this.marks?.plus(bodyPart) ?: listOf(bodyPart)
-        "Other" -> this.otherMarks = this.otherMarks?.plus(bodyPart) ?: listOf(bodyPart)
+        "Mark", "Other" -> {
+          this.marks = this.marks?.plus(bodyPart) ?: listOf(bodyPart)
+          this.tattoos = this.tattoos.addIfContains(bodyPart, "tattoo")
+          this.scars = this.scars.addIfContains(bodyPart, "scar")
+        }
       }
     }
   }
@@ -148,3 +151,12 @@ private fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let 
     dateTime = it.iepTime.withNano(0),
   )
 }
+
+private fun List<BodyPartDetail>?.addIfContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? =
+  if (bodyPart.comment?.lowercase()?.contains(keyword) == true) {
+    bodyPart.copy().let {
+      this?.plus(it) ?: listOf(it)
+    }
+  } else {
+    this
+  }

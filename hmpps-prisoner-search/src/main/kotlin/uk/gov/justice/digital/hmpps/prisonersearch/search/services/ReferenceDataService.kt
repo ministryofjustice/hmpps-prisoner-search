@@ -85,7 +85,6 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
   marksBodyPart(field = "marks.bodyPart.keyword"),
   maritalStatus,
   nationality,
-  otherMarksBodyPart(field = "otherMarks.bodyPart.keyword"),
   religion,
   rightEyeColour,
   scarsBodyPart(field = "scars.bodyPart.keyword"),

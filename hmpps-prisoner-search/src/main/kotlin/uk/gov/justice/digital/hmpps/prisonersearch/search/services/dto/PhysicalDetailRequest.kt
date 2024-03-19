@@ -127,11 +127,6 @@ data class PhysicalDetailRequest(
   val scars: List<BodyPart>? = null,
 
   @Schema(
-    description = "List of body parts that have a different mark",
-  )
-  val otherMarks: List<BodyPart>? = null,
-
-  @Schema(
     description = """
         Whether all terms are required to match. If set to true then only matches on all fields will return a result.
         If set to false then matches will return a higher score than non matches, but all will be returned.

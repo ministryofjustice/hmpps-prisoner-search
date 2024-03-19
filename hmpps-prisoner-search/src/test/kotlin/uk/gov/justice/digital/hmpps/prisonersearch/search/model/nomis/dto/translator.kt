@@ -66,8 +66,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner?, ob: OffenderBooking, incenti
       when (pm.type) {
         "Tattoo" -> this.tattoos = this.tattoos?.plus(bodyPart) ?: listOf(bodyPart)
         "Scar" -> this.scars = this.scars?.plus(bodyPart) ?: listOf(bodyPart)
-        "Mark" -> this.marks = this.marks?.plus(bodyPart) ?: listOf(bodyPart)
-        "Other" -> this.otherMarks = this.otherMarks?.plus(bodyPart) ?: listOf(bodyPart)
+        "Mark", "Other" -> this.marks = this.marks?.plus(bodyPart) ?: listOf(bodyPart)
       }
     }
   }
