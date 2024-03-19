@@ -23,7 +23,9 @@ class AttributeResolverTest {
     val integer: Int,
     val localDate: LocalDate,
     val localDateTime: LocalDateTime,
+    @Field(type = FieldType.Nested)
     val list: List<Complex>,
+    @Field(type = FieldType.Nested)
     val complex: Complex,
   )
 
@@ -45,26 +47,26 @@ class AttributeResolverTest {
   companion object {
     @JvmStatic
     fun testParameters(): Stream<Arguments> = Stream.of(
-      arguments("keywordString", Attribute(String::class, "keywordString")),
-      arguments("string", Attribute(String::class, "string.keyword")),
-      arguments("boolean", Attribute(Boolean::class, "boolean")),
-      arguments("integer", Attribute(Integer::class, "integer")),
-      arguments("localDate", Attribute(LocalDate::class, "localDate")),
-      arguments("localDateTime", Attribute(LocalDateTime::class, "localDateTime")),
-      arguments("list.string", Attribute(String::class, "list.string.keyword")),
-      arguments("list.boolean", Attribute(Boolean::class, "list.boolean")),
-      arguments("list.integer", Attribute(Integer::class, "list.integer")),
-      arguments("list.localDate", Attribute(LocalDate::class, "list.localDate")),
-      arguments("list.localDateTime", Attribute(LocalDateTime::class, "list.localDateTime")),
-      arguments("list.nested.code", Attribute(String::class, "list.nested.code")),
-      arguments("list.nested.description", Attribute(String::class, "list.nested.description.keyword")),
-      arguments("complex.string", Attribute(String::class, "complex.string.keyword")),
-      arguments("complex.boolean", Attribute(Boolean::class, "complex.boolean")),
-      arguments("complex.integer", Attribute(Integer::class, "complex.integer")),
-      arguments("complex.localDate", Attribute(LocalDate::class, "complex.localDate")),
-      arguments("complex.localDateTime", Attribute(LocalDateTime::class, "complex.localDateTime")),
-      arguments("complex.nested.code", Attribute(String::class, "complex.nested.code")),
-      arguments("complex.nested.description", Attribute(String::class, "complex.nested.description.keyword")),
+      arguments("keywordString", Attribute(String::class, "keywordString", false)),
+      arguments("string", Attribute(String::class, "string.keyword", false)),
+      arguments("boolean", Attribute(Boolean::class, "boolean", false)),
+      arguments("integer", Attribute(Integer::class, "integer", false)),
+      arguments("localDate", Attribute(LocalDate::class, "localDate", false)),
+      arguments("localDateTime", Attribute(LocalDateTime::class, "localDateTime", false)),
+      arguments("list.string", Attribute(String::class, "list.string.keyword", true)),
+      arguments("list.boolean", Attribute(Boolean::class, "list.boolean", true)),
+      arguments("list.integer", Attribute(Integer::class, "list.integer", true)),
+      arguments("list.localDate", Attribute(LocalDate::class, "list.localDate", true)),
+      arguments("list.localDateTime", Attribute(LocalDateTime::class, "list.localDateTime", true)),
+      arguments("list.nested.code", Attribute(String::class, "list.nested.code", true)),
+      arguments("list.nested.description", Attribute(String::class, "list.nested.description.keyword", true)),
+      arguments("complex.string", Attribute(String::class, "complex.string.keyword", true)),
+      arguments("complex.boolean", Attribute(Boolean::class, "complex.boolean", true)),
+      arguments("complex.integer", Attribute(Integer::class, "complex.integer", true)),
+      arguments("complex.localDate", Attribute(LocalDate::class, "complex.localDate", true)),
+      arguments("complex.localDateTime", Attribute(LocalDateTime::class, "complex.localDateTime", true)),
+      arguments("complex.nested.code", Attribute(String::class, "complex.nested.code", true)),
+      arguments("complex.nested.description", Attribute(String::class, "complex.nested.description.keyword", true)),
     )
   }
 
@@ -73,6 +75,7 @@ class AttributeResolverTest {
   fun `should resolve attributes`(attributeName: String, attribute: Attribute) {
     assertThat(attributes[attributeName]?.type).isEqualTo(attribute.type)
     assertThat(attributes[attributeName]?.openSearchName).isEqualTo(attribute.openSearchName)
+    assertThat(attributes[attributeName]?.nested).isEqualTo(attribute.nested)
   }
 
   @Test

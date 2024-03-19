@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalMarkBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.ProfileInformationBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
@@ -42,8 +45,9 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       heightCentimetres = 181,
       recall = false,
       currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 1", dateTime = now.minusDays(2).minusHours(1)),
-      alertCodes = listOf("AT1" to "AC1"),
+      alertCodes = listOf("AT1" to "AC1", "AT2" to "AC2"),
       profileInformation = ProfileInformationBuilder(youthOffender = true),
+      physicalMarks = PhysicalMarkBuilder(tattoo = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dragon"))),
     ),
     PrisonerBuilder(
       prisonerNumber = "P2",
@@ -52,8 +56,9 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       heightCentimetres = 182,
       recall = true,
       currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 2", dateTime = now.minusDays(1).minusHours(1)),
-      alertCodes = listOf("AT2" to "AC2"),
+      alertCodes = listOf("AT1" to "AC2", "AT2" to "AC2"),
       profileInformation = ProfileInformationBuilder(youthOffender = false),
+      physicalMarks = PhysicalMarkBuilder(tattoo = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dragon/skull"))),
     ),
     PrisonerBuilder(
       prisonerNumber = "P3",
@@ -64,6 +69,12 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 3", dateTime = now.minusHours(1)),
       alertCodes = listOf("AT3" to "AC3"),
       profileInformation = ProfileInformationBuilder(youthOffender = true),
+      physicalMarks = PhysicalMarkBuilder(
+        tattoo = listOf(
+          BodyPartBuilder(bodyPart = "Arm", comment = "love heart"),
+          BodyPartBuilder(bodyPart = "Shoulder", comment = "dragon"),
+        ),
+      ),
     ),
   )
 
@@ -426,7 +437,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1")
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
     }
 
     @Test
@@ -434,11 +445,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       val request = RequestDsl {
         query {
           stringMatcher("alerts.alertType" IS "AT1")
-          stringMatcher("alerts.alertCode" IS "AC1")
+          stringMatcher("alerts.alertCode" IS "AC2")
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1")
+      webTestClient.attributeSearch(request).expectPrisoners("P2")
     }
 
     @Test
@@ -512,7 +523,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P3")
     }
 
     @Test
@@ -1241,6 +1252,36 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
       }
 
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+  }
+
+  @Nested
+  @Disabled("These tests currently fail because the tattoos list isn't a Nested field")
+  inner class BodyParts {
+    @Test
+    fun `should match on both body part AND IS comment`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("tattoos.bodyPart" IS "Arm")
+          stringMatcher("tattoos.comment" IS "dragon")
+        }
+      }
+
+      // importantly this ignores P3 which has tattoos Arm/heart and Shoulder/dragon but NOT Arm/dragon
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match on both body part AND CONTAINS comment`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("tattoos.bodyPart" IS "Arm")
+          stringMatcher("tattoos.comment" CONTAINS "dragon")
+        }
+      }
+
+      // importantly this ignores P3 which has tattoos Arm/heart and Shoulder/dragon but NOT Arm/dragon
       webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
     }
   }
