@@ -69,8 +69,8 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
         "Scar" -> this.scars = this.scars?.plus(bodyPart) ?: listOf(bodyPart)
         "Mark", "Other" -> {
           this.marks = this.marks?.plus(bodyPart) ?: listOf(bodyPart)
-          this.tattoos = this.tattoos.addIfContains(bodyPart, "tattoo")
-          this.scars = this.scars.addIfContains(bodyPart, "scar")
+          this.tattoos = this.tattoos.addIfCommentContains(bodyPart, "tattoo")
+          this.scars = this.scars.addIfCommentContains(bodyPart, "scar")
         }
       }
     }
@@ -152,7 +152,7 @@ private fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let 
   )
 }
 
-private fun List<BodyPartDetail>?.addIfContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? =
+private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? =
   if (bodyPart.comment?.lowercase()?.contains(keyword) == true) {
     bodyPart.copy().let {
       this?.plus(it) ?: listOf(it)
