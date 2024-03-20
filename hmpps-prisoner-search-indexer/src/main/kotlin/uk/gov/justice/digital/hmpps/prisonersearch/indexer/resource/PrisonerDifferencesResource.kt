@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferencesService
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 

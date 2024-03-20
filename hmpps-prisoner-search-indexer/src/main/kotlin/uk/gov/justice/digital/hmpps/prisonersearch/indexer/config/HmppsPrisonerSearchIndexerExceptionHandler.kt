@@ -18,6 +18,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexConflictException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.WrongIndexRequestedException
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestControllerAdvice
 class HmppsPrisonerSearchIndexerExceptionHandler {
@@ -81,7 +82,7 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
   fun handleEntityNotFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
     .contentType(MediaType.APPLICATION_JSON)
-    .body(ErrorResponse(status = NOT_FOUND.value(), developerMessage = e.message))
+    .body(ErrorResponse(status = NOT_FOUND, developerMessage = e.message))
 
   @ExceptionHandler(WrongIndexRequestedException::class)
   fun handleWrongIndexRequestedException(e: WrongIndexRequestedException): ResponseEntity<ErrorResponse> =
@@ -110,27 +111,10 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
   @ExceptionHandler(AccessDeniedException::class)
   fun handleException(e: AccessDeniedException?): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(HttpStatus.FORBIDDEN)
-    .body(ErrorResponse(status = HttpStatus.FORBIDDEN.value()))
+    .body(ErrorResponse(status = HttpStatus.FORBIDDEN))
     .also { log.debug("Forbidden (403) returned", e) }
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
-}
-
-data class ErrorResponse(
-  val status: Int,
-  val errorCode: Int? = null,
-  val userMessage: String? = null,
-  val developerMessage: String? = null,
-  val moreInfo: String? = null,
-) {
-  constructor(
-    status: HttpStatus,
-    errorCode: Int? = null,
-    userMessage: String? = null,
-    developerMessage: String? = null,
-    moreInfo: String? = null,
-  ) :
-    this(status.value(), errorCode, userMessage, developerMessage, moreInfo)
 }
