@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.NotFoundException
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestControllerAdvice
 class HmppsPrisonerSearchExceptionHandler {
@@ -33,32 +34,28 @@ class HmppsPrisonerSearchExceptionHandler {
       ).also { log.info("BadRequest exception: {}", e.message) }
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
-  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
-    log.debug("Bad request (400) returned", e)
-    return ResponseEntity
+  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> =
+    ResponseEntity
       .status(BAD_REQUEST)
       .body(
         ErrorResponse(
-          status = BAD_REQUEST.value(),
+          status = BAD_REQUEST,
           userMessage = "Method argument failure: ${e.message}",
           developerMessage = e.developerMessage(),
         ),
       ).also { log.info("MethodArgumentNotValid exception: {}", e.message) }
-  }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
-    log.debug("Bad request (400) returned", e)
-    return ResponseEntity
+  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> =
+    ResponseEntity
       .status(BAD_REQUEST)
       .body(
         ErrorResponse(
-          status = BAD_REQUEST.value(),
+          status = BAD_REQUEST,
           userMessage = "Method argument failure: ${e.message}",
           developerMessage = e.message,
         ),
       ).also { log.info("MethodArgumentTypeMismatchException exception: {}", e.message) }
-  }
 
   @ExceptionHandler(ValidationException::class)
   fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> =
@@ -85,7 +82,7 @@ class HmppsPrisonerSearchExceptionHandler {
       ).also { log.info("Failed to parse request: {}", e.message) }
 
   @ExceptionHandler(ResponseStatusException::class)
-  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse?>? =
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> =
     ResponseEntity
       .status(e.statusCode)
       .body(
@@ -100,13 +97,13 @@ class HmppsPrisonerSearchExceptionHandler {
   fun handleEntityNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(HttpStatus.NOT_FOUND)
     .contentType(MediaType.APPLICATION_JSON)
-    .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), developerMessage = e.message))
+    .body(ErrorResponse(status = HttpStatus.NOT_FOUND, developerMessage = e.message))
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleEntityNotFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(HttpStatus.NOT_FOUND)
     .contentType(MediaType.APPLICATION_JSON)
-    .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), developerMessage = e.message))
+    .body(ErrorResponse(status = HttpStatus.NOT_FOUND, developerMessage = e.message))
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? =
@@ -121,31 +118,14 @@ class HmppsPrisonerSearchExceptionHandler {
       ).also { log.error("Unexpected exception", e) }
 
   @ExceptionHandler(AccessDeniedException::class)
-  fun handleException(e: AccessDeniedException?): ResponseEntity<ErrorResponse> = ResponseEntity
+  fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(HttpStatus.FORBIDDEN)
-    .body(ErrorResponse(status = HttpStatus.FORBIDDEN.value()))
+    .body(ErrorResponse(status = HttpStatus.FORBIDDEN))
     .also { log.debug("Forbidden (403) returned", e) }
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
-}
-
-data class ErrorResponse(
-  val status: Int,
-  val errorCode: Int? = null,
-  val userMessage: String? = null,
-  val developerMessage: String? = null,
-  val moreInfo: String? = null,
-) {
-  constructor(
-    status: HttpStatus,
-    errorCode: Int? = null,
-    userMessage: String? = null,
-    developerMessage: String? = null,
-    moreInfo: String? = null,
-  ) :
-    this(status.value(), errorCode, userMessage, developerMessage, moreInfo)
 }
 
 private fun MethodArgumentNotValidException.developerMessage(): String {
