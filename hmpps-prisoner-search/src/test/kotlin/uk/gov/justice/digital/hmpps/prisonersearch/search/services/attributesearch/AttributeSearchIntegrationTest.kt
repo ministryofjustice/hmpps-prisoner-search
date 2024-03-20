@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -47,7 +46,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 1", dateTime = now.minusDays(2).minusHours(1)),
       alertCodes = listOf("AT1" to "AC1", "AT2" to "AC2"),
       profileInformation = ProfileInformationBuilder(youthOffender = true),
-      physicalMarks = PhysicalMarkBuilder(tattoo = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dragon"))),
+      physicalMarks = PhysicalMarkBuilder(
+        tattoo = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dragon")),
+        scar = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "bite")),
+        mark = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "birthmark")),
+      ),
     ),
     PrisonerBuilder(
       prisonerNumber = "P2",
@@ -58,7 +61,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       currentIncentive = IncentiveLevelBuilder(levelDescription = "Incentive level 2", dateTime = now.minusDays(1).minusHours(1)),
       alertCodes = listOf("AT1" to "AC2", "AT2" to "AC2"),
       profileInformation = ProfileInformationBuilder(youthOffender = false),
-      physicalMarks = PhysicalMarkBuilder(tattoo = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dragon/skull"))),
+      physicalMarks = PhysicalMarkBuilder(
+        tattoo = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dragon/skull")),
+        scar = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dog bite")),
+        mark = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "birthmark on left wrist")),
+      ),
     ),
     PrisonerBuilder(
       prisonerNumber = "P3",
@@ -73,6 +80,14 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         tattoo = listOf(
           BodyPartBuilder(bodyPart = "Arm", comment = "love heart"),
           BodyPartBuilder(bodyPart = "Shoulder", comment = "dragon"),
+        ),
+        scar = listOf(
+          BodyPartBuilder(bodyPart = "Arm", comment = "wrist"),
+          BodyPartBuilder(bodyPart = "Shoulder", comment = "bite"),
+        ),
+        mark = listOf(
+          BodyPartBuilder(bodyPart = "Arm"),
+          BodyPartBuilder(bodyPart = "Shoulder", comment = "birthmark"),
         ),
       ),
     ),
@@ -1257,10 +1272,9 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
   }
 
   @Nested
-  @Disabled("These tests currently fail because the tattoos list isn't a Nested field")
   inner class BodyParts {
     @Test
-    fun `should match on both body part AND IS comment`() {
+    fun `should match tattoo on both body part AND IS comment`() {
       val request = RequestDsl {
         query {
           stringMatcher("tattoos.bodyPart" IS "Arm")
@@ -1273,7 +1287,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
-    fun `should match on both body part AND CONTAINS comment`() {
+    fun `should match tattoo on both body part AND CONTAINS comment`() {
       val request = RequestDsl {
         query {
           stringMatcher("tattoos.bodyPart" IS "Arm")
@@ -1283,6 +1297,103 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
       // importantly this ignores P3 which has tattoos Arm/heart and Shoulder/dragon but NOT Arm/dragon
       webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `should match tattoo on either body part or comment in different queries`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("tattoos.bodyPart" IS "Arm")
+        }
+        query {
+          stringMatcher("tattoos.comment" IS "dragon")
+        }
+      }
+
+      // importantly this includes P3 because we only check nested objects within the same query
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+
+    @Test
+    fun `should match scar on both body part AND IS comment`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("scars.bodyPart" IS "Arm")
+          stringMatcher("scars.comment" IS "bite")
+        }
+      }
+
+      // importantly this ignores P3 which has scars Arm/wrist and Shoulder/bite but NOT Arm/bite
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match scar on both body part AND CONTAINS comment`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("scars.bodyPart" IS "Arm")
+          stringMatcher("scars.comment" CONTAINS "bite")
+        }
+      }
+
+      // importantly this ignores P3 which has scars Arm/wrist and Shoulder/bite but NOT Arm/bite
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `should match scar on either body part or comment in different queries`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("scars.bodyPart" IS "Arm")
+        }
+        query {
+          stringMatcher("scars.comment" IS "bite")
+        }
+      }
+
+      // importantly this includes P3 because we only check nested objects within the same query
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+
+    @Test
+    fun `should match marks on both body part AND IS comment`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("marks.bodyPart" IS "Arm")
+          stringMatcher("marks.comment" IS "birthmark")
+        }
+      }
+
+      // importantly this ignores P3 which has marks on Arm and Shoulder/birthmark but NOT Arm/birthmark
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match marks on both body part AND CONTAINS comment`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("marks.bodyPart" IS "Arm")
+          stringMatcher("marks.comment" CONTAINS "birthmark")
+        }
+      }
+
+      // importantly this ignores P3 which has marks on Arm and Shoulder/birthmark but NOT Arm/birthmark
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `should match marks on either body part or comment in different query`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("marks.bodyPart" IS "Arm")
+        }
+        query {
+          stringMatcher("marks.comment" IS "birthmark")
+        }
+      }
+
+      // importantly this includes P3 because we only check nested objects within the same query
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
     }
   }
 

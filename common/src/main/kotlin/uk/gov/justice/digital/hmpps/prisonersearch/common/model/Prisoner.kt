@@ -390,18 +390,21 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.PHYSICAL_DETAILS)
   var shoeSize: Int? = null
 
+  @Field(type = FieldType.Nested, includeInParent = true)
   @Schema(
     description = "List of parts of the body that have tattoos. This includes marks and other marks whose comment contains 'tattoo'. 'From REFERENCE_CODES table where DOMAIN = BODY_PART. Allowable values extracted 08/02/2023.",
   )
   @DiffableProperty(DiffCategory.PHYSICAL_DETAILS)
   var tattoos: List<BodyPartDetail>? = null
 
+  @Field(type = FieldType.Nested, includeInParent = true)
   @Schema(
     description = "List of parts of the body that have scars. This includes marks and other marks whose comment contains 'scar'. From REFERENCE_CODES table where DOMAIN = BODY_PART. Allowable values extracted 08/02/2023.",
   )
   @DiffableProperty(DiffCategory.PHYSICAL_DETAILS)
   var scars: List<BodyPartDetail>? = null
 
+  @Field(type = FieldType.Nested, includeInParent = true)
   @Schema(
     description = "List of parts of the body that have marks. This includes NOMIS physical details of type 'marks' and 'otherMarks'. If we find a comment with either 'tattoo' or 'scar' we also add to the list of tattoos or scars. From REFERENCE_CODES table where DOMAIN = BODY_PART. Allowable values extracted 08/02/2023.",
   )
