@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.opensearch.common.unit.Fuzziness
 import org.opensearch.index.query.AbstractQueryBuilder
 import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.CONTAINS
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS_NOT
 
 @Schema(description = "A matcher for a string attribute from the prisoner record")
 data class StringMatcher(
@@ -25,19 +29,33 @@ data class StringMatcher(
   }
 
   override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> =
-    attributes[attribute]?.let {
-      when (condition) {
-        StringCondition.IS -> QueryBuilders.termQuery(it.openSearchName, searchTerm).caseInsensitive(true)
-        StringCondition.IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(it.openSearchName, searchTerm).caseInsensitive(true))
-        StringCondition.CONTAINS -> QueryBuilders.wildcardQuery(it.openSearchName, "*$searchTerm*").caseInsensitive(true)
-      }
-    } ?: throw AttributeSearchException("Attribute $attribute not recognised")
+    attributes[attribute]
+      ?.let { attr ->
+        val query = when (condition) {
+          IS -> QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
+          IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true))
+          CONTAINS -> QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
+        }
+        return when {
+          attr.isFuzzy && condition == IS -> {
+            QueryBuilders.boolQuery()
+              .should(query)
+              .should(QueryBuilders.fuzzyQuery(attr.openSearchName, searchTerm))
+          }
+          attr.isFuzzy && condition == CONTAINS -> {
+            QueryBuilders.boolQuery()
+              .should(query)
+              .should(QueryBuilders.matchQuery(attribute, searchTerm).fuzziness(Fuzziness.AUTO))
+          }
+          else -> query
+        }
+      } ?: throw AttributeSearchException("Attribute $attribute not recognised")
 
   override fun toString(): String {
     val condition = when (condition) {
-      StringCondition.IS -> "="
-      StringCondition.IS_NOT -> "!="
-      StringCondition.CONTAINS -> "CONTAINS"
+      IS -> "="
+      IS_NOT -> "!="
+      CONTAINS -> "CONTAINS"
     }
     return "$attribute $condition $searchTerm"
   }
@@ -49,6 +67,8 @@ data class StringMatcher(
   IS and IS_NOT require an exact match (wildcards ? and * will not work).
   
   CONTAINS checks for a partial match and respects wildcards ? (single character) and * (zero to many characters).
+  
+  For IS and CONTAINS, if the attribute contains free text then the search will also perform a fuzzy match.
   """,
 )
 enum class StringCondition {

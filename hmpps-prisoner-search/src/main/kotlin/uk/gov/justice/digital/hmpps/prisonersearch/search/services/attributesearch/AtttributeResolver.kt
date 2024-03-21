@@ -13,10 +13,28 @@ import kotlin.reflect.jvm.javaField
 
 typealias Attributes = Map<String, Attribute>
 
+val FUZZY_ATTRIBUTES = listOf(
+  "firstName",
+  "middleNames",
+  "lastName",
+  "prisonName",
+  "mostSeriousOffence",
+  "locationDescription",
+  "dischargeHospitalDescription",
+  "dischargeDetails",
+  "tattoos.comment",
+  "scars.comment",
+  "marks.comment",
+  "aliases.firstName",
+  "aliases.middleNames",
+  "aliases.lastName",
+)
+
 class Attribute(
   val type: KClass<*>,
   val openSearchName: String,
-  val nested: Boolean = false,
+  val isNested: Boolean = false,
+  val isFuzzy: Boolean = false,
 )
 
 @Configuration
@@ -36,7 +54,10 @@ private fun findAttributes(
   when (getPropertyType(prop)) {
     PropertyType.SIMPLE -> {
       getPropertyClass(prop).let { propClass ->
-        listOf("${prefix}${prop.name}" to Attribute(propClass, "${prefix}${getOpenSearchName(prop, propClass)}", nested))
+        val propertyName = prefix + prop.name
+        val openSearchName = prefix + getOpenSearchName(prop, propClass)
+        val fuzzy = FUZZY_ATTRIBUTES.contains(propertyName)
+        listOf(propertyName to Attribute(propClass, openSearchName, nested, fuzzy))
       }
     }
     PropertyType.LIST -> {

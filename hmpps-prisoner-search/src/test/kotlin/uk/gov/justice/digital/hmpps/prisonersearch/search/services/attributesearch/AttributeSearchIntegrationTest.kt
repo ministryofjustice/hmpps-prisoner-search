@@ -54,7 +54,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     ),
     PrisonerBuilder(
       prisonerNumber = "P2",
-      firstName = "John2",
+      firstName = "James2",
       dateOfBirth = "1990-01-02",
       heightCentimetres = 182,
       recall = true,
@@ -69,7 +69,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     ),
     PrisonerBuilder(
       prisonerNumber = "P3",
-      firstName = "John3",
+      firstName = "Jeff3",
       dateOfBirth = "1990-01-03",
       heightCentimetres = 183,
       recall = false,
@@ -239,7 +239,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       val request = RequestDsl {
         query {
           stringMatcher("firstName" IS_NOT "John1")
-          stringMatcher("firstName" IS_NOT "John2")
+          stringMatcher("firstName" IS_NOT "James2")
         }
       }
 
@@ -267,7 +267,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -278,7 +278,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -289,7 +289,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -348,7 +348,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
-    fun `single CONTAINS with a multiple character wildcard nom atch`() {
+    fun `single CONTAINS with a multiple character wildcard no match`() {
       val request = RequestDsl {
         query {
           stringMatcher("currentIncentive.level.description" CONTAINS "ince*ves level")
@@ -421,9 +421,9 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `IS, CONTAINS and IS_NOT`() {
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" IS "John1")
-          stringMatcher("firstName" CONTAINS "John")
-          stringMatcher("firstName" IS_NOT "John2")
+          stringMatcher("prisonerNumber" IS "P1")
+          stringMatcher("prisonerNumber" CONTAINS "P")
+          stringMatcher("prisonerNumber" IS_NOT "P2")
         }
       }
 
@@ -435,9 +435,9 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       val request = RequestDsl {
         query {
           joinType = OR
-          stringMatcher("firstName" IS_NOT "John1")
-          stringMatcher("firstName" CONTAINS "John")
-          stringMatcher("firstName" IS "John2")
+          stringMatcher("prisonerNumber" IS "P1")
+          stringMatcher("prisonerNumber" CONTAINS "P")
+          stringMatcher("prisonerNumber" IS_NOT "P2")
         }
       }
 
@@ -599,6 +599,84 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
       webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
+
+    @Test
+    fun `fuzzy attribute with IS allows spelling mistakes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "Jhon1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `fuzzy attribute wth CONTAINS allows spelling mistakes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("tattoos.comment" CONTAINS "haert")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P3")
+    }
+
+    @Test
+    fun `fuzzy attribute with IS doesn't allow incorrect case spelling mistakes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "JHON1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `fuzzy attribute with CONTAINS allows incorrect case spelling mistakes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("tattoos.comment" CONTAINS "HAERT")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P3")
+    }
+
+    @Test
+    fun `non-fuzzy attribute with IS doesn't allow spelling mistakes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" IS "Icnentive level 1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `non-fuzzy attribute with CONTAINS doesn't allow spelling mistakes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" CONTAINS "Icnentive")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `allows spelling mistakes in multiple fuzzy attributes`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IS "Jmaes2")
+          stringMatcher("marks.comment" CONTAINS "brithmrak")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P2")
+    }
   }
 
   @Nested
@@ -723,7 +801,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         query {
           joinType = OR
           intMatcher("heightCentimetres" EQ 181)
-          stringMatcher("firstName" IS "John2")
+          stringMatcher("firstName" IS "James2")
         }
       }
 
@@ -785,7 +863,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       val request = RequestDsl {
         query {
           booleanMatcher("recall" IS false)
-          stringMatcher("firstName" IS "John3")
+          stringMatcher("firstName" IS "Jeff3")
           intMatcher("heightCentimetres" EQ 183)
         }
       }
@@ -874,7 +952,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       val request = RequestDsl {
         query {
           dateTimeMatcher("currentIncentive.dateTime" GT now.minusDays(2))
-          stringMatcher("firstName" IS "John3")
+          stringMatcher("firstName" IS "Jeff3")
         }
       }
 
@@ -887,7 +965,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         query {
           joinType = OR
           dateTimeMatcher("currentIncentive.dateTime" GT now.minusDays(2))
-          stringMatcher("firstName" IS "John2")
+          stringMatcher("firstName" IS "James2")
         }
       }
 
@@ -1043,7 +1121,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         query {
           joinType = OR
           dateMatcher("dateOfBirth" EQ "1990-01-01")
-          stringMatcher("firstName" IS "John2")
+          stringMatcher("firstName" IS "James2")
         }
       }
 
@@ -1160,11 +1238,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
     @Test
     fun `multiple nested sub-queries`() {
-      // firstName CONTAINS John AND ((dateOfBirth = 1990-01-01) OR (dateOfBirth = 1990-01-02))
+      // firstName CONTAINS J AND ((dateOfBirth = 1990-01-01) OR (dateOfBirth = 1990-01-02))
       val request = RequestDsl {
         query {
           joinType = JoinType.AND
-          stringMatcher("firstName" CONTAINS "John")
+          stringMatcher("firstName" CONTAINS "J")
           subQuery {
             joinType = OR
             subQuery {
@@ -1205,7 +1283,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
           stringMatcher("firstName" IS "John1")
         }
         query {
-          stringMatcher("firstName" IS "John2")
+          stringMatcher("firstName" IS "James2")
         }
       }
 
@@ -1241,7 +1319,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         }
         query {
           subQuery {
-            stringMatcher("firstName" IS "John2")
+            stringMatcher("firstName" IS "James2")
           }
         }
       }
@@ -1260,7 +1338,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
           }
         }
         query {
-          stringMatcher("firstName" IS "John2")
+          stringMatcher("firstName" IS "James2")
           subQuery {
             dateMatcher("dateOfBirth" EQ "1990-01-02")
           }

@@ -22,7 +22,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorR
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 
-typealias AttributeTypes = Map<String, String>
+@Schema(description = "An attribute that can be searched for in a query")
+data class Attribute(
+  @Schema(description = "The name of the attribute to be used when searching", example = "firstName")
+  val name: String,
+  @Schema(description = "The type of the attribute (used to determine which matcher to use)", example = "String")
+  val type: String,
+  @Schema(description = "Whether the attribute search will be fuzzy. Generally applicable to String attributes containing free text such as names.", example = "true")
+  val fuzzySearch: Boolean,
+)
 
 @RestController
 @Validated
@@ -52,9 +60,12 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       to include them in the same query. For example, to search for alias "John Smith" you should search for aliases.firstName IS "John" and aliases.lastName IS "Smith" in a single query.
       If you search for them in different queries you will receive anyone with firstName John and also anyone with lastName Smith.
       </p>
-      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record or get them from endpoint <string>GET /attribute-search/attributes</strong>. Attributes from lists can be
+      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record or get them from endpoint <strong>GET /attribute-search/attributes</strong>. Attributes from lists can be
       searched for with dot notation, e.g. <strong>"attribute=aliases.firstName"</strong> or <strong>"attribute=tattoos.bodyPart"</strong>. 
       Attributes from complex objects can also be searched for with dot notation, e.g. <strong>"attribute=currentIncentive.level.code"</strong>.
+      </p>
+      <p>String attributes that contain free text will perform a <a href="https://opensearch.org/docs/latest/query-dsl/term/fuzzy/">fuzzy search</a> with conditions IS and CONTAINS.
+      This means that the query also matches on near misses, e.g. spelling mistakes. To find which attributes perform a fuzzy search call endpoint <strong>GET /attribute-search/attributes</strong>.
       </p>
       <p>To assist with debugging queries we publish events in App Insights. To search in App Insights Log Analytics run query: 
       <pre>
@@ -209,5 +220,5 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       ),
     ],
   )
-  fun getAttributes(): AttributeTypes = attributeSearchService.getAttributes()
+  fun getAttributes(): List<Attribute> = attributeSearchService.getAttributes()
 }

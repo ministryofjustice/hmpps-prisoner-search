@@ -63,7 +63,7 @@ data class Query(
   }
 
   private fun List<TypeMatcher<*>>.findMatchers(attributes: Attributes, nested: Boolean) =
-    filter { attributes[it.attribute]?.nested == nested }
+    filter { attributes[it.attribute]?.isNested == nested }
 
   override fun toString(): String {
     val matchersString = matchers?.joinToString(" ${joinType.name} ") { it.toString() } ?: ""
