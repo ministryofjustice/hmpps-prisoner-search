@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "1.9.22"
+  kotlin("plugin.jpa") version "1.9.23"
 }
 
 configurations {
@@ -40,7 +40,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.1")
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.32.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.33.1")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
@@ -57,7 +57,7 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.21") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.20")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.21")
   testImplementation("org.wiremock:wiremock-standalone:3.4.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
