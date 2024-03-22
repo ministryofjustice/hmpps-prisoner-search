@@ -18,10 +18,12 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.Attribute
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.OR
+import kotlin.reflect.KClass
 
 @Component
 class AttributeSearchService(
@@ -94,9 +96,11 @@ class AttributeSearchService(
       ?.openSearchName
       ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
 
-  fun getAttributes() = attributes.map { it.key to it.value.type.toString().lastWord() }.toMap()
+  fun getAttributes() = attributes.map { (name, attribute) ->
+    Attribute(name, attribute.type.matcherType(), FUZZY_ATTRIBUTES.contains(name))
+  }
 
-  private fun String.lastWord() = split(".").last()
+  private fun KClass<*>.matcherType() = simpleName!!.replace("Local", "")
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

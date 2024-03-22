@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -9,6 +10,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
@@ -781,13 +783,17 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         .exchange()
         .expectStatus().isOk
         .expectBody()
-        .jsonPath("$['firstName']").isEqualTo("String")
-        .jsonPath("$['recall']").isEqualTo("Boolean")
-        .jsonPath("$['heightCentimetres']").isEqualTo("Int")
-        .jsonPath("$['releaseDate']").isEqualTo("LocalDate")
-        .jsonPath("$['currentIncentive.dateTime']").isEqualTo("LocalDateTime")
-        .jsonPath("$['currentIncentive.level.code']").isEqualTo("String")
-        .jsonPath("$['aliases.firstName']").isEqualTo("String")
+        .jsonPath("$").value<List<Attribute>> {
+          assertThat(it).extracting("name", "type", "fuzzySearch").contains(
+            tuple("firstName", "String", true),
+            tuple("recall", "Boolean", false),
+            tuple("heightCentimetres", "Int", false),
+            tuple("releaseDate", "Date", false),
+            tuple("currentIncentive.dateTime", "DateTime", false),
+            tuple("currentIncentive.level.code", "String", false),
+            tuple("aliases.firstName", "String", true),
+          )
+        }
     }
   }
 

@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.elasticsearch.annotations.Field
 import org.springframework.data.elasticsearch.annotations.FieldType
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.stream.Stream
@@ -75,11 +76,22 @@ class AttributeResolverTest {
   fun `should resolve attributes`(attributeName: String, attribute: Attribute) {
     assertThat(attributes[attributeName]?.type).isEqualTo(attribute.type)
     assertThat(attributes[attributeName]?.openSearchName).isEqualTo(attribute.openSearchName)
-    assertThat(attributes[attributeName]?.nested).isEqualTo(attribute.nested)
+    assertThat(attributes[attributeName]?.isNested).isEqualTo(attribute.isNested)
   }
 
   @Test
   fun `should not resolve extra attributes`() {
     assertThat(attributes.size).isEqualTo(20)
+  }
+
+  @Test
+  fun `should resolve reference data attributes`() {
+    val prisonerAttributes = getAttributes(Prisoner::class)
+
+    assertThat(prisonerAttributes["firstName"]?.isFuzzy).isTrue()
+    assertThat(prisonerAttributes["build"]?.isFuzzy).isFalse()
+    assertThat(prisonerAttributes["marks.comment"]?.isFuzzy).isTrue()
+    assertThat(prisonerAttributes["marks.bodyPart"]?.isFuzzy).isFalse()
+    assertThat(prisonerAttributes["aliases.firstName"]?.isFuzzy).isTrue()
   }
 }
