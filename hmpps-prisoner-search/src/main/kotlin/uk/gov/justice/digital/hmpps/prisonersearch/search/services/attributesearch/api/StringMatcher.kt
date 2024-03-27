@@ -42,7 +42,7 @@ data class StringMatcher(
               .should(query)
               .should(QueryBuilders.fuzzyQuery(attr.openSearchName, searchTerm))
           }
-          attr.isFuzzy && condition == CONTAINS -> {
+          attr.isFuzzy && condition == CONTAINS && !searchTerm.hasWildcard() -> {
             QueryBuilders.boolQuery()
               .should(query)
               .should(QueryBuilders.matchQuery(attribute, searchTerm).fuzziness(Fuzziness.AUTO))
@@ -50,6 +50,8 @@ data class StringMatcher(
           else -> query
         }
       } ?: throw AttributeSearchException("Attribute $attribute not recognised")
+
+  private fun String.hasWildcard() = contains("?") || contains("*")
 
   override fun toString(): String {
     val condition = when (condition) {
