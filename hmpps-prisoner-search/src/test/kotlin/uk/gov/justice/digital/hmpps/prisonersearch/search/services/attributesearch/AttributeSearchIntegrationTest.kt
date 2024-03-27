@@ -677,6 +677,19 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
       webTestClient.attributeSearch(request).expectPrisoners("P2")
     }
+
+    @Test
+    fun `shouldn't perform a fuzzy search if wildcards used`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("marks.bodyPart" IS "Arm")
+          stringMatcher("marks.comment" CONTAINS "birthmark*wrist")
+        }
+      }
+
+      // Shouldn't find P1 who has Arm/birthmark because the * should preclude a fuzzy search
+      webTestClient.attributeSearch(request).expectPrisoners("P2")
+    }
   }
 
   @Nested
