@@ -64,9 +64,25 @@ spec:
               value: {{ .Values.cron.snapshot_namespace }}
             - name: PRISON_API_BASE_URL
               value: {{ index .Values "generic-service" "env" "API_BASE_URL_PRISON_API" }}
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              seccompProfile:
+                type: RuntimeDefault
           restartPolicy: "Never"
           volumes:
           - name: opensearch-restore-script
             configMap:
               name: opensearch-restore-script
               defaultMode: 0755
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              seccompProfile:
+                type: RuntimeDefault
