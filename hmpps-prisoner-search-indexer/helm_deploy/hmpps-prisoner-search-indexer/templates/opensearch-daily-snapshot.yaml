@@ -59,9 +59,25 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              seccompProfile:
+                type: RuntimeDefault
           restartPolicy: "Never"
           volumes:
           - name: opensearch-snapshot-script
             configMap:
               name: opensearch-snapshot-script
               defaultMode: 0755
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              seccompProfile:
+                type: RuntimeDefault

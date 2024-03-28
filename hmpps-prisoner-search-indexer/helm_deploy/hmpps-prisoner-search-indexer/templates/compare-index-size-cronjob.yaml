@@ -23,4 +23,12 @@ spec:
                 - /bin/sh
                 - -c
                 - curl --retry 2 http://hmpps-prisoner-search-indexer/compare-index/size
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
           restartPolicy: Never
