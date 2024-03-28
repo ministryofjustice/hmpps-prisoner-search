@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.CONTAINS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS_NOT
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.STARTSWITH
 
 @Schema(description = "A matcher for a string attribute from the prisoner record")
 data class StringMatcher(
@@ -35,6 +36,7 @@ data class StringMatcher(
           IS -> QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
           IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true))
           CONTAINS -> QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
+          STARTSWITH -> QueryBuilders.wildcardQuery(attr.openSearchName, "$searchTerm*").caseInsensitive(true)
         }
         return when {
           attr.isFuzzy && condition == IS -> {
@@ -58,6 +60,7 @@ data class StringMatcher(
       IS -> "="
       IS_NOT -> "!="
       CONTAINS -> "CONTAINS"
+      STARTSWITH -> "STARTSWITH"
     }
     return "$attribute $condition $searchTerm"
   }
@@ -68,13 +71,14 @@ data class StringMatcher(
   
   IS and IS_NOT require an exact match (wildcards ? and * will not work).
   
-  CONTAINS checks for a partial match and respects wildcards ? (single character) and * (zero to many characters).
+  For IS and CONTAINS, if the attribute contains free text then the search will also perform a fuzzy (partial) match.
   
-  For IS and CONTAINS, if the attribute contains free text then the search will also perform a fuzzy match.
+  CONTAINS with wildcards ? (single character) and * (zero to many characters) will not perform a fuzzy match.
   """,
 )
 enum class StringCondition {
   IS,
   IS_NOT,
   CONTAINS,
+  STARTSWITH,
 }
