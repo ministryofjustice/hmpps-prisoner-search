@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.RequestDsl
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.STARTSWITH
 import java.time.LocalDateTime
 
 /**
@@ -51,6 +52,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         scar = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "bite")),
         mark = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "birthmark")),
       ),
+      cellLocation = "1-1-002",
     ),
     PrisonerBuilder(
       prisonerNumber = "P2",
@@ -66,6 +68,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         scar = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "dog bite")),
         mark = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "birthmark on left wrist")),
       ),
+      cellLocation = "TAP",
     ),
     PrisonerBuilder(
       prisonerNumber = "P3",
@@ -90,6 +93,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
           BodyPartBuilder(bodyPart = "Shoulder", comment = "birthmark"),
         ),
       ),
+      cellLocation = "1-2-012",
     ),
   )
 
@@ -689,6 +693,110 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
       // Shouldn't find P1 who has Arm/birthmark because the * should preclude a fuzzy search
       webTestClient.attributeSearch(request).expectPrisoners("P2")
+    }
+
+    @Test
+    fun `single STARTSWITH`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("cellLocation" STARTSWITH "1-")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+
+    @Test
+    fun `single STARTSWITH lowercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" STARTSWITH "john")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `single STARTSWITH uppercase`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" STARTSWITH "JOHN")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `STARTSWITH with AND`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("cellLocation" STARTSWITH "1-")
+          stringMatcher("firstName" IS "John1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `STARTSWITH with OR`() {
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          stringMatcher("cellLocation" STARTSWITH "1-")
+          stringMatcher("firstName" IS "James2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `STARTSWITH with IS_NOT`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("cellLocation" STARTSWITH "1-")
+          stringMatcher("cellLocation" IS_NOT "1-2-012")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `STARTSWITH with CONTAINS`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("cellLocation" STARTSWITH "1-")
+          stringMatcher("firstName" CONTAINS "John")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `STARTSWITH for an array`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("marks.comment" STARTSWITH "birthmark")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `STARTSWITH for a nested object`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" STARTSWITH "Incentive")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
     }
   }
 
