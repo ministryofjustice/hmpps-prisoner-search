@@ -78,11 +78,3 @@ spec:
             configMap:
               name: opensearch-restore-script
               defaultMode: 0755
-            securityContext:
-              capabilities:
-                drop:
-                - ALL
-              runAsNonRoot: true
-              allowPrivilegeEscalation: false
-              seccompProfile:
-                type: RuntimeDefault
