@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services
 
 import org.opensearch.action.search.SearchRequest
+import org.opensearch.action.search.SearchResponse
 import org.opensearch.common.unit.TimeValue
 import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation
+import org.opensearch.search.aggregations.bucket.nested.NestedAggregationBuilder
+import org.opensearch.search.aggregations.bucket.nested.ParsedNested
+import org.opensearch.search.aggregations.bucket.terms.ParsedStringTerms
 import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder
 import org.opensearch.search.builder.SearchSourceBuilder
 import org.springframework.beans.factory.annotation.Value
@@ -41,6 +45,23 @@ class ReferenceDataService(
       size(0)
       aggregation(TermsAggregationBuilder(attribute.name).size(maxSearchResults).field(attribute.field))
     }
+
+  fun findAlertsReferenceData(): Map<String, List<String>> {
+    val aggs = TermsAggregationBuilder("alertTypes").size(maxSearchResults).field("alerts.alertType.keyword")
+      .subAggregation(TermsAggregationBuilder("alertCodes").size(maxSearchResults).field("alerts.alertCode.keyword"))
+    val searchSourceBuilder = SearchSourceBuilder().apply {
+      timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
+      size(0)
+      aggregation(NestedAggregationBuilder("alerts", "alerts").subAggregation(aggs))
+    }
+    val searchRequest = SearchRequest(arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX), searchSourceBuilder)
+    val searchResponse = elasticsearchClient.search(searchRequest)
+    return searchResponse.unpackAlertBuckets()
+  }
+
+  private fun SearchResponse.unpackAlertBuckets() = ((aggregations.first() as ParsedNested).aggregations.first() as ParsedStringTerms).buckets.associate {
+    it.key as String to (it.aggregations.first() as ParsedStringTerms).buckets.map { it.key as String }
+  }
 }
 
 data class ReferenceDataResponse(val data: List<ReferenceData> = emptyList())
