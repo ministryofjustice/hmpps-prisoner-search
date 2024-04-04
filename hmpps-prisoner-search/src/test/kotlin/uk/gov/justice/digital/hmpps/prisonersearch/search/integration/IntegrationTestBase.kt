@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.P
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonApiService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
@@ -63,6 +64,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   internal lateinit var context: ApplicationContext
+
+  @Autowired
+  internal lateinit var prisonApiService: PrisonApiService
 
   init {
     SecurityContextHolder.getContext().authentication = TestingAuthenticationToken("user", "pw")

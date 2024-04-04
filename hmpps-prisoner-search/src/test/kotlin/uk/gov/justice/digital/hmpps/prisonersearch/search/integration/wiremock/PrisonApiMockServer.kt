@@ -18,6 +18,28 @@ class PrisonApiMockServer : WireMockServer(8093) {
       ),
     )
   }
+
+  fun stubAlertTypes(response: String) {
+    stubFor(
+      WireMock.get("/api/reference-domains/domains/ALERT/codes").willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(response),
+      ),
+    )
+  }
+
+  fun stubAlertCodes(response: String) {
+    stubFor(
+      WireMock.get("/api/reference-domains/domains/ALERT_CODE/codes").willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(response),
+      ),
+    )
+  }
 }
 
 class PrisonApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
