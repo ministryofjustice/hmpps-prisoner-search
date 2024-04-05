@@ -2,58 +2,109 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAlertCode
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAlertType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.AlertCode
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.AlertType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAlertsResponse
 
 class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
-  @Autowired
-  private lateinit var referenceDataService: ReferenceDataService
-
-  // TODO SDIT-1583 This test class will eventually be expanded to use the real endpoint.
   override fun loadPrisonerData() {
     val prisonerData = listOf(
       PrisonerBuilder(alertCodes = listOf("A" to "AAR", "C" to "CC1")),
       PrisonerBuilder(alertCodes = listOf("A" to "AAR", "A" to "ADSC")),
-      PrisonerBuilder(alertCodes = listOf("C" to "CC1", "C" to "CSIP")),
+      PrisonerBuilder(alertCodes = listOf("C" to "CC1", "C" to "CSIP", "X" to "X1")),
     )
     loadPrisonersFromBuilders(prisonerData)
+  }
+
+  @Test
+  fun `access forbidden when no authority`() {
+    webTestClient.get().uri("/reference-data/alerts/types")
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isUnauthorized
+  }
+
+  @Test
+  fun `access forbidden when no role`() {
+    webTestClient.get().uri("/reference-data/alerts/types")
+      .headers(setAuthorisation())
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isForbidden
+  }
+
+  @Test
+  fun `access forbidden with wrong role`() {
+    webTestClient.get().uri("/reference-data/alerts/types")
+      .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isForbidden
   }
 
   @Test
   fun `should return alert types and codes`() {
     prisonApi.stubGetAlertTypes(alertTypes)
 
-    referenceDataService.findAlertsReferenceData().apply {
-      assertThat(this.alertTypes).containsExactlyInAnyOrderElementsOf(
-        listOf(
-          ReferenceDataAlertType(
-            "A",
-            "Social Care",
-            true,
-            listOf(
-              ReferenceDataAlertCode("A", "AAR", "Adult At Risk (Home Office identified)", true),
-              ReferenceDataAlertCode("A", "ADSC", "Adult Social Care", false),
-            ),
-          ),
-          ReferenceDataAlertType(
-            "C",
-            "Child Communication Measures",
-            true,
-            listOf(
-              ReferenceDataAlertCode("C", "CC1", "Child contact L1", true),
-              ReferenceDataAlertCode("C", "CSIP", "CSIP", true),
-            ),
+    val result = webTestClient.getAlertTypes()
+
+    assertThat(result.alertTypes).containsAll(
+      listOf(
+        AlertType(
+          type = "A",
+          description = "Social Care",
+          active = true,
+          codes = listOf(
+            AlertCode("A", "AAR", "Adult At Risk (Home Office identified)", true),
+            AlertCode("A", "ADSC", "Adult Social Care", false),
           ),
         ),
-      )
-    }
+        AlertType(
+          type = "C",
+          description = "Child Communication Measures",
+          active = true,
+          codes = listOf(
+            AlertCode("C", "CC1", "Child contact L1", true),
+            AlertCode("C", "CSIP", "CSIP", true),
+          ),
+        ),
+      ),
+    )
   }
+
+  @Test
+  fun `should return alert types and codes even if not found in prison api`() {
+    prisonApi.stubGetAlertTypes(alertTypes)
+
+    val result = webTestClient.getAlertTypes()
+
+    assertThat(result.alertTypes).contains(
+      AlertType(
+        type = "X",
+        description = "X",
+        active = false,
+        codes = listOf(
+          AlertCode("X", "X1", "X1", false),
+        ),
+      ),
+    )
+  }
+
+  private fun WebTestClient.getAlertTypes() =
+    get()
+      .uri("/reference-data/alerts/types")
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .exchange()
+      .expectStatus().isOk
+      .returnResult<ReferenceDataAlertsResponse>()
+      .responseBody
+      .blockFirst()!!
 
   val alertTypes = """
     [

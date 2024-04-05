@@ -51,13 +51,13 @@ class ReferenceDataService(
     val prisonApiAlerts = prisonApiService.getAllAlerts()
     return findSearchableAlertsReferenceData().map {
       val alertType = prisonApiAlerts.find { alertType -> alertType.type == it.key }
-      ReferenceDataAlertType(
+      AlertType(
         type = it.key,
         description = alertType?.description ?: it.key,
         active = alertType?.active ?: false,
         codes = it.value.map { code ->
           val alertCode = alertType?.alertCodes?.find { alertCode -> alertCode.code == code }
-          ReferenceDataAlertCode(
+          AlertCode(
             type = it.key,
             code = code,
             description = alertCode?.description ?: code,
@@ -154,16 +154,16 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
     else -> name
   }
 }
-data class ReferenceDataAlertsResponse(val alertTypes: List<ReferenceDataAlertType> = emptyList())
+data class ReferenceDataAlertsResponse(val alertTypes: List<AlertType> = emptyList())
 
-data class ReferenceDataAlertType(
+data class AlertType(
   val type: String,
   val description: String,
   val active: Boolean,
-  val codes: List<ReferenceDataAlertCode>,
+  val codes: List<AlertCode>,
 )
 
-data class ReferenceDataAlertCode(
+data class AlertCode(
   val type: String,
   val code: String,
   val description: String,
