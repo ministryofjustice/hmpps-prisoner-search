@@ -16,7 +16,7 @@ class PrisonApiServiceIntegrationTest : IntegrationTestBase() {
   inner class GetAlerts {
     @BeforeEach
     fun setUp() {
-      prisonApi.stubGetAlertTypes(newAlertTypes)
+      prisonApi.stubGetAlertTypes(alertTypes)
     }
 
     @Test
@@ -46,7 +46,7 @@ class PrisonApiServiceIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  val newAlertTypes = """
+  val alertTypes = """
     [
       {
         "domain": "ALERT",
