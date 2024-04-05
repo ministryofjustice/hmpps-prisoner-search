@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services
 
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.BeforeEach
@@ -13,8 +16,7 @@ class PrisonApiServiceIntegrationTest : IntegrationTestBase() {
   inner class GetAlerts {
     @BeforeEach
     fun setUp() {
-      prisonApi.stubAlertTypes(alertTypes)
-      prisonApi.stubAlertCodes(alertCodes)
+      prisonApi.stubGetAlertTypes(newAlertTypes)
     }
 
     @Test
@@ -36,69 +38,69 @@ class PrisonApiServiceIntegrationTest : IntegrationTestBase() {
           AlertCode("CSIP", "CSIP", true),
         )
       }
+
+      prisonApi.verify(
+        getRequestedFor(urlEqualTo("/api/reference-domains/alertTypes"))
+          .withHeader("Page-Limit", equalTo("1000")),
+      )
     }
   }
 
-  val alertTypes =
-    """
-      [
-        {
-          "domain": "ALERT",
-          "code": "A",
-          "description": "Social Care",
-          "activeFlag": "Y",
-          "listSeq": 12,
-          "systemDataFlag": "N",
-          "subCodes": []
-        },
-        {
-          "domain": "ALERT",
-          "code": "C",
-          "description": "Child Communication Measures",
-          "activeFlag": "Y",
-          "listSeq": 3,
-          "systemDataFlag": "N",
-          "subCodes": []
-        }
-      ]
-    """.trimIndent()
-
-  val alertCodes =
-    """
-      [
-        {
-          "domain": "ALERT_CODE",
-          "code": "AAR",
-          "description": "Adult At Risk (Home Office identified)",
-          "parentDomain": "ALERT",
-          "parentCode": "A",
-          "activeFlag": "Y",
-          "listSeq": 6,
-          "systemDataFlag": "N",
-          "subCodes": []
-        },
-        {
-          "domain": "ALERT_CODE",
-          "code": "ADSC",
-          "description": "Adult Social Care",
-          "parentDomain": "ALERT",
-          "parentCode": "A",
-          "activeFlag": "N",
-          "listSeq": 1,
-          "systemDataFlag": "N",
-          "subCodes": []
-        },
-        {
-          "domain": "ALERT_CODE",
-          "code": "CSIP",
-          "description": "CSIP",
-          "parentDomain": "ALERT",
-          "parentCode": "C",
-          "activeFlag": "Y",
-          "listSeq": 10,
-          "systemDataFlag": "N",
-          "subCodes": []
-        }
-      ]
-    """.trimIndent()
+  val newAlertTypes = """
+    [
+      {
+        "domain": "ALERT",
+        "code": "A",
+        "description": "Social Care",
+        "activeFlag": "Y",
+        "listSeq": 12,
+        "systemDataFlag": "N",
+        "subCodes": [
+          {
+            "domain": "ALERT_CODE",
+            "code": "AAR",
+            "description": "Adult At Risk (Home Office identified)",
+            "parentDomain": "ALERT",
+            "parentCode": "A",
+            "activeFlag": "Y",
+            "listSeq": 6,
+            "systemDataFlag": "N",
+            "subCodes": []
+          },
+          {
+            "domain": "ALERT_CODE",
+            "code": "ADSC",
+            "description": "Adult Social Care",
+            "parentDomain": "ALERT",
+            "parentCode": "A",
+            "activeFlag": "N",
+            "listSeq": 1,
+            "systemDataFlag": "N",
+            "subCodes": []
+          }
+        ]
+      },
+      {
+        "domain": "ALERT",
+        "code": "C",
+        "description": "Child Communication Measures",
+        "activeFlag": "Y",
+        "listSeq": 3,
+        "systemDataFlag": "N",
+        "subCodes": [
+          {
+            "domain": "ALERT_CODE",
+            "code": "CSIP",
+            "description": "CSIP",
+            "parentDomain": "ALERT",
+            "parentCode": "C",
+            "activeFlag": "Y",
+            "listSeq": 10,
+            "systemDataFlag": "N",
+            "subCodes": []
+          }
+        ]
+      }
+    ]
+  """.trimIndent()
 }
