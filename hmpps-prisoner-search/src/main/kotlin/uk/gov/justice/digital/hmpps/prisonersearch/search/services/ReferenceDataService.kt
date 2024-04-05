@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class ReferenceDataService(
   private val elasticsearchClient: SearchClient,
+  private val prisonApiService: PrisonApiService,
   @Value("\${search.reference.max-results}") private val maxSearchResults: Int = 200,
   @Value("\${search.reference.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
@@ -46,7 +47,30 @@ class ReferenceDataService(
       aggregation(TermsAggregationBuilder(attribute.name).size(maxSearchResults).field(attribute.field))
     }
 
-  fun findAlertsReferenceData(): Map<String, List<String>> {
+  fun findAlertsReferenceData(): ReferenceDataAlertsResponse {
+    val prisonApiAlerts = prisonApiService.getAllAlerts()
+    return findSearchableAlertsReferenceData().map {
+      val alertType = prisonApiAlerts.find { alertType -> alertType.type == it.key }
+      ReferenceDataAlertType(
+        type = it.key,
+        description = alertType?.description ?: it.key,
+        active = alertType?.active ?: false,
+        codes = it.value.map { code ->
+          val alertCode = alertType?.alertCodes?.find { alertCode -> alertCode.code == code }
+          ReferenceDataAlertCode(
+            type = it.key,
+            code = code,
+            description = alertCode?.description ?: code,
+            active = alertCode?.active ?: false,
+          )
+        },
+      )
+    }.let {
+      ReferenceDataAlertsResponse(it)
+    }
+  }
+
+  private fun findSearchableAlertsReferenceData(): Map<String, List<String>> {
     val aggs = TermsAggregationBuilder("alertTypes").size(maxSearchResults).field("alerts.alertType.keyword")
       .subAggregation(TermsAggregationBuilder("alertCodes").size(maxSearchResults).field("alerts.alertCode.keyword"))
     val searchSourceBuilder = SearchSourceBuilder().apply {
@@ -130,3 +154,18 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
     else -> name
   }
 }
+data class ReferenceDataAlertsResponse(val alertTypes: List<ReferenceDataAlertType> = emptyList())
+
+data class ReferenceDataAlertType(
+  val type: String,
+  val description: String,
+  val active: Boolean,
+  val codes: List<ReferenceDataAlertCode>,
+)
+
+data class ReferenceDataAlertCode(
+  val type: String,
+  val code: String,
+  val description: String,
+  val active: Boolean,
+)
