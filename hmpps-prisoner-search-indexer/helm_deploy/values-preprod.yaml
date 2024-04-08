@@ -14,6 +14,11 @@ generic-service:
     DIFF_HOST: "https://prisoner-search-preprod.prison.service.justice.gov.uk"
     DIFF_PREFIX: ""
 
+  scheduledDowntime:
+    enabled: true
+    startup: '43 6 * * 1-5' # Start at 6.43am UTC Monday-Friday
+    shutdown: '47 21 * * 1-5' # Stop at 9.47pm UTC Monday-Friday
+
 generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
@@ -32,9 +37,11 @@ generic-prometheus-alerts:
 cron:
   snapshot_namespace: hmpps-prisoner-search-prod
   suspend_restore: false
-  index_refresh_schedule: "05 17 * * 1,4"
+  retry_dlqs_schedule: "*/10 7-20 * * 1-5"
   index_size_schedule: "*/10 7-20 * * 1-5"
-  check_index_schedule: "*/15 * * * 1-5"
+  check_index_schedule: "*/15 7-20 * * 1-5"
+  index_refresh_schedule: "05 17 * * 1,4"
+  remove_differences_schedule: "30 20 * * 1-5"
   snapshot_schedule: "57 1 * * *"
 
 indexQueueNames:
