@@ -9,6 +9,11 @@ generic-service:
     API_BASE_URL_HMPPS_AUTH: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
     API_BASE_URL_PRISON_API: "https://prison-api-preprod.prison.service.justice.gov.uk"
 
+  scheduledDowntime:
+    enabled: true
+    startup: '23 6 * * 1-5' # Start at 6.20am UTC Monday-Friday
+    shutdown: '47 21 * * 1-5' # Stop at 9.50pm UTC Monday-Friday
+
   # Additional allowlist rules
   # See also allowlist values helm_deploy/prisoner-offender-search/values.yaml
   allowlist:
