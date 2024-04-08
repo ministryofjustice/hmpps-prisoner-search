@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.reset
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
@@ -94,6 +95,28 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         ),
       ),
     )
+  }
+
+  @Test
+  fun `should cache alerts reference data`() {
+    prisonApi.stubGetAlertTypes(alertTypes)
+    cacheManager.getCache("alertsReferenceData")?.clear()
+
+    // pre-check to ensure that forcing elastic error causes search to fail
+    forceElasticError()
+    webTestClient.get().uri("/reference-data/alerts/types")
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().is5xxServerError
+
+    // so that we can check caching then works
+    reset(elasticsearchClient)
+    webTestClient.getAlertTypes()
+
+    // and no exception is thrown
+    forceElasticError()
+    webTestClient.getAlertTypes()
   }
 
   private fun WebTestClient.getAlertTypes() =

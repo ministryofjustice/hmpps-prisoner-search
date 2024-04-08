@@ -6,6 +6,9 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.whenever
 import org.slf4j.LoggerFactory
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
@@ -225,6 +228,10 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody().json(fileAssert.readResourceAsText())
+  }
+
+  protected fun forceElasticError() {
+    doThrow(RuntimeException("gone wrong")).whenever(elasticsearchClient).search(any())
   }
 
   private companion object {

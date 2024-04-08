@@ -97,5 +97,5 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
   )
   @GetMapping("/alerts/types")
   @Tag(name = "Alerts reference data")
-  fun alertsReferenceData(): ReferenceDataAlertsResponse = referenceDataService.findAlertsReferenceData()
+  fun alertsReferenceData(): ReferenceDataAlertsResponse = referenceDataService.findAlertsReferenceDataCached()
 }
