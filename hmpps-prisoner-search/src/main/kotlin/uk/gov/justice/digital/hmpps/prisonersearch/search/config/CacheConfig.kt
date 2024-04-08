@@ -22,10 +22,23 @@ class CacheConfig(private val referenceDataService: ReferenceDataService) : Cach
       .refreshAfterWrite(1, TimeUnit.HOURS)
       // throw away any results after 3 hours so that we don't serve up data that is too stale
       .expireAfterWrite(3, TimeUnit.HOURS)
-      .maximumSize(ReferenceDataAttribute.entries.size + 1L)
       .recordStats()
       .build {
         referenceDataService.findReferenceData(it as ReferenceDataAttribute)
+      },
+  )
+
+  @Bean
+  fun alertsReferenceDataCache(): Cache = CaffeineCache(
+    "alertsReferenceData",
+    Caffeine.newBuilder()
+      // we cache for at least an hour and next request after that will asynchronously get the new data
+      .refreshAfterWrite(1, TimeUnit.HOURS)
+      // throw away any results after 3 hours so that we don't serve up data that is too stale
+      .expireAfterWrite(3, TimeUnit.HOURS)
+      .recordStats()
+      .build {
+        referenceDataService.findAlertsReferenceData()
       },
   )
 }

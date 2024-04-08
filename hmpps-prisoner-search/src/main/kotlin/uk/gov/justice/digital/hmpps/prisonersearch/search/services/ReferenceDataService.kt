@@ -47,6 +47,10 @@ class ReferenceDataService(
       aggregation(TermsAggregationBuilder(attribute.name).size(maxSearchResults).field(attribute.field))
     }
 
+  // we have implemented a cache loader in CacheConfig so that will call the findAlertsReferenceData method below
+  @Cacheable(cacheNames = ["alertsReferenceData"])
+  fun findAlertsReferenceDataCached() = ReferenceDataAlertsResponse()
+
   fun findAlertsReferenceData(): ReferenceDataAlertsResponse {
     val prisonApiAlerts = prisonApiService.getAllAlerts()
     return findSearchableAlertsReferenceData().map {

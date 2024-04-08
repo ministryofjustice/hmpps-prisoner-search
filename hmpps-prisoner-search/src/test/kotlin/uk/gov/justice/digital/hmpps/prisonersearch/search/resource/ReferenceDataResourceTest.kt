@@ -8,10 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.reset
-import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
@@ -262,10 +259,6 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
     assertThat(ReferenceDataAttribute.entries.map { it.name }).containsExactlyInAnyOrderElementsOf(
       attributeData().toList().map { it.get()[0].toString() },
     )
-  }
-
-  private fun forceElasticError() {
-    doThrow(RuntimeException("gone wrong")).whenever(elasticsearchClient).search(any())
   }
 
   @Test
