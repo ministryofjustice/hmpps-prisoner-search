@@ -53,22 +53,25 @@ class ReferenceDataService(
 
   fun findAlertsReferenceData(): ReferenceDataAlertsResponse {
     val prisonApiAlerts = prisonApiService.getAllAlerts()
-    return findSearchableAlertsReferenceData().map {
-      val alertType = prisonApiAlerts.find { alertType -> alertType.type == it.key }
+    return findSearchableAlertsReferenceData().map { type ->
+      val alertType = prisonApiAlerts.find { alertType -> alertType.type == type.key }
       AlertType(
-        type = it.key,
-        description = alertType?.description ?: it.key,
+        type = type.key,
+        description = alertType?.description ?: type.key,
         active = alertType?.active ?: false,
-        codes = it.value.map { code ->
+        codes = type.value.map { code ->
           val alertCode = alertType?.alertCodes?.find { alertCode -> alertCode.code == code }
           AlertCode(
-            type = it.key,
+            type = type.key,
             code = code,
             description = alertCode?.description ?: code,
             active = alertCode?.active ?: false,
           )
-        },
+        }.sortedBy { alertCode -> alertCode.description },
       )
+    }.sortedBy {
+        alertType ->
+      alertType.description
     }.let {
       ReferenceDataAlertsResponse(it)
     }

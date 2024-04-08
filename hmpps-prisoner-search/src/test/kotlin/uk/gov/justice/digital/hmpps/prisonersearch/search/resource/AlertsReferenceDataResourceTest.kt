@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.reset
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -16,7 +17,7 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
   override fun loadPrisonerData() {
     val prisonerData = listOf(
-      PrisonerBuilder(alertCodes = listOf("A" to "AAR", "C" to "CC1")),
+      PrisonerBuilder(alertCodes = listOf("A" to "ADSC", "C" to "CSIP")),
       PrisonerBuilder(alertCodes = listOf("A" to "AAR", "A" to "ADSC")),
       PrisonerBuilder(alertCodes = listOf("C" to "CC1", "C" to "CSIP", "X" to "X1")),
     )
@@ -55,27 +56,17 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
     val result = webTestClient.getAlertTypes()
 
-    assertThat(result.alertTypes).containsAll(
-      listOf(
-        AlertType(
-          type = "A",
-          description = "Social Care",
-          active = true,
-          codes = listOf(
-            AlertCode("A", "AAR", "Adult At Risk (Home Office identified)", true),
-            AlertCode("A", "ADSC", "Adult Social Care", false),
-          ),
-        ),
-        AlertType(
-          type = "C",
-          description = "Child Communication Measures",
-          active = true,
-          codes = listOf(
-            AlertCode("C", "CC1", "Child contact L1", true),
-            AlertCode("C", "CSIP", "CSIP", true),
-          ),
-        ),
-      ),
+    assertThat(result.alertTypes).extracting("type", "description", "active").contains(
+      tuple("A", "Social Care", true),
+      tuple("C", "Child Communication Measures", true),
+    )
+    assertThat(result.alertTypes.first { it.type == "A" }.codes).containsExactlyInAnyOrder(
+      AlertCode("A", "AAR", "Adult At Risk (Home Office identified)", true),
+      AlertCode("A", "ADSC", "Adult Social Care", false),
+    )
+    assertThat(result.alertTypes.first { it.type == "C" }.codes).containsExactlyInAnyOrder(
+      AlertCode("C", "CC1", "Child contact L1", true),
+      AlertCode("C", "CSIP", "CSIP", true),
     )
   }
 
@@ -95,6 +86,18 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
         ),
       ),
     )
+  }
+
+  @Test
+  fun `should return alert types and codes ordered by descriptions`() {
+    prisonApi.stubGetAlertTypes(alertTypes)
+
+    val result = webTestClient.getAlertTypes()
+
+    assertThat(result.alertTypes).extracting("description").containsExactly("Child Communication Measures", "Social Care", "X")
+    assertThat(result.alertTypes[0].codes).extracting("description").containsExactly("CSIP", "Child contact L1")
+    assertThat(result.alertTypes[1].codes).extracting("description").containsExactly("Adult At Risk (Home Office identified)", "Adult Social Care")
+    assertThat(result.alertTypes[2].codes).extracting("description").containsExactly("X1")
   }
 
   @Test
@@ -133,38 +136,6 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
     [
       {
         "domain": "ALERT",
-        "code": "A",
-        "description": "Social Care",
-        "activeFlag": "Y",
-        "listSeq": 12,
-        "systemDataFlag": "N",
-        "subCodes": [
-          {
-            "domain": "ALERT_CODE",
-            "code": "AAR",
-            "description": "Adult At Risk (Home Office identified)",
-            "parentDomain": "ALERT",
-            "parentCode": "A",
-            "activeFlag": "Y",
-            "listSeq": 6,
-            "systemDataFlag": "N",
-            "subCodes": []
-          },
-          {
-            "domain": "ALERT_CODE",
-            "code": "ADSC",
-            "description": "Adult Social Care",
-            "parentDomain": "ALERT",
-            "parentCode": "A",
-            "activeFlag": "N",
-            "listSeq": 1,
-            "systemDataFlag": "N",
-            "subCodes": []
-          }
-        ]
-      },
-      {
-        "domain": "ALERT",
         "code": "C",
         "description": "Child Communication Measures",
         "activeFlag": "Y",
@@ -190,6 +161,38 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
             "parentCode": "C",
             "activeFlag": "Y",
             "listSeq": 10,
+            "systemDataFlag": "N",
+            "subCodes": []
+          }
+        ]
+      },
+      {
+        "domain": "ALERT",
+        "code": "A",
+        "description": "Social Care",
+        "activeFlag": "Y",
+        "listSeq": 12,
+        "systemDataFlag": "N",
+        "subCodes": [
+          {
+            "domain": "ALERT_CODE",
+            "code": "ADSC",
+            "description": "Adult Social Care",
+            "parentDomain": "ALERT",
+            "parentCode": "A",
+            "activeFlag": "N",
+            "listSeq": 1,
+            "systemDataFlag": "N",
+            "subCodes": []
+          },
+          {
+            "domain": "ALERT_CODE",
+            "code": "AAR",
+            "description": "Adult At Risk (Home Office identified)",
+            "parentDomain": "ALERT",
+            "parentCode": "A",
+            "activeFlag": "Y",
+            "listSeq": 6,
             "systemDataFlag": "N",
             "subCodes": []
           }
