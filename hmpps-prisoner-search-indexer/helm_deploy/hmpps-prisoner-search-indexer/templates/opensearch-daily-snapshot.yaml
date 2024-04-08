@@ -18,6 +18,7 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   schedule: "{{ .Values.cron.snapshot_schedule }}"
+  timeZone: "Europe/London"
   concurrencyPolicy: "Forbid"
   successfulJobsHistoryLimit: 5
   failedJobsHistoryLimit: 5
