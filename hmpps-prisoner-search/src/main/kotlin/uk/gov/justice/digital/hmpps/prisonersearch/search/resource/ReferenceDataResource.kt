@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataService
@@ -62,4 +63,39 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
     @Valid @PathVariable
     attribute: ReferenceDataAttribute,
   ): ReferenceDataResponse = referenceDataService.findReferenceDataCached(attribute)
+
+  @Operation(
+    summary = "*** BETA *** Alerts reference data",
+    description = """BETA endpoint - alerts reference data returned reflects the data assigned to prisoners
+      rather than all the possible values.  Only to be used for searching existing data purposes.
+      This method will also cache all reference data results for an hour and any new data will only appear after an hour.
+      Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.
+      """,
+    security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Reference data search successfully performed",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ReferenceDataResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Reference data search for attribute that isn't mapped",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to retrieve reference data",
+        content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+      ),
+    ],
+  )
+  @GetMapping("/alerts/types")
+  @Tag(name = "Alerts reference data")
+  fun alertsReferenceData(): ReferenceDataAlertsResponse = referenceDataService.findAlertsReferenceData()
 }

@@ -23,19 +23,19 @@ class PrisonApiServiceIntegrationTest : IntegrationTestBase() {
     fun `should get alerts`() {
       val alerts = prisonApiService.getAllAlerts()
 
-      assertThat(alerts).extracting(AlertType::type, AlertType::description).containsExactlyInAnyOrder(
+      assertThat(alerts).extracting(PrisonAlertType::type, PrisonAlertType::description).containsExactlyInAnyOrder(
         tuple("A", "Social Care"),
         tuple("C", "Child Communication Measures"),
       )
       with(alerts.first { it.type == "A" }) {
         assertThat(this.alertCodes).containsExactlyInAnyOrder(
-          AlertCode("AAR", "Adult At Risk (Home Office identified)", true),
-          AlertCode("ADSC", "Adult Social Care", false),
+          PrisonAlertCode("AAR", "Adult At Risk (Home Office identified)", true),
+          PrisonAlertCode("ADSC", "Adult Social Care", false),
         )
       }
       with(alerts.first { it.type == "C" }) {
         assertThat(this.alertCodes).containsExactlyInAnyOrder(
-          AlertCode("CSIP", "CSIP", true),
+          PrisonAlertCode("CSIP", "CSIP", true),
         )
       }
 
