@@ -108,14 +108,12 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
     ob.sentenceDetail?.conditionalReleaseOverrideDate ?: ob.sentenceDetail?.conditionalReleaseDate
   this.actualParoleDate = ob.sentenceDetail?.actualParoleDate
 
-  // get the most serious offence for this booking
-  this.mostSeriousOffence =
-    ob.offenceHistory?.firstOrNull { off -> off.mostSerious && off.bookingId == ob.bookingId }?.offenceDescription
+  this.mostSeriousOffence = ob.mostSeriousOffence
   this.recall = ob.recall
   this.legalStatus = ob.legalStatus
   this.imprisonmentStatus = ob.imprisonmentStatus
   this.imprisonmentStatusDescription = ob.imprisonmentStatusDescription
-  this.indeterminateSentence = ob.sentenceTerms?.any { st -> st.lifeSentence && st.bookingId == ob.bookingId }
+  this.indeterminateSentence = ob.indeterminateSentence
 
   restrictedPatientData.onSuccess { rp ->
     this.restrictedPatient = rp != null

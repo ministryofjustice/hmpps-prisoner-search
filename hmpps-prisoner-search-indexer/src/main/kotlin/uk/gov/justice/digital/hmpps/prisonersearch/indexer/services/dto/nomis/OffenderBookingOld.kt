@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis
 
 import java.time.LocalDate
 
-data class OffenderBooking(
+data class OffenderBookingOld(
   val offenderNo: String,
   val firstName: String,
   val lastName: String,
@@ -33,8 +33,8 @@ data class OffenderBooking(
   val birthCountryCode: String? = null,
   val identifiers: List<OffenderIdentifier>? = null,
   val sentenceDetail: SentenceDetail? = null,
-  val mostSeriousOffence: String? = null,
-  val indeterminateSentence: Boolean? = null,
+  val offenceHistory: List<OffenceHistoryDetail>? = null,
+  val sentenceTerms: List<SentenceTerm>? = null,
   val status: String? = null,
   val legalStatus: String? = null,
   val recall: Boolean? = null,
@@ -44,4 +44,50 @@ data class OffenderBooking(
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
-)
+) {
+  fun toOffenderBooking(): OffenderBooking {
+    return OffenderBooking(
+      offenderNo,
+      firstName,
+      lastName,
+      dateOfBirth,
+      activeFlag,
+      bookingId,
+      bookingNo,
+      middleName,
+      aliases,
+      agencyId,
+      inOutStatus,
+      lastMovementTypeCode,
+      lastMovementReasonCode,
+      religion,
+      language,
+      alerts,
+      assignedLivingUnit,
+      facialImageId,
+      age,
+      physicalAttributes,
+      physicalCharacteristics,
+      profileInformation,
+      physicalMarks,
+      assessments,
+      csra,
+      categoryCode,
+      birthPlace,
+      birthCountryCode,
+      identifiers,
+      sentenceDetail,
+      offenceHistory?.firstOrNull { off -> off.mostSerious && off.bookingId == bookingId }?.offenceDescription,
+      sentenceTerms?.any { st -> st.lifeSentence && st.bookingId == bookingId },
+      status,
+      legalStatus,
+      recall,
+      imprisonmentStatus,
+      imprisonmentStatusDescription,
+      personalCareNeeds,
+      receptionDate,
+      locationDescription,
+      latestLocationId,
+    )
+  }
+}
