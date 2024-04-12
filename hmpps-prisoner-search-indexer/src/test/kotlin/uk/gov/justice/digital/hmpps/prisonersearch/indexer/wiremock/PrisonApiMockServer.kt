@@ -54,7 +54,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(prisonerBuilder.toOffenderBooking()),
+            .withBody(prisonerBuilder.toOffenderBookingOld()),
         ),
     )
   }
