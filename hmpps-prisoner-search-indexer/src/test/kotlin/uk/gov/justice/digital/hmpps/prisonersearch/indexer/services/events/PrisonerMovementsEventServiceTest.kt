@@ -427,7 +427,6 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
     "BOATENG",
     "AKUSEA",
     LocalDate.of(1976, 5, 15),
-    false,
     bookingId = 123456L,
     identifiers = identifiers,
   )

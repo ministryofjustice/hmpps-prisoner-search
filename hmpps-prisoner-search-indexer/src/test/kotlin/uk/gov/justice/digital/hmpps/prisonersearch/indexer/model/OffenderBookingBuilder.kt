@@ -17,6 +17,5 @@ class OffenderBookingBuilder {
       description = "Moorland",
       agencyName = "Moorland",
     ),
-    activeFlag = true,
   )
 }

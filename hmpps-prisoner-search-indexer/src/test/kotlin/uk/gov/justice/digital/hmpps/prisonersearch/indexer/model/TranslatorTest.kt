@@ -24,7 +24,7 @@ class TranslatorTest {
   fun `when prisoner has no booking associated the booking information is missing`() {
     val dateOfBirth = LocalDate.now().minusYears(18)
     val prisoner = Prisoner().translate(
-      ob = OffenderBooking("A1234AA", "Fred", "Bloggs", dateOfBirth, false),
+      ob = OffenderBooking("A1234AA", "Fred", "Bloggs", dateOfBirth),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
@@ -45,7 +45,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         sentenceDetail = SentenceDetail(topupSupervisionExpiryDate = tseDate),
       ),
       incentiveLevel = Result.success(null),
@@ -63,7 +62,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         sentenceDetail = SentenceDetail(topupSupervisionStartDate = tssDate),
       ),
       incentiveLevel = Result.success(null),
@@ -81,7 +79,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         sentenceDetail = SentenceDetail(homeDetentionCurfewEndDate = hdcend),
       ),
       incentiveLevel = Result.success(null),
@@ -102,7 +99,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         sentenceDetail = SentenceDetail(
           conditionalReleaseDate = releaseDate,
           conditionalReleaseOverrideDate = conditionalReleaseOverrideDate,
@@ -131,7 +127,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         sentenceDetail = SentenceDetail(
           conditionalReleaseDate = conditionalReleaseDate,
           automaticReleaseDate = automaticReleaseDate,
@@ -154,7 +149,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Serving Life Imprisonment",
       ),
@@ -173,7 +167,6 @@ class TranslatorTest {
         "Fred",
         "Bloggs",
         LocalDate.of(1976, 5, 15),
-        false,
         alerts = listOf(
           Alert(
             alertId = 1,
@@ -540,4 +533,4 @@ class TranslatorTest {
   }
 }
 
-private fun aBooking() = OffenderBooking("A1234AA", "Fred", "Bloggs", LocalDate.now().minusYears(18), false)
+private fun aBooking() = OffenderBooking("A1234AA", "Fred", "Bloggs", LocalDate.now().minusYears(18))

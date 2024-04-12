@@ -38,7 +38,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueSe
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBookingOld
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalMark
@@ -247,11 +247,11 @@ data class PrisonerBuilder(
   val currentIncentive: CurrentIncentive? = null,
 ) {
 
-  private fun getOffenderBookingTemplate(): OffenderBooking =
-    GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
+  private fun getOffenderBookingOldTemplate(): OffenderBookingOld =
+    GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBookingOld::class.java)
 
-  fun toOffenderBooking(): String = GsonConfig().gson().toJson(
-    getOffenderBookingTemplate().copy(
+  fun toOffenderBookingOld(): String = GsonConfig().gson().toJson(
+    getOffenderBookingOldTemplate().copy(
       offenderNo = this.prisonerNumber,
       bookingId = this.bookingId,
       firstName = this.firstName,

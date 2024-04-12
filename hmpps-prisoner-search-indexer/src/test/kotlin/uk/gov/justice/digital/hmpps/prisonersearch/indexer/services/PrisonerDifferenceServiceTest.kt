@@ -828,6 +828,5 @@ class PrisonerDifferenceServiceTest {
       firstName = "someFirstName",
       lastName = "someLastName",
       dateOfBirth = LocalDate.now(),
-      activeFlag = true,
     )
 }
