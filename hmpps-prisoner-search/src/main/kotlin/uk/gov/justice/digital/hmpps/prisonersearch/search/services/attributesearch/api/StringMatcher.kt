@@ -35,7 +35,13 @@ data class StringMatcher(
         val query = when (condition) {
           IS -> QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
           IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true))
-          CONTAINS -> QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
+          CONTAINS -> {
+            if (searchTerm.hasWildcard()) {
+              QueryBuilders.wildcardQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
+            } else {
+              QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
+            }
+          }
           STARTSWITH -> QueryBuilders.wildcardQuery(attr.openSearchName, "$searchTerm*").caseInsensitive(true)
         }
         return when {
@@ -67,13 +73,19 @@ data class StringMatcher(
 }
 
 @Schema(
-  description = """The condition to apply to the attribute. 
+  description = """The condition to apply to the attribute value. 
+    
+  All String searches are case-insensitive.
   
   IS and IS_NOT require an exact match (wildcards ? and * will not work).
   
-  For IS and CONTAINS, if the attribute contains free text then the search will also perform a fuzzy (partial) match.
+  For IS and CONTAINS some attributes support fuzzy matching e.g. they allow spelling mistakes. Call endpoint `/attribute-search/attributes` to see which attributes support fuzzy matching.
   
-  CONTAINS with wildcards ? (single character) and * (zero to many characters) will not perform a fuzzy match.
+  CONTAINS without wildcards (? and *) for a non-fuzzy attribute looks for the exact search term anywhere in the attribute value.
+  
+  CONTAINS with wildcards ? (single character) and * (zero to many characters) perform a wildcard match which must match the entire attribute value.
+  
+  STARTSWITH checks only the prefix of the attribute value and does not support fuzzy matching or wildcards.π
   """,
 )
 enum class StringCondition {
