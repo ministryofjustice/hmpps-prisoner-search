@@ -2,7 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
-import com.microsoft.applicationinsights.TelemetryClient
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -17,7 +16,6 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -31,8 +29,6 @@ import java.time.Instant
 import java.time.LocalDate
 
 class RefreshIndexResourceIntTest : IntegrationTestBase() {
-  @SpyBean
-  lateinit var telemetryClient: TelemetryClient
 
   @BeforeEach
   fun setUp() {

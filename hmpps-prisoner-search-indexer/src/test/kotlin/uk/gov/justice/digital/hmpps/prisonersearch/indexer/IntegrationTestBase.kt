@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer
 
 import com.google.gson.Gson
+import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.lang3.RandomStringUtils
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -35,13 +36,17 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatu
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBookingOld
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
@@ -55,6 +60,7 @@ import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.random.Random
 
@@ -88,6 +94,15 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var indexStatusRepository: IndexStatusRepository
+
+  @SpyBean
+  protected lateinit var maintainIndexService: MaintainIndexService
+
+  @SpyBean
+  lateinit var prisonerSpyBeanRepository: PrisonerRepository
+
+  @SpyBean
+  lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   internal lateinit var gson: Gson
@@ -245,6 +260,7 @@ data class PrisonerBuilder(
   val physicalCharacteristics: PhysicalCharacteristicBuilder? = null,
   val physicalMarks: PhysicalMarkBuilder? = null,
   val currentIncentive: CurrentIncentive? = null,
+  val assignedLivingUnitLocationId: Long? = Random.nextLong(),
 ) {
 
   private fun getOffenderBookingOldTemplate(): OffenderBookingOld =
@@ -271,7 +287,7 @@ data class PrisonerBuilder(
       ),
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = this.agencyId,
-        locationId = Random.nextLong(),
+        locationId = this.assignedLivingUnitLocationId,
         description = this.cellLocation,
         agencyName = "$agencyId (HMP)",
       ),
@@ -339,6 +355,129 @@ data class PrisonerBuilder(
           pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
         }
       },
+    ).let {
+      if (released) {
+        it.copy(
+          status = "INACTIVE OUT",
+          lastMovementTypeCode = "REL",
+          lastMovementReasonCode = "HP",
+          inOutStatus = "OUT",
+          agencyId = "OUT",
+        )
+      } else {
+        it.copy(
+          lastMovementTypeCode = "ADM",
+          lastMovementReasonCode = "I",
+        )
+      }
+    },
+  )
+
+  fun toOffenderBookingNewEndpoint(): String = GsonConfig().gson().toJson(
+    OffenderBooking(
+      offenderNo = this.prisonerNumber,
+      bookingNo = "V61587",
+      bookingId = this.bookingId,
+      firstName = this.firstName,
+      lastName = this.lastName,
+      agencyId = this.agencyId,
+      dateOfBirth = LocalDate.parse(this.dateOfBirth),
+      physicalAttributes = PhysicalAttributes(
+        gender = this.gender,
+        raceCode = null,
+        ethnicity = this.ethnicity,
+        heightFeet = null,
+        heightInches = null,
+        heightMetres = null,
+        heightCentimetres = this.heightCentimetres,
+        weightPounds = null,
+        weightKilograms = this.weightKilograms,
+      ),
+      assignedLivingUnit = AssignedLivingUnit(
+        agencyId = this.agencyId,
+        locationId = this.assignedLivingUnitLocationId,
+        description = this.cellLocation,
+        agencyName = "$agencyId (HMP)",
+      ),
+      alerts = this.alertCodes.map { (type, code) ->
+        Alert(
+          alertId = Random.nextLong(),
+          offenderNo = this.prisonerNumber,
+          alertCode = code,
+          alertCodeDescription = "Code description for $code",
+          alertType = type,
+          alertTypeDescription = "Type Description for $type",
+          // In search all alerts are not expired and active
+          expired = false,
+          active = true,
+          dateCreated = LocalDate.now(),
+        )
+      },
+      aliases = this.aliases.map { a ->
+        Alias(
+          gender = a.gender,
+          ethnicity = a.ethnicity,
+          firstName = this.firstName,
+          middleName = null,
+          lastName = this.lastName,
+          age = null,
+          dob = LocalDate.parse(this.dateOfBirth),
+          nameType = null,
+          createDate = LocalDate.now(),
+        )
+      },
+      physicalCharacteristics = mutableListOf<PhysicalCharacteristic>().also { pcs ->
+        this.physicalCharacteristics?.hairColour?.let {
+          pcs.add(PhysicalCharacteristic("HAIR", "Hair Colour", it, null))
+        }
+        this.physicalCharacteristics?.rightEyeColour?.let {
+          pcs.add(PhysicalCharacteristic("R_EYE_C", "Right Eye Colour", it, null))
+        }
+        this.physicalCharacteristics?.leftEyeColour?.let {
+          pcs.add(PhysicalCharacteristic("L_EYE_C", "Left Eye Colour", it, null))
+        }
+        this.physicalCharacteristics?.facialHair?.let {
+          pcs.add(PhysicalCharacteristic("FACIAL_HAIR", "Facial Hair", it, null))
+        }
+        this.physicalCharacteristics?.shapeOfFace?.let {
+          pcs.add(PhysicalCharacteristic("FACE", "Shape of Face", it, null))
+        }
+        this.physicalCharacteristics?.build?.let {
+          pcs.add(PhysicalCharacteristic("BUILD", "Build", it, null))
+        }
+        this.physicalCharacteristics?.shoeSize?.let {
+          pcs.add(PhysicalCharacteristic("SHOESIZE", "Shoe Size", it.toString(), null))
+        }
+      },
+      physicalMarks = mutableListOf<PhysicalMark>().also { pms ->
+        this.physicalMarks?.tattoo?.forEach {
+          pms.add(PhysicalMark("Tattoo", null, it.bodyPart, null, it.comment, null))
+        }
+        this.physicalMarks?.mark?.forEach {
+          pms.add(PhysicalMark("Mark", null, it.bodyPart, null, it.comment, null))
+        }
+        this.physicalMarks?.other?.forEach {
+          pms.add(PhysicalMark("Other", null, it.bodyPart, null, it.comment, null))
+        }
+        this.physicalMarks?.scar?.forEach {
+          pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
+        }
+      },
+      profileInformation = listOf(
+        ProfileInformation("YOUTH", "Youth Offender?", "NO"),
+        ProfileInformation("RELF", "Religion", "Christian"),
+        ProfileInformation("NAT", "Nationality?", "British"),
+      ),
+      inOutStatus = "IN",
+      identifiers = listOf(
+        OffenderIdentifier("CRO", "29906/12L", null, LocalDate.parse("2013-12-02"), LocalDateTime.parse("2013-12-02T20:00")),
+        OffenderIdentifier("PNC", "12/394773W", null, LocalDate.parse("2013-12-02"), LocalDateTime.parse("2013-12-02T20:00")),
+      ),
+      status = "ACTIVE IN",
+      legalStatus = "REMAND",
+      imprisonmentStatus = "LIFE",
+      imprisonmentStatusDescription = "Life imprisonment",
+      latestLocationId = "WWI",
     ).let {
       if (released) {
         it.copy(

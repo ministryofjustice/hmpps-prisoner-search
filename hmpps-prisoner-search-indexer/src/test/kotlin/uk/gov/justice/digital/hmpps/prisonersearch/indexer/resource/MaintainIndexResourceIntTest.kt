@@ -21,7 +21,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
@@ -34,25 +33,18 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.readResourceAsText
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildAlreadyInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.NoActiveIndexesException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class MaintainIndexResourceIntTest : IntegrationTestBase() {
-  @SpyBean
-  private lateinit var maintainIndexService: MaintainIndexService
 
   @Autowired
   @Qualifier("offenderqueue-sqs-client")
   private lateinit var offenderQueueSqsClient: SqsAsyncClient
-
-  @SpyBean
-  lateinit var prisonerSpyBeanRepository: PrisonerRepository
 
   @BeforeEach
   fun `reset mocks`() = reset(maintainIndexService)
