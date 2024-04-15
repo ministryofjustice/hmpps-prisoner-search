@@ -49,6 +49,7 @@ data class OffenderBooking(
 private fun getDiffResult(booking: OffenderBooking, other: OffenderBooking): DiffResult<OffenderBooking> =
   DiffBuilder(booking, other, ToStringStyle.JSON_STYLE).apply {
     OffenderBooking::class.members
-      .filterNot { listOf("diff", "equals", "toString", "hashCode").contains(it.name) }
+      .filterNot { listOf("copy", "diff", "equals", "toString", "hashCode").contains(it.name) }
+      .filterNot { it.name.startsWith("component") }
       .forEach { property -> append(property.name, property.call(booking), property.call(other)) }
   }.build()

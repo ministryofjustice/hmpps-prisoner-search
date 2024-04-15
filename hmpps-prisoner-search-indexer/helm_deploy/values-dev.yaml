@@ -14,6 +14,7 @@ generic-service:
     INDEX_BUILD_COMPLETE_THRESHOLD: 500000
     DIFF_HOST: "https://prisoner-search-dev.prison.service.justice.gov.uk"
     DIFF_PREFIX: ""
+    DIFF_TEST_NEW_OFFENDER_ENDPOINT: true
 
   scheduledDowntime:
     enabled: true

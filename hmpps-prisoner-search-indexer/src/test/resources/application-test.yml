@@ -74,6 +74,7 @@ index-build:
 diff:
   events: true
   prefix: test.
+  testNewOffenderEndpoint: true
 
 republish:
   delayInSeconds: 0

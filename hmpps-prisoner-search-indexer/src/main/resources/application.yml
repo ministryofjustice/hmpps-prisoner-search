@@ -106,6 +106,7 @@ diff:
   events: true
   host: http://localhost:8080
   prefix: dummy.
+  testNewOffenderEndpoint: false
 
 republish:
   delayInSeconds: 5
