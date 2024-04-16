@@ -13,6 +13,7 @@ generic-service:
     API_BASE_URL_INCENTIVES: "https://incentives-api-preprod.hmpps.service.justice.gov.uk"
     DIFF_HOST: "https://prisoner-search-preprod.prison.service.justice.gov.uk"
     DIFF_PREFIX: ""
+    DIFF_TESTNEWOFFENDERENDPOINT: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true
