@@ -728,6 +728,17 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
+    fun `single STARTSWITH does not support wildcards`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" STARTSWITH "JOHN*")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
     fun `STARTSWITH with AND`() {
       val request = RequestDsl {
         query {
