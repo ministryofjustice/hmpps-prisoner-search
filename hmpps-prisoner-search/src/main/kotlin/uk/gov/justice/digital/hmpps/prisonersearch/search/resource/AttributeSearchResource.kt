@@ -64,8 +64,14 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
       searched for with dot notation, e.g. <strong>"attribute=aliases.firstName"</strong> or <strong>"attribute=tattoos.bodyPart"</strong>. 
       Attributes from complex objects can also be searched for with dot notation, e.g. <strong>"attribute=currentIncentive.level.code"</strong>.
       </p>
-      <p>String attributes that contain free text will perform a <a href="https://opensearch.org/docs/latest/query-dsl/term/fuzzy/">fuzzy search</a> with conditions IS and CONTAINS.
-      This means that the query also matches on near misses, e.g. spelling mistakes. To find which attributes perform a fuzzy search call endpoint <strong>GET /attribute-search/attributes</strong>.
+      <p>String attributes support advanced search techniques such as <a href="https://opensearch.org/docs/latest/query-dsl/term/fuzzy/">fuzzy search</a> matching and <a href="https://opensearch.org/docs/latest/query-dsl/term/wildcard/">wildcard search</a>. All String searches are case-insensitive.
+      <ul>
+        <li>IS and IS_NOT require an exact match (wildcards ? and * will not work). E.g. If religion is "Christian" then <strong>"religion IS Christian"</strong> will match but <strong>"religion IS Christ*"</strong> will not.</li>
+        <li>For IS and CONTAINS some attributes support fuzzy matching e.g. they allow spelling mistakes. Call endpoint <strong>GET /attribute-search/attributes</strong> to see which attributes support fuzzy matching. E.g. If firstName is "Jonathan" then <strong>"firstName IS Johnathon"</strong> or <strong>"firstName CONTAINS Johnathon"</strong> will match.</li>
+        <li>CONTAINS without wildcards (? and *) for a non-fuzzy attribute looks for the exact search term anywhere in the attribute value. E.g. If religion is "Christian" then <strong>"religion CONTAINS ist"</strong> will match.</li>
+        <li>CONTAINS with wildcards ? (single character) and/or * (zero to many characters) perform a wildcard search which must match the entire attribute value. E.g. If firstName is "Jonathan" then <strong>"firstName CONTAINS Jon*"</strong> will match but <strong>"firstName CONTAINS nath*"</strong> will not.</li>
+        <li>STARTSWITH checks only the prefix of the attribute value and does not support fuzzy matching or wildcards. E.g.If firstName is "Jonathan" then <strong>"firstName STARTSWITH Jon"</strong> will match but <strong>"firstName STARTSWITH Jon*"</strong> will not.</li> 
+      </ul>
       </p>
       <p>To assist with debugging queries we publish events in App Insights. To search in App Insights Log Analytics run query: 
       <pre>

@@ -267,7 +267,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS`() {
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" CONTAINS "John")
+          stringMatcher("firstName" CONTAINS "ohn")
         }
       }
 
@@ -278,7 +278,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS uppercase`() {
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" CONTAINS "JOHN")
+          stringMatcher("firstName" CONTAINS "OHN")
         }
       }
 
@@ -289,7 +289,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS lowercase`() {
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" CONTAINS "john")
+          stringMatcher("firstName" CONTAINS "ohn")
         }
       }
 
@@ -300,11 +300,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS with single character wildcard`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" CONTAINS "ince?tive level")
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince?tive level 1")
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -322,11 +322,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS with more than one single character wildcard`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" CONTAINS "ince?tive le?el")
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince?tive le?el 1")
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -344,11 +344,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS with a multiple character wildcard`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ve level")
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ve level 1")
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -366,11 +366,11 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     fun `single CONTAINS with more than one multiple character wildcards`() {
       val request = RequestDsl {
         query {
-          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ve l*l")
+          stringMatcher("currentIncentive.level.description" CONTAINS "ince*ve l*l 1")
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
 
     @Test
@@ -385,15 +385,14 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
-    fun `single CONTAINS with partial matches in search term`() {
-      // The "John" matches all prisoners, so we're testing that the results must contain the whole search term
+    fun `single CONTAINS with wildcard not a full match`() {
       val request = RequestDsl {
         query {
-          stringMatcher("firstName" CONTAINS "John1")
+          stringMatcher("currentIncentive.level.description" CONTAINS "e*ve l*l")
         }
       }
 
-      webTestClient.attributeSearch(request).expectPrisoners("P1")
+      webTestClient.attributeSearch(request).expectPrisoners()
     }
 
     @Test
