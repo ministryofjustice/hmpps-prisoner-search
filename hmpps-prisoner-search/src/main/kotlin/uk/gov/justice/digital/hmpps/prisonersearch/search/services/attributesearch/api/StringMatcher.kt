@@ -42,7 +42,7 @@ data class StringMatcher(
               QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
             }
           }
-          STARTSWITH -> QueryBuilders.wildcardQuery(attr.openSearchName, "$searchTerm*").caseInsensitive(true)
+          STARTSWITH -> QueryBuilders.prefixQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
         }
         return when {
           attr.isFuzzy && condition == IS -> {
