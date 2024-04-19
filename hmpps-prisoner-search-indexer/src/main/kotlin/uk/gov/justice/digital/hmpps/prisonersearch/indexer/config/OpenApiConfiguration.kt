@@ -32,7 +32,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .info(
       Info().title("HMPPS Prisoner Search Indexer")
         .version(version)
-        .description("Service for indexing prisoners for HMPPS Prisoner Search")
+        .description(javaClass.getResource("/swagger-description.html")!!.readText())
         .contact(Contact().name("HMPPS Digital Studio").email("feedback@digital.justice.gov.uk")),
     )
     .components(
