@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.EQ
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.GT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.GTE
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IN
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.IS_NOT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LT
@@ -807,6 +808,137 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       }
 
       webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `single IN`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1,James2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `IN with a single value in the list`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `IN with spaces between search terms`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1, James2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `IN is case sensitive`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "JOHN1,james2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners()
+    }
+
+    @Test
+    fun `IN for an array`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("alerts.alertType" IN "AT1, AT2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `IN for a nested object`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("currentIncentive.level.description" IN "Incentive level 1,Incentive level 2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `IN with and`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1,James2")
+          dateMatcher("dateOfBirth" EQ "1990-01-01")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `IN with OR`() {
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          stringMatcher("firstName" IN "John1,Jeff3")
+          booleanMatcher("recall" IS true)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2", "P3")
+    }
+
+    @Test
+    fun `IN with a subquery`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1,James2,Jeff3")
+          query {
+            stringMatcher("tattoos.bodyPart" IS "Arm")
+            stringMatcher("tattoos.comment" CONTAINS "DRAGON")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `IN with multiple queries`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1,James2,Jeff3")
+        }
+        query {
+          stringMatcher("tattoos.comment" IS "DRAGON")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+
+    @Test
+    fun `IN with empty search terms`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("firstName" IN "John1,,,,James2")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
     }
   }
 

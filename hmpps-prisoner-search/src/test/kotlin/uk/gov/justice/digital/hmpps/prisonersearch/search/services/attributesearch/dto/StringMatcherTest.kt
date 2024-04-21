@@ -18,4 +18,26 @@ class StringMatcherTest {
       assertThat(it.message).contains("firstName").contains("blank")
     }
   }
+
+  @Test
+  fun `should not allow empty list with IN`() {
+    val matcher = StringMatcher("firstName", StringCondition.IN, "")
+
+    assertThrows<AttributeSearchException> {
+      matcher.validate()
+    }.also {
+      assertThat(it.message).contains("firstName").contains("empty list")
+    }
+  }
+
+  @Test
+  fun `should not allow multiple empty values with IN`() {
+    val matcher = StringMatcher("firstName", StringCondition.IN, ",")
+
+    assertThrows<AttributeSearchException> {
+      matcher.validate()
+    }.also {
+      assertThat(it.message).contains("firstName").contains("empty list")
+    }
+  }
 }
