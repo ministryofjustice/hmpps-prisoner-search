@@ -48,6 +48,8 @@ private fun getDiffResult(booking: OffenderBooking, other: OffenderBooking): Dif
   DiffBuilder(booking, other, ToStringStyle.JSON_STYLE).apply {
     OffenderBooking::class.members
       .filterNot { listOf("copy", "diff", "equals", "toString", "hashCode").contains(it.name) }
+      // These show differences because of either the order a list is returned or because they have additional data from the old endpoint that we're not interested in. So we'll ignore them as we're trying to find genuine differences.
+      .filterNot { listOf("alerts", "profileInformation", "identifiers").contains(it.name) }
       .filterNot { it.name.startsWith("component") }
       .forEach { property -> append(property.name, property.call(booking), property.call(other)) }
   }.build()
