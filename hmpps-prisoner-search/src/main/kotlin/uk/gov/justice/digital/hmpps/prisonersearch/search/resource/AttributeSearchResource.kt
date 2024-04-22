@@ -45,24 +45,26 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @PostMapping
   @Tag(name = "Attribute search")
   @Operation(
-    summary = "*** WIP - DO NOT USE!!! *** Search for prisoners by attributes",
+    summary = "*** BETA *** Search for prisoners by attributes",
     description = """<p>This endpoint allows you to create queries over all attributes from the <em>Prisoner</em> record. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.</p>
       <p>The request contains a list of queries to search on one or more attributes using a list of matchers. For example attribute "lastName""
       requires a <em>StringMatcher</em> so we can query on <strong>"lastName IS Smith"</strong>. Other type matchers include <em>IntMatcher</em>, <em>BooleanMatcher</em>,
-      <em>DateMatcher</em> and <em>DateTimeMatcher</em>. We have the facility to easily create additional matchers as required, for example 
-      we may end up with a PNCMatcher that handles any format of PNC number.
+      <em>DateMatcher</em> and <em>DateTimeMatcher</em>.
       </p>
       <p>Each query can also contain a list of sub-queries. Each sub-query can be considered as a separate query in brackets.
       Combining multiple sub-queries gives us the ability to create complex searches using any combination of a prisoner's 
-      attributes. For example we can model nested queries such as <strong>"lastName IS Smith AND (prisonId IS MDI OR (prisonId IS OUT AND inOutStatus is OUT))"</strong>.
+      attributes. For example we can model nested queries such as <strong>"lastName IS Smith AND (prisonId IS MDI OR (prisonId IS OUT AND lastPrisonId IS MDI))"</strong>.
       </p>
-      <p>Please be aware that when searching lists of complex objects (e.g. aliases, alerts, tattoos) if you want to search for multiple attributes within the same object then you need 
-      to include them in the same query. For example, to search for alias "John Smith" you should search for aliases.firstName IS "John" and aliases.lastName IS "Smith" in a single query.
-      If you search for them in different queries you will receive anyone with firstName John and also anyone with lastName Smith.
-      </p>
-      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record or get them from endpoint <strong>GET /attribute-search/attributes</strong>. Attributes from lists can be
+      <p>To find all attributes that can be searched for please refer to the <em>Prisoner</em> record or get them from endpoint <a target="_blank" href="/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config#/Attribute search/getAttributes"><strong>GET /attribute-search/attributes</strong></a>. Attributes from lists can be
       searched for with dot notation, e.g. <strong>"attribute=aliases.firstName"</strong> or <strong>"attribute=tattoos.bodyPart"</strong>. 
       Attributes from complex objects can also be searched for with dot notation, e.g. <strong>"attribute=currentIncentive.level.code"</strong>.
+      </p>
+      <p>Note that when searching lists of complex objects (e.g. aliases, alerts, tattoos) if you want to search for multiple attributes within the same object then you need 
+      to include them in the same query. For example, to search for alias "John Smith" you should search for <strong>aliases.firstName IS "John"</strong> and <strong>aliases.lastName IS "Smith"</strong> using string matchers in the same query.
+      If you search for them in different queries you will receive anyone with firstName John and also anyone with lastName Smith.
+      </p>
+      <p>Many attributes contain reference data restricted to a fixed list of values. For example, attribute "inOutStatus" only contains values "IN", "OUT" and "TRN".
+      To find which attributes use reference data and to fetch the possible attribute values see the endpoint <a target="_blank" href="/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config#/Reference data/referenceData"><strong>GET /reference-data/{attribute}</strong></a>.
       </p>
       <p>String attributes support advanced search techniques such as <a href="https://opensearch.org/docs/latest/query-dsl/term/fuzzy/">fuzzy search</a> matching and <a href="https://opensearch.org/docs/latest/query-dsl/term/wildcard/">wildcard search</a>. All String searches are case-insensitive.
       <ul>
@@ -71,6 +73,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
         <li>CONTAINS without wildcards (? and *) for a non-fuzzy attribute looks for the exact search term anywhere in the attribute value. E.g. If religion is "Christian" then <strong>"religion CONTAINS ist"</strong> will match.</li>
         <li>CONTAINS with wildcards ? (single character) and/or * (zero to many characters) perform a wildcard search which must match the entire attribute value. E.g. If firstName is "Jonathan" then <strong>"firstName CONTAINS Jon*"</strong> will match but <strong>"firstName CONTAINS nath*"</strong> will not.</li>
         <li>STARTSWITH checks only the prefix of the attribute value and does not support fuzzy matching or wildcards. E.g.If firstName is "Jonathan" then <strong>"firstName STARTSWITH Jon"</strong> will match but <strong>"firstName STARTSWITH Jon*"</strong> will not.</li> 
+        <li>IN checks that the attribute value is any of the list of Strings provided in the search term. The search term should be a comma separated list of Strings to search, E.g. "searchValue1,searchValue2,searchValue3". This only matches exactly - no fuzzy search, wildcards or case-insensitive search is supported by OpenSearch. E.g.If firstName is "Jonathan" then <strong>"firstName IN 'Jonathan,Bob,Chris'"</strong> will match but <strong>"firstName IN 'Adrian,Bob,Chris'"</strong> will not.</li> 
       </ul>
       </p>
       <p>To assist with debugging queries we publish events in App Insights. To search in App Insights Log Analytics run query: 
@@ -105,6 +108,36 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
                   "attribute": "heightCentimetres",
                   "minValue": 150,
                   "maxValue": 180
+                }
+              ]
+            }
+          ]
+        }
+      </pre>
+      <br/>
+      <h4>Search for all prisoners in a list of cells in Moorland</h4>
+      Query: <strong>"prisonId = "MDI" AND cellLocation IN (1-2-001, 1-3-014, 3-1-020)</strong>
+      <br/>
+      JSON request:
+      <br/>
+      <pre>
+        {
+          "joinType": "AND",
+          "queries": [
+            {
+              "joinType": "AND",
+              "matchers": [
+                {
+                  "type": "String",
+                  "attribute": "prisonId",
+                  "condition": "IS",
+                  "searchTerm": "MDI"
+                },
+                {
+                  "type": "String",
+                  "attribute": "cellLocation",
+                  "condition": "IN",
+                  "searchTerm": "1-2-001,1-3-014,3-1-020"
                 }
               ]
             }
@@ -206,7 +239,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @GetMapping("/attributes")
   @Tag(name = "Attribute search")
   @Operation(
-    summary = "*** WIP - DO NOT USE!!! *** Retrieve all attributes supported by the attribute search",
+    summary = "*** BETA *** Retrieve all attributes supported by the attribute search",
     description = "Returns all attributes that can be passed into the attribute search including their type.",
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [

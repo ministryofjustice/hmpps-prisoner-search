@@ -7,6 +7,7 @@ import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.CONTAINS
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IN
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS_NOT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.STARTSWITH
@@ -23,9 +24,14 @@ data class StringMatcher(
   @Schema(description = "Must be String", example = "String")
   override val type: String = "String"
 
+  private val listSearchTerms: List<String> = searchTerm.split(",").map { it.trim() }.filterNot { it.isEmpty() }
+
   override fun validate() {
-    if (searchTerm.isBlank()) {
+    if (condition != IN && searchTerm.isBlank()) {
       throw AttributeSearchException("Attribute $attribute must not have a blank search term")
+    }
+    if (condition == IN && listSearchTerms.isEmpty()) {
+      throw AttributeSearchException("Attribute $attribute must not have an empty list of search terms")
     }
   }
 
@@ -43,6 +49,7 @@ data class StringMatcher(
             }
           }
           STARTSWITH -> QueryBuilders.prefixQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
+          IN -> QueryBuilders.termsQuery(attr.openSearchName, listSearchTerms)
         }
         return when {
           attr.isFuzzy && condition == IS -> {
@@ -67,6 +74,7 @@ data class StringMatcher(
       IS_NOT -> "!="
       CONTAINS -> "CONTAINS"
       STARTSWITH -> "STARTSWITH"
+      IN -> "IN"
     }
     return "$attribute $condition $searchTerm"
   }
@@ -85,7 +93,9 @@ data class StringMatcher(
   
   CONTAINS with wildcards ? (single character) and * (zero to many characters) perform a wildcard match which must match the entire attribute value.
   
-  STARTSWITH checks only the prefix of the attribute value and does not support fuzzy matching or wildcards.π
+  STARTSWITH checks only the prefix of the attribute value and does not support fuzzy matching or wildcards.
+  
+  IN checks a list of values for an exact match and does not support fuzzy matching, wildcards or case insensitive searching.
   """,
 )
 enum class StringCondition {
@@ -93,4 +103,5 @@ enum class StringCondition {
   IS_NOT,
   CONTAINS,
   STARTSWITH,
+  IN,
 }

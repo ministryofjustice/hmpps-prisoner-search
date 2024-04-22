@@ -45,3 +45,6 @@ internal infix fun String.CONTAINS(value: String) = StringAssertion(this, String
 
 @Suppress("ktlint:standard:function-naming")
 internal infix fun String.STARTSWITH(value: String) = StringAssertion(this, StringCondition.STARTSWITH, value)
+
+@Suppress("ktlint:standard:function-naming")
+internal infix fun String.IN(values: String) = StringAssertion(this, StringCondition.IN, values)
