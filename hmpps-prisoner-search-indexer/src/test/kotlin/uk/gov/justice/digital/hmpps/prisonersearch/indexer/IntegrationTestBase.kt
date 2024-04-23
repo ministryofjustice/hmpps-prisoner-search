@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Ph
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.ProfileInformation
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
@@ -261,6 +262,7 @@ data class PrisonerBuilder(
   val physicalMarks: PhysicalMarkBuilder? = null,
   val currentIncentive: CurrentIncentive? = null,
   val assignedLivingUnitLocationId: Long? = Random.nextLong(),
+  val sentenceDetail: SentenceDetail? = null,
 ) {
 
   private fun getOffenderBookingOldTemplate(): OffenderBookingOld =
@@ -355,6 +357,7 @@ data class PrisonerBuilder(
           pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
         }
       },
+      sentenceDetail = sentenceDetail,
     ).let {
       if (released) {
         it.copy(
@@ -478,6 +481,7 @@ data class PrisonerBuilder(
       imprisonmentStatus = "LIFE",
       imprisonmentStatusDescription = "Life imprisonment",
       latestLocationId = "WWI",
+      sentenceDetail = this.sentenceDetail,
     ).let {
       if (released) {
         it.copy(

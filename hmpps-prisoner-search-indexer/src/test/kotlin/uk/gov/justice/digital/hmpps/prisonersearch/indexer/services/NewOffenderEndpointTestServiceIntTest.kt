@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PhysicalCharacteristicBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class NewOffenderEndpointTestServiceIntTest : IntegrationTestBase() {
@@ -109,6 +110,24 @@ class NewOffenderEndpointTestServiceIntTest : IntegrationTestBase() {
           check {
             assertThat(it).containsEntry("offenderNo", "A1234BC")
             assertThat(it).containsEntry("diff", "new_booking_null")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Test
+    fun `should not publish diff telemetry if old endpoint returns null additional days awarded`() {
+      val prisonerBuilder = PrisonerBuilder(sentenceDetail = SentenceDetail(additionalDaysAwarded = null), firstName = "OLD")
+      prisonApi.stubOffenders(prisonerBuilder)
+      prisonApi.stubGetOffenderNewEndpoint(prisonerBuilder.copy(sentenceDetail = SentenceDetail(additionalDaysAwarded = 0), firstName = "NEW"))
+      buildAndSwitchIndex(GREEN, 1)
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("OffenderBookingDifference"),
+          check {
+            assertThat(it).containsEntry("diff", "firstName") // sentence detail is not mentioned here
           },
           isNull(),
         )
