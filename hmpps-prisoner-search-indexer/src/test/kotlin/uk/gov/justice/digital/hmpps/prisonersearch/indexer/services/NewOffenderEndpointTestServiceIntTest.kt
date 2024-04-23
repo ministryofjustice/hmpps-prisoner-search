@@ -12,6 +12,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PhysicalCharacteristicBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
@@ -59,9 +60,9 @@ class NewOffenderEndpointTestServiceIntTest : IntegrationTestBase() {
 
     @Test
     fun `should publish diff telemetry for a difference to a list`() {
-      val prisonerBuilder = PrisonerBuilder("A1234BC", alertCodes = listOf("X" to "XX"))
+      val prisonerBuilder = PrisonerBuilder("A1234BC", aliases = listOf(AliasBuilder(gender = "Male")))
       prisonApi.stubOffenders(prisonerBuilder)
-      prisonApi.stubGetOffenderNewEndpoint(prisonerBuilder.copy(alertCodes = listOf("Y" to "YY")))
+      prisonApi.stubGetOffenderNewEndpoint(prisonerBuilder.copy(aliases = listOf(AliasBuilder(gender = "Female"))))
       buildAndSwitchIndex(GREEN, 1)
 
       await untilAsserted {
@@ -69,7 +70,7 @@ class NewOffenderEndpointTestServiceIntTest : IntegrationTestBase() {
           eq("OffenderBookingDifference"),
           check {
             assertThat(it).containsEntry("offenderNo", "A1234BC")
-            assertThat(it).containsEntry("diff", "alerts")
+            assertThat(it).containsEntry("diff", "aliases")
           },
           isNull(),
         )
