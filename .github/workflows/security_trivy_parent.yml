@@ -1,0 +1,18 @@
+name: Parent security trivy dependency check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "35 5 * * MON-FRI" # Every weekday at 05:35 UTC
+
+jobs:
+  security-trivy-search-check:
+    name: Search security trivy dependency check
+    uses: ./.github/workflows/security_trivy.yml
+    with:
+      subproject: hmpps-prisoner-search
+  security-trivy-indexer-check:
+    name: Indexer security trivy dependency check
+    uses: ./.github/workflows/security_trivy.yml
+    with:
+      subproject: hmpps-prisoner-search-indexer
