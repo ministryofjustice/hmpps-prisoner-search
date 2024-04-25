@@ -19,7 +19,7 @@ jobs:
     env:
       parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Trivy Image Vulnerability Scanner
       id: trivy
       uses: aquasecurity/trivy-action@b5f4977b78f81fa3d48865ff0efcc6e279210235 # v0.50.2
@@ -30,7 +30,8 @@ jobs:
         skip-files: /app/agent.jar
         format: 'sarif'
         output: 'trivy-results.sarif'
-    - uses: github/codeql-action/upload-sarif@v2
+        exit-code: 1
+    - uses: github/codeql-action/upload-sarif@v3
       if: success() || steps.trivy.conclusion == 'failure'
       with:
         sarif_file: 'trivy-results.sarif'
