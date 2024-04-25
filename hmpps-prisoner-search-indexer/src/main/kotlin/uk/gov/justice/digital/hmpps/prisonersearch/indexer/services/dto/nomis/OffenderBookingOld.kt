@@ -70,7 +70,7 @@ data class OffenderBookingOld(
       categoryCode,
       identifiers,
       sentenceDetail,
-      offenceHistory?.firstOrNull { off -> off.mostSerious && off.bookingId == bookingId }?.offenceDescription,
+      offenceHistory?.filter { off -> off.mostSerious && off.bookingId == bookingId }?.minByOrNull { it.offenceSeverityRanking }?.offenceDescription,
       sentenceTerms?.any { st -> st.lifeSentence && st.bookingId == bookingId },
       status,
       legalStatus,

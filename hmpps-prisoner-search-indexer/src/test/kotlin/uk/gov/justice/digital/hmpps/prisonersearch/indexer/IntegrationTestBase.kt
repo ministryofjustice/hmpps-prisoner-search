@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainInde
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBookingOld
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderIdentifier
@@ -263,6 +264,7 @@ data class PrisonerBuilder(
   val currentIncentive: CurrentIncentive? = null,
   val assignedLivingUnitLocationId: Long? = Random.nextLong(),
   val sentenceDetail: SentenceDetail? = null,
+  val offenceHistory: List<OffenceHistoryDetail>? = null,
 ) {
 
   private fun getOffenderBookingOldTemplate(): OffenderBookingOld =
@@ -358,6 +360,7 @@ data class PrisonerBuilder(
         }
       },
       sentenceDetail = sentenceDetail,
+      offenceHistory = offenceHistory,
     ).let {
       if (released) {
         it.copy(
