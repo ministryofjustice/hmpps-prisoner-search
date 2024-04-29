@@ -6,6 +6,9 @@ on:
       subproject:
         required: false
         type: string
+      slack_webhook_url:
+        description: Slack webhook
+        required: true
 
 permissions:
   contents: read
