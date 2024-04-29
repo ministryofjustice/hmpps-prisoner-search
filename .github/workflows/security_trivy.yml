@@ -6,6 +6,10 @@ on:
       subproject:
         required: false
         type: string
+    secrets:
+      slack_webhook_url:
+        description: Slack webhook
+        required: true
 
 permissions:
   contents: read
@@ -70,5 +74,5 @@ jobs:
             ]
           }
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

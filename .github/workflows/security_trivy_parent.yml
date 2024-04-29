@@ -16,3 +16,5 @@ jobs:
     uses: ./.github/workflows/security_trivy.yml
     with:
       subproject: hmpps-prisoner-search-indexer
+    secrets:
+      slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
