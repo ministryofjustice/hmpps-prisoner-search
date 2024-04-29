@@ -69,6 +69,10 @@ jobs:
                   {
                     "type": "mrkdwn",
                     "text": "*Repo:*\n${{ github.repository }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Project:*\n${{ inputs.subproject }}"
                   }
                 ]
               }
