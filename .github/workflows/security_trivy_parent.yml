@@ -11,8 +11,10 @@ jobs:
     uses: ./.github/workflows/security_trivy.yml
     with:
       subproject: hmpps-prisoner-search
+      slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
   security-trivy-indexer-check:
     name: Indexer security trivy dependency check
     uses: ./.github/workflows/security_trivy.yml
     with:
       subproject: hmpps-prisoner-search-indexer
+      slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
