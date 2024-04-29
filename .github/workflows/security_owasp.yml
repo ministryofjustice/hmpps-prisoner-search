@@ -6,7 +6,8 @@ on:
       subproject:
         required: false
         type: string
-      slack_webhook_url:
+    secrets:
+      SLACK_WEBHOOK_URL:
         description: Slack webhook
         required: true
 
@@ -74,5 +75,5 @@ jobs:
             ]
           }
       env:
-        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
