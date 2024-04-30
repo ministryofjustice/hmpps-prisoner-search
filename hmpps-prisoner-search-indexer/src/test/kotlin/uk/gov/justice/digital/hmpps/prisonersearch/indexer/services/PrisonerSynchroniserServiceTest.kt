@@ -34,14 +34,12 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
-  private val newOffenderEndpointTestService = mock<NewOffenderEndpointTestService>()
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
     telemetryClient,
     restrictedPatientService,
     incentivesService,
     prisonerDifferenceService,
-    newOffenderEndpointTestService,
   )
 
   @Nested

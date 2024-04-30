@@ -18,7 +18,6 @@ class PrisonerSynchroniserService(
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
-  private val newOffenderEndpointTestService: NewOffenderEndpointTestService?,
 ) {
 
   // called when prisoner updated or manual prisoner index required
@@ -37,8 +36,6 @@ class PrisonerSynchroniserService(
     // only save to open search if we encounter any differences
     if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
-        // TODO Remove this once testing of the new prison-api offender endpoint is complete
-        .also { newOffenderEndpointTestService?.launchOffenderEndpointDiffTest(ob) }
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
       telemetryClient.trackPrisonerEvent(
@@ -59,8 +56,6 @@ class PrisonerSynchroniserService(
   internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner =
     translate(ob).also {
       indexes.map { index -> prisonerRepository.save(it, index) }
-        // TODO Remove this once testing of the new prison-api offender endpoint is complete
-        .also { newOffenderEndpointTestService?.launchOffenderEndpointDiffTest(ob) }
     }
 
   internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>) {
@@ -79,8 +74,6 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
-        // TODO Remove this once testing of the new prison-api offender endpoint is complete
-        .also { newOffenderEndpointTestService?.launchOffenderEndpointDiffTest(ob) }
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
     }
   }
