@@ -200,7 +200,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     // update the prisoner on ES
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -231,7 +231,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     // update the prisoner on ES
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -259,7 +259,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     // update the prisoner on ES
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -290,7 +290,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     // update the prisoner on ES
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -323,7 +323,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     // update the prisoner on ES
     prisonApi.stubOffenderNoFromBookingId("A1239DD")
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -356,7 +356,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     // update the prisoner on ES
     prisonApi.stubOffenderNoFromBookingId("A1239DD")
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -389,7 +389,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     // update the prisoner on ES
     prisonApi.stubOffenderNoFromBookingId("A1239DD")
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -424,7 +424,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     // update the prisoner on ES - TWICE
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -481,7 +481,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     doThrow(RuntimeException("Failed to send event")).whenever(publishQueueSqsClient)
       .sendMessage(any<SendMessageRequest>())
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/A1239DD"))
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -509,7 +509,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     prisonerRepository.delete(prisonerNumber)
     prisonApi.stubFor(
-      get(urlEqualTo("/api/offenders/$prisonerNumber"))
+      get(urlEqualTo("/api/prisoner-search/offenders/$prisonerNumber"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -521,7 +521,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
 
     // create the prisoner in ES
-    await untilCallTo { prisonApi.countFor("/api/offenders/$prisonerNumber") } matches { it == 1 }
+    await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/$prisonerNumber") } matches { it == 1 }
 
     // delete create events
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it != 0 }
