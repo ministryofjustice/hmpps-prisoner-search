@@ -7,7 +7,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono
 import reactor.netty.http.client.HttpClientRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBookingOld
 import java.time.Duration
 
 @Service
@@ -42,14 +41,6 @@ class NomisService(
     ?.offenderNo
 
   fun getOffender(offenderNo: String): OffenderBooking? = prisonApiWebClient.get()
-    .uri("/api/offenders/{offenderNo}", offenderNo)
-    .retrieve()
-    .bodyToMono(OffenderBookingOld::class.java)
-    .onErrorResume(NotFound::class.java) { Mono.empty() }
-    .block()
-    ?.toOffenderBooking()
-
-  fun getOffenderNewEndpoint(offenderNo: String): OffenderBooking? = prisonApiWebClient.get()
     .uri("/api/prisoner-search/offenders/{offenderNo}", offenderNo)
     .retrieve()
     .bodyToMono(OffenderBooking::class.java)
