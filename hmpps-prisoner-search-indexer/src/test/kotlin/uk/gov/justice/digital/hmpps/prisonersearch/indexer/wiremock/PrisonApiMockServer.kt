@@ -50,11 +50,40 @@ class PrisonApiMockServer : WireMockServer(8093) {
 
   fun stubGetOffender(prisonerBuilder: PrisonerBuilder) {
     stubFor(
+      WireMock.get(urlEqualTo("/api/offenders/${prisonerBuilder.prisonerNumber}"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(prisonerBuilder.toOffenderBookingOld()),
+        ),
+    )
+  }
+
+  fun stubGetOffenderNewEndpoint(prisonerBuilder: PrisonerBuilder) {
+    stubFor(
       WireMock.get(urlEqualTo("/api/prisoner-search/offenders/${prisonerBuilder.prisonerNumber}"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(prisonerBuilder.toOffenderBookingNewEndpoint()),
+        ),
+    )
+  }
+
+  fun stubGetOffenderNewEndpointNotFound(prisonerNumber: String) {
+    stubFor(
+      WireMock.get(urlEqualTo("/api/prisoner-search/offenders/$prisonerNumber"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              """
+                {
+                  "error": "not found"
+                }
+              """.trimIndent(),
+            )
+            .withStatus(404),
         ),
     )
   }
