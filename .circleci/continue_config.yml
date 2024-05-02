@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@8
+  hmpps: ministryofjustice/hmpps@dev:8ccab01
 
 parameters:
   releases-slack-channel:
@@ -16,6 +16,12 @@ parameters:
   build-search:
     type: boolean
     default: false
+  search-paths:
+    type: string
+    default: "hmpps-prisoner-search common build.gradle.kts .circleci"
+  indexer-paths:
+    type: string
+    default: "hmpps-prisoner-search-indexer common build.gradle.kts .circleci"
 
 jobs:
   validate-common:
@@ -180,6 +186,7 @@ workflows:
             - build_docker-indexer
             - helm_lint-indexer
           helm_timeout: 5m
+          changelog_git_paths: << pipeline.parameters.indexer-paths >>
       - hmpps/smoke_test:
           name: smoke_test-indexer
           command: "./gradlew :hmpps-prisoner-search-indexer:testSmoke -Dtestlogger.showStandardStreams=true"
@@ -201,6 +208,7 @@ workflows:
           chart_name: hmpps-prisoner-search-indexer
           release_name: hmpps-prisoner-search-indexer
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+          changelog_git_paths: << pipeline.parameters.indexer-paths >>
           requires:
             - smoke_test-indexer
       - request-prod-approval:
@@ -222,6 +230,7 @@ workflows:
           chart_name: hmpps-prisoner-search-indexer
           release_name: hmpps-prisoner-search-indexer
           helm_dir: hmpps-prisoner-search-indexer/helm_deploy
+          changelog_git_paths: << pipeline.parameters.indexer-paths >>
           requires:
             - request-prod-approval
   build-test-and-deploy-search:
@@ -262,6 +271,7 @@ workflows:
             - build_docker-search
             - helm_lint-search
           helm_timeout: 5m
+          changelog_git_paths: << pipeline.parameters.search-paths >>
       - hmpps/smoke_test:
           name: smoke_test-search
           command: "./gradlew :hmpps-prisoner-search:testSmoke -Dtestlogger.showStandardStreams=true"
@@ -280,6 +290,7 @@ workflows:
             - hmpps-common-vars
             - hmpps-prisoner-search-preprod
           helm_dir: hmpps-prisoner-search/helm_deploy
+          changelog_git_paths: << pipeline.parameters.search-paths >>
           requires:
             - smoke_test-search
       - request-prod-approval:
@@ -298,5 +309,6 @@ workflows:
             - hmpps-common-vars
             - hmpps-prisoner-search-prod
           helm_dir: hmpps-prisoner-search/helm_deploy
+          changelog_git_paths: << pipeline.parameters.search-paths >>
           requires:
             - request-prod-approval
