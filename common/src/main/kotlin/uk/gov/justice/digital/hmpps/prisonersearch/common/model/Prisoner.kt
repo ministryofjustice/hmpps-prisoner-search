@@ -173,6 +173,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.SENTENCE)
   var mostSeriousOffence: String? = null
 
+  @Field(type = FieldType.Nested, includeInParent = true)
+  @Schema(description = "All active and convicted offences for this prisoner")
+  @DiffableProperty(DiffCategory.SENTENCE)
+  var offences: List<Offence>? = null
+
   @Schema(description = "Indicates that the prisoner has been recalled", example = "false")
   @DiffableProperty(DiffCategory.STATUS)
   var recall: Boolean? = null

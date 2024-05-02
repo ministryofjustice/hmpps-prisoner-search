@@ -40,6 +40,7 @@ data class OffenderBooking(
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
+  val allOffences: List<OffenceHistoryDetail>? = null,
 ) : Diffable<OffenderBooking> {
   override fun diff(newEndpointBooking: OffenderBooking): DiffResult<OffenderBooking> = getDiffResult(this, newEndpointBooking)
 }
