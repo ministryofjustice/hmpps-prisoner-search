@@ -209,7 +209,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 firstName = "NEW_NAME",
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -240,7 +240,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 firstName = "NEW_NAME",
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -268,7 +268,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 released = true,
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -299,7 +299,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 released = false,
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -332,7 +332,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 alertCodes = listOf("X" to "XTACT", "W" to "WO"),
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -365,7 +365,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 heightCentimetres = 190,
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -399,7 +399,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 alertCodes = listOf("W" to "WO"),
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -433,7 +433,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 firstName = "NEW_NAME",
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -490,7 +490,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
                 prisonerNumber = "A1239DD",
                 bookingId = null,
                 firstName = "NEW_NAME",
-              ).toOffenderBookingOld(),
+              ).toOffenderBookingNewEndpoint(),
             ),
         ),
     )
@@ -513,7 +513,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(builder.toOffenderBookingOld()),
+            .withBody(builder.toOffenderBookingNewEndpoint()),
         ),
     )
     offenderQueueSqsClient.sendMessage(
@@ -551,7 +551,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = null).toOffenderBookingOld()),
+            .withBody(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = null).toOffenderBookingNewEndpoint()),
         ),
     )
   }
