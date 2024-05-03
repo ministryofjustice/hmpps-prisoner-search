@@ -42,7 +42,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Al
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBookingOld
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
@@ -266,118 +265,6 @@ data class PrisonerBuilder(
   val sentenceDetail: SentenceDetail? = null,
   val offenceHistory: List<OffenceHistoryDetail>? = null,
 ) {
-
-  private fun getOffenderBookingOldTemplate(): OffenderBookingOld =
-    GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBookingOld::class.java)
-
-  fun toOffenderBookingOld(): String = GsonConfig().gson().toJson(
-    getOffenderBookingOldTemplate().copy(
-      offenderNo = this.prisonerNumber,
-      bookingId = this.bookingId,
-      firstName = this.firstName,
-      lastName = this.lastName,
-      agencyId = this.agencyId,
-      dateOfBirth = LocalDate.parse(this.dateOfBirth),
-      physicalAttributes = PhysicalAttributes(
-        gender = this.gender,
-        raceCode = null,
-        ethnicity = this.ethnicity,
-        heightFeet = null,
-        heightInches = null,
-        heightMetres = null,
-        heightCentimetres = this.heightCentimetres,
-        weightPounds = null,
-        weightKilograms = this.weightKilograms,
-      ),
-      assignedLivingUnit = AssignedLivingUnit(
-        agencyId = this.agencyId,
-        locationId = this.assignedLivingUnitLocationId,
-        description = this.cellLocation,
-        agencyName = "$agencyId (HMP)",
-      ),
-      alerts = this.alertCodes.map { (type, code) ->
-        Alert(
-          alertId = Random.nextLong(),
-          offenderNo = this.prisonerNumber,
-          alertCode = code,
-          alertCodeDescription = "Code description for $code",
-          alertType = type,
-          alertTypeDescription = "Type Description for $type",
-          // In search all alerts are not expired and active
-          expired = false,
-          active = true,
-          dateCreated = LocalDate.now(),
-        )
-      },
-      aliases = this.aliases.map { a ->
-        Alias(
-          gender = a.gender,
-          ethnicity = a.ethnicity,
-          firstName = this.firstName,
-          middleName = null,
-          lastName = this.lastName,
-          age = null,
-          dob = LocalDate.parse(this.dateOfBirth),
-          nameType = null,
-          createDate = LocalDate.now(),
-        )
-      },
-      physicalCharacteristics = mutableListOf<PhysicalCharacteristic>().also { pcs ->
-        this.physicalCharacteristics?.hairColour?.let {
-          pcs.add(PhysicalCharacteristic("HAIR", "Hair Colour", it, null))
-        }
-        this.physicalCharacteristics?.rightEyeColour?.let {
-          pcs.add(PhysicalCharacteristic("R_EYE_C", "Right Eye Colour", it, null))
-        }
-        this.physicalCharacteristics?.leftEyeColour?.let {
-          pcs.add(PhysicalCharacteristic("L_EYE_C", "Left Eye Colour", it, null))
-        }
-        this.physicalCharacteristics?.facialHair?.let {
-          pcs.add(PhysicalCharacteristic("FACIAL_HAIR", "Facial Hair", it, null))
-        }
-        this.physicalCharacteristics?.shapeOfFace?.let {
-          pcs.add(PhysicalCharacteristic("FACE", "Shape of Face", it, null))
-        }
-        this.physicalCharacteristics?.build?.let {
-          pcs.add(PhysicalCharacteristic("BUILD", "Build", it, null))
-        }
-        this.physicalCharacteristics?.shoeSize?.let {
-          pcs.add(PhysicalCharacteristic("SHOESIZE", "Shoe Size", it.toString(), null))
-        }
-      },
-      physicalMarks = mutableListOf<PhysicalMark>().also { pms ->
-        this.physicalMarks?.tattoo?.forEach {
-          pms.add(PhysicalMark("Tattoo", null, it.bodyPart, null, it.comment, null))
-        }
-        this.physicalMarks?.mark?.forEach {
-          pms.add(PhysicalMark("Mark", null, it.bodyPart, null, it.comment, null))
-        }
-        this.physicalMarks?.other?.forEach {
-          pms.add(PhysicalMark("Other", null, it.bodyPart, null, it.comment, null))
-        }
-        this.physicalMarks?.scar?.forEach {
-          pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
-        }
-      },
-      sentenceDetail = sentenceDetail,
-      offenceHistory = offenceHistory,
-    ).let {
-      if (released) {
-        it.copy(
-          status = "INACTIVE OUT",
-          lastMovementTypeCode = "REL",
-          lastMovementReasonCode = "HP",
-          inOutStatus = "OUT",
-          agencyId = "OUT",
-        )
-      } else {
-        it.copy(
-          lastMovementTypeCode = "ADM",
-          lastMovementReasonCode = "I",
-        )
-      }
-    },
-  )
 
   fun toOffenderBookingNewEndpoint(): String = GsonConfig().gson().toJson(
     OffenderBooking(
