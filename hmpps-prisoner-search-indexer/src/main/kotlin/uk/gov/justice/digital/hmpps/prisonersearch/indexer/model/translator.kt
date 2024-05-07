@@ -2,6 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Address as NomisAddress
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
   this.prisonerNumber = ob.offenderNo
@@ -138,6 +140,8 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
 
+  this.addresses = ob.addresses?.map { it.toAddress() }
+
   return this
 }
 
@@ -158,3 +162,41 @@ private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail,
   } else {
     this
   }
+
+private fun NomisAddress.toAddress(): Address {
+  val address = mutableListOf<String>()
+
+  fun MutableList<String>.addIfNotEmpty(value: String?) {
+    if (!value.isNullOrBlank()) {
+      add(value.trim())
+    }
+  }
+
+  // Append "Flat" if there is one
+  if (!flat.isNullOrBlank()) {
+    address.add("Flat ${flat.trim()}")
+  }
+  // Don't separate a numeric premise from the street, only if it's a name
+  val hasPremise = !premise.isNullOrBlank()
+  val premiseIsNumber = premise?.all { char -> char.isDigit() } ?: false
+  val hasStreet = !street.isNullOrBlank()
+  when {
+    hasPremise && premiseIsNumber && hasStreet -> address.add("$premise $street")
+    hasPremise && !premiseIsNumber && hasStreet -> address.add("$premise, $street")
+    hasPremise -> address.add(premise!!)
+    hasStreet -> address.add(street!!)
+  }
+  // Add others if they exist
+  address.addIfNotEmpty(locality)
+  address.addIfNotEmpty(town)
+  address.addIfNotEmpty(county)
+  address.addIfNotEmpty(postalCode)
+  address.addIfNotEmpty(country)
+
+  return Address(
+    fullAddress = address.joinToString(", "),
+    postalCode = postalCode,
+    startDate = startDate,
+    primaryAddress = primary,
+  )
+}

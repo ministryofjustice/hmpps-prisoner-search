@@ -411,6 +411,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.PHYSICAL_DETAILS)
   var marks: List<BodyPartDetail>? = null
 
+  @Field(type = FieldType.Nested, includeInParent = true)
+  @Schema(description = "Addresses")
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  var addresses: List<Address>? = null
+
   override fun diff(other: Prisoner): DiffResult<Prisoner> = getDiffResult(this, other)
 
   @get:JsonIgnore
