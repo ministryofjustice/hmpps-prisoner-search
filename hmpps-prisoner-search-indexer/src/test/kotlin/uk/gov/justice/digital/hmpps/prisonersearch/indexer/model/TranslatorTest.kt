@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.Agency
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Se
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Address as NomisAddress
 
 class TranslatorTest {
 
@@ -530,6 +532,134 @@ class TranslatorTest {
       BodyPartDetail("Shoulder", "Mark scar"),
       BodyPartDetail("Hand", "Other mark SCAR"),
     )
+  }
+
+  @Nested
+  inner class Addresses {
+    @Test
+    fun `should map all address fields`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, LocalDate.now()),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses).containsExactly(
+        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", LocalDate.now(), true),
+      )
+    }
+
+    @Test
+    fun `should handle missing flat`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, null, "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, LocalDate.now()),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses).containsExactly(
+        Address("3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", LocalDate.now(), true),
+      )
+    }
+
+    @Test
+    fun `should handle multiple addresses`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, LocalDate.now()),
+            NomisAddress(2, null, "1", "Big Street", null, "Sheffield", "S11 1BB", null, null, false, LocalDate.now()),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses).containsExactly(
+        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", LocalDate.now(), true),
+        Address("1 Big Street, Sheffield, S11 1BB", "S11 1BB", LocalDate.now(), false),
+      )
+    }
+
+    @Test
+    fun `should handle different combinations of premise and street`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, null, "1", "Main Street", "locality", "any", "any", "any", "any", true, LocalDate.now()),
+            NomisAddress(2, null, "Big House", "Main Street", "locality", "any", "any", "any", "any", true, LocalDate.now()),
+            NomisAddress(3, null, "Big House", null, "locality", "any", "any", "any", "any", true, LocalDate.now()),
+            NomisAddress(4, null, null, "Main Street", "locality", "any", "any", "any", "any", true, LocalDate.now()),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses!![0].fullAddress).startsWith("1 Main Street, locality, ")
+      assertThat(prisoner.addresses!![1].fullAddress).startsWith("Big House, Main Street, locality, ")
+      assertThat(prisoner.addresses!![2].fullAddress).startsWith("Big House, locality, ")
+      assertThat(prisoner.addresses!![3].fullAddress).startsWith("Main Street, locality, ")
+    }
+
+    @Test
+    fun `should handle missing address fields`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, null, null, null, null, null, "S11 1BB", null, null, false, LocalDate.now()),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses).containsExactly(
+        Address("S11 1BB", "S11 1BB", LocalDate.now(), false),
+      )
+    }
+
+    @Test
+    fun `should handle missing postal code`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", null, "South Yorkshire", "England", true, LocalDate.now()),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses).containsExactly(
+        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, England", null, LocalDate.now(), true),
+      )
+    }
+
+    @Test
+    fun `should handle missing start date`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, null),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses).containsExactly(
+        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", null, true),
+      )
+    }
   }
 }
 

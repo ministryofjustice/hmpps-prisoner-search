@@ -67,6 +67,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
       strings = [
         "OFFENDER-INSERTED", "OFFENDER-UPDATED", "OFFENDER_DETAILS-CHANGED", "OFFENDER_ALIAS-CHANGED",
         "OFFENDER_PHYSICAL_DETAILS-CHANGED", "OFFENDER_IDENTIFIER-UPDATED", "ASSESSMENT-UPDATED_REPUBLISHED",
+        "OFFENDER_ADDRESS-INSERTED", "OFFENDER_ADDRESS-UPDATED",
       ],
     )
     internal fun `will call service for offender change`(eventType: String) {
