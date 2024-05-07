@@ -4,7 +4,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
@@ -110,14 +109,6 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.actualParoleDate = ob.sentenceDetail?.actualParoleDate
 
   this.mostSeriousOffence = ob.mostSeriousOffence
-  this.offences = ob.allOffences?.map {
-    Offence(
-      code = it.offenceCode,
-      description = it.offenceDescription,
-      offenceDate = it.offenceDate,
-      latestBooking = it.bookingId == ob.bookingId,
-    )
-  }?.sortedBy { it.offenceDate }
   this.recall = ob.recall
   this.legalStatus = ob.legalStatus
   this.imprisonmentStatus = ob.imprisonmentStatus

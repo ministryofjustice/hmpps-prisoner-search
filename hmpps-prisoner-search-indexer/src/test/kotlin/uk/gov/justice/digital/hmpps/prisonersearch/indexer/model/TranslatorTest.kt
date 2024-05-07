@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.groups.Tuple
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
@@ -10,7 +9,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
@@ -532,46 +530,6 @@ class TranslatorTest {
       BodyPartDetail("Shoulder", "Mark scar"),
       BodyPartDetail("Hand", "Other mark SCAR"),
     )
-  }
-
-  @Test
-  fun `offences are mapped`() {
-    val prisoner = Prisoner().translate(
-      ob = aBooking().copy(
-        bookingId = 2,
-        allOffences = listOf(
-          OffenceHistoryDetail(
-            bookingId = 2,
-            offenceDate = LocalDate.of(2021, 1, 1),
-            offenceRangeDate = LocalDate.of(2021, 1, 2),
-            offenceDescription = "Active booking offence",
-            offenceCode = "MD1234",
-            statuteCode = "MD12",
-            mostSerious = true,
-            offenceSeverityRanking = 100,
-          ),
-          OffenceHistoryDetail(
-            bookingId = 1,
-            offenceDate = LocalDate.of(2011, 1, 1),
-            offenceRangeDate = LocalDate.of(2011, 1, 2),
-            offenceDescription = "Old booking offence",
-            offenceCode = "RT1234",
-            statuteCode = "RT12",
-            mostSerious = true,
-            offenceSeverityRanking = 100,
-          ),
-        ),
-      ),
-      incentiveLevel = Result.success(null),
-      restrictedPatientData = Result.success(null),
-    )
-
-    assertThat(prisoner.offences)
-      .extracting("code", "description", "offenceDate", "latestBooking", "active", "convicted")
-      .containsExactly(
-        Tuple.tuple("RT1234", "Old booking offence", LocalDate.of(2011, 1, 1), false, true, true),
-        Tuple.tuple("MD1234", "Active booking offence", LocalDate.of(2021, 1, 1), true, true, true),
-      )
   }
 }
 
