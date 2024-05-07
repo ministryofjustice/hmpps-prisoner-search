@@ -23,7 +23,7 @@ spec:
             {{ $businessOrAllHoursExpression }}
           for: 3h
           labels:
-            severity: syscon
+            severity: {{ index .Values "generic-prometheus-alerts" "alertSeverity" }}
         - alert: SQS-number-of-messages
           annotations:
             dashboard_url: {{ $.Values.grafanaUrl }}/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $sqsLabelQueueName }}&from=now-6h&to=now
@@ -34,4 +34,4 @@ spec:
             {{ $businessOrAllHoursExpression }}
           for: 3h
           labels:
-            severity: syscon
+            severity: {{ index .Values "generic-prometheus-alerts" "alertSeverity" }}
