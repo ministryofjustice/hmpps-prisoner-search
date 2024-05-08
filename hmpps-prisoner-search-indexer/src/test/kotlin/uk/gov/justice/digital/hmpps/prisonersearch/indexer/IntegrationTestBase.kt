@@ -266,7 +266,7 @@ data class PrisonerBuilder(
   val offenceHistory: List<OffenceHistoryDetail>? = null,
 ) {
 
-  fun toOffenderBookingNewEndpoint(): String = GsonConfig().gson().toJson(
+  fun toOffenderBooking(): String = GsonConfig().gson().toJson(
     OffenderBooking(
       offenderNo = this.prisonerNumber,
       bookingNo = "V61587",

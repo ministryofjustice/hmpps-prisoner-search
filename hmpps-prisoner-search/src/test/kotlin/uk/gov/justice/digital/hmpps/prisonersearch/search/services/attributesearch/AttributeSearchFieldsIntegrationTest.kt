@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
@@ -136,6 +137,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     tariffDate = LocalDate.parse("2024-01-18")
     releaseOnTemporaryLicenceDate = LocalDate.parse("2024-01-19")
     dischargeDate = LocalDate.parse("2024-01-20")
+    addresses = listOf(Address("1 Full Address, Sheffield, S10 1BP", "S10 1BP", LocalDate.parse("2024-01-22"), true))
   }
 
   override fun loadPrisonerData() {
@@ -199,6 +201,8 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "scars.comment,Scar on left cheek",
     "marks.bodyPart,Left Arm",
     "marks.comment,Tribal tattoo",
+    "addresses.fullAddress,'1 Full Address, Sheffield, S10 1BP'",
+    "addresses.postalCode,S10 1BP",
   )
   fun `string fields`(field: String, value: String) {
     val request = RequestDsl {
@@ -235,6 +239,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "restrictedPatient,true",
     "alerts.active,true",
     "alerts.expired,false",
+    "addresses.primaryAddress,true",
   )
   fun `boolean fields`(field: String, value: Boolean) {
     val request = RequestDsl {
@@ -270,6 +275,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "releaseOnTemporaryLicenceDate,2024-01-19",
     "dischargeDate,2024-01-20",
     "currentIncentive.nextReviewDate,2024-01-21",
+    "addresses.startDate,2024-01-22",
   )
   fun `date fields`(field: String, value: String) {
     val request = RequestDsl {
