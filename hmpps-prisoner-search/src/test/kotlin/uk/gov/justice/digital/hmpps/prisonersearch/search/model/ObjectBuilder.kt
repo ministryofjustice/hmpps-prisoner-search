@@ -1,19 +1,19 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
 import org.apache.commons.lang3.RandomStringUtils
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.search.config.GsonConfig
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.Alias
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.IncentiveLevelDto
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalAttributes
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalCharacteristic
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.PhysicalMark
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.ProfileInformation
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -101,9 +101,9 @@ fun numbers(length: Int): String {
   return RandomStringUtils.random(length, false, true)
 }
 
-fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevelDto? =
+fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? =
   this.currentIncentive?.let {
-    IncentiveLevelDto(
+    IncentiveLevel(
       iepCode = it.levelCode,
       iepLevel = it.levelDescription,
       iepTime = it.dateTime,
@@ -238,5 +238,5 @@ fun PrisonerBuilder.toPrisoner(): Prisoner =
 private fun getOffenderBookingTemplate(): OffenderBooking =
   GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
 
-fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevelDto?, restrictedPatientData: RestrictedPatient?) =
-  Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), restrictedPatientData) }
+fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) =
+  Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), Result.success(restrictedPatientData)) }

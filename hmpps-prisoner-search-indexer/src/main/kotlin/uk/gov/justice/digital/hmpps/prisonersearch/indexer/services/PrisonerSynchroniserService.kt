@@ -4,12 +4,12 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 
 @Service
 class PrisonerSynchroniserService(

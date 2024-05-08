@@ -27,12 +27,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_DATABASE_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService

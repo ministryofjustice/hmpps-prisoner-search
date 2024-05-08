@@ -22,11 +22,11 @@ import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.AssignedLivingUnit
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()

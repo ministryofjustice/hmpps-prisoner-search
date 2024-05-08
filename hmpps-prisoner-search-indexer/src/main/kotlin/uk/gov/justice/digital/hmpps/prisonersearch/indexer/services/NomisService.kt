@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import reactor.core.publisher.Mono
 import reactor.netty.http.client.HttpClientRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import java.time.Duration
 
 @Service

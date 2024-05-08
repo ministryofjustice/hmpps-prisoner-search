@@ -1,19 +1,11 @@
 @file:Suppress("ktlint:standard:filename")
 
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
+package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberLong
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Address as NomisAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
   this.prisonerNumber = ob.offenderNo
@@ -147,7 +139,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
 
 private fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
   CurrentIncentive(
-    level = uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel(it.iepCode, it.iepLevel),
+    level = IncentiveLevel(it.iepCode, it.iepLevel),
     nextReviewDate = it.nextReviewDate,
     // ES only stores to the second
     dateTime = it.iepTime.withNano(0),

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis
+package uk.gov.justice.digital.hmpps.prisonersearch.common.nomis
 
 import java.time.LocalDate
 
