@@ -5,7 +5,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
-import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import java.time.LocalDateTime
 
 @Service
@@ -27,22 +28,7 @@ class RestrictedPatientService(@Qualifier("restrictedPatientsWebClient") private
       }
 }
 
-data class RestrictedPatient(
-  var supportingPrisonId: String?,
-  val dischargedHospital: Agency?,
-  val dischargeDate: LocalDate,
-  val dischargeDetails: String?,
-)
-
-data class Agency(
-  val agencyId: String,
-  val description: String? = null,
-  val longDescription: String? = null,
-  val agencyType: String,
-  val active: Boolean,
-)
-
-data class RestrictedPatientDto(
+private data class RestrictedPatientDto(
   val id: Long,
   val prisonerNumber: String,
   val supportingPrison: Agency,

@@ -1,24 +1,20 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
+package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.Agency
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalAttributes
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalCharacteristic
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.PhysicalMark
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.SentenceDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.SentenceDetail
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.dto.nomis.Address as NomisAddress
 
 class TranslatorTest {
 
@@ -31,11 +27,11 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.prisonerNumber).isEqualTo("A1234AA")
-    assertThat(prisoner.firstName).isEqualTo("Fred")
-    assertThat(prisoner.lastName).isEqualTo("Bloggs")
-    assertThat(prisoner.dateOfBirth).isEqualTo(dateOfBirth)
-    assertThat(prisoner.bookingId).isNull()
+    Assertions.assertThat(prisoner.prisonerNumber).isEqualTo("A1234AA")
+    Assertions.assertThat(prisoner.firstName).isEqualTo("Fred")
+    Assertions.assertThat(prisoner.lastName).isEqualTo("Bloggs")
+    Assertions.assertThat(prisoner.dateOfBirth).isEqualTo(dateOfBirth)
+    Assertions.assertThat(prisoner.bookingId).isNull()
   }
 
   @Test
@@ -52,7 +48,7 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.topupSupervisionExpiryDate).isEqualTo(tseDate)
+    Assertions.assertThat(prisoner.topupSupervisionExpiryDate).isEqualTo(tseDate)
   }
 
   @Test
@@ -69,7 +65,7 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.topupSupervisionStartDate).isEqualTo(tssDate)
+    Assertions.assertThat(prisoner.topupSupervisionStartDate).isEqualTo(tssDate)
   }
 
   @Test
@@ -86,7 +82,7 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.homeDetentionCurfewEndDate).isEqualTo(hdcend)
+    Assertions.assertThat(prisoner.homeDetentionCurfewEndDate).isEqualTo(hdcend)
   }
 
   @Test
@@ -113,9 +109,9 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseOverrideDate)
-    assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseOverrideDate)
-    assertThat(prisoner.postRecallReleaseDate).isEqualTo(postRecallReleaseOverrideDate)
+    Assertions.assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseOverrideDate)
+    Assertions.assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseOverrideDate)
+    Assertions.assertThat(prisoner.postRecallReleaseDate).isEqualTo(postRecallReleaseOverrideDate)
   }
 
   @Test
@@ -138,9 +134,9 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
-    assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseDate)
-    assertThat(prisoner.postRecallReleaseDate).isEqualTo(postRecallReleaseDate)
+    Assertions.assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
+    Assertions.assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseDate)
+    Assertions.assertThat(prisoner.postRecallReleaseDate).isEqualTo(postRecallReleaseDate)
   }
 
   @Test
@@ -157,8 +153,8 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.imprisonmentStatus).isEqualTo("LIFE")
-    assertThat(prisoner.imprisonmentStatusDescription).isEqualTo("Serving Life Imprisonment")
+    Assertions.assertThat(prisoner.imprisonmentStatus).isEqualTo("LIFE")
+    Assertions.assertThat(prisoner.imprisonmentStatusDescription).isEqualTo("Serving Life Imprisonment")
   }
 
   @Test
@@ -184,7 +180,7 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.alerts?.first())
+    Assertions.assertThat(prisoner.alerts?.first())
       .extracting("alertType", "alertCode", "active", "expired")
       .contains("x-type", "x-code", true, false)
   }
@@ -204,12 +200,12 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.currentIncentive).isNotNull
-    assertThat(prisoner.currentIncentive?.level).isNotNull
-    assertThat(prisoner.currentIncentive?.level?.code).isEqualTo("STD")
-    assertThat(prisoner.currentIncentive?.level?.description).isEqualTo("Standard")
-    assertThat(prisoner.currentIncentive?.dateTime).isEqualTo(LocalDateTime.parse("2021-01-01T11:00:00"))
-    assertThat(prisoner.currentIncentive?.nextReviewDate).isEqualTo(LocalDate.parse("2022-02-02"))
+    Assertions.assertThat(prisoner.currentIncentive).isNotNull
+    Assertions.assertThat(prisoner.currentIncentive?.level).isNotNull
+    Assertions.assertThat(prisoner.currentIncentive?.level?.code).isEqualTo("STD")
+    Assertions.assertThat(prisoner.currentIncentive?.level?.description).isEqualTo("Standard")
+    Assertions.assertThat(prisoner.currentIncentive?.dateTime).isEqualTo(LocalDateTime.parse("2021-01-01T11:00:00"))
+    Assertions.assertThat(prisoner.currentIncentive?.nextReviewDate).isEqualTo(LocalDate.parse("2022-02-02"))
   }
 
   @Test
@@ -228,12 +224,12 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.currentIncentive).isNotNull
-    assertThat(prisoner.currentIncentive?.level).isNotNull
-    assertThat(prisoner.currentIncentive?.level?.code).isEqualTo("STD")
-    assertThat(prisoner.currentIncentive?.level?.description).isEqualTo("Standard")
-    assertThat(prisoner.currentIncentive?.dateTime).isEqualTo(LocalDateTime.parse("2021-01-01T11:00:00"))
-    assertThat(prisoner.currentIncentive?.nextReviewDate).isEqualTo(LocalDate.parse("2022-02-02"))
+    Assertions.assertThat(prisoner.currentIncentive).isNotNull
+    Assertions.assertThat(prisoner.currentIncentive?.level).isNotNull
+    Assertions.assertThat(prisoner.currentIncentive?.level?.code).isEqualTo("STD")
+    Assertions.assertThat(prisoner.currentIncentive?.level?.description).isEqualTo("Standard")
+    Assertions.assertThat(prisoner.currentIncentive?.dateTime).isEqualTo(LocalDateTime.parse("2021-01-01T11:00:00"))
+    Assertions.assertThat(prisoner.currentIncentive?.nextReviewDate).isEqualTo(LocalDate.parse("2022-02-02"))
   }
 
   @Test
@@ -256,13 +252,13 @@ class TranslatorTest {
       ),
     )
 
-    assertThat(prisoner.restrictedPatient).isTrue
-    assertThat(prisoner.supportingPrisonId).isEqualTo("MDI")
-    assertThat(prisoner.dischargedHospitalId).isEqualTo("HAZLWD")
-    assertThat(prisoner.dischargedHospitalDescription).isEqualTo("Hazelwood Hospital")
-    assertThat(prisoner.dischargeDate).isEqualTo(LocalDate.now())
-    assertThat(prisoner.dischargeDetails).isEqualTo("Getting worse")
-    assertThat(prisoner.locationDescription).isEqualTo("OUT - discharged to Hazelwood Hospital")
+    Assertions.assertThat(prisoner.restrictedPatient).isTrue
+    Assertions.assertThat(prisoner.supportingPrisonId).isEqualTo("MDI")
+    Assertions.assertThat(prisoner.dischargedHospitalId).isEqualTo("HAZLWD")
+    Assertions.assertThat(prisoner.dischargedHospitalDescription).isEqualTo("Hazelwood Hospital")
+    Assertions.assertThat(prisoner.dischargeDate).isEqualTo(LocalDate.now())
+    Assertions.assertThat(prisoner.dischargeDetails).isEqualTo("Getting worse")
+    Assertions.assertThat(prisoner.locationDescription).isEqualTo("OUT - discharged to Hazelwood Hospital")
   }
 
   @Test
@@ -273,13 +269,13 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.restrictedPatient).isFalse
-    assertThat(prisoner.supportingPrisonId).isNull()
-    assertThat(prisoner.dischargedHospitalId).isNull()
-    assertThat(prisoner.dischargedHospitalDescription).isNull()
-    assertThat(prisoner.dischargeDate).isNull()
-    assertThat(prisoner.dischargeDetails).isNull()
-    assertThat(prisoner.locationDescription).isEqualTo("OUT")
+    Assertions.assertThat(prisoner.restrictedPatient).isFalse
+    Assertions.assertThat(prisoner.supportingPrisonId).isNull()
+    Assertions.assertThat(prisoner.dischargedHospitalId).isNull()
+    Assertions.assertThat(prisoner.dischargedHospitalDescription).isNull()
+    Assertions.assertThat(prisoner.dischargeDate).isNull()
+    Assertions.assertThat(prisoner.dischargeDetails).isNull()
+    Assertions.assertThat(prisoner.locationDescription).isEqualTo("OUT")
   }
 
   @Test
@@ -290,7 +286,7 @@ class TranslatorTest {
       restrictedPatientData = Result.success(null),
     )
 
-    assertThat(prisoner.lastPrisonId).isEqualTo("LEI")
+    Assertions.assertThat(prisoner.lastPrisonId).isEqualTo("LEI")
   }
 
   @Nested
@@ -317,12 +313,12 @@ class TranslatorTest {
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.currentIncentive).isNotNull
-      assertThat(prisoner.currentIncentive?.level).isNotNull
-      assertThat(prisoner.currentIncentive?.level?.code).isEqualTo("STD")
-      assertThat(prisoner.currentIncentive?.level?.description).isEqualTo("Standard")
-      assertThat(prisoner.currentIncentive?.dateTime).isEqualTo(LocalDateTime.parse("2021-01-01T11:00:00"))
-      assertThat(prisoner.currentIncentive?.nextReviewDate).isEqualTo(LocalDate.parse("2022-02-02"))
+      Assertions.assertThat(prisoner.currentIncentive).isNotNull
+      Assertions.assertThat(prisoner.currentIncentive?.level).isNotNull
+      Assertions.assertThat(prisoner.currentIncentive?.level?.code).isEqualTo("STD")
+      Assertions.assertThat(prisoner.currentIncentive?.level?.description).isEqualTo("Standard")
+      Assertions.assertThat(prisoner.currentIncentive?.dateTime).isEqualTo(LocalDateTime.parse("2021-01-01T11:00:00"))
+      Assertions.assertThat(prisoner.currentIncentive?.nextReviewDate).isEqualTo(LocalDate.parse("2022-02-02"))
     }
 
     @Test
@@ -334,7 +330,7 @@ class TranslatorTest {
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.currentIncentive).isNull()
+      Assertions.assertThat(prisoner.currentIncentive).isNull()
     }
 
     @Test
@@ -352,7 +348,7 @@ class TranslatorTest {
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.currentIncentive).isNull()
+      Assertions.assertThat(prisoner.currentIncentive).isNull()
     }
   }
 
@@ -385,13 +381,13 @@ class TranslatorTest {
         restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
       )
 
-      assertThat(prisoner.locationDescription).isEqualTo("OUT - discharged to Hazelwood Hospital")
-      assertThat(prisoner.restrictedPatient).isTrue
-      assertThat(prisoner.supportingPrisonId).isEqualTo("MDI")
-      assertThat(prisoner.dischargedHospitalId).isEqualTo("HAZLWD")
-      assertThat(prisoner.dischargedHospitalDescription).isEqualTo("Hazelwood Hospital")
-      assertThat(prisoner.dischargeDate).isEqualTo(LocalDate.now())
-      assertThat(prisoner.dischargeDetails).isEqualTo("Getting worse")
+      Assertions.assertThat(prisoner.locationDescription).isEqualTo("OUT - discharged to Hazelwood Hospital")
+      Assertions.assertThat(prisoner.restrictedPatient).isTrue
+      Assertions.assertThat(prisoner.supportingPrisonId).isEqualTo("MDI")
+      Assertions.assertThat(prisoner.dischargedHospitalId).isEqualTo("HAZLWD")
+      Assertions.assertThat(prisoner.dischargedHospitalDescription).isEqualTo("Hazelwood Hospital")
+      Assertions.assertThat(prisoner.dischargeDate).isEqualTo(LocalDate.now())
+      Assertions.assertThat(prisoner.dischargeDetails).isEqualTo("Getting worse")
     }
 
     @Test
@@ -403,9 +399,9 @@ class TranslatorTest {
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.restrictedPatient).isFalse()
-      assertThat(prisoner.locationDescription).isEqualTo("previous location")
-      assertThat(prisoner.supportingPrisonId).isNull()
+      Assertions.assertThat(prisoner.restrictedPatient).isFalse()
+      Assertions.assertThat(prisoner.locationDescription).isEqualTo("previous location")
+      Assertions.assertThat(prisoner.supportingPrisonId).isNull()
     }
 
     @Test
@@ -423,9 +419,9 @@ class TranslatorTest {
         restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
       )
 
-      assertThat(prisoner.restrictedPatient).isFalse()
-      assertThat(prisoner.locationDescription).isEqualTo("OUT")
-      assertThat(prisoner.supportingPrisonId).isNull()
+      Assertions.assertThat(prisoner.restrictedPatient).isFalse()
+      Assertions.assertThat(prisoner.locationDescription).isEqualTo("OUT")
+      Assertions.assertThat(prisoner.supportingPrisonId).isNull()
     }
   }
 
@@ -448,10 +444,10 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.gender).isEqualTo("M")
-    assertThat(prisoner.ethnicity).isEqualTo("W")
-    assertThat(prisoner.heightCentimetres).isEqualTo(200)
-    assertThat(prisoner.weightKilograms).isEqualTo(100)
+    Assertions.assertThat(prisoner.gender).isEqualTo("M")
+    Assertions.assertThat(prisoner.ethnicity).isEqualTo("W")
+    Assertions.assertThat(prisoner.heightCentimetres).isEqualTo(200)
+    Assertions.assertThat(prisoner.weightKilograms).isEqualTo(100)
   }
 
   @Test
@@ -471,13 +467,13 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.hairColour).isEqualTo("Red")
-    assertThat(prisoner.rightEyeColour).isEqualTo("Green")
-    assertThat(prisoner.leftEyeColour).isEqualTo("Hazel")
-    assertThat(prisoner.facialHair).isEqualTo("Clean Shaven")
-    assertThat(prisoner.shapeOfFace).isEqualTo("Bullet")
-    assertThat(prisoner.build).isEqualTo("Proportional")
-    assertThat(prisoner.shoeSize).isEqualTo(10)
+    Assertions.assertThat(prisoner.hairColour).isEqualTo("Red")
+    Assertions.assertThat(prisoner.rightEyeColour).isEqualTo("Green")
+    Assertions.assertThat(prisoner.leftEyeColour).isEqualTo("Hazel")
+    Assertions.assertThat(prisoner.facialHair).isEqualTo("Clean Shaven")
+    Assertions.assertThat(prisoner.shapeOfFace).isEqualTo("Bullet")
+    Assertions.assertThat(prisoner.build).isEqualTo("Proportional")
+    Assertions.assertThat(prisoner.shoeSize).isEqualTo(10)
   }
 
   @Test
@@ -495,9 +491,11 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.tattoos).containsExactly(BodyPartDetail("Elbow", "Comment here"), BodyPartDetail("Foot", null))
-    assertThat(prisoner.marks).containsExactly(BodyPartDetail("Ear", "Some comment"), BodyPartDetail("Arm", null))
-    assertThat(prisoner.scars).containsExactly(BodyPartDetail("Torso", null))
+    Assertions.assertThat(prisoner.tattoos)
+      .containsExactly(BodyPartDetail("Elbow", "Comment here"), BodyPartDetail("Foot", null))
+    Assertions.assertThat(prisoner.marks)
+      .containsExactly(BodyPartDetail("Ear", "Some comment"), BodyPartDetail("Arm", null))
+    Assertions.assertThat(prisoner.scars).containsExactly(BodyPartDetail("Torso", null))
   }
 
   @Test
@@ -516,17 +514,17 @@ class TranslatorTest {
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
-    assertThat(prisoner.tattoos).containsExactlyInAnyOrder(
+    Assertions.assertThat(prisoner.tattoos).containsExactlyInAnyOrder(
       BodyPartDetail("Elbow", "Comment here"),
       BodyPartDetail("Arm", "Mark tattoo"),
       BodyPartDetail("Head", "Other mark TATTOO"),
     )
-    assertThat(prisoner.scars).containsExactlyInAnyOrder(
+    Assertions.assertThat(prisoner.scars).containsExactlyInAnyOrder(
       BodyPartDetail("Torso", null),
       BodyPartDetail("Shoulder", "Mark scar"),
       BodyPartDetail("Hand", "Other mark SCAR"),
     )
-    assertThat(prisoner.marks).containsExactlyInAnyOrder(
+    Assertions.assertThat(prisoner.marks).containsExactlyInAnyOrder(
       BodyPartDetail("Arm", "Mark tattoo"),
       BodyPartDetail("Head", "Other mark TATTOO"),
       BodyPartDetail("Shoulder", "Mark scar"),
@@ -541,15 +539,32 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, LocalDate.now()),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              "2",
+              "3",
+              "Main Street",
+              "Crookes",
+              "Sheffield",
+              "S10 1AB",
+              "South Yorkshire",
+              "England",
+              true,
+              LocalDate.now(),
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses).containsExactly(
-        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", LocalDate.now(), true),
+      Assertions.assertThat(prisoner.addresses).containsExactly(
+        Address(
+          "Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England",
+          "S10 1AB",
+          LocalDate.now(),
+          true,
+        ),
       )
     }
 
@@ -558,15 +573,32 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, null, "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, LocalDate.now()),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              null,
+              "3",
+              "Main Street",
+              "Crookes",
+              "Sheffield",
+              "S10 1AB",
+              "South Yorkshire",
+              "England",
+              true,
+              LocalDate.now(),
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses).containsExactly(
-        Address("3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", LocalDate.now(), true),
+      Assertions.assertThat(prisoner.addresses).containsExactly(
+        Address(
+          "3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England",
+          "S10 1AB",
+          LocalDate.now(),
+          true,
+        ),
       )
     }
 
@@ -575,16 +607,45 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, LocalDate.now()),
-            NomisAddress(2, null, "1", "Big Street", null, "Sheffield", "S11 1BB", null, null, false, LocalDate.now()),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              "2",
+              "3",
+              "Main Street",
+              "Crookes",
+              "Sheffield",
+              "S10 1AB",
+              "South Yorkshire",
+              "England",
+              true,
+              LocalDate.now(),
+            ),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              2,
+              null,
+              "1",
+              "Big Street",
+              null,
+              "Sheffield",
+              "S11 1BB",
+              null,
+              null,
+              false,
+              LocalDate.now(),
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses).containsExactly(
-        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", LocalDate.now(), true),
+      Assertions.assertThat(prisoner.addresses).containsExactly(
+        Address(
+          "Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England",
+          "S10 1AB",
+          LocalDate.now(),
+          true,
+        ),
         Address("1 Big Street, Sheffield, S11 1BB", "S11 1BB", LocalDate.now(), false),
       )
     }
@@ -594,20 +655,68 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, null, "1", "Main Street", "locality", "any", "any", "any", "any", true, LocalDate.now()),
-            NomisAddress(2, null, "Big House", "Main Street", "locality", "any", "any", "any", "any", true, LocalDate.now()),
-            NomisAddress(3, null, "Big House", null, "locality", "any", "any", "any", "any", true, LocalDate.now()),
-            NomisAddress(4, null, null, "Main Street", "locality", "any", "any", "any", "any", true, LocalDate.now()),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              null,
+              "1",
+              "Main Street",
+              "locality",
+              "any",
+              "any",
+              "any",
+              "any",
+              true,
+              LocalDate.now(),
+            ),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              2,
+              null,
+              "Big House",
+              "Main Street",
+              "locality",
+              "any",
+              "any",
+              "any",
+              "any",
+              true,
+              LocalDate.now(),
+            ),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              3,
+              null,
+              "Big House",
+              null,
+              "locality",
+              "any",
+              "any",
+              "any",
+              "any",
+              true,
+              LocalDate.now(),
+            ),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              4,
+              null,
+              null,
+              "Main Street",
+              "locality",
+              "any",
+              "any",
+              "any",
+              "any",
+              true,
+              LocalDate.now(),
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses!![0].fullAddress).startsWith("1 Main Street, locality, ")
-      assertThat(prisoner.addresses!![1].fullAddress).startsWith("Big House, Main Street, locality, ")
-      assertThat(prisoner.addresses!![2].fullAddress).startsWith("Big House, locality, ")
-      assertThat(prisoner.addresses!![3].fullAddress).startsWith("Main Street, locality, ")
+      Assertions.assertThat(prisoner.addresses!![0].fullAddress).startsWith("1 Main Street, locality, ")
+      Assertions.assertThat(prisoner.addresses!![1].fullAddress).startsWith("Big House, Main Street, locality, ")
+      Assertions.assertThat(prisoner.addresses!![2].fullAddress).startsWith("Big House, locality, ")
+      Assertions.assertThat(prisoner.addresses!![3].fullAddress).startsWith("Main Street, locality, ")
     }
 
     @Test
@@ -615,14 +724,26 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, null, null, null, null, null, "S11 1BB", null, null, false, LocalDate.now()),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              null,
+              null,
+              null,
+              null,
+              null,
+              "S11 1BB",
+              null,
+              null,
+              false,
+              LocalDate.now(),
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses).containsExactly(
+      Assertions.assertThat(prisoner.addresses).containsExactly(
         Address("S11 1BB", "S11 1BB", LocalDate.now(), false),
       )
     }
@@ -632,14 +753,26 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", null, "South Yorkshire", "England", true, LocalDate.now()),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              "2",
+              "3",
+              "Main Street",
+              "Crookes",
+              "Sheffield",
+              null,
+              "South Yorkshire",
+              "England",
+              true,
+              LocalDate.now(),
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses).containsExactly(
+      Assertions.assertThat(prisoner.addresses).containsExactly(
         Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, England", null, LocalDate.now(), true),
       )
     }
@@ -649,14 +782,26 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(1, "2", "3", "Main Street", "Crookes", "Sheffield", "S10 1AB", "South Yorkshire", "England", true, null),
+            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+              1,
+              "2",
+              "3",
+              "Main Street",
+              "Crookes",
+              "Sheffield",
+              "S10 1AB",
+              "South Yorkshire",
+              "England",
+              true,
+              null,
+            ),
           ),
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
       )
 
-      assertThat(prisoner.addresses).containsExactly(
+      Assertions.assertThat(prisoner.addresses).containsExactly(
         Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", null, true),
       )
     }

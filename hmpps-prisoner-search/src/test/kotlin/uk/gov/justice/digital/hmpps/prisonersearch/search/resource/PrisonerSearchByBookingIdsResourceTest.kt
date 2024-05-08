@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.toPrisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds

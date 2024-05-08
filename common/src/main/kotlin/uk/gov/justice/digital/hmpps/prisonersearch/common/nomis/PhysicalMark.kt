@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.search.model.nomis.dto
+package uk.gov.justice.digital.hmpps.prisonersearch.common.nomis
 
 data class PhysicalMark(
   val type: String,
