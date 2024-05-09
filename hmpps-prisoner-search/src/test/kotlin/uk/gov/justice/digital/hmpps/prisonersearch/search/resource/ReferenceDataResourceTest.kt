@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceData
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.shapeOfFace
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.status
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.tattoosBodyPart
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.title
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataAttribute.youthOffender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReferenceDataResponse
 import java.util.stream.Stream
@@ -48,6 +49,7 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
     val prisonerData = listOf(
       PrisonerBuilder(
         prisonerNumber = "G7089EZ",
+        title = "Mr",
         agencyId = "LEI",
         cellLocation = "B-C1-010",
         gender = "Male",
@@ -78,6 +80,7 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AC",
+        title = null,
         agencyId = "AGI",
         cellLocation = "H-1-004",
         gender = "Female",
@@ -107,6 +110,7 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090AD",
+        title = "Mrs",
         agencyId = "AGI",
         cellLocation = "H-1-004",
         gender = "Not Known / Not Recorded",
@@ -127,6 +131,7 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
       ),
       PrisonerBuilder(
         prisonerNumber = "G7090BA",
+        title = "Ms",
         agencyId = "LEI",
         cellLocation = "B-C1-010",
         gender = "Male",
@@ -239,6 +244,7 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
       arguments(shapeOfFace, listOf("Bullet", "Oval", "Round"), null),
       arguments(status, listOf("ACTIVE IN"), listOf("Active Inside")),
       arguments(tattoosBodyPart, listOf("Ankle", "Finger", "Foot", "Knee"), null),
+      arguments(title, listOf("Mr", "Mrs", "Ms"), null),
       arguments(youthOffender, listOf("false", "true"), listOf("No", "Yes")),
     )
 

@@ -246,6 +246,7 @@ abstract class IntegrationTestBase {
 data class PrisonerBuilder(
   val prisonerNumber: String = generatePrisonerNumber(),
   val bookingId: Long? = generateBookingId(),
+  val title: String = "Mr",
   val firstName: String = "LUCAS",
   val lastName: String = "MORALES",
   val agencyId: String = "MDI",
@@ -310,6 +311,7 @@ data class PrisonerBuilder(
         Alias(
           gender = a.gender,
           ethnicity = a.ethnicity,
+          title = this.title,
           firstName = this.firstName,
           middleName = null,
           lastName = this.lastName,

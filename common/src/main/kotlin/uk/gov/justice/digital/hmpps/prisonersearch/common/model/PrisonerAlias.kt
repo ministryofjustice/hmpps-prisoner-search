@@ -7,6 +7,9 @@ import org.springframework.data.elasticsearch.annotations.FieldType
 import java.time.LocalDate
 
 data class PrisonerAlias(
+  @Schema(description = "Title", example = "Ms")
+  var title: String?,
+
   @Schema(description = "First Name", example = "Robert")
   val firstName: String,
 

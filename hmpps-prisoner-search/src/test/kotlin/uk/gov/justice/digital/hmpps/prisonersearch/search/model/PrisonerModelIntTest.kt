@@ -10,6 +10,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
 
   private val prisoner = PrisonerBuilder(
     prisonerNumber = "A1111AA",
+    title = "Mr",
     addresses = listOf(
       AddressBuilder(
         flat = "1",
@@ -24,6 +25,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
         primary = true,
       ),
     ),
+    aliases = listOf(AliasBuilder(title = "Ms")),
   )
 
   override fun loadPrisonerData() {
@@ -42,5 +44,17 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .jsonPath("addresses[0].postalCode").isEqualTo("S12 3DE")
       .jsonPath("addresses[0].primaryAddress").isEqualTo(true)
       .jsonPath("addresses[0].startDate").isEqualTo("2013-12-02")
+  }
+
+  @Test
+  fun `should save and retrieve title`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("title").isEqualTo("Mr")
+      .jsonPath("aliases[0].title").isEqualTo("Ms")
   }
 }

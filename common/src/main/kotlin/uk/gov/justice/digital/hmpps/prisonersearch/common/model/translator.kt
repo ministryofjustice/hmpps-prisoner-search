@@ -31,12 +31,13 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.csra = ob.csra
 
   this.dateOfBirth = ob.dateOfBirth
+  this.title = ob.title
   this.firstName = ob.firstName
   this.middleNames = ob.middleName
   this.lastName = ob.lastName
 
   this.aliases =
-    ob.aliases?.map { a -> PrisonerAlias(a.firstName, a.middleName, a.lastName, a.dob, a.gender, a.ethnicity) }
+    ob.aliases?.map { a -> PrisonerAlias(a.title, a.firstName, a.middleName, a.lastName, a.dob, a.gender, a.ethnicity) }
   this.alerts =
     ob.alerts?.filter { a -> a.active }?.map { a -> PrisonerAlert(a.alertType, a.alertCode, a.active, a.expired) }
 

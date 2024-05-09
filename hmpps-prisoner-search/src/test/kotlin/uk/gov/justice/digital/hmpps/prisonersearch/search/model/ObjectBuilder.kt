@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as Nomis
 data class PrisonerBuilder(
   val prisonerNumber: String = generatePrisonerNumber(),
   val bookingId: Long? = generateBookingId(),
+  val title: String? = "Mr",
   val firstName: String = "LUCAS",
   val lastName: String = "MORALES",
   val agencyId: String = "MDI",
@@ -76,6 +77,8 @@ data class BodyPartBuilder(
 data class AliasBuilder(
   val gender: String? = null,
   val ethnicity: String? = null,
+  val title: String? = null,
+  val firstName: String? = null,
 )
 
 data class IncentiveLevelBuilder(
@@ -130,6 +133,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
   getOffenderBookingTemplate().copy(
     offenderNo = this.prisonerNumber,
     bookingId = this.bookingId,
+    title = this.title,
     firstName = this.firstName,
     lastName = this.lastName,
     agencyId = this.agencyId,
@@ -169,7 +173,8 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       Alias(
         gender = a.gender,
         ethnicity = a.ethnicity,
-        firstName = this.firstName,
+        title = a.title ?: this.title,
+        firstName = a.firstName ?: this.firstName,
         middleName = null,
         lastName = this.lastName,
         age = null,

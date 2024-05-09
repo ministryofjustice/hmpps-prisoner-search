@@ -7,6 +7,7 @@ data class OffenderBooking(
   val firstName: String,
   val lastName: String,
   val dateOfBirth: LocalDate,
+  val title: String? = null,
   val bookingId: Long? = null,
   val bookingNo: String? = null,
   val middleName: String? = null,

@@ -219,6 +219,7 @@ class PrisonerDifferenceServiceTest {
 
     private fun alias(firstName: String, lastName: String, dateOfBirth: LocalDate) =
       PrisonerAlias(
+        title = null,
         firstName = firstName,
         middleNames = null,
         lastName = lastName,
