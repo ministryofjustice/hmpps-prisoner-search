@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.random.Random
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 data class PrisonerBuilder(
   val prisonerNumber: String = generatePrisonerNumber(),
@@ -42,6 +43,7 @@ data class PrisonerBuilder(
   val csra: String? = null,
   val recall: Boolean? = null,
   val receptionDate: String? = null,
+  val addresses: List<AddressBuilder>? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -81,6 +83,19 @@ data class IncentiveLevelBuilder(
   val levelDescription: String = "Standard",
   val dateTime: LocalDateTime = LocalDateTime.now(),
   val nextReviewDate: LocalDate? = null,
+)
+
+data class AddressBuilder(
+  val flat: String? = null,
+  val premise: String? = null,
+  val street: String? = null,
+  val locality: String? = null,
+  val town: String? = null,
+  val county: String? = null,
+  val postalCode: String? = null,
+  val country: String? = null,
+  val primary: Boolean = true,
+  val startDate: LocalDate? = null,
 )
 
 fun generatePrisonerNumber(): String {
@@ -215,6 +230,21 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
     csra = csra,
     recall = recall,
     receptionDate = receptionDate?.let { LocalDate.parse(it) },
+    addresses = addresses?.map {
+      NomisAddress(
+        addressId = numbers(length = 5).toLong(),
+        flat = it.flat,
+        premise = it.premise,
+        street = it.street,
+        locality = it.locality,
+        town = it.town,
+        postalCode = it.postalCode,
+        county = it.county,
+        country = it.country,
+        primary = it.primary,
+        startDate = it.startDate,
+      )
+    },
   ).let {
     if (released) {
       it.copy(

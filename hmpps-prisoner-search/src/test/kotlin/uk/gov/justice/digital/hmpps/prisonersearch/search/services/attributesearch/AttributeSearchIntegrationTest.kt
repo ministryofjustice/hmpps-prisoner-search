@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AddressBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalMarkBuilder
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.LTE
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.RequestDsl
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.STARTSWITH
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -54,6 +56,17 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
         mark = listOf(BodyPartBuilder(bodyPart = "Arm", comment = "birthmark")),
       ),
       cellLocation = "1-1-002",
+      addresses = listOf(
+        AddressBuilder(
+          premise = "1",
+          street = "Main Street",
+          town = "Sheffield",
+          postalCode = "S1 1BG",
+          country = "England",
+          startDate = LocalDate.parse("2021-03-23"),
+          primary = true,
+        ),
+      ),
     ),
     PrisonerBuilder(
       prisonerNumber = "P2",
@@ -1735,6 +1748,77 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
 
       // importantly this includes P3 because we only check nested objects within the same query
       webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+  }
+
+  @Nested
+  inner class Addresses {
+    @Test
+    fun `should match on full address`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("addresses.fullAddress" IS "1 Main Street, Sheffield, S1 1BG, England")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match full address on town`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("addresses.fullAddress" CONTAINS "Sheffield")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match full address on postal code`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("addresses.fullAddress" CONTAINS "S1 1BG")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match full address on street and town`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("addresses.fullAddress" CONTAINS "Main Street, Sheffield")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match postal code`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("addresses.postalCode" IS "S1 1BG")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `should match postal code, primary and start date`() {
+      val request = RequestDsl {
+        query {
+          stringMatcher("addresses.postalCode" IS "S1 1BG")
+          booleanMatcher("addresses.primaryAddress" IS true)
+          dateMatcher("addresses.startDate" GT "2021-01-01")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
     }
   }
 
