@@ -19,15 +19,13 @@ generic-prometheus-alerts:
   alertSeverity: syscon-nonprod
   rdsAlertsDatabases:
     cloud-platform-12e2a73b0333ffab: "prisoner search indexer"
-  sqsAlertsQueueNames:
+  sqsNumberAlertQueueNames:
     - "syscon-devs-preprod-hmpps_prisoner_search_domain_dlq"
     - "syscon-devs-preprod-hmpps_prisoner_search_domain_queue"
     - "syscon-devs-preprod-hmpps_prisoner_search_offender_dlq"
     - "syscon-devs-preprod-hmpps_prisoner_search_offender_queue"
     - "syscon-devs-preprod-hmpps_prisoner_search_publish_queue_dl"
     - "syscon-devs-preprod-hmpps_prisoner_search_publish_queue"
-  sqsAlertsOldestThreshold: 10
-  sqsAlertsTotalMessagesThreshold: 1
 
 cron:
   snapshot_namespace: hmpps-prisoner-search-prod
