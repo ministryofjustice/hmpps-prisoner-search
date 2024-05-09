@@ -47,6 +47,10 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.IDENTIFIERS)
   var bookNumber: String? = null
 
+  @Schema(description = "Title", example = "Ms")
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  var title: String? = null
+
   @MultiField(
     mainField = Field(type = FieldType.Text),
     otherFields = [

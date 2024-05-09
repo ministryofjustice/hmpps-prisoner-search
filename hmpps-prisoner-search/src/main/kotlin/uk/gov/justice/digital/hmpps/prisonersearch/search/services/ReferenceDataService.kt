@@ -152,6 +152,7 @@ enum class ReferenceDataAttribute(keyword: Boolean = true, field: String? = null
     ),
   ),
   tattoosBodyPart(field = "tattoos.bodyPart.keyword"),
+  title,
   youthOffender(keyword = false, map = mapOf("true" to "Yes", "false" to "No")),
   ;
 

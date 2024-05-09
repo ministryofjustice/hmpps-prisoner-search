@@ -6,6 +6,7 @@ import java.time.LocalDate
  * Alias
  */
 data class Alias(
+  val title: String?,
   val firstName: String,
   val middleName: String?,
   val lastName: String,

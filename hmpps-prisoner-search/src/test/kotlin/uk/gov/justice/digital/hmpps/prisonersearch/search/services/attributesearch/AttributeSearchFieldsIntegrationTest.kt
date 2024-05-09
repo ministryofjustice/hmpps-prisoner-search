@@ -32,6 +32,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     croNumber = "29906/12J"
     bookingId = "0001200924"
     bookNumber = "38412A"
+    title = "Mr"
     firstName = "Robert"
     middleNames = "John James"
     lastName = "Larsen"
@@ -49,6 +50,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     prisonName = "HMP Moorland"
     aliases = listOf(
       PrisonerAlias(
+        title = "Sir",
         firstName = "Robert",
         middleNames = "John James",
         lastName = "Larsen",
@@ -153,6 +155,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "croNumber,29906/12J",
     "bookingId,0001200924",
     "bookNumber,38412A",
+    "title,Mr",
     "firstName,Robert",
     "middleNames,John James",
     "lastName,Larsen",
@@ -168,6 +171,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "prisonId,MDI",
     "lastPrisonId,MDI",
     "prisonName,HMP Moorland",
+    "aliases.title,Sir",
     "aliases.firstName,Robert",
     "aliases.middleNames,John James",
     "aliases.lastName,Larsen",
