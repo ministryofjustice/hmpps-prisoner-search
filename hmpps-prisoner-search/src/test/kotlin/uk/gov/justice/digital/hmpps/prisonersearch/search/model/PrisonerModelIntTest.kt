@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
+import org.assertj.core.groups.Tuple.tuple
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import java.time.LocalDate
 
@@ -30,6 +32,10 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
     emailAddresses = listOf(
       EmailAddressBuilder("john.smith@gmail.com"),
       EmailAddressBuilder("john.smith@hotmail.com"),
+    ),
+    phones = listOf(
+      PhoneBuilder("MOB", "07123 456789"),
+      PhoneBuilder("HOME", "01123456789"),
     ),
   )
 
@@ -73,6 +79,22 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .expectBody()
       .jsonPath("emailAddresses[*].email").value<List<String>> {
         assertThat(it).containsExactlyInAnyOrder("john.smith@gmail.com", "john.smith@hotmail.com")
+      }
+  }
+
+  @Test
+  fun `should save and retrieve telephone numbers`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("phoneNumbers").value<List<PhoneNumber>> {
+        assertThat(it).extracting("type", "number").containsExactlyInAnyOrder(
+          tuple("MOB", "07123456789"),
+          tuple("HOME", "01123456789"),
+        )
       }
   }
 }

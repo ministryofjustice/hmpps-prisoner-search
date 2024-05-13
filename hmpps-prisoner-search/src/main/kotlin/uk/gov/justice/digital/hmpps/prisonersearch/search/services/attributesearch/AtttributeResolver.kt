@@ -60,7 +60,7 @@ private fun findAttributes(
         listOf(propertyName to Attribute(propClass, openSearchName, nested, fuzzy))
       }
     }
-    PropertyType.LIST_SIMPLE -> throw InvalidAttributeTypeException("Attribute '${prefix}${prop.name}' is invalid. Lists of simple types are not supported because they cannot be extended (and would require special support from OpenSearch adding). Please change to a list of objects. See [Prisoner.EmailAddresses] for an example.")
+    PropertyType.LIST_SIMPLE -> throw InvalidAttributeTypeException("Attribute '${prefix}${prop.name}' is invalid. Lists of simple types are not supported because they cannot be extended. Please change to a list of objects. See [Prisoner.emailAddresses] for an example.")
     PropertyType.LIST_COMPLEX -> {
       getGenericTypeClass(prop).memberProperties
         .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }

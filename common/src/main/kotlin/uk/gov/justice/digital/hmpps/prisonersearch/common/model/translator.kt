@@ -135,6 +135,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
 
   this.addresses = ob.addresses?.map { it.toAddress() }
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
+  this.phoneNumbers = ob.phones?.filter { SupportedPhoneNumberTypes.supports(it.type) }?.map { PhoneNumber(it.type, it.number.extractNumbers()) }
 
   return this
 }
@@ -194,3 +195,18 @@ private fun NomisAddress.toAddress(): Address {
     primaryAddress = primary,
   )
 }
+
+private enum class SupportedPhoneNumberTypes {
+  HOME,
+  MOB,
+  ;
+
+  companion object {
+    fun supports(type: String) = SupportedPhoneNumberTypes.entries.map { it.toString() }.contains(type)
+  }
+}
+
+private fun String.extractNumbers() =
+  split(Regex("\\D+"))
+    .filter { it.isNotBlank() }
+    .joinToString(separator = "")
