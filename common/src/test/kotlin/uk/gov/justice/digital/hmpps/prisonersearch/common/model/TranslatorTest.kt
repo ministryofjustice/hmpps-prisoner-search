@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
@@ -531,6 +532,20 @@ class TranslatorTest {
       BodyPartDetail("Shoulder", "Mark scar"),
       BodyPartDetail("Hand", "Other mark SCAR"),
     )
+  }
+
+  @Test
+  fun `should map email addresses`() {
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(
+        emailAddresses = listOf(EmailAddress("personalemail@hotmail.com"), EmailAddress("backupemail@gmail.com")),
+      ),
+      incentiveLevel = Result.success(null),
+      restrictedPatientData = Result.success(null),
+    )
+
+    assertThat(prisoner.emailAddresses).extracting("email")
+      .containsExactly("personalemail@hotmail.com", "backupemail@gmail.com")
   }
 
   @Nested

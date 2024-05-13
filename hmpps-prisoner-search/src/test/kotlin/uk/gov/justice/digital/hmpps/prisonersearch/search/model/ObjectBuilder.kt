@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
@@ -45,6 +46,7 @@ data class PrisonerBuilder(
   val recall: Boolean? = null,
   val receptionDate: String? = null,
   val addresses: List<AddressBuilder>? = null,
+  val emailAddresses: List<EmailAddressBuilder>? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -99,6 +101,10 @@ data class AddressBuilder(
   val country: String? = null,
   val primary: Boolean = true,
   val startDate: LocalDate? = null,
+)
+
+data class EmailAddressBuilder(
+  val email: String? = null,
 )
 
 fun generatePrisonerNumber(): String {
@@ -250,6 +256,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
         startDate = it.startDate,
       )
     },
+    emailAddresses = emailAddresses?.filter { it.email != null }?.map { EmailAddress(it.email!!) },
   ).let {
     if (released) {
       it.copy(

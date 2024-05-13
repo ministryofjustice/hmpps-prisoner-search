@@ -420,6 +420,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var addresses: List<Address>? = null
 
+  @Field(includeInParent = true)
+  @Schema(description = "Email addresses")
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  var emailAddresses: List<EmailAddress>? = null
+
   override fun diff(other: Prisoner): DiffResult<Prisoner> = getDiffResult(this, other)
 
   @get:JsonIgnore

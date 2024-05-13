@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
@@ -43,6 +44,10 @@ class AttributeResolverTest {
     @Field(type = FieldType.Keyword)
     val code: String,
     val description: String,
+  )
+
+  private class ListSimpleType(
+    val listString: List<String>,
   )
 
   companion object {
@@ -93,5 +98,14 @@ class AttributeResolverTest {
     assertThat(prisonerAttributes["marks.comment"]?.isFuzzy).isTrue()
     assertThat(prisonerAttributes["marks.bodyPart"]?.isFuzzy).isFalse()
     assertThat(prisonerAttributes["aliases.firstName"]?.isFuzzy).isTrue()
+  }
+
+  @Test
+  fun `should reject lists of simple types`() {
+    assertThrows<InvalidAttributeTypeException> {
+      getAttributes(ListSimpleType::class)
+    }.also {
+      assertThat(it.message).contains("listString").contains("Lists of simple types are not supported")
+    }
   }
 }

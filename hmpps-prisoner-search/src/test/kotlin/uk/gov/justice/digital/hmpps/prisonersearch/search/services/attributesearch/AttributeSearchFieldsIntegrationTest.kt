@@ -6,6 +6,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
@@ -140,6 +141,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     releaseOnTemporaryLicenceDate = LocalDate.parse("2024-01-19")
     dischargeDate = LocalDate.parse("2024-01-20")
     addresses = listOf(Address("1 Full Address, Sheffield, S10 1BP", "S10 1BP", LocalDate.parse("2024-01-22"), true))
+    emailAddresses = listOf(EmailAddress("robert@gmail.com"))
   }
 
   override fun loadPrisonerData() {
@@ -207,6 +209,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "marks.comment,Tribal tattoo",
     "addresses.fullAddress,'1 Full Address, Sheffield, S10 1BP'",
     "addresses.postalCode,S10 1BP",
+    "emailAddresses.email,robert@gmail.com",
   )
   fun `string fields`(field: String, value: String) {
     val request = RequestDsl {

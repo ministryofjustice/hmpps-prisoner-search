@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
@@ -26,6 +27,10 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       ),
     ),
     aliases = listOf(AliasBuilder(title = "Ms")),
+    emailAddresses = listOf(
+      EmailAddressBuilder("john.smith@gmail.com"),
+      EmailAddressBuilder("john.smith@hotmail.com"),
+    ),
   )
 
   override fun loadPrisonerData() {
@@ -56,5 +61,18 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .expectBody()
       .jsonPath("title").isEqualTo("Mr")
       .jsonPath("aliases[0].title").isEqualTo("Ms")
+  }
+
+  @Test
+  fun `should save and retrieve email addresses`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("emailAddresses[*].email").value<List<String>> {
+        assertThat(it).containsExactlyInAnyOrder("john.smith@gmail.com", "john.smith@hotmail.com")
+      }
   }
 }
