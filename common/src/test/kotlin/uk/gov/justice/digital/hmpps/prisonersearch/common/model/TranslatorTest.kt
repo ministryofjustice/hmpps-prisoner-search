@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.groups.Tuple
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttribut
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.SentenceDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -546,6 +548,27 @@ class TranslatorTest {
 
     assertThat(prisoner.emailAddresses).extracting("email")
       .containsExactly("personalemail@hotmail.com", "backupemail@gmail.com")
+  }
+
+  @Test
+  fun `should map telephone numbers`() {
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(
+        phones = listOf(
+          Telephone("0114 1234567", "HOME"),
+          Telephone("0777 1234567", "MOB"),
+          Telephone("0114 7654321", "OTH"),
+        ),
+      ),
+      incentiveLevel = Result.success(null),
+      restrictedPatientData = Result.success(null),
+    )
+
+    assertThat(prisoner.phoneNumbers).extracting("type", "number")
+      .containsExactlyInAnyOrder(
+        Tuple.tuple("HOME", "01141234567"),
+        Tuple.tuple("MOB", "07771234567"),
+      )
   }
 
   @Nested

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
@@ -142,6 +143,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     dischargeDate = LocalDate.parse("2024-01-20")
     addresses = listOf(Address("1 Full Address, Sheffield, S10 1BP", "S10 1BP", LocalDate.parse("2024-01-22"), true))
     emailAddresses = listOf(EmailAddress("robert@gmail.com"))
+    phoneNumbers = listOf(PhoneNumber("HOME", "0114123456"))
   }
 
   override fun loadPrisonerData() {
@@ -210,6 +212,8 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "addresses.fullAddress,'1 Full Address, Sheffield, S10 1BP'",
     "addresses.postalCode,S10 1BP",
     "emailAddresses.email,robert@gmail.com",
+    "phoneNumbers.type,HOME",
+    "phoneNumbers.number,0114123456",
   )
   fun `string fields`(field: String, value: String) {
     val request = RequestDsl {

@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttribut
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.ProfileInformation
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.search.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import java.time.LocalDate
@@ -47,6 +48,7 @@ data class PrisonerBuilder(
   val receptionDate: String? = null,
   val addresses: List<AddressBuilder>? = null,
   val emailAddresses: List<EmailAddressBuilder>? = null,
+  val phones: List<PhoneBuilder>? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -105,6 +107,11 @@ data class AddressBuilder(
 
 data class EmailAddressBuilder(
   val email: String? = null,
+)
+
+data class PhoneBuilder(
+  val type: String? = null,
+  val number: String? = null,
 )
 
 fun generatePrisonerNumber(): String {
@@ -257,6 +264,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       )
     },
     emailAddresses = emailAddresses?.filter { it.email != null }?.map { EmailAddress(it.email!!) },
+    phones = phones?.map { Telephone(type = it.type!!, number = it.number!!) },
   ).let {
     if (released) {
       it.copy(
