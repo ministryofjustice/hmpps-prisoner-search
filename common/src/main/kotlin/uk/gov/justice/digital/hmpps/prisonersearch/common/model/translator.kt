@@ -134,6 +134,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
 
   this.addresses = ob.addresses?.map { it.toAddress() }
+  this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
 
   return this
 }

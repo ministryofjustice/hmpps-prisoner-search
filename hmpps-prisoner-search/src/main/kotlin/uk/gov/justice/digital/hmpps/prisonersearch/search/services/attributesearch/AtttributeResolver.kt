@@ -60,7 +60,8 @@ private fun findAttributes(
         listOf(propertyName to Attribute(propClass, openSearchName, nested, fuzzy))
       }
     }
-    PropertyType.LIST -> {
+    PropertyType.LIST_SIMPLE -> throw InvalidAttributeTypeException("Attribute '${prefix}${prop.name}' is invalid. Lists of simple types are not supported because they cannot be extended (and would require special support from OpenSearch adding). Please change to a list of objects. See [Prisoner.EmailAddresses] for an example.")
+    PropertyType.LIST_COMPLEX -> {
       getGenericTypeClass(prop).memberProperties
         .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
     }
@@ -93,12 +94,20 @@ private fun KProperty1<*, *>.getFieldType(): String? {
 private enum class PropertyType {
   SIMPLE,
   COMPLEX,
-  LIST,
+  LIST_SIMPLE,
+  LIST_COMPLEX,
 }
 
 private fun getPropertyType(prop: KProperty1<*, *>): PropertyType =
   when (prop.returnType.classifier) {
-    List::class -> PropertyType.LIST
+    List::class -> {
+      when (getGenericTypeClass(prop)) {
+        in TypeMatcher.getSupportedTypes() -> PropertyType.LIST_SIMPLE
+        else -> PropertyType.LIST_COMPLEX
+      }
+    }
     in TypeMatcher.getSupportedTypes() -> PropertyType.SIMPLE
     else -> PropertyType.COMPLEX
   }
+
+class InvalidAttributeTypeException(message: String) : RuntimeException(message)

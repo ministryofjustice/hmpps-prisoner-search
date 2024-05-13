@@ -38,4 +38,5 @@ data class OffenderBooking(
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
   val addresses: List<Address>? = null,
+  val emailAddresses: List<EmailAddress>? = null,
 )
