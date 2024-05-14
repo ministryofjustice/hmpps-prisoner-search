@@ -19,4 +19,7 @@ data class Address(
 
   @Schema(description = "Whether the address is currently marked as the primary address", example = "true")
   val primaryAddress: Boolean,
+
+  @Schema(description = "Phone numbers linked to the address. Note the phone number contains only numbers, no whitespace. Therefore searching on 'addresses.phoneNumbers.number' should not pass any non-numeric characters.")
+  val phoneNumbers: List<PhoneNumber>? = null,
 )

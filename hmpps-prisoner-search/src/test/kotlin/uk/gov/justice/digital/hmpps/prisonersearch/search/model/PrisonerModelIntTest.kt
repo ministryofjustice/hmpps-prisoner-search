@@ -26,6 +26,11 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
         country = "England",
         startDate = LocalDate.parse("2013-12-02"),
         primary = true,
+        phones = listOf(
+          PhoneBuilder("MOB", "07987 654321"),
+          PhoneBuilder("HOME", "0119 87654321"),
+          PhoneBuilder("OTH", "0111 111 111"),
+        ),
       ),
     ),
     aliases = listOf(AliasBuilder(title = "Ms")),
@@ -94,6 +99,22 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
         assertThat(it).extracting("type", "number").containsExactlyInAnyOrder(
           tuple("MOB", "07123456789"),
           tuple("HOME", "01123456789"),
+        )
+      }
+  }
+
+  @Test
+  fun `should save and retrieve address telephone numbers`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("addresses[0].phoneNumbers").value<List<PhoneNumber>> {
+        assertThat(it).extracting("type", "number").containsExactlyInAnyOrder(
+          tuple("MOB", "07987654321"),
+          tuple("HOME", "011987654321"),
         )
       }
   }

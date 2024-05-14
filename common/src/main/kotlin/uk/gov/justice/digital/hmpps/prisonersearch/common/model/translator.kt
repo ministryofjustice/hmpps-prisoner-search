@@ -5,6 +5,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
@@ -135,7 +136,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
 
   this.addresses = ob.addresses?.map { it.toAddress() }
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
-  this.phoneNumbers = ob.phones?.filter { SupportedPhoneNumberTypes.supports(it.type) }?.map { PhoneNumber(it.type, it.number.extractNumbers()) }
+  this.phoneNumbers = ob.phones?.toPhoneNumbers()
 
   return this
 }
@@ -193,8 +194,13 @@ private fun NomisAddress.toAddress(): Address {
     postalCode = postalCode,
     startDate = startDate,
     primaryAddress = primary,
+    phoneNumbers = phones?.toPhoneNumbers(),
   )
 }
+
+private fun List<Telephone>.toPhoneNumbers(): List<PhoneNumber> =
+  filter { SupportedPhoneNumberTypes.supports(it.type) }
+    .map { PhoneNumber(it.type, it.number.extractNumbers()) }
 
 private enum class SupportedPhoneNumberTypes {
   HOME,

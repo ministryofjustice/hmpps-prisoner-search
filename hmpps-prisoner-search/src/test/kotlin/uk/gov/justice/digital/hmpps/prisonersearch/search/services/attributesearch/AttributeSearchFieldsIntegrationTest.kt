@@ -141,7 +141,15 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     tariffDate = LocalDate.parse("2024-01-18")
     releaseOnTemporaryLicenceDate = LocalDate.parse("2024-01-19")
     dischargeDate = LocalDate.parse("2024-01-20")
-    addresses = listOf(Address("1 Full Address, Sheffield, S10 1BP", "S10 1BP", LocalDate.parse("2024-01-22"), true))
+    addresses = listOf(
+      Address(
+        fullAddress = "1 Full Address, Sheffield, S10 1BP",
+        postalCode = "S10 1BP",
+        startDate = LocalDate.parse("2024-01-22"),
+        primaryAddress = true,
+        phoneNumbers = listOf(PhoneNumber("MOB", "0777123456")),
+      ),
+    )
     emailAddresses = listOf(EmailAddress("robert@gmail.com"))
     phoneNumbers = listOf(PhoneNumber("HOME", "0114123456"))
   }
@@ -211,6 +219,8 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "marks.comment,Tribal tattoo",
     "addresses.fullAddress,'1 Full Address, Sheffield, S10 1BP'",
     "addresses.postalCode,S10 1BP",
+    "addresses.phoneNumbers.type,MOB",
+    "addresses.phoneNumbers.number,0777123456",
     "emailAddresses.email,robert@gmail.com",
     "phoneNumbers.type,HOME",
     "phoneNumbers.number,0114123456",

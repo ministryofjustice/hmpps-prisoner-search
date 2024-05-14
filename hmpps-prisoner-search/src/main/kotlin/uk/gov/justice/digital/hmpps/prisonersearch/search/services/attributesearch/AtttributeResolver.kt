@@ -61,11 +61,11 @@ private fun findAttributes(
       }
     }
     PropertyType.LIST_SIMPLE -> throw InvalidAttributeTypeException("Attribute '${prefix}${prop.name}' is invalid. Lists of simple types are not supported because they cannot be extended. Please change to a list of objects. See [Prisoner.emailAddresses] for an example.")
-    PropertyType.LIST_COMPLEX -> {
+    PropertyType.LIST_OBJECT -> {
       getGenericTypeClass(prop).memberProperties
         .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
     }
-    PropertyType.COMPLEX -> {
+    PropertyType.OBJECT -> {
       getPropertyClass(prop).memberProperties
         .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
     }
@@ -93,9 +93,9 @@ private fun KProperty1<*, *>.getFieldType(): String? {
 
 private enum class PropertyType {
   SIMPLE,
-  COMPLEX,
+  OBJECT,
   LIST_SIMPLE,
-  LIST_COMPLEX,
+  LIST_OBJECT,
 }
 
 private fun getPropertyType(prop: KProperty1<*, *>): PropertyType =
@@ -103,11 +103,11 @@ private fun getPropertyType(prop: KProperty1<*, *>): PropertyType =
     List::class -> {
       when (getGenericTypeClass(prop)) {
         in TypeMatcher.getSupportedTypes() -> PropertyType.LIST_SIMPLE
-        else -> PropertyType.LIST_COMPLEX
+        else -> PropertyType.LIST_OBJECT
       }
     }
     in TypeMatcher.getSupportedTypes() -> PropertyType.SIMPLE
-    else -> PropertyType.COMPLEX
+    else -> PropertyType.OBJECT
   }
 
 class InvalidAttributeTypeException(message: String) : RuntimeException(message)

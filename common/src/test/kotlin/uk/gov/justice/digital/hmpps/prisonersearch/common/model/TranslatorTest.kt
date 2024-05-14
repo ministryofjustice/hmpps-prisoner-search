@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 class TranslatorTest {
 
@@ -578,7 +579,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               "2",
               "3",
@@ -590,6 +591,7 @@ class TranslatorTest {
               "England",
               true,
               LocalDate.now(),
+              null,
             ),
           ),
         ),
@@ -612,7 +614,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               null,
               "3",
@@ -624,6 +626,7 @@ class TranslatorTest {
               "England",
               true,
               LocalDate.now(),
+              null,
             ),
           ),
         ),
@@ -646,7 +649,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               "2",
               "3",
@@ -658,8 +661,9 @@ class TranslatorTest {
               "England",
               true,
               LocalDate.now(),
+              null,
             ),
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               2,
               null,
               "1",
@@ -671,6 +675,7 @@ class TranslatorTest {
               null,
               false,
               LocalDate.now(),
+              null,
             ),
           ),
         ),
@@ -694,7 +699,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               null,
               "1",
@@ -706,8 +711,9 @@ class TranslatorTest {
               "any",
               true,
               LocalDate.now(),
+              null,
             ),
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               2,
               null,
               "Big House",
@@ -719,8 +725,9 @@ class TranslatorTest {
               "any",
               true,
               LocalDate.now(),
+              null,
             ),
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               3,
               null,
               "Big House",
@@ -732,8 +739,9 @@ class TranslatorTest {
               "any",
               true,
               LocalDate.now(),
+              null,
             ),
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               4,
               null,
               null,
@@ -745,6 +753,7 @@ class TranslatorTest {
               "any",
               true,
               LocalDate.now(),
+              null,
             ),
           ),
         ),
@@ -763,7 +772,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               null,
               null,
@@ -775,6 +784,7 @@ class TranslatorTest {
               null,
               false,
               LocalDate.now(),
+              null,
             ),
           ),
         ),
@@ -792,7 +802,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               "2",
               "3",
@@ -804,6 +814,7 @@ class TranslatorTest {
               "England",
               true,
               LocalDate.now(),
+              null,
             ),
           ),
         ),
@@ -821,7 +832,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address(
+            NomisAddress(
               1,
               "2",
               "3",
@@ -833,6 +844,7 @@ class TranslatorTest {
               "England",
               true,
               null,
+              null,
             ),
           ),
         ),
@@ -843,6 +855,42 @@ class TranslatorTest {
       assertThat(prisoner.addresses).containsExactly(
         Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", null, true),
       )
+    }
+
+    @Test
+    fun `should map telephone numbers`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          addresses = listOf(
+            NomisAddress(
+              1,
+              "2",
+              "3",
+              "Main Street",
+              "Crookes",
+              "Sheffield",
+              "S10 1AB",
+              "South Yorkshire",
+              "England",
+              true,
+              null,
+              listOf(
+                Telephone("0114 1234567", "HOME"),
+                Telephone("0777 1234567", "MOB"),
+                Telephone("0114 7654321", "OTH"),
+              ),
+            ),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.addresses!![0].phoneNumbers).extracting("type", "number")
+        .containsExactlyInAnyOrder(
+          Tuple.tuple("HOME", "01141234567"),
+          Tuple.tuple("MOB", "07771234567"),
+        )
     }
   }
 }
