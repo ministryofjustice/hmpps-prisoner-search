@@ -89,7 +89,7 @@ generic-service:
 generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-search-indexer
   alertSeverity: syscon
-  sqsAlertsTotalMessagesThreshold: 0
+  sqsAlertsTotalMessagesThreshold: "0"
 
 cron:
   retry_dlqs_schedule: "*/10 * * * *"
