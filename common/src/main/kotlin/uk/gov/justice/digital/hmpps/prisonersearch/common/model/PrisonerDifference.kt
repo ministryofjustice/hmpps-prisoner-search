@@ -19,6 +19,7 @@ enum class DiffCategory {
   RESTRICTED_PATIENT,
   INCENTIVE_LEVEL,
   PHYSICAL_DETAILS,
+  CONTACT_DETAILS,
 }
 
 internal fun getDiffResult(prisoner: Prisoner, other: Prisoner): DiffResult<Prisoner> =

@@ -417,17 +417,17 @@ open class Prisoner : Diffable<Prisoner> {
 
   @Field(type = FieldType.Nested, includeInParent = true)
   @Schema(description = "Addresses")
-  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @DiffableProperty(DiffCategory.CONTACT_DETAILS)
   var addresses: List<Address>? = null
 
   @Field(includeInParent = true)
   @Schema(description = "Email addresses")
-  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @DiffableProperty(DiffCategory.CONTACT_DETAILS)
   var emailAddresses: List<EmailAddress>? = null
 
   @Field(includeInParent = true)
   @Schema(description = "Telephone numbers. Note that the number will contain only numeric characters [0-9] (including no break between area code and number). Therefore if searching on 'phoneNumbers.number' you should not pass any non-numeric characters.")
-  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @DiffableProperty(DiffCategory.CONTACT_DETAILS)
   var phoneNumbers: List<PhoneNumber>? = null
 
   override fun diff(other: Prisoner): DiffResult<Prisoner> = getDiffResult(this, other)
