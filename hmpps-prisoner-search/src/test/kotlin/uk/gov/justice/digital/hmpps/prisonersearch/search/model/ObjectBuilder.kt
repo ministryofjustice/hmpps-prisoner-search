@@ -103,6 +103,7 @@ data class AddressBuilder(
   val country: String? = null,
   val primary: Boolean = true,
   val startDate: LocalDate? = null,
+  val phones: List<PhoneBuilder>? = null,
 )
 
 data class EmailAddressBuilder(
@@ -261,6 +262,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
         country = it.country,
         primary = it.primary,
         startDate = it.startDate,
+        phones = it.phones?.map { Telephone(type = it.type!!, number = it.number!!) },
       )
     },
     emailAddresses = emailAddresses?.filter { it.email != null }?.map { EmailAddress(it.email!!) },

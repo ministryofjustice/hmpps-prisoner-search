@@ -38,6 +38,7 @@ class AttributeResolverTest {
     val localDate: LocalDate,
     val localDateTime: LocalDateTime,
     val nested: Nested,
+    val nestedList: List<Nested>,
   )
 
   private class Nested(
@@ -66,6 +67,8 @@ class AttributeResolverTest {
       arguments("list.localDateTime", Attribute(LocalDateTime::class, "list.localDateTime", true)),
       arguments("list.nested.code", Attribute(String::class, "list.nested.code", true)),
       arguments("list.nested.description", Attribute(String::class, "list.nested.description.keyword", true)),
+      arguments("list.nestedList.code", Attribute(String::class, "list.nestedList.code", true)),
+      arguments("list.nestedList.description", Attribute(String::class, "list.nestedList.description.keyword", true)),
       arguments("complex.string", Attribute(String::class, "complex.string.keyword", true)),
       arguments("complex.boolean", Attribute(Boolean::class, "complex.boolean", true)),
       arguments("complex.integer", Attribute(Integer::class, "complex.integer", true)),
@@ -73,6 +76,8 @@ class AttributeResolverTest {
       arguments("complex.localDateTime", Attribute(LocalDateTime::class, "complex.localDateTime", true)),
       arguments("complex.nested.code", Attribute(String::class, "complex.nested.code", true)),
       arguments("complex.nested.description", Attribute(String::class, "complex.nested.description.keyword", true)),
+      arguments("complex.nestedList.code", Attribute(String::class, "complex.nestedList.code", true)),
+      arguments("complex.nestedList.description", Attribute(String::class, "complex.nestedList.description.keyword", true)),
     )
   }
 
@@ -86,7 +91,7 @@ class AttributeResolverTest {
 
   @Test
   fun `should not resolve extra attributes`() {
-    assertThat(attributes.size).isEqualTo(20)
+    assertThat(attributes.size).isEqualTo(24)
   }
 
   @Test

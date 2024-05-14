@@ -14,4 +14,5 @@ data class Address(
   val country: String?,
   val primary: Boolean,
   val startDate: LocalDate?,
+  val phones: List<Telephone>?,
 )
