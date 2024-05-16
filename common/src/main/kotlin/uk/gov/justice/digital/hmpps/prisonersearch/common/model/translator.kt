@@ -5,6 +5,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
@@ -138,6 +139,8 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
   this.phoneNumbers = ob.phones?.toPhoneNumbers()
 
+  this.identifiers = ob.identifiers?.toIdentifiers()
+
   return this
 }
 
@@ -216,3 +219,14 @@ private fun String.extractNumbers() =
   split(Regex("\\D+"))
     .filter { it.isNotBlank() }
     .joinToString(separator = "")
+
+private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? =
+  this?.mapNotNull {
+    when (it.type) {
+      "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+      "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+      else -> null
+    }
+  }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
+
+private fun String.toPncNumber(): String = if (this.isPNCNumber()) this.canonicalPNCNumberShort()!! else this

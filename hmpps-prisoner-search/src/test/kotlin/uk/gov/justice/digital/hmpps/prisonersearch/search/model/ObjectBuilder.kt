@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
@@ -49,6 +50,7 @@ data class PrisonerBuilder(
   val addresses: List<AddressBuilder>? = null,
   val emailAddresses: List<EmailAddressBuilder>? = null,
   val phones: List<PhoneBuilder>? = null,
+  val identifiers: List<IdentifierBuilder>? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -113,6 +115,14 @@ data class EmailAddressBuilder(
 data class PhoneBuilder(
   val type: String? = null,
   val number: String? = null,
+)
+
+data class IdentifierBuilder(
+  val type: String,
+  val value: String,
+  val issuedDate: String? = null,
+  val issuedAuthorityText: String? = null,
+  val createdDatetime: String? = null,
 )
 
 fun generatePrisonerNumber(): String {
@@ -267,6 +277,15 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
     },
     emailAddresses = emailAddresses?.filter { it.email != null }?.map { EmailAddress(it.email!!) },
     phones = phones?.map { Telephone(type = it.type!!, number = it.number!!) },
+    identifiers = identifiers?.map {
+      OffenderIdentifier(
+        type = it.type,
+        value = it.value,
+        issuedDate = it.issuedDate?.let { LocalDate.parse(it) },
+        issuedAuthorityText = it.issuedAuthorityText,
+        whenCreated = it.createdDatetime?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now(),
+      )
+    },
   ).let {
     if (released) {
       it.copy(

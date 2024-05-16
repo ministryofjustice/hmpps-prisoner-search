@@ -4,9 +4,13 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import org.assertj.core.groups.Tuple.tuple
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
@@ -41,6 +45,15 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
     phones = listOf(
       PhoneBuilder("MOB", "07123 456789"),
       PhoneBuilder("HOME", "01123456789"),
+    ),
+    identifiers = listOf(
+      IdentifierBuilder("PNC", "2012/0394773H", "2019-07-17", "NOMIS", "2019-07-17T12:34:56.833133"),
+      IdentifierBuilder("PNC", "12/394773H", "2019-07-17", null, "2020-07-17T12:34:56.833133"),
+      IdentifierBuilder("CRO", "145845/12U", null, "Incorrect CRO - typo", "2021-10-18T12:34:56.833133"),
+      IdentifierBuilder("CRO", "145835/12U", null, null, "2021-10-19T12:34:56.833133"),
+      IdentifierBuilder("NINO", "JE460605B", null, null, "2019-06-11T12:34:56.833133"),
+      IdentifierBuilder("DL", "COLBO/912052/JM9MU", null, null, "2022-04-12T12:34:56.833133"),
+      IdentifierBuilder("HOREF", "T3037620", null, null, "2020-04-12T12:34:56.833133"),
     ),
   )
 
@@ -116,6 +129,29 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
           tuple("MOB", "07987654321"),
           tuple("HOME", "011987654321"),
         )
+      }
+  }
+
+  @Test
+  fun `should save and retrieve identifiers`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<Prisoner>()
+      .consumeWith {
+        with(it.responseBody as Prisoner) {
+          assertThat(identifiers)
+            .containsExactly(
+              Identifier("NINO", "JE460605B", null, null, LocalDateTime.parse("2019-06-11T12:34:56")),
+              Identifier("PNC", "12/394773H", LocalDate.parse("2019-07-17"), "NOMIS", LocalDateTime.parse("2019-07-17T12:34:56")),
+              Identifier("PNC", "12/394773H", LocalDate.parse("2019-07-17"), null, LocalDateTime.parse("2020-07-17T12:34:56")),
+              Identifier("CRO", "145845/12U", null, "Incorrect CRO - typo", LocalDateTime.parse("2021-10-18T12:34:56")),
+              Identifier("CRO", "145835/12U", null, null, LocalDateTime.parse("2021-10-19T12:34:56")),
+              Identifier("DL", "COLBO/912052/JM9MU", null, null, LocalDateTime.parse("2022-04-12T12:34:56")),
+            )
+        }
       }
   }
 }

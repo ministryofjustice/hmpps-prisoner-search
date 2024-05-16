@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -152,6 +153,15 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     )
     emailAddresses = listOf(EmailAddress("robert@gmail.com"))
     phoneNumbers = listOf(PhoneNumber("HOME", "0114123456"))
+    identifiers = listOf(
+      Identifier(
+        type = "PNC",
+        value = "12/394773H",
+        issuedDate = LocalDate.parse("2019-07-17"),
+        issuedAuthorityText = "NOMIS",
+        createdDateTime = LocalDateTime.parse("2019-07-17T12:34:56.833133"),
+      ),
+    )
   }
 
   override fun loadPrisonerData() {
@@ -224,6 +234,9 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "emailAddresses.email,robert@gmail.com",
     "phoneNumbers.type,HOME",
     "phoneNumbers.number,0114123456",
+    "identifiers.type,PNC",
+    "identifiers.value,12/394773H",
+    "identifiers.issuedAuthorityText,NOMIS",
   )
   fun `string fields`(field: String, value: String) {
     val request = RequestDsl {
@@ -297,6 +310,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "dischargeDate,2024-01-20",
     "currentIncentive.nextReviewDate,2024-01-21",
     "addresses.startDate,2024-01-22",
+    "identifiers.issuedDate,2019-07-17",
   )
   fun `date fields`(field: String, value: String) {
     val request = RequestDsl {
@@ -311,6 +325,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
   @ParameterizedTest
   @CsvSource(
     "currentIncentive.dateTime,2023-12-01T00:00:00,2022-11-10T15:47:24",
+    "identifiers.createdDateTime,2019-07-17T12:35:00,2019-07-17T12:34:56",
   )
   fun `date time fields`(field: String, lessThanTime: LocalDateTime, expectedTime: String) {
     val request = RequestDsl {
