@@ -4,12 +4,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.groups.Tuple
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
@@ -892,6 +895,26 @@ class TranslatorTest {
           Tuple.tuple("MOB", "07771234567"),
         )
     }
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "12/394773H,12/394773H",
+    "12/0394773H,12/394773H",
+    "2012/394773H,12/394773H",
+    "2012/0394773H,12/394773H",
+    "INVALID_PNC,INVALID_PNC",
+  )
+  fun `should always convert PNC number to short format if possible`(nomisPnc: String, prisonerPnc: String) {
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(
+        identifiers = listOf(OffenderIdentifier("PNC", nomisPnc, null, null, LocalDateTime.now())),
+      ),
+      incentiveLevel = Result.success(null),
+      restrictedPatientData = Result.success(null),
+    )
+
+    assertThat(prisoner.identifiers?.first()?.value).isEqualTo(prisonerPnc)
   }
 }
 

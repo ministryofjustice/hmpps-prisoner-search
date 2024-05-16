@@ -27,7 +27,7 @@ private fun String.splitPNC(): Pnc {
 
 data class Pnc(val year: String, val serialNumber: Int, val checksum: Char)
 
-private fun String.isPNCNumber() = matches("^([0-9]{2}|[0-9]{4})/[0-9]+[a-zA-Z]".toRegex())
+fun String.isPNCNumber() = matches("^([0-9]{2}|[0-9]{4})/[0-9]+[a-zA-Z]".toRegex())
 
 private fun String.isPNCNumberShort() = matches("^([0-9]{2})/[0-9]+[a-zA-Z]".toRegex())
 
