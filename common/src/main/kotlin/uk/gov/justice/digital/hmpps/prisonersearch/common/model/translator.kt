@@ -223,15 +223,8 @@ private fun String.extractNumbers() =
 private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? =
   this?.mapNotNull {
     when (it.type) {
-      "PNC" -> {
-        val pnc = Identifier("PNC", it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
-        listOf(
-          pnc,
-          pnc.copy(type = "PNC_SHORT", value = it.value.canonicalPNCNumberShort()!!),
-          pnc.copy(type = "PNC_LONG", value = it.value.canonicalPNCNumberLong()!!),
-        )
-      }
-      "CRO", "DL", "NINO" -> listOf(Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0)))
+      "PNC" -> Identifier("PNC", it.value.canonicalPNCNumberShort()!!, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+      "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
       else -> null
     }
-  }?.flatten()?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
+  }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
