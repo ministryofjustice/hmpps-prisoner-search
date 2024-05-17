@@ -48,7 +48,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
     ),
     identifiers = listOf(
       IdentifierBuilder("PNC", "2012/0394773H", "2019-07-17", "NOMIS", "2019-07-17T12:34:56.833133"),
-      IdentifierBuilder("PNC", "12/394773H", "2019-07-17", null, "2020-07-17T12:34:56.833133"),
+      IdentifierBuilder("PNC", "12/0394773H", "2019-07-17", null, "2020-07-17T12:34:56.833133"),
       IdentifierBuilder("CRO", "145845/12U", null, "Incorrect CRO - typo", "2021-10-18T12:34:56.833133"),
       IdentifierBuilder("CRO", "145835/12U", null, null, "2021-10-19T12:34:56.833133"),
       IdentifierBuilder("NINO", "JE460605B", null, null, "2019-06-11T12:34:56.833133"),
@@ -151,6 +151,10 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
               Identifier("CRO", "145835/12U", null, null, LocalDateTime.parse("2021-10-19T12:34:56")),
               Identifier("DL", "COLBO/912052/JM9MU", null, null, LocalDateTime.parse("2022-04-12T12:34:56")),
             )
+          assertThat(pncNumber).isEqualTo("12/0394773H")
+          assertThat(pncNumberCanonicalShort).isEqualTo("12/394773H")
+          assertThat(pncNumberCanonicalLong).isEqualTo("2012/394773H")
+          assertThat(croNumber).isEqualTo("145835/12U")
         }
       }
   }

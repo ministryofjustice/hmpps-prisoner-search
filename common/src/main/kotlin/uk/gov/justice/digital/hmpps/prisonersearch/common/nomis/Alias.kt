@@ -6,14 +6,15 @@ import java.time.LocalDate
  * Alias
  */
 data class Alias(
-  val title: String?,
+  val title: String? = null,
   val firstName: String,
-  val middleName: String?,
+  val middleName: String? = null,
   val lastName: String,
-  val age: Int?,
+  val age: Int? = null,
   val dob: LocalDate,
-  val gender: String?,
-  val ethnicity: String?,
-  val nameType: String?,
+  val gender: String? = null,
+  val ethnicity: String? = null,
+  val nameType: String? = null,
   val createDate: LocalDate,
+  val offenderId: Long,
 )

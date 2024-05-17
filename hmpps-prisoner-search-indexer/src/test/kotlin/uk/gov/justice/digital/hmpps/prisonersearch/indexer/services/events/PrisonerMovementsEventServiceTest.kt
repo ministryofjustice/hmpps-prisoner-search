@@ -225,6 +225,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
           value = "1234",
           issuedAuthorityText = null,
           issuedDate = null,
+          offenderId = 1L,
         ),
         OffenderIdentifier(
           whenCreated = LocalDateTime.now().minusMinutes(70),
@@ -232,6 +233,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
           value = "1234",
           issuedAuthorityText = null,
           issuedDate = null,
+          offenderId = 1L,
         ),
       )
 
@@ -254,6 +256,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
           value = "1234",
           issuedAuthorityText = null,
           issuedDate = null,
+          offenderId = 1L,
         ),
         OffenderIdentifier(
           whenCreated = LocalDateTime.now().minusMinutes(95),
@@ -261,6 +264,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
           value = "1234",
           issuedAuthorityText = null,
           issuedDate = null,
+          offenderId = 1L,
         ),
       )
 
@@ -283,6 +287,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
           value = "1234",
           issuedAuthorityText = null,
           issuedDate = null,
+          offenderId = 1L,
         ),
         OffenderIdentifier(
           whenCreated = LocalDateTime.now().minusMinutes(45),
@@ -290,6 +295,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
           value = "1234",
           issuedAuthorityText = null,
           issuedDate = null,
+          offenderId = 1L,
         ),
       )
 
@@ -424,11 +430,12 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
 
   private fun offenderBooking(identifiers: List<OffenderIdentifier>? = null) = OffenderBooking(
     "A9460DY",
+    1L,
     "BOATENG",
     "AKUSEA",
     LocalDate.of(1976, 5, 15),
     bookingId = 123456L,
-    identifiers = identifiers,
+    allIdentifiers = identifiers,
   )
 
   private fun String.readResourceAsText(): String =

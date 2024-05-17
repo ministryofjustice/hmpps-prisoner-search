@@ -825,6 +825,7 @@ class PrisonerDifferenceServiceTest {
 
   private fun someOffenderBooking() =
     OffenderBooking(
+      offenderId = 1L,
       offenderNo = "someOffenderNo",
       firstName = "someFirstName",
       lastName = "someLastName",

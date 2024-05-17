@@ -153,10 +153,12 @@ fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? =
     )
   }
 
-fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
-  getOffenderBookingTemplate().copy(
+fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
+  val offenderId = Random.nextLong()
+  return getOffenderBookingTemplate().copy(
     offenderNo = this.prisonerNumber,
     bookingId = this.bookingId,
+    offenderId = offenderId,
     title = this.title,
     firstName = this.firstName,
     lastName = this.lastName,
@@ -205,6 +207,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
         dob = LocalDate.parse(this.dateOfBirth),
         nameType = null,
         createDate = LocalDate.now(),
+        offenderId = Random.nextLong(),
       )
     },
     physicalCharacteristics = mutableListOf<PhysicalCharacteristic>().also { pcs ->
@@ -277,13 +280,14 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
     },
     emailAddresses = emailAddresses?.filter { it.email != null }?.map { EmailAddress(it.email!!) },
     phones = phones?.map { Telephone(type = it.type!!, number = it.number!!) },
-    identifiers = identifiers?.map {
+    allIdentifiers = identifiers?.map {
       OffenderIdentifier(
         type = it.type,
         value = it.value,
         issuedDate = it.issuedDate?.let { LocalDate.parse(it) },
         issuedAuthorityText = it.issuedAuthorityText,
         whenCreated = it.createdDatetime?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now(),
+        offenderId = offenderId,
       )
     },
   ).let {
@@ -302,6 +306,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking =
       )
     }
   }
+}
 
 fun PrisonerBuilder.toPrisoner(): Prisoner =
   toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)

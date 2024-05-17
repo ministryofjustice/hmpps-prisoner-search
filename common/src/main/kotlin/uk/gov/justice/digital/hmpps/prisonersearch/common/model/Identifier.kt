@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Identifier(
-  @Schema(description = "The type of identifier", example = "PNC, PNC_SHORT, PNC_LONG, CRO, DL, NINO")
+  @Schema(description = "The type of identifier", example = "PNC, CRO, DL, NINO")
   val type: String,
 
   @Schema(description = "The identifier value", example = "12/394773H")

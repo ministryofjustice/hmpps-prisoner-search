@@ -4,6 +4,7 @@ import java.time.LocalDate
 
 data class OffenderBooking(
   val offenderNo: String,
+  val offenderId: Long,
   val firstName: String,
   val lastName: String,
   val dateOfBirth: LocalDate,
@@ -25,7 +26,7 @@ data class OffenderBooking(
   val physicalMarks: List<PhysicalMark>? = null,
   val csra: String? = null,
   val categoryCode: String? = null,
-  val identifiers: List<OffenderIdentifier>? = null,
+  val allIdentifiers: List<OffenderIdentifier>? = null,
   val sentenceDetail: SentenceDetail? = null,
   val mostSeriousOffence: String? = null,
   val indeterminateSentence: Boolean? = null,
@@ -40,4 +41,15 @@ data class OffenderBooking(
   val addresses: List<Address>? = null,
   val emailAddresses: List<EmailAddress>? = null,
   val phones: List<Telephone>? = null,
-)
+) {
+  fun latestIdentifier(type: String) =
+    allIdentifiers
+      ?.filter { it.type == type }
+      ?.takeIf { it.isNotEmpty() }
+      ?.maxBy { it.whenCreated }
+
+  fun identifiersForActiveOffender(type: String) =
+    allIdentifiers
+      ?.filter { it.offenderId == offenderId }
+      ?.filter { it.type == type }
+}
