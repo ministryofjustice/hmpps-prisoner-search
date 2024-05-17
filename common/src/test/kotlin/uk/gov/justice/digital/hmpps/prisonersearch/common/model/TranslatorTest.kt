@@ -29,7 +29,14 @@ class TranslatorTest {
   fun `when prisoner has no booking associated the booking information is missing`() {
     val dateOfBirth = LocalDate.now().minusYears(18)
     val prisoner = Prisoner().translate(
-      ob = OffenderBooking("A1234AA", "Fred", "Bloggs", dateOfBirth, "Mr"),
+      ob = OffenderBooking(
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = dateOfBirth,
+        title = "Mr",
+      ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
@@ -47,10 +54,11 @@ class TranslatorTest {
     val tseDate = LocalDate.of(2021, 5, 15)
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(topupSupervisionExpiryDate = tseDate),
       ),
       incentiveLevel = Result.success(null),
@@ -64,10 +72,11 @@ class TranslatorTest {
     val tssDate = LocalDate.of(2021, 5, 15)
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(topupSupervisionStartDate = tssDate),
       ),
       incentiveLevel = Result.success(null),
@@ -81,10 +90,11 @@ class TranslatorTest {
     val hdcend = LocalDate.of(2021, 5, 15)
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(homeDetentionCurfewEndDate = hdcend),
       ),
       incentiveLevel = Result.success(null),
@@ -101,10 +111,11 @@ class TranslatorTest {
     val releaseDate = LocalDate.now().plusMonths(5)
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(
           conditionalReleaseDate = releaseDate,
           conditionalReleaseOverrideDate = conditionalReleaseOverrideDate,
@@ -129,10 +140,11 @@ class TranslatorTest {
     val postRecallReleaseDate = LocalDate.now().plusMonths(3)
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(
           conditionalReleaseDate = conditionalReleaseDate,
           automaticReleaseDate = automaticReleaseDate,
@@ -151,10 +163,11 @@ class TranslatorTest {
   fun `imprisonmentStatus and description are present`() {
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Serving Life Imprisonment",
       ),
@@ -169,10 +182,11 @@ class TranslatorTest {
   fun `maps alerts correctly`() {
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
-        "A1234AA",
-        "Fred",
-        "Bloggs",
-        LocalDate.of(1976, 5, 15),
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        firstName = "Fred",
+        lastName = "Bloggs",
+        dateOfBirth = LocalDate.of(1976, 5, 15),
         alerts = listOf(
           Alert(
             alertId = 1,
@@ -908,7 +922,7 @@ class TranslatorTest {
   fun `should always convert PNC number to short format if possible`(nomisPnc: String, prisonerPnc: String) {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(
-        identifiers = listOf(OffenderIdentifier("PNC", nomisPnc, null, null, LocalDateTime.now())),
+        allIdentifiers = listOf(OffenderIdentifier(1L, "PNC", nomisPnc, null, null, LocalDateTime.now())),
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
@@ -918,4 +932,4 @@ class TranslatorTest {
   }
 }
 
-private fun aBooking() = OffenderBooking("A1234AA", "Fred", "Bloggs", LocalDate.now().minusYears(18))
+private fun aBooking() = OffenderBooking("A1234AA", 1L, "Fred", "Bloggs", LocalDate.now().minusYears(18))

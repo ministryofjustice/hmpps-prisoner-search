@@ -431,7 +431,7 @@ open class Prisoner : Diffable<Prisoner> {
   var phoneNumbers: List<PhoneNumber>? = null
 
   @Field(includeInParent = true)
-  @Schema(description = "All identifiers for the prisoner including those recorded against aliases. Currently supports only PNC, PNC_SHORT, PNC_LONG, CRO, NINO and DL.")
+  @Schema(description = "All identifiers for the prisoner including those recorded against aliases. Currently supports only PNC, CRO, NINO and DL.")
   @DiffableProperty(DiffCategory.IDENTIFIERS)
   var identifiers: List<Identifier>? = null
 

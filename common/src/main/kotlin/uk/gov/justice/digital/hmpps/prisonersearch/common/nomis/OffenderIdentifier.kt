@@ -4,6 +4,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class OffenderIdentifier(
+  val offenderId: Long,
   val type: String,
   val value: String,
   val issuedAuthorityText: String?,

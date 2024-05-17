@@ -13,12 +13,10 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()
-  this.pncNumber = ob.identifiers?.firstOrNull { i -> i.type == "PNC" }?.value
-  this.pncNumberCanonicalShort =
-    ob.identifiers?.firstOrNull { i -> i.type == "PNC" }?.value?.canonicalPNCNumberShort()
-  this.pncNumberCanonicalLong =
-    ob.identifiers?.firstOrNull { i -> i.type == "PNC" }?.value?.canonicalPNCNumberLong()
-  this.croNumber = ob.identifiers?.firstOrNull { i -> i.type == "CRO" }?.value
+  this.pncNumber = ob.latestIdentifier("PNC")?.value
+  this.pncNumberCanonicalShort = this.pncNumber?.canonicalPNCNumberShort()
+  this.pncNumberCanonicalLong = this.pncNumber?.canonicalPNCNumberLong()
+  this.croNumber = ob.latestIdentifier("CRO")?.value
 
   this.cellLocation = ob.assignedLivingUnit?.description
   this.prisonName = ob.assignedLivingUnit?.agencyName
@@ -139,7 +137,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
   this.phoneNumbers = ob.phones?.toPhoneNumbers()
 
-  this.identifiers = ob.identifiers?.toIdentifiers()
+  this.identifiers = ob.allIdentifiers?.toIdentifiers()
 
   return this
 }

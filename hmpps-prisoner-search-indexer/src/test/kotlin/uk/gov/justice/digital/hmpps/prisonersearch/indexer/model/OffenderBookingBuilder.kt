@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import java.time.LocalDate
+import kotlin.random.Random
 
 class OffenderBookingBuilder {
   fun anOffenderBooking(bookingId: Long? = 12345L, offenderNo: String = "A1234AA") = OffenderBooking(
+    offenderId = Random.nextLong(),
     offenderNo = offenderNo,
     firstName = "Fred",
     lastName = "Bloggs",
