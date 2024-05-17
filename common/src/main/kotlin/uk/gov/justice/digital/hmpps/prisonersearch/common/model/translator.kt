@@ -14,8 +14,8 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()
   this.pncNumber = ob.latestIdentifier("PNC")?.value
-  this.pncNumberCanonicalShort = ob.latestIdentifier("PNC")?.value?.canonicalPNCNumberShort()
-  this.pncNumberCanonicalLong = ob.latestIdentifier("PNC")?.value?.canonicalPNCNumberLong()
+  this.pncNumberCanonicalShort = this.pncNumber?.canonicalPNCNumberShort()
+  this.pncNumberCanonicalLong = this.pncNumber?.canonicalPNCNumberLong()
   this.croNumber = ob.latestIdentifier("CRO")?.value
 
   this.cellLocation = ob.assignedLivingUnit?.description
