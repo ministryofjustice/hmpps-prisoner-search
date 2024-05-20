@@ -7,6 +7,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.AddressBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.BodyPartBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IdentifierBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PhysicalMarkBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
@@ -66,6 +67,9 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
           startDate = LocalDate.parse("2021-03-23"),
           primary = true,
         ),
+      ),
+      identifiers = listOf(
+        IdentifierBuilder("PNC", "24/123456H"),
       ),
     ),
     PrisonerBuilder(
@@ -1819,6 +1823,115 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       }
 
       webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+  }
+
+  @Nested
+  inner class PncNumber {
+    @Test
+    fun `PNC matcher AND string`() {
+      val request = RequestDsl {
+        query {
+          pncMatcher("24/123456H")
+          stringMatcher("firstName" IS "John1")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `PNC matcher OR string`() {
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          pncMatcher("24/123456H")
+          stringMatcher("firstName" CONTAINS "james")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
+    }
+
+    @Test
+    fun `PNC matcher AND int`() {
+      val request = RequestDsl {
+        query {
+          pncMatcher("24/123456H")
+          intMatcher("heightCentimetres" EQ 181)
+        }
+      }
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `PNC matcher OR int`() {
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          pncMatcher("24/123456H")
+          intMatcher("heightCentimetres" GTE 183)
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+
+    @Test
+    fun `PNC matcher AND nested list`() {
+      val request = RequestDsl {
+        query {
+          pncMatcher("24/123456H")
+          stringMatcher("tattoos.bodyPart" IS "Arm")
+          stringMatcher("tattoos.comment" IS "dragon")
+        }
+      }
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `PNC matcher OR nested list with multiple queries`() {
+      val request = RequestDsl {
+        joinType = OR
+        query {
+          pncMatcher("24/123456H")
+        }
+        query {
+          stringMatcher("tattoos.bodyPart" IS "Arm")
+          stringMatcher("tattoos.comment" CONTAINS "heart")
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P3")
+    }
+
+    @Test
+    fun `PNC matcher AND date in sub-query`() {
+      val request = RequestDsl {
+        query {
+          pncMatcher("24/123456H")
+          subQuery {
+            dateMatcher("dateOfBirth" EQ "1990-01-01")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1")
+    }
+
+    @Test
+    fun `PNC matcher OR nested object in sub-query`() {
+      val request = RequestDsl {
+        query {
+          joinType = OR
+          pncMatcher("24/123456H")
+          subQuery {
+            stringMatcher("currentIncentive.level.description" IS "Incentive level 2")
+          }
+        }
+      }
+
+      webTestClient.attributeSearch(request).expectPrisoners("P1", "P2")
     }
   }
 

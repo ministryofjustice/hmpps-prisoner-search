@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.requestdsl.EQ
@@ -335,6 +336,23 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     }
 
     webTestClient.attributeSearch(request).expectSingleResult(field, expectedTime)
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "12/394773H",
+    "12/0394773H",
+    "2012/394773H",
+    "2012/0394773H",
+  )
+  fun `pnc matcher`(pncNumber: String) {
+    val request = RequestDsl {
+      query {
+        pncMatcher(pncNumber)
+      }
+    }
+
+    webTestClient.attributeSearch(request).expectSingleResult("pncNumber", pncNumber.canonicalPNCNumberShort()!!)
   }
 
   private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) =
