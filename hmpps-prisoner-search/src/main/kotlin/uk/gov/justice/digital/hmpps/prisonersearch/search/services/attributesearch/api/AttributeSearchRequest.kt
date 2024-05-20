@@ -33,14 +33,6 @@ data class AttributeSearchRequest(
     } else {
       ""
     }
-
-  private fun TypeMatcher<*>.validateType(attributes: Attributes) {
-    val attributeType = attributes[attribute]?.type ?: throw AttributeSearchException("Unknown attribute: $attribute")
-    val genericType = this.genericType()
-    if (genericType != attributeType) {
-      throw AttributeSearchException("Attribute $attribute of type $attributeType not supported by $genericType matcher")
-    }
-  }
 }
 
 fun AttributeSearchRequest.getAllQueries(): List<Query> = queries.getAllQueries()

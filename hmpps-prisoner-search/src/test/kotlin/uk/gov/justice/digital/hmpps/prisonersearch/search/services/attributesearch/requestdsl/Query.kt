@@ -5,9 +5,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateTimeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.IntMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Matcher
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.PncMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Query
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TypeMatcher
 
 @DslMarker
 annotation class QueryDslMarker
@@ -66,6 +67,12 @@ interface QueryDsl {
   fun dateMatcher(dateAssertion: DateAssertion): DateMatcher
 
   /**
+   * A PNC matcher. See [PncMatcher] for more details.
+   */
+  @PncMatcherDslMarker
+  fun pncMatcher(pncNumber: String): PncMatcher
+
+  /**
    * A sub-query to join with or without matchers and other sub-queries. See [QueryBuilder] for more details.
    */
   @QueryDslMarker
@@ -74,7 +81,7 @@ interface QueryDsl {
 
 class QueryBuilder : QueryDsl {
   override var joinType = JoinType.AND
-  private val matchers = mutableListOf<TypeMatcher<*>>()
+  private val matchers = mutableListOf<Matcher>()
   private val subQueries = mutableListOf<Query>()
 
   override fun stringMatcher(stringAssertion: StringAssertion) =
@@ -100,6 +107,10 @@ class QueryBuilder : QueryDsl {
   override fun dateMatcher(dateAssertion: DateAssertion): DateMatcher =
     DateMatcherBuilder(dateAssertion)
       .build()
+      .also { matchers += it }
+
+  override fun pncMatcher(pncNumber: String): PncMatcher =
+    PncMatcher(pncNumber)
       .also { matchers += it }
 
   override fun subQuery(dsl: QueryDsl.() -> Unit): Query =
