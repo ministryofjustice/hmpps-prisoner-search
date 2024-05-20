@@ -63,13 +63,6 @@ data class Query(
       }
   }
 
-  private fun List<Matcher>.findNestedMatchers(attributes: Attributes) =
-    filterIsInstance(TypeMatcher::class.java)
-      .filter {
-        attributes[it.attribute]?.isNested
-          ?: throw AttributeSearchException("Unknown attribute: ${it.attribute}")
-      }
-
   override fun toString(): String {
     val matchersString = matchers?.joinToString(" ${joinType.name} ") { it.toString() } ?: ""
     val subQueriesString = subQueries?.joinToString(" ${joinType.name} ") { "($it)" } ?: ""

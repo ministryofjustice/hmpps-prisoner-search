@@ -5,6 +5,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
+/**
+ * A type matcher provides a way to search in OpenSearch for a specific attribute type, e.g. DateMatcher searches for dates .
+ */
 sealed interface TypeMatcher<S> : Matcher {
   val attribute: String
   fun validate() {}
