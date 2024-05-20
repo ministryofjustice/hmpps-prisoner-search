@@ -14,7 +14,7 @@ data class Query(
   @Schema(description = "The type of join to use when combining the matchers and subQueries", example = "AND", defaultValue = "AND")
   val joinType: JoinType = AND,
   @Schema(description = "Matchers that will be applied to this query")
-  val matchers: List<TypeMatcher<*>>? = null,
+  val matchers: List<Matcher>? = null,
   @Schema(description = "A list of sub-queries of type Query that will be combined with the matchers in this query")
   val subQueries: List<Query>? = null,
 ) {
@@ -40,16 +40,17 @@ data class Query(
       }
 
   private fun BoolQueryBuilder.addAndQueries(attributes: Attributes) {
-    // matchers that aren't for nested fields can be added directly to the bool query
+    val nestedMatchers = matchers?.findNestedMatchers(attributes) ?: emptyList()
+
+    // matchers that aren't for nested attributes can be added directly to the bool query
     matchers
-      ?.findMatchers(attributes, nested = false)
+      ?.minus(nestedMatchers.toSet())
       ?.forEach { must(it.buildQuery(attributes)) }
 
-    // matchers for nested fields need to be grouped into nested queries
-    matchers
-      ?.findMatchers(attributes, nested = true)
-      ?.groupBy { it.attribute.substringBefore(".") }
-      ?.forEach { (prefix, matchers) ->
+    // matchers for nested attributes need to be grouped into nested queries
+    nestedMatchers
+      .groupBy { it.attribute.substringBefore(".") }
+      .forEach { (prefix, matchers) ->
         must(
           QueryBuilders.nestedQuery(
             prefix,
@@ -62,8 +63,12 @@ data class Query(
       }
   }
 
-  private fun List<TypeMatcher<*>>.findMatchers(attributes: Attributes, nested: Boolean) =
-    filter { attributes[it.attribute]?.isNested == nested }
+  private fun List<Matcher>.findNestedMatchers(attributes: Attributes) =
+    filterIsInstance(TypeMatcher::class.java)
+      .filter {
+        attributes[it.attribute]?.isNested
+          ?: throw AttributeSearchException("Unknown attribute: ${it.attribute}")
+      }
 
   override fun toString(): String {
     val matchersString = matchers?.joinToString(" ${joinType.name} ") { it.toString() } ?: ""
@@ -84,7 +89,7 @@ fun List<Query>.getAllQueries(): List<Query> =
 fun List<Query>.getAllTypeMatchers(): List<TypeMatcher<*>> =
   fold<Query, MutableList<TypeMatcher<*>>>(mutableListOf()) { allTypeMatchers, matcher ->
     allTypeMatchers.apply {
-      addAll(matcher.matchers ?: emptyList())
+      addAll(matcher.matchers?.filterIsInstance(TypeMatcher::class.java) ?: emptyList())
       addAll(matcher.subQueries?.getAllTypeMatchers() ?: emptyList())
     }
   }.toList()
