@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
@@ -51,6 +52,7 @@ data class PrisonerBuilder(
   val emailAddresses: List<EmailAddressBuilder>? = null,
   val phones: List<PhoneBuilder>? = null,
   val identifiers: List<IdentifierBuilder>? = null,
+  val allConvictedOffences: List<OffenceBuilder>? = null,
 )
 
 data class PhysicalCharacteristicBuilder(
@@ -123,6 +125,16 @@ data class IdentifierBuilder(
   val issuedDate: String? = null,
   val issuedAuthorityText: String? = null,
   val createdDatetime: String? = null,
+)
+
+data class OffenceBuilder(
+  val statuteCode: String,
+  val offenceCode: String,
+  val offenceDescription: String,
+  val offenceDate: LocalDate? = null,
+  val bookingId: Long,
+  val mostSerious: Boolean,
+  val offenceSeverityRanking: Int,
 )
 
 fun generatePrisonerNumber(): String {
@@ -288,6 +300,18 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
         issuedAuthorityText = it.issuedAuthorityText,
         whenCreated = it.createdDatetime?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now(),
         offenderId = offenderId,
+      )
+    },
+    allConvictedOffences = allConvictedOffences?.map {
+      OffenceHistoryDetail(
+        statuteCode = it.statuteCode,
+        offenceCode = it.offenceCode,
+        offenceDescription = it.offenceDescription,
+        offenceDate = it.offenceDate,
+        offenceRangeDate = null,
+        bookingId = it.bookingId,
+        mostSerious = it.mostSerious,
+        offenceSeverityRanking = it.offenceSeverityRanking,
       )
     },
   ).let {

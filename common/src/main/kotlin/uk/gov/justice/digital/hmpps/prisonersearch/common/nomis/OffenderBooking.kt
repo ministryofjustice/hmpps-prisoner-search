@@ -41,6 +41,7 @@ data class OffenderBooking(
   val addresses: List<Address>? = null,
   val emailAddresses: List<EmailAddress>? = null,
   val phones: List<Telephone>? = null,
+  val allConvictedOffences: List<OffenceHistoryDetail>? = null,
 ) {
   fun latestIdentifier(type: String) =
     allIdentifiers

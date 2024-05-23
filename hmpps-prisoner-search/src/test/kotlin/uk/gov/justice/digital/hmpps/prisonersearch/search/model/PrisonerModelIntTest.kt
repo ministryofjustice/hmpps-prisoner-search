@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
@@ -16,6 +17,7 @@ import java.time.LocalDateTime
 class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
 
   private val prisoner = PrisonerBuilder(
+    bookingId = 2,
     prisonerNumber = "A1111AA",
     title = "Mr",
     addresses = listOf(
@@ -54,6 +56,26 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       IdentifierBuilder("NINO", "JE460605B", null, null, "2019-06-11T12:34:56.833133"),
       IdentifierBuilder("DL", "COLBO/912052/JM9MU", null, null, "2022-04-12T12:34:56.833133"),
       IdentifierBuilder("HOREF", "T3037620", null, null, "2020-04-12T12:34:56.833133"),
+    ),
+    allConvictedOffences = listOf(
+      OffenceBuilder(
+        statuteCode = "TH68",
+        offenceCode = "TH68012",
+        offenceDescription = "Theft",
+        offenceDate = LocalDate.parse("2020-01-01"),
+        bookingId = 1,
+        mostSerious = true,
+        offenceSeverityRanking = 100,
+      ),
+      OffenceBuilder(
+        statuteCode = "TH68",
+        offenceCode = "TH68057",
+        offenceDescription = "Robbery",
+        offenceDate = LocalDate.parse("2024-02-01"),
+        bookingId = 2,
+        mostSerious = true,
+        offenceSeverityRanking = 100,
+      ),
     ),
   )
 
@@ -156,6 +178,23 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
           assertThat(pncNumberCanonicalLong).isEqualTo("2012/394773H")
           assertThat(croNumber).isEqualTo("145835/12U")
         }
+      }
+  }
+
+  @Test
+  fun `should save and retrieve convicted offences`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("allConvictedOffences").value<List<Offence>> {
+        assertThat(it).extracting("statuteCode", "offenceCode", "offenceDescription", "offenceDate", "latestBooking")
+          .containsExactlyInAnyOrder(
+            tuple("TH68", "TH68012", "Theft", "2020-01-01", false),
+            tuple("TH68", "TH68057", "Robbery", "2024-02-01", true),
+          )
       }
   }
 }
