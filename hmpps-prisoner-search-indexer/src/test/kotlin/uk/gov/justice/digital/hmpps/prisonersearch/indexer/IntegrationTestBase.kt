@@ -264,7 +264,7 @@ data class PrisonerBuilder(
   val currentIncentive: CurrentIncentive? = null,
   val assignedLivingUnitLocationId: Long? = Random.nextLong(),
   val sentenceDetail: SentenceDetail? = null,
-  val offenceHistory: List<OffenceHistoryDetail>? = null,
+  val allConvictedOffences: List<OffenceHistoryDetail>? = null,
 ) {
 
   fun toOffenderBooking(): String {

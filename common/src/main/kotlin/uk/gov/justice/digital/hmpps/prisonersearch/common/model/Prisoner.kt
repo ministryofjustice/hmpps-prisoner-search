@@ -435,6 +435,11 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.IDENTIFIERS)
   var identifiers: List<Identifier>? = null
 
+  @Field(type = FieldType.Nested, includeInParent = true)
+  @Schema(description = "All historical convicted offences")
+  @DiffableProperty(DiffCategory.SENTENCE)
+  var allConvictedOffences: List<Offence>? = null
+
   override fun diff(other: Prisoner): DiffResult<Prisoner> = getDiffResult(this, other)
 
   @get:JsonIgnore

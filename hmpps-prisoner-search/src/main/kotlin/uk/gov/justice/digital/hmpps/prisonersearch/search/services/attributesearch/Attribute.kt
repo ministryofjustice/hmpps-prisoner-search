@@ -30,4 +30,5 @@ private val FUZZY_ATTRIBUTES = listOf(
   "aliases.firstName",
   "aliases.middleNames",
   "aliases.lastName",
+  "allConvictedOffences.offenceDescription",
 )

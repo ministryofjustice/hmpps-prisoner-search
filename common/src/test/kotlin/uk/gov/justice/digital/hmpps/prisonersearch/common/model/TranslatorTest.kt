@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
@@ -907,6 +908,45 @@ class TranslatorTest {
         .containsExactlyInAnyOrder(
           Tuple.tuple("HOME", "01141234567"),
           Tuple.tuple("MOB", "07771234567"),
+        )
+    }
+
+    @Test
+    fun `should map all convicted offences`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          bookingId = 2,
+          allConvictedOffences = listOf(
+            OffenceHistoryDetail(
+              bookingId = 1,
+              offenceDate = LocalDate.now().minusYears(1),
+              offenceRangeDate = null,
+              offenceDescription = "Robbery",
+              statuteCode = "TH68",
+              offenceCode = "TH68023",
+              mostSerious = true,
+              offenceSeverityRanking = 100,
+            ),
+            OffenceHistoryDetail(
+              bookingId = 2,
+              offenceDate = LocalDate.now(),
+              offenceRangeDate = null,
+              offenceDescription = "Burglary other than dwelling - theft",
+              statuteCode = "TH68",
+              offenceCode = "TH68037",
+              mostSerious = true,
+              offenceSeverityRanking = 90,
+            ),
+          ),
+        ),
+        incentiveLevel = Result.success(null),
+        restrictedPatientData = Result.success(null),
+      )
+
+      assertThat(prisoner.allConvictedOffences)
+        .containsExactlyInAnyOrder(
+          Offence("TH68", "TH68023", "Robbery", LocalDate.now().minusYears(1), false),
+          Offence("TH68", "TH68037", "Burglary other than dwelling - theft", LocalDate.now(), true),
         )
     }
   }

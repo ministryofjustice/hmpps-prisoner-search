@@ -4,6 +4,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
@@ -139,6 +140,8 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
 
   this.identifiers = ob.allIdentifiers?.toIdentifiers()
 
+  this.allConvictedOffences = ob.allConvictedOffences?.toOffences(ob.bookingId)
+
   return this
 }
 
@@ -228,3 +231,14 @@ private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? =
   }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
 
 private fun String.toPncNumber(): String = if (this.isPNCNumber()) this.canonicalPNCNumberShort()!! else this
+
+private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List<Offence>? =
+  this?.map {
+    Offence(
+      statuteCode = it.statuteCode,
+      offenceCode = it.offenceCode,
+      offenceDescription = it.offenceDescription,
+      offenceDate = it.offenceDate,
+      latestBooking = it.bookingId == latestBookingId,
+    )
+  }

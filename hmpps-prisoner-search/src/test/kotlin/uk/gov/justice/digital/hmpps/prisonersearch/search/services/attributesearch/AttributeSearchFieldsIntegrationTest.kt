@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
@@ -163,6 +164,15 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
         createdDateTime = LocalDateTime.parse("2019-07-17T12:34:56.833133"),
       ),
     )
+    allConvictedOffences = listOf(
+      Offence(
+        statuteCode = "TH068",
+        offenceCode = "TH068043",
+        offenceDescription = "Robbery",
+        offenceDate = LocalDate.parse("2022-08-24"),
+        latestBooking = true,
+      ),
+    )
   }
 
   override fun loadPrisonerData() {
@@ -238,6 +248,9 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "identifiers.type,PNC",
     "identifiers.value,12/394773H",
     "identifiers.issuedAuthorityText,NOMIS",
+    "allConvictedOffences.statuteCode,TH068",
+    "allConvictedOffences.offenceCode,TH068043",
+    "allConvictedOffences.offenceDescription,Robbery",
   )
   fun `string fields`(field: String, value: String) {
     val request = RequestDsl {
@@ -275,6 +288,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "alerts.active,true",
     "alerts.expired,false",
     "addresses.primaryAddress,true",
+    "allConvictedOffences.latestBooking,true",
   )
   fun `boolean fields`(field: String, value: Boolean) {
     val request = RequestDsl {
@@ -312,6 +326,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "currentIncentive.nextReviewDate,2024-01-21",
     "addresses.startDate,2024-01-22",
     "identifiers.issuedDate,2019-07-17",
+    "allConvictedOffences.offenceDate,2022-08-24",
   )
   fun `date fields`(field: String, value: String) {
     val request = RequestDsl {
