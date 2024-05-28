@@ -51,6 +51,7 @@ dependencies {
 
   runtimeOnly("org.postgresql:postgresql:42.7.3")
   runtimeOnly("org.flywaydb:flyway-core")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
