@@ -16,6 +16,7 @@ class IndexListenerService(
   private val indexStatusService: IndexStatusService,
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val nomisService: NomisService,
+  private val prisonerLocationService: PrisonerLocationService,
   private val telemetryClient: TelemetryClient,
 ) {
   fun incentiveChange(message: IncentiveChangedMessage, eventType: String) {
@@ -84,6 +85,14 @@ class IndexListenerService(
     } ?: customEventForMissingOffenderIdDisplay(eventType, message.previousOffenderId)
   }
 
+  fun prisonerLocationChange(message: PrisonerLocationChangedMessage, eventType: String) {
+    // need to search for all prisoners that have the old description
+    val cellLocation = message.oldDescription.substringAfter("${message.prisonId}-")
+    prisonerLocationService.findPrisoners(message.prisonId, cellLocation).forEach {
+      sync(prisonerNumber = it, eventType)
+    }
+  }
+
   private fun reindexPrisoner(ob: OffenderBooking, eventType: String): Prisoner? =
     indexStatusService.getIndexStatus()
       .run {
@@ -139,4 +148,9 @@ data class OffenderBookingReassignedMessage(
   val offenderIdDisplay: String?,
   val previousOffenderId: Long,
   val previousOffenderIdDisplay: String?,
+)
+
+data class PrisonerLocationChangedMessage(
+  val prisonId: String,
+  val oldDescription: String,
 )

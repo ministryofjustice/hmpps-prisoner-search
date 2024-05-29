@@ -30,9 +30,10 @@ internal class IndexListenerServiceTest {
   private val indexStatusService = mock<IndexStatusService>()
   private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val nomisService = mock<NomisService>()
+  private val prisonerLocationService = mock<PrisonerLocationService>()
   private val telemetryClient = mock<TelemetryClient>()
   private val indexListenerService =
-    IndexListenerService(indexStatusService, prisonerSynchroniserService, nomisService, telemetryClient)
+    IndexListenerService(indexStatusService, prisonerSynchroniserService, nomisService, prisonerLocationService, telemetryClient)
 
   @Nested
   inner class incentiveChange {
@@ -536,6 +537,39 @@ internal class IndexListenerServiceTest {
       bookingId = 12345L,
       offenderIdDisplay = prisonerNumber,
       previousOffenderIdDisplay = previousPrisonerNumber,
+    )
+  }
+
+  @Nested
+  inner class prisonerLocationChange {
+    @Test
+    fun `will reindex on prisoner location change`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+      )
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      whenever(prisonerLocationService.findPrisoners(any(), any())).thenReturn(listOf("A124BC"))
+
+      indexListenerService.prisonerLocationChange(
+        anPrisonerLocationChange(),
+        "AGENCY_INTERNAL_LOCATIONS-UPDATED",
+      )
+
+      verify(prisonerSynchroniserService).reindex(
+        check {
+          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
+        },
+        eq(listOf(GREEN)),
+        eq("AGENCY_INTERNAL_LOCATIONS-UPDATED"),
+      )
+      verifyNoMoreInteractions(prisonerSynchroniserService)
+    }
+
+    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String = "EWI-RES1-2-14") = PrisonerLocationChangedMessage(
+      prisonId = prisonId,
+      oldDescription = oldDescription,
     )
   }
 }

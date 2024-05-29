@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBook
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBookingReassignedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerLocationChangedMessage
 
 @JsonTest
 internal class OffenderEventListenerTest(@Autowired private val objectMapper: ObjectMapper) {
@@ -123,6 +124,20 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
       )
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["AGENCY_INTERNAL_LOCATIONS-UPDATED"])
+    internal fun `will process an agency internal locations updated message`(eventType: String) {
+      val requestJson = validPrisonerLocationChangeMessage(eventType)
+      listener.processOffenderEvent(requestJson)
+      verify(indexListenerService).prisonerLocationChange(
+        PrisonerLocationChangedMessage(
+          oldDescription = "EWI-RES1-2-14",
+          prisonId = "EWI",
+        ),
+        eventType,
+      )
+    }
+
     @Test
     internal fun `failed request`() {
       whenever(indexListenerService.externalMovement(any(), any())).thenThrow(RuntimeException("something went wrong"))
@@ -165,6 +180,11 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   private fun validOffenderBookingReassignedMessage(eventType: String) = validMessage(
     eventType = eventType,
     message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"previousOffenderIdDisplay\":\"A123ZZZ\",\"previousOffenderId\":\"2345611\",\"bookingId\":\"1234\",\"nomisEventType\":\"OFF_BKB_UPD\"}""",
+  )
+
+  private fun validPrisonerLocationChangeMessage(eventType: String) = validMessage(
+    eventType = eventType,
+    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"oldDescription\":\"EWI-RES1-2-14\",\"nomisEventType\":\"AGENCY_INTERNAL_LOCATIONS-UPDATED\",\"recordDeleted\":\"false\",\"prisonId\":\"EWI\",\"description\":\"EWI-RES1-2-014\",\"auditModuleName\":\"OIMILOCA\",\"internalLocationId\":\"633621\"}""",
   )
 
   private fun validMessage(eventType: String, message: String) = """
