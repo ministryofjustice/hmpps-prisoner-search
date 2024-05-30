@@ -27,17 +27,17 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:0.2.4")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:1.3.0")
-  implementation("com.google.code.gson:gson:2.10.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.4.0")
+  implementation("com.google.code.gson:gson:2.11.0")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.data:spring-data-elasticsearch:5.2.5")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.3.0")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.33.1")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.33.3")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
@@ -58,8 +58,8 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.22") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.21")
-  testImplementation("org.wiremock:wiremock-standalone:3.5.4")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.22")
+  testImplementation("org.wiremock:wiremock-standalone:3.6.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.7")
@@ -72,8 +72,6 @@ kotlin {
 
 tasks {
   withType<KotlinCompile> {
-    kotlinOptions {
-      jvmTarget = "21"
-    }
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
   }
 }
