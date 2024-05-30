@@ -36,6 +36,63 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `will search for all affected prisoners when location update message received`() {
+    val prisonerNumber = "O7089FD"
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = prisonerNumber
+        this.prisonId = "EWI"
+        this.cellLocation = "RES1-2-014"
+      },
+      SyncIndex.GREEN,
+    )
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = "O7089FF"
+        this.prisonId = "EWI"
+        this.cellLocation = "RES1-2-014"
+      },
+      SyncIndex.GREEN,
+    )
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = "O7089FG"
+        this.prisonId = "EWI"
+        this.cellLocation = "RES1-1-014" // wrong cell
+      },
+      SyncIndex.GREEN,
+    )
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = "O7089FH"
+        this.prisonId = "MDI" // wrong prison
+        this.cellLocation = "RES1-2-014"
+      },
+      SyncIndex.GREEN,
+    )
+    await untilCallTo { prisonerRepository.count(SyncIndex.GREEN) } matches { it == 4L }
+
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validPrisonerLocationChangeMessage("AGENCY_INTERNAL_LOCATIONS-UPDATED")).build(),
+    )
+
+    await untilAsserted {
+      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
+      assertThat(prisoner?.cellLocation).isEqualTo("A-1-1")
+    }
+    await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/$prisonerNumber") } matches { it == 1 }
+    await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/O7089FF") } matches { it == 1 }
+    // check we didn't get extra calls - wrong cell
+    await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/O7089FG") } matches { it == 0 }
+    // check we didn't get extra calls - wrong prison
+    await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/O7089FH") } matches { it == 0 }
+  }
+
+  @Test
   fun `will republish an ASSESSMENT_UPDATED event and then process`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val bookingId = 12349L
@@ -104,6 +161,11 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   private fun validOffenderChangedMessage(prisonerNumber: String, eventType: String) = validMessage(
     eventType = eventType,
     message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"$prisonerNumber\",\"offenderId\":\"2345612\",\"nomisEventType\":\"S1_RESULT\"}""",
+  )
+
+  private fun validPrisonerLocationChangeMessage(eventType: String) = validMessage(
+    eventType = eventType,
+    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"oldDescription\":\"EWI-RES1-2-014\",\"nomisEventType\":\"AGENCY_INTERNAL_LOCATIONS-UPDATED\",\"recordDeleted\":\"false\",\"prisonId\":\"EWI\",\"description\":\"EWI-RES1-2-014\",\"auditModuleName\":\"OIMILOCA\",\"internalLocationId\":\"633621\"}""",
   )
 
   private fun validMessage(eventType: String, message: String) = """
