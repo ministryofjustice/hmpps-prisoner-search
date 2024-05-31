@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.search.services
+package uk.gov.justice.digital.hmpps.prisonersearch.common.services
 
 import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.search.SearchRequest

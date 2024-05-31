@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.config.AuthenticationHolder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PhysicalDetailRequest

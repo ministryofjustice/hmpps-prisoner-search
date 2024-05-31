@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import java.util.concurrent.TimeUnit
 
 @Service

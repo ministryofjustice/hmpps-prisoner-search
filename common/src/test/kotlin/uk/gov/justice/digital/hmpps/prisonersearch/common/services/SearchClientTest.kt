@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.search.services
+package uk.gov.justice.digital.hmpps.prisonersearch.common.services
 
 import org.apache.http.ProtocolVersion
 import org.apache.http.message.BasicRequestLine

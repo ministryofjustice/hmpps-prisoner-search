@@ -14,6 +14,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
@@ -21,7 +22,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRep
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonApiService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
 import java.time.Duration
 

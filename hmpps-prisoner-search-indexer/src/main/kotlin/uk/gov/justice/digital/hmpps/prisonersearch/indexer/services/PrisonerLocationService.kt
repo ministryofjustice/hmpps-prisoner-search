@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 
 @Service
 class PrisonerLocationService(private val searchClient: SearchClient) {

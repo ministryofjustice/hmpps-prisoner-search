@@ -18,7 +18,7 @@ import org.mockito.kotlin.whenever
 import org.opensearch.action.search.SearchResponse
 import org.opensearch.search.SearchHits
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
