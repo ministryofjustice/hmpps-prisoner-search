@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumber
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.MatchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.MatchedBy
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonerMatch

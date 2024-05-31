@@ -18,7 +18,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Attribute
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType.AND
