@@ -69,14 +69,15 @@ data class StringMatcher(
   private fun String.hasWildcard() = contains("?") || contains("*")
 
   override fun toString(): String {
-    val condition = when (condition) {
+    val conditionOutput = when (condition) {
       IS -> "="
       IS_NOT -> "!="
       CONTAINS -> "CONTAINS"
       STARTSWITH -> "STARTSWITH"
       IN -> "IN"
     }
-    return "$attribute $condition $searchTerm"
+    val searchTermOutput = if (condition == IN) "($searchTerm)" else searchTerm
+    return "$attribute $conditionOutput $searchTermOutput"
   }
 }
 
