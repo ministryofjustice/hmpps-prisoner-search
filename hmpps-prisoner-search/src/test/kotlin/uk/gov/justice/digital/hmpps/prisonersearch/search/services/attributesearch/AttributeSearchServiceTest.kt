@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.JoinType
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Query
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IN
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringMatcher
 import java.time.LocalDate
@@ -780,6 +781,33 @@ class AttributeSearchServiceTest {
         eq("POSAttributeSearch"),
         check {
           assertThat(it["query"]).isEqualTo("(currentIncentive.dateTime > ${yesterday.atStartOfDay()} AND currentIncentive.dateTime < ${tomorrow.atStartOfDay()})")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should track list of strings`() {
+      service.search(
+        AttributeSearchRequest(
+          queries = listOf(
+            Query(
+              matchers = listOf(
+                StringMatcher(
+                  attribute = "prisonId",
+                  condition = IN,
+                  searchTerm = "LEI,MDI",
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("POSAttributeSearch"),
+        check {
+          assertThat(it["query"]).isEqualTo("prisonId IN (LEI,MDI)")
         },
         isNull(),
       )
