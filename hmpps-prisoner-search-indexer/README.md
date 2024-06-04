@@ -1,8 +1,7 @@
 # HMPPS Prisoner Search Indexer
-
-[![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-search/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-search-indexer)
-[![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-prisoner-search-indexer/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-prisoner-search-indexer)
-[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-search-indexer-dev.prison.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs)
+[![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-search/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-search)
+[![Docker Repository on Quay](https://img.shields.io/badge/quay.io-repository-2496ED.svg?logo=docker)](https://quay.io/repository/hmpps/hmpps-prisoner-search-indexer)
+[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-search-indexer-dev.prison.service.justice.gov.uk/swagger-ui/index.html)
 
 The purpose of this service is to:
 * Keep the OpenSearch prison index up to date with changes from Prison systems (NOMIS)
