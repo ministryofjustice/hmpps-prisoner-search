@@ -1,8 +1,8 @@
 # HMPPS Prisoner Search
-
+[![repo standards badge](https://img.shields.io/badge/endpoint.svg?&style=flat&logo=github&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-prisoner-search)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-report/hmpps-prisoner-search "Link to report")
 [![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-search/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-search)
-[![Docker](https://quay.io/repository/hmpps/hmpps-prisoner-search/status)](https://quay.io/repository/hmpps/hmpps-prisoner-search/status)
-[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-search-dev.prison.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config)
+[![Docker Repository on Quay](https://img.shields.io/badge/quay.io-repository-2496ED.svg?logo=docker)](https://quay.io/repository/hmpps/hmpps-prisoner-search)
+[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-search-dev.prison.service.justice.gov.uk/swagger-ui/index.html)
 
 This README provides information on the prisoner search service.  For the indexer service that keeps the search
 up-to-date from Prison systems (NOMIS) please see the [indexer README](hmpps-prisoner-search-indexer/README.md).
