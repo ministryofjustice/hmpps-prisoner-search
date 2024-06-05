@@ -86,10 +86,14 @@ class IndexListenerService(
   }
 
   fun prisonerLocationChange(message: PrisonerLocationChangedMessage, eventType: String) {
-    // need to search for all prisoners that have the old description
-    val cellLocation = message.oldDescription.substringAfter("${message.prisonId}-")
-    prisonerLocationService.findPrisoners(message.prisonId, cellLocation).forEach {
-      sync(prisonerNumber = it, eventType)
+    if (message.oldDescription == null) {
+      log.info("Ignoring location change for {} as no old description", message.prisonId)
+    } else {
+      // need to search for all prisoners that have the old description
+      val cellLocation = message.oldDescription.substringAfter("${message.prisonId}-")
+      prisonerLocationService.findPrisoners(message.prisonId, cellLocation).forEach {
+        sync(prisonerNumber = it, eventType)
+      }
     }
   }
 
@@ -152,5 +156,5 @@ data class OffenderBookingReassignedMessage(
 
 data class PrisonerLocationChangedMessage(
   val prisonId: String,
-  val oldDescription: String,
+  val oldDescription: String?,
 )
