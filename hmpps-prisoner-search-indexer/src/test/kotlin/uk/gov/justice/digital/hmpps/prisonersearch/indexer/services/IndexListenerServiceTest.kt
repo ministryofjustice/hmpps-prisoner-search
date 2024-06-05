@@ -567,7 +567,17 @@ internal class IndexListenerServiceTest {
       verifyNoMoreInteractions(prisonerSynchroniserService)
     }
 
-    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String = "EWI-RES1-2-14") = PrisonerLocationChangedMessage(
+    @Test
+    fun `will do nothing if new location (missing old description)`() {
+      indexListenerService.prisonerLocationChange(
+        anPrisonerLocationChange(oldDescription = null),
+        "AGENCY_INTERNAL_LOCATIONS-UPDATED",
+      )
+      verifyNoInteractions(prisonerLocationService)
+      verifyNoInteractions(prisonerSynchroniserService)
+    }
+
+    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String? = "EWI-RES1-2-14") = PrisonerLocationChangedMessage(
       prisonId = prisonId,
       oldDescription = oldDescription,
     )
