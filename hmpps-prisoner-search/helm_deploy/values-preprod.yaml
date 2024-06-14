@@ -10,11 +10,11 @@ generic-service:
     API_BASE_URL_PRISON_API: "https://prison-api-preprod.prison.service.justice.gov.uk"
 
   # Additional allowlist rules
-  # See also allowlist values helm_deploy/prisoner-offender-search/values.yaml
+  # See also allowlist values helm_deploy/hmpps-prisoner-search/values.yaml
   allowlist:
-    prum-test-platform-1: 18.134.149.68/32
-    prum-test-platform-2: 18.133.201.123/32
-    prum-test-platform-3: 52.56.76.34/32
+    groups:
+      - internal
+      - prum-test
 
 generic-prometheus-alerts:
   businessHoursOnly: true
