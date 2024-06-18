@@ -7,10 +7,6 @@ WORKDIR /app
 ADD . .
 RUN ./gradlew --no-daemon :hmpps-prisoner-search-indexer:assemble
 
-# Grab AWS RDS Root cert
-RUN apt-get update && apt-get install -y curl
-RUN curl https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem  > root.crt
-
 FROM eclipse-temurin:21-jre-jammy
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
 
@@ -29,7 +25,7 @@ RUN addgroup --gid 2000 --system appgroup && \
 
 # Install AWS RDS Root cert into Java truststore
 RUN mkdir /home/appuser/.postgresql
-COPY --from=builder --chown=appuser:appgroup /app/root.crt /home/appuser/.postgresql/root.crt
+ADD --chown=appuser:appgroup https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /home/appuser/.postgresql/root.crt
 
 WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/hmpps-prisoner-search-indexer/build/libs/hmpps-prisoner-search-indexer*.jar /app/app.jar
