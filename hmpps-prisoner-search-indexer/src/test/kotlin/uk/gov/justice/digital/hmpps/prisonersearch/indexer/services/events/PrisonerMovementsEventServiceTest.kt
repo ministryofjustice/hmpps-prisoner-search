@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION_SWITCH_BOOKING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.RETURN_FROM_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TEMPORARY_ABSENCE_RETURN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED
@@ -206,6 +207,19 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
         reason = READMISSION,
+        prisonId = "BXI",
+      )
+    }
+
+    @Test
+    internal fun `will emit receive event with reason of readmission with switch booking to existing old booking`() {
+      val prisoner = recalledPrisoner("BXI", bookingId = "99")
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = READMISSION_SWITCH_BOOKING,
         prisonId = "BXI",
       )
     }
@@ -404,8 +418,9 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
     }
 
   private fun releasedPrisoner() = prisoner("/receive-state-changes/released.json")
-  private fun recalledPrisoner(prisonId: String = "NMI") = prisoner("/receive-state-changes/recalled.json").apply {
+  private fun recalledPrisoner(prisonId: String = "NMI", bookingId: String = "1203208") = prisoner("/receive-state-changes/recalled.json").apply {
     this.prisonId = prisonId
+    this.bookingId = bookingId
   }
   private fun releasedPrisonerToHospital() = prisoner("/receive-state-changes/released-to-hospital.json")
 
