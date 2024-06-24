@@ -115,6 +115,7 @@ class HmppsDomainEventEmitter(
   enum class PrisonerReceiveReason(val description: String) {
     NEW_ADMISSION("admission on new charges"),
     READMISSION("re-admission on an existing booking"),
+    READMISSION_SWITCH_BOOKING("re-admission but switched to old booking"),
     TRANSFERRED("transfer from another prison"),
     RETURN_FROM_COURT("returned back to prison from court"),
     TEMPORARY_ABSENCE_RETURN("returned after a temporary absence"),

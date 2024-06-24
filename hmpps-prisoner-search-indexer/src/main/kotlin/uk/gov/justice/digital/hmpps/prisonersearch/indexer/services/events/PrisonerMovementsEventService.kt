@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION_SWITCH_BOOKING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.RETURN_FROM_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TEMPORARY_ABSENCE_RETURN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TRANSFERRED
@@ -70,6 +71,8 @@ class PrisonerMovementsEventService(
         CourtReturn(prisonerNumber, prisoner.prisonId!!)
       } else if (prisoner.isNewAdmission(previousPrisonerSnapshot) && isAdmissionAssociatedWithAMerge(offenderBooking)) {
         MergeAdmission(prisonerNumber, prisoner.prisonId!!)
+      } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot)) {
+        MovementInChange.ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
       } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
         NewAdmission(prisonerNumber, prisoner.prisonId!!)
       } else if (prisoner.isReadmission(previousPrisonerSnapshot)) {
@@ -159,6 +162,14 @@ private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) =
     this.status == "ACTIVE IN" &&
     previousPrisonerSnapshot?.status == "INACTIVE OUT"
 
+private fun Prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot: Prisoner?) =
+  this.lastMovementTypeCode == "ADM" &&
+    previousPrisonerSnapshot?.bookingId != null &&
+    this.bookingId != previousPrisonerSnapshot.bookingId &&
+    this.bookingId.isBookingBefore(previousPrisonerSnapshot.bookingId) &&
+    this.status == "ACTIVE IN" &&
+    previousPrisonerSnapshot.status == "INACTIVE OUT"
+
 private fun Prisoner.isRelease(previousPrisonerSnapshot: Prisoner?) =
   this.lastMovementTypeCode == "REL" &&
     this.status == "INACTIVE OUT" &&
@@ -184,6 +195,10 @@ private fun isAdmissionAssociatedWithAMerge(offenderBooking: OffenderBooking): B
     ?: false
 }
 
+private fun String?.isBookingBefore(previousSnapshotBookingId: String?): Boolean {
+  return (this?.toLong() ?: Long.MAX_VALUE) < (previousSnapshotBookingId?.toLong() ?: 0)
+}
+
 sealed class PossibleMovementChange {
   sealed class MovementInChange(
     val offenderNo: String,
@@ -201,6 +216,7 @@ sealed class PossibleMovementChange {
       MovementInChange(offenderNo, prisonId, POST_MERGE_ADMISSION)
 
     class Readmission(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, READMISSION)
+    class ReadmissionSwitchBooking(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, READMISSION_SWITCH_BOOKING)
   }
 
   sealed class MovementOutChange(val offenderNo: String, val prisonId: String, val reason: PrisonerReleaseReason) :
