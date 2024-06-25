@@ -52,8 +52,7 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.7.3")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.2-beta")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.22") {
     exclude(group = "io.swagger.core.v3")
   }
