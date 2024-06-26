@@ -915,7 +915,8 @@ class PrisonersInPrisonResourceTest : AbstractSearchIntegrationTest() {
           .queryParam("incentiveLevelCode", "STD")
           .build()
       }
-        .headers(setAuthorisation(user = "JILL.BEANS", roles = listOf("ROLE_PRISONER_SEARCH"))).header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "JILL.BEANS", roles = listOf("ROLE_PRISONER_SEARCH")))
+        .header("Content-Type", "application/json")
         .exchange().expectStatus().isOk
 
       verify(telemetryClient).trackEvent(

@@ -43,7 +43,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
@@ -58,6 +57,7 @@ import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
 import uk.gov.justice.hmpps.sqs.HmppsTopicFactory
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.MissingTopicException
+import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -76,7 +76,7 @@ import kotlin.random.Random
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
   @Autowired
-  protected lateinit var jwtAuthHelper: JwtAuthHelper
+  protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
   @Autowired
   lateinit var openSearchClient: RestHighLevelClient
@@ -191,7 +191,7 @@ abstract class IntegrationTestBase {
   internal fun setAuthorisation(
     user: String = "prisoner-offender-search-indexer-client",
     roles: List<String> = listOf(),
-  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, roles)
+  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = user, roles = roles)
 
   /* Need to redefine these beans so that we can then spy on them in tests */
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
