@@ -42,7 +42,6 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
-  implementation("io.arrow-kt:arrow-core:1.2.4")
   implementation("org.awaitility:awaitility-kotlin:4.2.1")
 
   implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
@@ -64,7 +63,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.2.7")
-  testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
 }
 
 kotlin {
