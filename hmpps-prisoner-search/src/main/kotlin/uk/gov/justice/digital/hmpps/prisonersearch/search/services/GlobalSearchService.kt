@@ -17,15 +17,15 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
-import uk.gov.justice.digital.hmpps.prisonersearch.search.config.AuthenticationHolder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
+import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 
 @Service
 class GlobalSearchService(
   private val searchClient: SearchClient,
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
-  private val authenticationHolder: AuthenticationHolder,
+  private val authenticationHolder: HmppsAuthenticationHolder,
 ) {
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -165,8 +165,8 @@ class GlobalSearchService(
     numberOfResults: Int,
   ) {
     val propertiesMap = mapOf(
-      "username" to authenticationHolder.currentUsername(),
-      "clientId" to authenticationHolder.currentClientId(),
+      "username" to authenticationHolder.username,
+      "clientId" to authenticationHolder.clientId,
       "lastname" to globalSearchCriteria.lastName,
       "firstname" to globalSearchCriteria.firstName,
       "gender" to globalSearchCriteria.gender?.value,

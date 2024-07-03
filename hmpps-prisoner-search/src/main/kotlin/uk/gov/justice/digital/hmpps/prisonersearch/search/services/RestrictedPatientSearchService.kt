@@ -17,14 +17,14 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
-import uk.gov.justice.digital.hmpps.prisonersearch.search.config.AuthenticationHolder
+import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 
 @Service
 class RestrictedPatientSearchService(
   private val searchClient: SearchClient,
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
-  private val authenticationHolder: AuthenticationHolder,
+  private val authenticationHolder: HmppsAuthenticationHolder,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -138,8 +138,8 @@ class RestrictedPatientSearchService(
     numberOfResults: Int,
   ) {
     val propertiesMap = mapOf(
-      "username" to authenticationHolder.currentUsername(),
-      "clientId" to authenticationHolder.currentClientId(),
+      "username" to authenticationHolder.username,
+      "clientId" to authenticationHolder.clientId,
       "lastname" to searchCriteria.lastName,
       "firstname" to searchCriteria.firstName,
       "prisonerIdentifier" to searchCriteria.prisonerIdentifier,

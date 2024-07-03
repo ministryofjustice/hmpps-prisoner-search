@@ -18,18 +18,18 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
-import uk.gov.justice.digital.hmpps.prisonersearch.search.config.AuthenticationHolder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.PrisonerNumbers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
+import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 
 @Service
 class PrisonerSearchService(
   private val searchClient: SearchClient,
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
-  private val authenticationHolder: AuthenticationHolder,
+  private val authenticationHolder: HmppsAuthenticationHolder,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -342,8 +342,8 @@ class PrisonerSearchService(
 
   private fun customEventForFindBySearchCriteria(searchCriteria: SearchCriteria, numberOfResults: Int) {
     val propertiesMap = mapOf(
-      "username" to authenticationHolder.currentUsername(),
-      "clientId" to authenticationHolder.currentClientId(),
+      "username" to authenticationHolder.username,
+      "clientId" to authenticationHolder.clientId,
       "lastname" to searchCriteria.lastName,
       "firstname" to searchCriteria.firstName,
       "prisonId" to searchCriteria.prisonIds.toString(),
@@ -358,8 +358,8 @@ class PrisonerSearchService(
 
   private fun customEventForFindByReleaseDate(searchCriteria: ReleaseDateSearch, numberOfResults: Int) {
     val propertiesMap = mapOf(
-      "username" to authenticationHolder.currentUsername(),
-      "clientId" to authenticationHolder.currentClientId(),
+      "username" to authenticationHolder.username,
+      "clientId" to authenticationHolder.clientId,
       "earliestReleaseDate" to searchCriteria.earliestReleaseDate.toString(),
       "latestReleaseDateRange" to searchCriteria.latestReleaseDate.toString(),
       "prisonId" to searchCriteria.prisonIds.toString(),
@@ -372,8 +372,8 @@ class PrisonerSearchService(
 
   private fun customEventForFindBy(type: String, prisonerListNumber: Int, numberOfResults: Int) {
     val logMap = mapOf(
-      "username" to authenticationHolder.currentUsername(),
-      "clientId" to authenticationHolder.currentClientId(),
+      "username" to authenticationHolder.username,
+      "clientId" to authenticationHolder.clientId,
       "numberOfPrisonerIds" to prisonerListNumber.toString(),
     )
 
