@@ -21,10 +21,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
-import uk.gov.justice.digital.hmpps.prisonersearch.search.config.AuthenticationHolder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PhysicalDetailRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
+import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -32,7 +32,7 @@ class PhysicalDetailService(
   private val elasticsearchClient: SearchClient,
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
-  private val authenticationHolder: AuthenticationHolder,
+  private val authenticationHolder: HmppsAuthenticationHolder,
   @Value("\${search.detailed.max-results}") private val maxSearchResults: Int = 200,
   @Value("\${search.detailed.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
@@ -208,8 +208,8 @@ class PhysicalDetailService(
     numberOfResults: Long,
   ) {
     val propertiesMap = mapOf(
-      "username" to authenticationHolder.currentUsername(),
-      "clientId" to authenticationHolder.currentClientId(),
+      "username" to authenticationHolder.username,
+      "clientId" to authenticationHolder.clientId,
       "cellLocationPrefix" to detailRequest.cellLocationPrefix,
       "minHeight" to detailRequest.minHeight?.toString(),
       "maxHeight" to detailRequest.maxHeight?.toString(),
