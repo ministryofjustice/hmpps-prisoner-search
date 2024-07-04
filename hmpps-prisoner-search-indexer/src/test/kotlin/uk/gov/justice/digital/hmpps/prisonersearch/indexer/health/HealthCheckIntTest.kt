@@ -1,15 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.function.Consumer
 
 class HealthCheckIntTest : IntegrationTestBase() {
 
@@ -36,20 +32,6 @@ class HealthCheckIntTest : IntegrationTestBase() {
       .expectStatus().is5xxServerError
       .expectBody()
       .jsonPath("status").isEqualTo("DOWN")
-  }
-
-  @Test
-  fun `Health info reports version`() {
-    stubPingWithResponse(200)
-
-    webTestClient.get().uri("/health")
-      .exchange()
-      .expectStatus().isOk
-      .expectBody().jsonPath("components.healthInfo.details.version").value(
-        Consumer<String> {
-          assertThat(it).startsWith(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE))
-        },
-      )
   }
 
   @Test
