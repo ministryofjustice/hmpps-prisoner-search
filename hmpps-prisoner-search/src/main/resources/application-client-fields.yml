@@ -1,0 +1,11 @@
+search.clients:
+  restricted-patients-client:
+    - "prisonerNumber"
+    - "bookingId"
+    - "conditionalReleaseDate"
+    - "sentenceExpiryDate"
+    - "recall"
+    - "indeterminateSentence"
+    - "legalStatus"
+    - "lastMovementTypeCode"
+    - "lastMovementReasonCode"

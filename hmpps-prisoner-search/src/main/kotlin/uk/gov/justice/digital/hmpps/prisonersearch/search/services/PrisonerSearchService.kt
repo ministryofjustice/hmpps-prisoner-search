@@ -30,6 +30,7 @@ class PrisonerSearchService(
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
+  private val fields: ClientFields,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -132,6 +133,11 @@ class PrisonerSearchService(
         size(RESULT_HITS_MAX)
         query(it)
       }
+      // TODO: remove the -[0-9]* suffix from the client
+      fields.clients[authenticationHolder.clientId]?.apply {
+        searchSourceBuilder.fetchSource(this.toTypedArray(), null)
+      }
+
       val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
       val prisonerMatches = getSearchResult(searchClient.search(searchRequest))
       return if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)

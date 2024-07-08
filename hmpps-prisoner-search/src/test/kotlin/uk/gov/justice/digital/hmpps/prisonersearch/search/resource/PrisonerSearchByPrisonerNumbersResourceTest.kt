@@ -56,6 +56,21 @@ class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchIntegrationTes
   }
 
   @Test
+  fun `prisoner number search restricts to allowed fields`() {
+    webTestClient.post().uri("/prisoner-search/prisoner-numbers")
+      .body(BodyInserters.fromValue("""{"prisonerNumbers":["AN2"]}"""))
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH"), clientId = "restricted-patients-client"))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].prisonerNumber").isEqualTo("AN2")
+      .jsonPath("$[0].imprisonmentStatus").doesNotHaveJsonPath()
+      .jsonPath("$[0].imprisonmentStatusDescription").doesNotHaveJsonPath()
+  }
+
+  @Test
   fun `prisoner number search returns offender records, ignoring not found prison numbers`() {
     webTestClient.post().uri("/prisoner-search/prisoner-numbers")
       .body(BodyInserters.fromValue(gson.toJson(PrisonerNumbers(listOf("AN2", "AN33", "AN44")))))

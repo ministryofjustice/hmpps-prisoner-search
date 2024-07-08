@@ -35,9 +35,8 @@ spring:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
 
   profiles:
-    group:
-      test:
-        - "stdout"
+    include:
+      - "client-fields"
 
 server:
   port: 8080

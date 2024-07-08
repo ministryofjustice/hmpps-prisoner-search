@@ -71,6 +71,10 @@ abstract class IntegrationTestBase {
   }
   internal fun Any.asJson() = gson.toJson(this)
 
-  internal fun setAuthorisation(user: String = "prisoner-search-client", roles: List<String> = listOf()): (HttpHeaders) -> Unit =
-    jwtAuthHelper.setAuthorisationHeader(username = user, clientId = "prisoner-search-client", roles = roles)
+  internal fun setAuthorisation(
+    user: String? = "prisoner-search-client",
+    roles: List<String> = listOf(),
+    clientId: String = "prisoner-search-client",
+  ): (HttpHeaders) -> Unit =
+    jwtAuthHelper.setAuthorisationHeader(username = user, clientId = clientId, roles = roles)
 }
