@@ -66,15 +66,15 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
         "prisoner-in-prison-search-role",
         SecurityScheme().addBearerJwtRequirement("ROLE_PRISONER_IN_PRISON_SEARCH"),
       ).addSecuritySchemes(
-        "prisoner-search--core-person--ro",
-        SecurityScheme().addBearerJwtRequirement("PRISONER_SEARCH__CORE_PERSON__RO"),
+        "prisoner-search--prisoner--ro",
+        SecurityScheme().addBearerJwtRequirement("PRISONER_SEARCH__PRISONER__RO"),
       ),
     )
     .addSecurityItem(SecurityRequirement().addList("view-prisoner-data-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("global-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-in-prison-search-role", listOf("read")))
-    .addSecurityItem(SecurityRequirement().addList("prisoner-search--core-person--ro", listOf("read")))
+    .addSecurityItem(SecurityRequirement().addList("prisoner-search--prisoner--ro", listOf("read")))
 
   @Bean
   fun openAPICustomiser(): OpenApiCustomizer = OpenApiCustomizer {

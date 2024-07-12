@@ -82,7 +82,7 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   @Test
-  fun `can perform a get on prisoner number for role PRISONER_SEARCH__CORE_PERSON__RO`() {
+  fun `can perform a get on prisoner number for role PRISONER_SEARCH__PRISONER__RO`() {
     getPrisonerSearchCorePerson("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
   }
 

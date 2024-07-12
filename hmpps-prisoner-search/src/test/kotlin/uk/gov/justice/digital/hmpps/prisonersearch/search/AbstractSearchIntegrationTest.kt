@@ -207,7 +207,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
 
   fun getPrisonerSearchCorePerson(id: String, fileAssert: String) {
     webTestClient.get().uri("/prisoner/$id")
-      .headers(setAuthorisation(roles = listOf("PRISONER_SEARCH__CORE_PERSON__RO")))
+      .headers(setAuthorisation(roles = listOf("PRISONER_SEARCH__PRISONER__RO")))
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isOk
