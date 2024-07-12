@@ -47,6 +47,7 @@ class GlobalSearchResource(
   ) = globalSearchService.findByGlobalSearchCriteria(globalSearchCriteria, pageable)
 
   @GetMapping("/prisoner/{id}")
+  @PreAuthorize("hasAnyRole('ROLE_VIEW_PRISONER_DATA', 'ROLE_PRISONER_SEARCH', 'PRISONER_SEARCH__CORE_PERSON__RO')")
   @Operation(
     summary = "Get prisoner by prisoner number (AKA NOMS number)",
     description = "Requires  ROLE_PRISONER_SEARCH or ROLE_VIEW_PRISONER_DATA role or PRISONER_SEARCH__CORE_PERSON__RO",
