@@ -125,4 +125,20 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .jsonPath("$.security[3].prisoner-in-prison-search-role")
       .isEqualTo(JSONArray().apply { addAll(listOf("read")) })
   }
+
+  @Test
+  fun `a security scheme is setup for a HMPPS Auth token with the PRISONER_SEARCH__PRISONER__RO role`() {
+    webTestClient.get()
+      .uri("/v3/api-docs")
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.components.securitySchemes.prisoner-search--prisoner--ro.type").isEqualTo("http")
+      .jsonPath("$.components.securitySchemes.prisoner-search--prisoner--ro.scheme").isEqualTo("bearer")
+      .jsonPath("$.components.securitySchemes.prisoner-search--prisoner--ro.bearerFormat").isEqualTo("JWT")
+      .jsonPath("$.components.securitySchemes.prisoner-search--prisoner--ro.description").value(containsString("PRISONER_SEARCH__PRISONER__RO"))
+      .jsonPath("$.security[3].prisoner-in-prison-search-role")
+      .isEqualTo(JSONArray().apply { addAll(listOf("read")) })
+  }
 }

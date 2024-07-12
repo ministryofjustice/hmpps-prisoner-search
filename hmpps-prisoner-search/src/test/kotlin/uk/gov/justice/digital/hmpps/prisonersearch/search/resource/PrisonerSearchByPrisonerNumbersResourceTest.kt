@@ -59,7 +59,7 @@ class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchIntegrationTes
   fun `prisoner number search returns offender records, ignoring not found prison numbers`() {
     webTestClient.post().uri("/prisoner-search/prisoner-numbers")
       .body(BodyInserters.fromValue(gson.toJson(PrisonerNumbers(listOf("AN2", "AN33", "AN44")))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .headers(setAuthorisation(roles = listOf("PRISONER_SEARCH__PRISONER__RO")))
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isOk
