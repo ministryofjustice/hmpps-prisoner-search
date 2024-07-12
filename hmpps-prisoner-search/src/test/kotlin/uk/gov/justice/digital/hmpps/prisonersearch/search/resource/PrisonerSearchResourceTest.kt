@@ -79,9 +79,18 @@ class PrisonerSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   @Test
-  fun `search by prisonId success for ROLE_GLOBAL_SEARCH and ROLE_PRISONER_SEARCH role`() {
+  fun `search by prisonId success for PRISONER_SEARCH__CORE_PERSON__RO role`() {
     webTestClient.get().uri("/prisoner-search/prison/MDI")
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH")))
+      .headers(setAuthorisation(roles = listOf("PRISONER_SEARCH__CORE_PERSON__RO")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+  }
+
+  @Test
+  fun `search by prisonId success for ROLE_GLOBAL_SEARCH and ROLE_PRISONER_SEARCH role and `() {
+    webTestClient.get().uri("/prisoner-search/prison/MDI")
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH","PRISONER_SEARCH__CORE_PERSON__RO")))
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isOk

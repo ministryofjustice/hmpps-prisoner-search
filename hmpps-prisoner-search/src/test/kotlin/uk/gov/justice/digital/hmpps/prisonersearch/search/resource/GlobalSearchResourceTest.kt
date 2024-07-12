@@ -82,6 +82,11 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   @Test
+  fun `can perform a get on prisoner number for role PRISONER_SEARCH__CORE_PERSON__RO`() {
+    getPrisonerSearchCorePerson("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
+  }
+
+  @Test
   fun `access forbidden when wrong role`() {
     webTestClient.get().uri("/prisoner/A7089EY")
       .headers(setAuthorisation(roles = listOf("ROLE_DUMMY")))

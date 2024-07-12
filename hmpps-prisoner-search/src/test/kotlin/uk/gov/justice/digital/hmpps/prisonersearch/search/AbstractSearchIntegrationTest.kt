@@ -205,6 +205,15 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
       .expectBody().json(fileAssert.readResourceAsText())
   }
 
+  fun getPrisonerSearchCorePerson(id: String, fileAssert: String) {
+    webTestClient.get().uri("/prisoner/$id")
+      .headers(setAuthorisation(roles = listOf("PRISONER_SEARCH__CORE_PERSON__RO")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().json(fileAssert.readResourceAsText())
+  }
+
   fun restrictedPatientSearch(restrictedPatientSearchCriteria: RestrictedPatientSearchCriteria, fileAssert: String) {
     webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
       .body(BodyInserters.fromValue(gson.toJson(restrictedPatientSearchCriteria)))

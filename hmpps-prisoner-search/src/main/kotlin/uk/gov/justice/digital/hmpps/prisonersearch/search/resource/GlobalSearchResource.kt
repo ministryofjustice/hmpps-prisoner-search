@@ -33,10 +33,10 @@ class GlobalSearchResource(
     produces = [MediaType.APPLICATION_JSON_VALUE],
     consumes = [MediaType.APPLICATION_JSON_VALUE],
   )
-  @PreAuthorize("hasAnyRole('ROLE_GLOBAL_SEARCH', 'ROLE_PRISONER_SEARCH')")
+  @PreAuthorize("hasAnyRole('ROLE_GLOBAL_SEARCH', 'ROLE_PRISONER_SEARCH', 'PRISONER_SEARCH__CORE_PERSON__RO')")
   @Operation(
     summary = "Match prisoners by criteria",
-    description = "Requires ROLE_GLOBAL_SEARCH role or ROLE_PRISONER_SEARCH role",
+    description = "Requires ROLE_GLOBAL_SEARCH role or ROLE_PRISONER_SEARCH role or PRISONER_SEARCH__CORE_PERSON__RO",
   )
   @Tag(name = "Global search")
   @Tag(name = "Popular")
@@ -47,10 +47,9 @@ class GlobalSearchResource(
   ) = globalSearchService.findByGlobalSearchCriteria(globalSearchCriteria, pageable)
 
   @GetMapping("/prisoner/{id}")
-  @PreAuthorize("hasAnyRole('ROLE_VIEW_PRISONER_DATA', 'ROLE_PRISONER_SEARCH')")
   @Operation(
     summary = "Get prisoner by prisoner number (AKA NOMS number)",
-    description = "Requires ROLE_PRISONER_SEARCH or ROLE_VIEW_PRISONER_DATA role",
+    description = "Requires  ROLE_PRISONER_SEARCH or ROLE_VIEW_PRISONER_DATA role or PRISONER_SEARCH__CORE_PERSON__RO",
     security = [SecurityRequirement(name = "view-prisoner-data-role"), SecurityRequirement(name = "prisoner-search-role")],
   )
   @Tag(name = "Popular")

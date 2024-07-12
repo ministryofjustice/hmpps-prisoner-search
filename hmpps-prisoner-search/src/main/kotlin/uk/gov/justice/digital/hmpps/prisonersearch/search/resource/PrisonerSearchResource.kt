@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
 
 @RestController
 @Validated
-@PreAuthorize("hasAnyRole('ROLE_GLOBAL_SEARCH', 'ROLE_PRISONER_SEARCH')")
+@PreAuthorize("hasAnyRole('ROLE_GLOBAL_SEARCH', 'ROLE_PRISONER_SEARCH', 'PRISONER_SEARCH__CORE_PERSON__RO')")
 @RequestMapping(
   "/prisoner-search",
   produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -71,10 +71,11 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
   fun findPossibleMatchesBySearchCriteria(@Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria) =
     prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria)
 
+
   @PostMapping("/prisoner-numbers")
   @Operation(
     summary = "Match prisoners by a list of prisoner numbers",
-    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role or PRISONER_SEARCH__CORE_PERSON__RO",
   )
   @Tag(name = "Batch")
   @Tag(name = "Popular")
