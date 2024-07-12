@@ -71,7 +71,6 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
   fun findPossibleMatchesBySearchCriteria(@Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria) =
     prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria)
 
-
   @PostMapping("/prisoner-numbers")
   @Operation(
     summary = "Match prisoners by a list of prisoner numbers",

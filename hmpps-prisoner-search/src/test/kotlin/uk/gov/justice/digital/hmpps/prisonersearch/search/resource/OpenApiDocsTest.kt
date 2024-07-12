@@ -125,6 +125,7 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .jsonPath("$.security[3].prisoner-in-prison-search-role")
       .isEqualTo(JSONArray().apply { addAll(listOf("read")) })
   }
+
   @Test
   fun `a security scheme is setup for a HMPPS Auth token with the PRISONER_SEARCH__CORE_PERSON__RO role`() {
     webTestClient.get()
