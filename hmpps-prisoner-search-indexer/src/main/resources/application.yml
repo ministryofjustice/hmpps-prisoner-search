@@ -97,6 +97,18 @@ aws:
 
 hmpps.sqs:
   queueAdminRole: ROLE_PRISONER_INDEX
+  topics:
+    hmppseventtopic:
+      propagateTracing: true
+  queues:
+    index:
+      propagateTracing: true
+    hmppsdomainqueue:
+      propagateTracing: true
+    offenderqueue:
+      propagateTracing: true
+    publish:
+      propagateTracing: true
 
 index-build:
   page-size: 1000
