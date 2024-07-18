@@ -47,27 +47,22 @@ hmpps.sqs:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       dlqMaxReceiveCount: 1
-      propagateTracing: false
     hmppsdomainqueue:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       dlqMaxReceiveCount: 1
-      propagateTracing: false
     offenderqueue:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       dlqMaxReceiveCount: 1
-      propagateTracing: false
     hmppseventtestqueue:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       subscribeTopicId: hmppseventtopic
-      propagateTracing: false
     publish:
       queueName: ${random.uuid}
       dlqName: ${random.uuid}
       dlqMaxReceiveCount: 2
-      propagateTracing: false
   topics:
     hmppseventtopic:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
