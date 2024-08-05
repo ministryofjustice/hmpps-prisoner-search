@@ -17,7 +17,16 @@ internal class IndexStatusTest {
     val oldStartTime = LocalDateTime.now().minusHours(24)
     val oldEndTime = oldStartTime.plusMinutes(10)
     val newStartTime = LocalDateTime.now().minusMinutes(5)
-    val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, currentIndexEndBuildTime = oldEndTime, currentIndexStartBuildTime = oldStartTime, otherIndexState = BUILDING, otherIndexStartBuildTime = newStartTime, otherIndexEndBuildTime = null)
+    val indexStatus = IndexStatus(
+      id = INDEX_STATUS_ID,
+      currentIndex = GREEN,
+      currentIndexState = COMPLETED,
+      currentIndexEndBuildTime = oldEndTime,
+      currentIndexStartBuildTime = oldStartTime,
+      otherIndexState = BUILDING,
+      otherIndexStartBuildTime = newStartTime,
+      otherIndexEndBuildTime = null,
+    )
 
     val newStatus = indexStatus.toSwitchIndex()
 
@@ -31,9 +40,9 @@ internal class IndexStatusTest {
 
   @Test
   fun `Will find active indexes`() {
-    assertThat(IndexStatus(currentIndex = BLUE, currentIndexState = ABSENT, otherIndexState = ABSENT).activeIndexes()).containsExactlyInAnyOrder()
-    assertThat(IndexStatus(currentIndex = BLUE, currentIndexState = BUILDING, otherIndexState = ABSENT).activeIndexes()).containsExactlyInAnyOrder(BLUE)
-    assertThat(IndexStatus(currentIndex = BLUE, currentIndexState = CANCELLED, otherIndexState = BUILDING).activeIndexes()).containsExactlyInAnyOrder(GREEN)
-    assertThat(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED, otherIndexState = BUILDING).activeIndexes()).containsExactlyInAnyOrder(BLUE, GREEN)
+    assertThat(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = ABSENT, otherIndexState = ABSENT).activeIndexes()).containsExactlyInAnyOrder()
+    assertThat(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = BUILDING, otherIndexState = ABSENT).activeIndexes()).containsExactlyInAnyOrder(BLUE)
+    assertThat(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = CANCELLED, otherIndexState = BUILDING).activeIndexes()).containsExactlyInAnyOrder(GREEN)
+    assertThat(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED, otherIndexState = BUILDING).activeIndexes()).containsExactlyInAnyOrder(BLUE, GREEN)
   }
 }

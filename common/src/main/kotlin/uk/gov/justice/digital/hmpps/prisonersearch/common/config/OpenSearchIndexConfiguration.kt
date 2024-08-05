@@ -7,5 +7,6 @@ class OpenSearchIndexConfiguration {
 
   companion object {
     const val PRISONER_INDEX = "prisoner"
+    const val INCENTIVE_INDEX = "incentive"
   }
 }

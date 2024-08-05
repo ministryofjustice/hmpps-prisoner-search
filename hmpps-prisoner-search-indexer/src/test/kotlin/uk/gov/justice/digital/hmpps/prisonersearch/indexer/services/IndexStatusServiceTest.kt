@@ -39,7 +39,7 @@ class IndexStatusServiceTest {
 
       @Test
       internal fun `will add initial status to index`() {
-        indexStatusService.initialiseIndexWhenRequired()
+        indexStatusService.initialiseIndexWhenRequired(INDEX_STATUS_ID, SyncIndex.NONE)
         verify(indexStatusRepository).save(any())
       }
     }
@@ -50,10 +50,10 @@ class IndexStatusServiceTest {
 
     @Test
     fun `An existing index status should be returned`() {
-      val existingIndexStatus = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
+      val existingIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexStatus))
 
-      val actualIndexStatus = indexStatusService.getIndexStatus()
+      val actualIndexStatus = indexStatusService.getIndexStatus(INDEX_STATUS_ID)
 
       verify(indexStatusRepository).findById(INDEX_STATUS_ID)
       assertThat(actualIndexStatus).isEqualTo(existingIndexStatus)
@@ -69,20 +69,20 @@ class IndexStatusServiceTest {
 
     @Test
     fun `Already building index does nothing`() {
-      val existingIndexInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
+      val existingIndexInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexInProgress))
 
-      indexStatusService.markBuildInProgress()
+      indexStatusService.markBuildInProgress(INDEX_STATUS_ID)
 
       verify(indexStatusRepository, never()).save(any())
     }
 
     @Test
     fun `Not currently building index saves status building`() {
-      val existingIndexNotInProgress = IndexStatus(currentIndex = SyncIndex.GREEN, otherIndexState = IndexState.ABSENT)
+      val existingIndexNotInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, otherIndexState = IndexState.ABSENT)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexNotInProgress))
 
-      val newIndexStatus = indexStatusService.markBuildInProgress()
+      val newIndexStatus = indexStatusService.markBuildInProgress(INDEX_STATUS_ID)
 
       verify(indexStatusRepository).save(
         check { savedIndexStatus ->
@@ -105,20 +105,20 @@ class IndexStatusServiceTest {
 
     @Test
     fun `Already building index does nothing`() {
-      val existingIndexInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
+      val existingIndexInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexInProgress))
 
-      indexStatusService.markBuildAbsent()
+      indexStatusService.markBuildAbsent(INDEX_STATUS_ID)
 
       verify(indexStatusRepository, never()).save(any())
     }
 
     @Test
     fun `Not currently absent index saves status building`() {
-      val existingIndexNotInProgress = IndexStatus(currentIndex = SyncIndex.GREEN, otherIndexState = IndexState.CANCELLED)
+      val existingIndexNotInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, otherIndexState = IndexState.CANCELLED)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexNotInProgress))
 
-      val newIndexStatus = indexStatusService.markBuildAbsent()
+      val newIndexStatus = indexStatusService.markBuildAbsent(INDEX_STATUS_ID)
 
       verify(indexStatusRepository).save(
         check { savedIndexStatus ->
@@ -142,7 +142,7 @@ class IndexStatusServiceTest {
 
     @Test
     fun `Not currently building index does nothing`() {
-      val existingIndexNotInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.COMPLETED)
+      val existingIndexNotInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.COMPLETED)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexNotInProgress))
 
       verify(indexStatusRepository, never()).save(any())
@@ -150,10 +150,10 @@ class IndexStatusServiceTest {
 
     @Test
     fun `Currently building index updates repository to completed`() {
-      val existingIndexInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
+      val existingIndexInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexInProgress))
 
-      val newIndexStatus = indexStatusService.markBuildCompleteAndSwitchIndex()
+      val newIndexStatus = indexStatusService.markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)
 
       verify(indexStatusRepository).save(
         check { savedIndexStatus ->
@@ -176,7 +176,7 @@ class IndexStatusServiceTest {
 
     @Test
     fun `Build not currently in progress does nothing`() {
-      val existingIndexNotInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.COMPLETED)
+      val existingIndexNotInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.COMPLETED)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexNotInProgress))
 
       verify(indexStatusRepository, never()).save(any())
@@ -184,10 +184,10 @@ class IndexStatusServiceTest {
 
     @Test
     fun `Build currently in progress updates repository to cancelled`() {
-      val existingIndexInProgress = IndexStatus(currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
+      val existingIndexInProgress = IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.BLUE, otherIndexState = IndexState.BUILDING)
       whenever(indexStatusRepository.findById(INDEX_STATUS_ID)).thenReturn(Optional.ofNullable(existingIndexInProgress))
 
-      val newIndexStatus = indexStatusService.markBuildCancelled()
+      val newIndexStatus = indexStatusService.markBuildCancelled(INDEX_STATUS_ID)
 
       verify(indexStatusRepository).save(
         check { savedIndexStatus ->

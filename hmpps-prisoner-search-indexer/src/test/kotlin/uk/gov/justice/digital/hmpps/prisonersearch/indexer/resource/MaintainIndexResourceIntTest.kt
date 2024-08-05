@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCELLED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
@@ -87,7 +88,8 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
   inner class BuildIndex {
     @Test
     fun `Request build index is successful and calls service`() {
-      doReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)).whenever(maintainIndexService).prepareIndexForRebuild()
+      doReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
+        .whenever(maintainIndexService).prepareIndexForRebuild(SyncIndex.NONE)
 
       webTestClient.put()
         .uri("/maintain-index/build")
@@ -99,7 +101,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .jsonPath("$.otherIndex").isEqualTo("BLUE")
         .jsonPath("$.otherIndexState").isEqualTo("BUILDING")
 
-      verify(maintainIndexService).prepareIndexForRebuild()
+      verify(maintainIndexService).prepareIndexForRebuild(SyncIndex.NONE)
     }
 
     @Test
@@ -130,14 +132,14 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .jsonPath("$.otherIndex").isEqualTo("GREEN")
         .jsonPath("$.otherIndexState").isEqualTo("BUILDING")
 
-      verify(maintainIndexService).prepareIndexForRebuild()
+      verify(maintainIndexService).prepareIndexForRebuild(SyncIndex.NONE)
       await untilCallTo { indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue() } matches { it!! == 0 }
     }
 
     @Test
     fun `Request build index already building returns conflict`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      doThrow(BuildAlreadyInProgressException(expectedIndexStatus)).whenever(maintainIndexService).prepareIndexForRebuild()
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      doThrow(BuildAlreadyInProgressException(expectedIndexStatus)).whenever(maintainIndexService).prepareIndexForRebuild(SyncIndex.NONE)
 
       webTestClient.put()
         .uri("/maintain-index/build")
@@ -147,11 +149,11 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .expectStatus().isEqualTo(409)
         .expectBody()
         .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.otherIndex.name)
+          assertThat(message).contains(expectedIndexStatus.otherIndex.enumName())
           assertThat(message).contains(expectedIndexStatus.otherIndexState.name)
         }
 
-      verify(maintainIndexService).prepareIndexForRebuild()
+      verify(maintainIndexService).prepareIndexForRebuild(SyncIndex.NONE)
     }
   }
 
@@ -173,7 +175,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `Request to mark index complete when index not building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED)
       doThrow(BuildNotInProgressException(expectedIndexStatus)).whenever(maintainIndexService).markIndexingComplete(
         ignoreThreshold = false,
       )
@@ -186,7 +188,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .expectStatus().isEqualTo(409)
         .expectBody()
         .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.otherIndex.name)
+          assertThat(message).contains(expectedIndexStatus.otherIndex.enumName())
           assertThat(message).contains(expectedIndexStatus.otherIndexState.name)
         }
 
@@ -229,7 +231,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `Request to mark index cancelled when index not building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = CANCELLED)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = CANCELLED)
       doThrow(BuildNotInProgressException(expectedIndexStatus)).whenever(maintainIndexService).cancelIndexing()
 
       webTestClient.put()
@@ -240,7 +242,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .expectStatus().isEqualTo(409)
         .expectBody()
         .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.otherIndex.name)
+          assertThat(message).contains(expectedIndexStatus.otherIndex.enumName())
           assertThat(message).contains(expectedIndexStatus.otherIndexState.name)
         }
 
@@ -267,7 +269,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `Request to index prisoner without active indexes returns conflict`() {
-      val expectedIndexStatus = IndexStatus.newIndex()
+      val expectedIndexStatus = IndexStatus.newIndex(INDEX_STATUS_ID, SyncIndex.NONE)
       doThrow(NoActiveIndexesException(expectedIndexStatus)).whenever(maintainIndexService).indexPrisoner("A1234BC")
 
       webTestClient.put()
@@ -334,4 +336,4 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
   }
 }
 
-fun anIndexStatus() = IndexStatus.newIndex()
+fun anIndexStatus() = IndexStatus.newIndex(INDEX_STATUS_ID, SyncIndex.NONE)

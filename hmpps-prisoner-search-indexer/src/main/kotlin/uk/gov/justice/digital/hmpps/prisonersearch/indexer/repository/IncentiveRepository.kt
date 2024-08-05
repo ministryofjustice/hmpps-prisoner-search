@@ -15,13 +15,13 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INCENTIVES_INDEX_STATUS_ID
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Incentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
 @Repository
-class PrisonerRepository(
+class IncentiveRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
 ) {
@@ -36,19 +36,19 @@ class PrisonerRepository(
     -1
   }
 
-  fun save(prisoner: Prisoner, index: SyncIndex) {
-    openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), index.toIndexCoordinates())
+  fun save(incentive: Incentive, index: SyncIndex) {
+    openSearchRestTemplate.index(IndexQueryBuilder().withObject(incentive).build(), index.toIndexCoordinates())
   }
 
   fun delete(prisonerNumber: String) {
-    listOf(SyncIndex.GREEN, SyncIndex.BLUE).forEach {
+    listOf(SyncIndex.GREEN_I, SyncIndex.BLUE_I).forEach {
       openSearchRestTemplate.delete(prisonerNumber, it.toIndexCoordinates())
     }
   }
 
-  fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? =
+  fun get(prisonerNumber: String, indices: List<SyncIndex>): Incentive? =
     indices.firstNotNullOfOrNull {
-      openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
+      openSearchRestTemplate.get(prisonerNumber, Incentive::class.java, it.toIndexCoordinates())
     }
 
   fun createIndex(index: SyncIndex) {
@@ -60,7 +60,7 @@ class PrisonerRepository(
   fun addMapping(index: SyncIndex) {
     log.info("adding mapping to index {}", index.indexName())
     openSearchRestTemplate.indexOps(IndexCoordinates.of(index.indexName())).apply {
-      putMapping(createMapping(Prisoner::class.java))
+      putMapping(createMapping(Incentive::class.java))
     }
   }
 
@@ -77,26 +77,30 @@ class PrisonerRepository(
     client.indices().exists(GetIndexRequest(index.indexName()), RequestOptions.DEFAULT)
 
   fun switchAliasIndex(index: SyncIndex) {
-    val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
+    val alias = client.indices().getAlias(
+      GetAliasesRequest().aliases(OpenSearchIndexConfiguration.INCENTIVE_INDEX),
+      RequestOptions.DEFAULT,
+    )
     client.indices()
       .updateAliases(
         IndicesAliasesRequest().addAliasAction(
           IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.indexName())
-            .alias(PRISONER_INDEX),
+            .alias(OpenSearchIndexConfiguration.INCENTIVE_INDEX),
         ),
         RequestOptions.DEFAULT,
       )
 
-    alias.aliases[index.otherIndex(INDEX_STATUS_ID).indexName()]?.forEach {
+    alias.aliases[index.otherIndex(INCENTIVES_INDEX_STATUS_ID).indexName()]?.forEach {
       client.indices()
-        .deleteAlias(DeleteAliasRequest(index.otherIndex(INDEX_STATUS_ID).indexName(), it.alias), RequestOptions.DEFAULT)
+        .deleteAlias(DeleteAliasRequest(index.otherIndex(INCENTIVES_INDEX_STATUS_ID).indexName(), it.alias), RequestOptions.DEFAULT)
     }
   }
 
   fun prisonerAliasIsPointingAt(): Set<String> {
-    val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
+    val alias = client.indices().getAlias(
+      GetAliasesRequest().aliases(OpenSearchIndexConfiguration.INCENTIVE_INDEX),
+      RequestOptions.DEFAULT,
+    )
     return alias.aliases.keys
   }
 }
-
-fun SyncIndex.toIndexCoordinates() = IndexCoordinates.of(this.indexName())

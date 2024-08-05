@@ -15,6 +15,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IncentiveRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonApiService
@@ -46,6 +47,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   internal lateinit var prisonerRepository: PrisonerRepository
+
+  @Autowired
+  internal lateinit var incentiveRepository: IncentiveRepository
 
   @Autowired
   internal lateinit var indexStatusRepository: IndexStatusRepository

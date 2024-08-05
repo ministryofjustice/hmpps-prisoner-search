@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 import org.springframework.boot.actuate.info.Info
 import org.springframework.boot.actuate.info.InfoContributor
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE_I
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN_I
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexStatusService
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -24,7 +27,7 @@ class IndexInfo(
 
   override fun contribute(builder: Info.Builder) {
     try {
-      builder.withDetail("index-status", indexStatusService.getIndexStatus())
+      builder.withDetail("index-status", indexStatusService.getIndexStatus(INDEX_STATUS_ID))
     } catch (e: Exception) {
       builder.withDetail("index-status", "No status exists yet (${e.message})")
     }
@@ -33,6 +36,8 @@ class IndexInfo(
       mapOf(
         GREEN to prisonerRepository.count(GREEN),
         BLUE to prisonerRepository.count(BLUE),
+        GREEN_I to prisonerRepository.count(GREEN_I),
+        BLUE_I to prisonerRepository.count(BLUE_I),
       ),
     )
     try {

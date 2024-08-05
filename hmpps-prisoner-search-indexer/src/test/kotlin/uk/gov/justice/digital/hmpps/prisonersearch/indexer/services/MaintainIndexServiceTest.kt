@@ -21,6 +21,7 @@ import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.ABSENT
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCELLED
@@ -63,84 +64,84 @@ class MaintainIndexServiceTest {
   inner class BuildIndex {
     @BeforeEach
     internal fun setUp() {
-      whenever(indexStatusService.initialiseIndexWhenRequired()).thenReturn(indexStatusService)
+      whenever(indexStatusService.initialiseIndexWhenRequired(INDEX_STATUS_ID, NONE)).thenReturn(indexStatusService)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(IndexQueueStatus(0, 0, 0))
     }
 
     @Test
     fun `Index already building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
-      assertThatThrownBy { maintainIndexService.prepareIndexForRebuild() }
+      assertThatThrownBy { maintainIndexService.prepareIndexForRebuild(NONE) }
         .isInstanceOf(BuildAlreadyInProgressException::class.java)
         .hasMessageContaining("The build for BLUE is already BUILDING")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
 
     @Test
     fun `Index has active messages returns an error`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED))
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
-      assertThatThrownBy { maintainIndexService.prepareIndexForRebuild() }
+      assertThatThrownBy { maintainIndexService.prepareIndexForRebuild(NONE) }
         .isInstanceOf(ActiveMessagesExistException::class.java)
         .hasMessageContaining("The index prisoner-search-blue has active messages")
     }
 
     @Test
     fun `A request is made to mark the index build is in progress`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
-      verify(indexStatusService).markBuildInProgress()
+      verify(indexStatusService).markBuildInProgress(INDEX_STATUS_ID)
     }
 
     @Test
     internal fun `will create the current index if it doesn't exist`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, currentIndexState = ABSENT, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = ABSENT, otherIndexState = ABSENT))
 
       whenever(prisonerRepository.doesIndexExist(any())).thenReturn(false).thenReturn(false)
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(prisonerRepository).createIndex(GREEN)
     }
 
     @Test
     internal fun `will delete the index if it exists`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
 
       whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
       whenever(prisonerRepository.doesIndexExist(BLUE)).thenReturn(true).thenReturn(false)
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(prisonerRepository).deleteIndex(BLUE)
     }
 
     @Test
     internal fun `won't bother deleting index if it does not exist`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
       whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
       whenever(prisonerRepository.doesIndexExist(BLUE)).thenReturn(false)
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(prisonerRepository, never()).deleteIndex(any())
     }
 
     @Test
     fun `waits for index to be deleted before recreating`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
       whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
       whenever(prisonerRepository.doesIndexExist(BLUE))
         .thenReturn(true)
@@ -148,7 +149,7 @@ class MaintainIndexServiceTest {
         .thenReturn(true)
         .thenReturn(false)
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(prisonerRepository, times(4)).doesIndexExist(BLUE)
       verify(prisonerRepository).deleteIndex(BLUE)
@@ -157,46 +158,46 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `A request is made to reset the other index`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
 
       whenever(prisonerRepository.doesIndexExist(any())).thenReturn(true).thenReturn(false)
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(prisonerRepository).createIndex(BLUE)
     }
 
     @Test
     fun `A request is made to build other index`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(indexQueueService).sendPopulateIndexMessage(any())
     }
 
     @Test
     fun `A telemetry event is sent`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
 
-      maintainIndexService.prepareIndexForRebuild()
+      maintainIndexService.prepareIndexForRebuild(NONE)
 
       verify(telemetryClient).trackEvent(TelemetryEvents.BUILDING_INDEX.name, mapOf("index" to "BLUE"), null)
     }
 
     @Test
     fun `The updated index is returned`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT))
         .thenReturn(expectedIndexStatus)
 
-      val result = maintainIndexService.prepareIndexForRebuild()
+      val result = maintainIndexService.prepareIndexForRebuild(NONE)
 
-      verify(indexStatusService, times(2)).getIndexStatus()
+      verify(indexStatusService, times(2)).getIndexStatus(INDEX_STATUS_ID)
       assertThat(result).isEqualTo(expectedIndexStatus)
     }
   }
@@ -205,25 +206,25 @@ class MaintainIndexServiceTest {
   inner class MarkIndexingComplete {
     @BeforeEach
     internal fun setUp() {
-      whenever(indexStatusService.markBuildCompleteAndSwitchIndex()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED))
+      whenever(indexStatusService.markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED))
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(IndexQueueStatus(0, 0, 0))
     }
 
     @Test
     fun `Index not building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       assertThatThrownBy { maintainIndexService.markIndexingComplete(ignoreThreshold = true) }
         .isInstanceOf(BuildNotInProgressException::class.java)
         .hasMessageContaining("The index BLUE is in state COMPLETED")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
 
     @Test
     fun `Index with active messages returns error`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
@@ -231,12 +232,12 @@ class MaintainIndexServiceTest {
         .isInstanceOf(ActiveMessagesExistException::class.java)
         .hasMessageContaining("The index prisoner-search-blue has active messages")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
 
     @Test
     fun `Index not reached threshold returns error`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
       val expectedIndexQueueStatus = IndexQueueStatus(0, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
       whenever(indexBuildProperties.completeThreshold).thenReturn(10000)
@@ -246,14 +247,14 @@ class MaintainIndexServiceTest {
         .isInstanceOf(ThresholdNotReachedException::class.java)
         .hasMessageContaining("The index prisoner-search-blue has not reached threshold 10000 so")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
       verify(indexQueueService).getIndexQueueStatus()
       verify(prisonerRepository).count(BLUE)
     }
 
     @Test
     fun `Index reached threshold with other index under threshold`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
       val expectedIndexQueueStatus = IndexQueueStatus(0, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
       whenever(indexBuildProperties.completeThreshold).thenReturn(100)
@@ -262,24 +263,24 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.markIndexingComplete(ignoreThreshold = false)
 
-      verify(indexStatusService).markBuildCompleteAndSwitchIndex()
+      verify(indexStatusService).markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)
     }
 
     @Test
     fun `A request is made to mark the index state as complete`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.markBuildCompleteAndSwitchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
 
       maintainIndexService.markIndexingComplete(ignoreThreshold = true)
 
-      verify(indexStatusService).markBuildCompleteAndSwitchIndex()
+      verify(indexStatusService).markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)
     }
 
     @Test
     fun `Index not reached threshold but ignoring threshold - completes ok`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
       val expectedIndexQueueStatus = IndexQueueStatus(0, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
       whenever(indexBuildProperties.completeThreshold).thenReturn(1000000)
@@ -288,16 +289,16 @@ class MaintainIndexServiceTest {
         .isInstanceOf(ThresholdNotReachedException::class.java)
         .hasMessageContaining("The index prisoner-search-blue has not reached threshold 1000000 so")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
       verify(indexQueueService).getIndexQueueStatus()
     }
 
     @Test
     fun `A telemetry event is sent`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.markBuildCompleteAndSwitchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
 
       maintainIndexService.markIndexingComplete(ignoreThreshold = true)
 
@@ -306,15 +307,15 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Once current index marked as complete, the 'other' index is current`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.markBuildCompleteAndSwitchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
 
       val result = maintainIndexService.markIndexingComplete(ignoreThreshold = true)
 
-      verify(indexStatusService, times(2)).getIndexStatus()
-      assertThat(result).isEqualTo(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      verify(indexStatusService, times(2)).getIndexStatus(INDEX_STATUS_ID)
+      assertThat(result).isEqualTo(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
     }
   }
 
@@ -323,23 +324,23 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `A request is made to switch the indexes`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.switchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.switchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
 
       val result = maintainIndexService.switchIndex(false)
 
-      verify(indexStatusService).switchIndex()
-      assertThat(result).isEqualTo(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      verify(indexStatusService).switchIndex(INDEX_STATUS_ID)
+      assertThat(result).isEqualTo(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
     }
 
     @Test
     fun `A request is made to switch alias`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.switchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.switchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
 
       maintainIndexService.switchIndex(false)
 
@@ -348,10 +349,10 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `A telemetry event is sent`() {
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED))
-        .thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
-      whenever(indexStatusService.switchIndex()).thenReturn(IndexStatus(currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
+      whenever(indexStatusService.switchIndex(INDEX_STATUS_ID)).thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = BLUE, currentIndexState = COMPLETED))
 
       maintainIndexService.switchIndex(false)
 
@@ -360,38 +361,38 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Index building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       assertThatThrownBy { maintainIndexService.switchIndex(false) }
         .isInstanceOf(BuildInProgressException::class.java)
         .hasMessageContaining("The build for BLUE is already BUILDING")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
 
     @Test
     fun `Index Cancelled returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = CANCELLED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = CANCELLED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       assertThatThrownBy { maintainIndexService.switchIndex(false) }
         .isInstanceOf(BuildCancelledException::class.java)
         .hasMessageContaining("The build for BLUE is in state CANCELLED")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
 
     @Test
     fun `Index Absent returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = ABSENT)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       assertThatThrownBy { maintainIndexService.switchIndex(false) }
         .isInstanceOf(BuildAbsentException::class.java)
         .hasMessageContaining("The build for BLUE is in state ABSENT")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
   }
 
@@ -400,30 +401,30 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Index not building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       assertThatThrownBy { maintainIndexService.cancelIndexing() }
         .isInstanceOf(BuildNotInProgressException::class.java)
         .hasMessageContaining("The index BLUE is in state COMPLETED")
 
-      verify(indexStatusService).getIndexStatus()
+      verify(indexStatusService).getIndexStatus(INDEX_STATUS_ID)
     }
 
     @Test
     fun `A request is made to mark the index state as cancelled`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       maintainIndexService.cancelIndexing()
 
-      verify(indexStatusService).markBuildCancelled()
+      verify(indexStatusService).markBuildCancelled(INDEX_STATUS_ID)
     }
 
     @Test
     fun `all messages are cleared`() = runTest {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       maintainIndexService.cancelIndexing()
 
@@ -436,8 +437,8 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `A telemetry event is sent`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(expectedIndexStatus)
 
       maintainIndexService.cancelIndexing()
 
@@ -446,14 +447,14 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Once current index marked as cancelled, the 'other' index is current`() {
-      val expectedIndexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = CANCELLED)
-      whenever(indexStatusService.getIndexStatus())
-        .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING))
+      val expectedIndexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = CANCELLED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID))
+        .thenReturn(IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING))
         .thenReturn(expectedIndexStatus)
 
       val result = maintainIndexService.cancelIndexing()
 
-      verify(indexStatusService, times(2)).getIndexStatus()
+      verify(indexStatusService, times(2)).getIndexStatus(INDEX_STATUS_ID)
       assertThat(result).isEqualTo(expectedIndexStatus)
     }
   }
@@ -463,8 +464,8 @@ class MaintainIndexServiceTest {
     @Test
     internal fun `will delegate to synchronisation service if prisoner found in NOMIS`() {
       whenever(prisonerSynchroniserService.reindex(any(), any(), any())).thenReturn(Prisoner())
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
@@ -475,8 +476,8 @@ class MaintainIndexServiceTest {
 
     @Test
     internal fun `will delete from index if prisoner only found in indices`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
 
       maintainIndexService.indexPrisoner("ABC123D")
@@ -486,8 +487,8 @@ class MaintainIndexServiceTest {
 
     @Test
     internal fun `will raise a telemetry event if prisoner not found in NOMIS or indices`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { maintainIndexService.indexPrisoner("ABC123D") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
@@ -497,8 +498,8 @@ class MaintainIndexServiceTest {
 
     @Test
     internal fun `will return the not found if prisoner not found in NOMIS or indices`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { maintainIndexService.indexPrisoner("ABC123D") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
@@ -507,7 +508,7 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `No active indexes, update is not requested`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(IndexStatus.newIndex())
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(IndexStatus.newIndex(INDEX_STATUS_ID, NONE))
 
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(NoActiveIndexesException::class.java)
@@ -517,8 +518,8 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `No active indexes, error is returned`() {
-      val indexStatus = IndexStatus.newIndex()
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus.newIndex(INDEX_STATUS_ID, NONE)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(NoActiveIndexesException::class.java)
@@ -527,8 +528,8 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Current index active, offender is updated`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
@@ -540,8 +541,8 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Other index active, offender is updated`() {
-      val indexStatus = IndexStatus(currentIndex = NONE, otherIndexState = BUILDING, currentIndexState = ABSENT)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = NONE, otherIndexState = BUILDING, currentIndexState = ABSENT)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
@@ -553,8 +554,8 @@ class MaintainIndexServiceTest {
 
     @Test
     fun `Both indexes active, offender is updated on both indexes`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = BUILDING, currentIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = BUILDING, currentIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 

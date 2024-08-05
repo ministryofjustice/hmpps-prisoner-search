@@ -10,6 +10,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType
 import java.time.LocalDateTime
 
 const val INDEX_STATUS_ID = "STATUS"
+const val INCENTIVES_INDEX_STATUS_ID = "INCENTIVES_STATUS"
 
 enum class IndexState(val active: Boolean) {
   ABSENT(false),
@@ -24,7 +25,7 @@ data class IndexStatus(
   @Id
   @Field(type = FieldType.Keyword)
   @JsonIgnore
-  val id: String = INDEX_STATUS_ID,
+  val id: String,
 
   @Field(type = FieldType.Keyword)
   @Schema(description = "The index currently active for searches", example = "GREEN")
@@ -58,7 +59,7 @@ data class IndexStatus(
 
   val otherIndex
     @Schema(description = "The index currently available for rebuilding", example = "BLUE")
-    get() = currentIndex.otherIndex()
+    get() = currentIndex.otherIndex(id)
 
   fun inProgress(): Boolean = this.otherIndexState == IndexState.BUILDING
 
@@ -112,6 +113,6 @@ data class IndexStatus(
   fun isNotBuilding() = isBuilding().not()
 
   companion object {
-    fun newIndex() = IndexStatus(currentIndex = SyncIndex.NONE)
+    fun newIndex(indexStatusId: String, currentIndex: SyncIndex) = IndexStatus(id = indexStatusId, currentIndex = currentIndex)
   }
 }

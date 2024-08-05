@@ -7,6 +7,7 @@ import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -19,7 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExt
 class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will index a prisoner when offender event message received`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val bookingId = 12345L
     val prisonerNumber = "O7089FD"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
@@ -38,7 +39,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will search for all affected prisoners when location update message received`() {
     val prisonerNumber = "O7089FD"
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
     prisonerRepository.save(
       Prisoner().apply {
@@ -94,7 +95,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will republish an ASSESSMENT_UPDATED event and then process`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val bookingId = 12349L
     val prisonerNumber = "O7189FD"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
@@ -115,7 +116,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will delete merge records and insert new prisoner record on booking number change`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val oldPrisonerNumber = "O7089FE" // record to be removed
     prisonerRepository.save(Prisoner().also { it.prisonerNumber = oldPrisonerNumber }, SyncIndex.GREEN)
     await untilCallTo { prisonerRepository.count(SyncIndex.GREEN) } matches { it == 1L }
@@ -138,7 +139,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will update both indexes when rebuilding index`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
     val bookingId = 12346L
     val prisonerNumber = "O7089FE"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)

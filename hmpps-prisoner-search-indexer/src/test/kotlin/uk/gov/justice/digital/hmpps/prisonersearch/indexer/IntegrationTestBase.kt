@@ -29,6 +29,8 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INCENTIVES_INDEX_STATUS_ID
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
@@ -43,6 +45,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IncentiveRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
@@ -94,6 +97,9 @@ abstract class IntegrationTestBase {
   lateinit var prisonerRepository: PrisonerRepository
 
   @Autowired
+  lateinit var incentiveRepository: IncentiveRepository
+
+  @Autowired
   lateinit var indexStatusRepository: IndexStatusRepository
 
   @SpyBean
@@ -133,10 +139,12 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun cleanOpenSearch() {
+    deleteIncentiveIndices()
     deletePrisonerIndices()
     indexSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
     indexSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
     createPrisonerIndices()
+    createIncentiveIndices()
     initialiseIndexStatus()
   }
 
@@ -149,13 +157,34 @@ abstract class IntegrationTestBase {
 
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
 
-  fun createPrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.createIndex(it) }
+  fun createPrisonerIndices() {
+    prisonerRepository.createIndex(SyncIndex.GREEN)
+    prisonerRepository.createIndex(SyncIndex.BLUE)
+    prisonerRepository.createIndex(SyncIndex.NONE)
+  }
 
-  fun deletePrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.deleteIndex(it) }
+  fun createIncentiveIndices() {
+    incentiveRepository.createIndex(SyncIndex.GREEN_I)
+    incentiveRepository.createIndex(SyncIndex.BLUE_I)
+    incentiveRepository.createIndex(SyncIndex.NONE_I)
+  }
+
+  fun deletePrisonerIndices() {
+    prisonerRepository.deleteIndex(SyncIndex.GREEN)
+    prisonerRepository.deleteIndex(SyncIndex.BLUE)
+    prisonerRepository.deleteIndex(SyncIndex.NONE)
+  }
+
+  fun deleteIncentiveIndices() {
+    incentiveRepository.deleteIndex(SyncIndex.GREEN_I)
+    incentiveRepository.deleteIndex(SyncIndex.BLUE_I)
+    incentiveRepository.deleteIndex(SyncIndex.NONE_I)
+  }
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus.newIndex())
+    indexStatusRepository.save(IndexStatus.newIndex(INDEX_STATUS_ID, currentIndex = SyncIndex.NONE))
+    indexStatusRepository.save(IndexStatus.newIndex(INCENTIVES_INDEX_STATUS_ID, currentIndex = SyncIndex.NONE_I))
   }
 
   fun deinitialiseIndexStatus() = indexStatusRepository.deleteAll()
@@ -185,7 +214,7 @@ abstract class IntegrationTestBase {
     await untilCallTo { getIndexCount(index) } matches { it == expectedCount }
   }
 
-  fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName)
+  fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName())
   fun getIndexCount(index: String): Long = openSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
 
   internal fun setAuthorisation(

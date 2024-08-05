@@ -15,6 +15,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
@@ -37,7 +38,7 @@ class CompareIndexService(
 
   fun doIndexSizeCheck(): SizeCheck {
     val start = System.currentTimeMillis()
-    val totalIndexNumber = prisonerRepository.count(indexStatusService.getIndexStatus().currentIndex)
+    val totalIndexNumber = prisonerRepository.count(indexStatusService.getIndexStatus(INDEX_STATUS_ID).currentIndex)
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
@@ -112,7 +113,7 @@ class CompareIndexService(
   fun comparePrisoner(prisonerNumber: String) =
     nomisService.getOffender(prisonerNumber)?.let { ob ->
       val calculated = prisonerSynchroniserService.translate(ob)
-      val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
+      val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus(INDEX_STATUS_ID).currentIndex))
 
       prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
     }
@@ -123,7 +124,7 @@ class CompareIndexService(
       size(2000)
     }
     val searchRequest = SearchRequest(
-      arrayOf(indexStatusService.getIndexStatus().currentIndex.indexName),
+      arrayOf(indexStatusService.getIndexStatus(INDEX_STATUS_ID).currentIndex.indexName()),
       searchSourceBuilder,
     ).apply {
       scroll(scroll)

@@ -16,6 +16,7 @@ import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -78,17 +79,17 @@ class PopulateIndexServiceTest {
   @Nested
   inner class PopulateIndex {
     private val indexStatus =
-      IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
 
     @BeforeEach
     internal fun beforeEach() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
     }
 
     @Test
     internal fun `will return an error if indexing is not in progress`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndex(GREEN) }
         .isInstanceOf(BuildNotInProgressException::class.java)
@@ -197,8 +198,9 @@ class PopulateIndexServiceTest {
   inner class PopulateIndexWithPrisonerPage {
     @BeforeEach
     internal fun setUp() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(
         IndexStatus(
+          id = INDEX_STATUS_ID,
           currentIndex = GREEN,
           currentIndexState = COMPLETED,
           otherIndexState = BUILDING,
@@ -235,8 +237,8 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will return error if other index is not building`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
         .isInstanceOf(BuildNotInProgressException::class.java)
@@ -245,8 +247,8 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will return offender just indexed`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
@@ -256,8 +258,8 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will synchronise offender to current building index`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
 
@@ -269,8 +271,8 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will return not found if prisoner not in NOMIS`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
@@ -281,8 +283,8 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will raise the not found event if prisoner not in NOMIS`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+      val indexStatus = IndexStatus(id = INDEX_STATUS_ID, currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      whenever(indexStatusService.getIndexStatus(INDEX_STATUS_ID)).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
         .isInstanceOf(PrisonerNotFoundException::class.java)

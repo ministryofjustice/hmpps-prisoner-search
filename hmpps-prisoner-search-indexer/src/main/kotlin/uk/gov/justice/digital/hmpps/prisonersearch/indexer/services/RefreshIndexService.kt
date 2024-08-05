@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
@@ -18,7 +19,7 @@ class RefreshIndexService(
 
   fun startIndexRefresh() {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
-    return indexStatusService.getIndexStatus()
+    return indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       // no point refreshing index if we're already building the other one
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
       // no point if there is no data in the active index
@@ -34,7 +35,7 @@ class RefreshIndexService(
   }
 
   fun refreshIndex(): Int =
-    indexStatusService.getIndexStatus()
+    indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       // no point refreshing index if we're already building the other one
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
       .run { doRefreshIndex() }
@@ -54,7 +55,7 @@ class RefreshIndexService(
       }
 
   fun refreshPrisoner(prisonerNumber: String) {
-    indexStatusService.getIndexStatus()
+    indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       // no point refreshing index if we're already building the other one
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
       .run {

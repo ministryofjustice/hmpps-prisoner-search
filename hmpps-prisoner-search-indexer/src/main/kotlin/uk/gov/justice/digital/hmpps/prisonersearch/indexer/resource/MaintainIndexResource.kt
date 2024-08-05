@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.NONE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 
 @RestController
@@ -38,7 +39,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       ApiResponse(responseCode = "409", description = "Conflict, the index was not in a state to start building"),
     ],
   )
-  fun buildIndex(): IndexStatus = maintainIndexService.prepareIndexForRebuild()
+  fun buildIndex(): IndexStatus = maintainIndexService.prepareIndexForRebuild(NONE)
 
   @PutMapping("/cancel")
   @PreAuthorize("hasRole('PRISONER_INDEX')")

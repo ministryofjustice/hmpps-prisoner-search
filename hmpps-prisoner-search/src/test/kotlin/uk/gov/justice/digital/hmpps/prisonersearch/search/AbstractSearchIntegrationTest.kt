@@ -12,6 +12,7 @@ import org.mockito.kotlin.whenever
 import org.slf4j.LoggerFactory
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -33,19 +34,17 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
   @BeforeAll
   fun setup() {
     log.info("Initialising search data")
-    deletePrisonerIndex()
-    createPrisonerIndex()
+    incentiveRepository.deleteIndex(SyncIndex.GREEN_I)
+    prisonerRepository.deleteIndex(SyncIndex.GREEN)
+    prisonerRepository.createIndex(SyncIndex.GREEN)
+    incentiveRepository.createIndex(SyncIndex.GREEN_I)
     initialiseIndexStatus()
     loadPrisonerData()
   }
 
-  fun createPrisonerIndex() = prisonerRepository.createIndex(SyncIndex.GREEN)
-
-  fun deletePrisonerIndex() = prisonerRepository.deleteIndex(SyncIndex.GREEN)
-
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN))
     prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
   }
 
@@ -149,6 +148,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
       .expectStatus().isOk
       .expectBody().json(fileAssert.readResourceAsText())
   }
+
   fun globalSearchPagination(globalSearchCriteria: GlobalSearchCriteria, size: Long, page: Long, fileAssert: String) {
     webTestClient.post().uri("/global-search?size=$size&page=$page")
       .body(BodyInserters.fromValue(gson.toJson(globalSearchCriteria)))
@@ -178,6 +178,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
       .expectStatus().isOk
       .expectBody().json(fileAssert.readResourceAsText())
   }
+
   fun prisonSearch(prisonId: String, fileAssert: String, includeRestrictedPatients: Boolean = false) {
     webTestClient.get().uri("/prisoner-search/prison/$prisonId?include-restricted-patients=$includeRestrictedPatients")
       .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))

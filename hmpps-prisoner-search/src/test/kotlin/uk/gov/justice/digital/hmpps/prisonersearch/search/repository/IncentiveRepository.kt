@@ -13,12 +13,12 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 
 @Repository
-class PrisonerRepository(
+class IncentiveRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
 ) {
@@ -27,7 +27,7 @@ class PrisonerRepository(
   }
 
   fun count(index: SyncIndex) = try {
-    client.count(CountRequest(index.indexName()), RequestOptions.DEFAULT).count
+    client.count(CountRequest(index.indexName), RequestOptions.DEFAULT).count
   } catch (e: OpenSearchStatusException) {
     // if the index doesn't exist yet then we will get an exception, so catch and move on
     -1
@@ -47,23 +47,23 @@ class PrisonerRepository(
   }
 
   fun createIndex(index: SyncIndex) {
-    log.info("creating index {}", index.indexName())
-    client.indices().create(CreateIndexRequest(index.indexName()), RequestOptions.DEFAULT)
+    log.info("creating index {}", index.indexName)
+    client.indices().create(CreateIndexRequest(index.indexName), RequestOptions.DEFAULT)
     addMapping(index)
   }
 
   fun addMapping(index: SyncIndex) {
-    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.indexName())).apply {
+    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.indexName)).apply {
       putMapping(createMapping(Prisoner::class.java))
     }
   }
 
   fun deleteIndex(index: SyncIndex) {
-    log.info("deleting index {}", index.indexName())
-    if (client.indices().exists(GetIndexRequest(index.indexName()), RequestOptions.DEFAULT)) {
-      client.indices().delete(DeleteIndexRequest(index.indexName()), RequestOptions.DEFAULT)
+    log.info("deleting index {}", index.indexName)
+    if (client.indices().exists(GetIndexRequest(index.indexName), RequestOptions.DEFAULT)) {
+      client.indices().delete(DeleteIndexRequest(index.indexName), RequestOptions.DEFAULT)
     } else {
-      log.warn("index {} was never there in the first place", index.indexName())
+      log.warn("index {} was never there in the first place", index.indexName)
     }
   }
 
@@ -71,12 +71,10 @@ class PrisonerRepository(
     client.indices()
       .updateAliases(
         IndicesAliasesRequest().addAliasAction(
-          IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.indexName())
-            .alias(PRISONER_INDEX),
+          IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.indexName)
+            .alias(OpenSearchIndexConfiguration.PRISONER_INDEX),
         ),
         RequestOptions.DEFAULT,
       )
   }
 }
-
-fun SyncIndex.toIndexCoordinates() = IndexCoordinates.of(this.indexName())

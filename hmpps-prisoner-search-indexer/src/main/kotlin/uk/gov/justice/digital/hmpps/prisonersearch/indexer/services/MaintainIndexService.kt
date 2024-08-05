@@ -8,6 +8,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -34,9 +35,9 @@ class MaintainIndexService(
 ) {
   private val indexQueue by lazy { hmppsQueueService.findByQueueId("index") as HmppsQueue }
 
-  fun prepareIndexForRebuild(): IndexStatus {
+  fun prepareIndexForRebuild(noneValue: SyncIndex): IndexStatus {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
-    return indexStatusService.initialiseIndexWhenRequired().getIndexStatus()
+    return indexStatusService.initialiseIndexWhenRequired(INDEX_STATUS_ID, noneValue).getIndexStatus(INDEX_STATUS_ID)
       .also { logIndexStatuses(it) }
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
       .failIf({ indexQueueStatus.active }) { ActiveMessagesExistException(it.otherIndex, indexQueueStatus, "build index") }
@@ -44,17 +45,17 @@ class MaintainIndexService(
   }
 
   private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
-    indexStatusService.markBuildAbsent()
+    indexStatusService.markBuildAbsent(INDEX_STATUS_ID)
     createIfDoesntExist(indexStatus.currentIndex)
     resetAndCreate(indexStatus.otherIndex)
-    indexStatusService.markBuildInProgress()
+    indexStatusService.markBuildInProgress(INDEX_STATUS_ID)
     indexQueueService.sendPopulateIndexMessage(indexStatus.otherIndex)
-    return indexStatusService.getIndexStatus()
+    return indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       .also { logIndexStatuses(it) }
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.BUILDING_INDEX,
-          mapOf("index" to indexStatus.otherIndex.name),
+          mapOf("index" to indexStatus.otherIndex.enumName()),
         )
       }
   }
@@ -88,7 +89,7 @@ class MaintainIndexService(
 
   fun markIndexingComplete(ignoreThreshold: Boolean): IndexStatus {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
-    val indexStatus = indexStatusService.getIndexStatus()
+    val indexStatus = indexStatusService.getIndexStatus(INDEX_STATUS_ID)
     return indexStatus
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
       .failIf({ indexQueueStatus.active }) {
@@ -109,24 +110,24 @@ class MaintainIndexService(
   }
 
   private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean =
-    prisonerRepository.count(indexStatus.currentIndex.otherIndex()) < indexBuildProperties.completeThreshold
+    prisonerRepository.count(indexStatus.currentIndex.otherIndex(INDEX_STATUS_ID)) < indexBuildProperties.completeThreshold
 
   private fun doMarkIndexingComplete(): IndexStatus =
-    indexStatusService.markBuildCompleteAndSwitchIndex()
+    indexStatusService.markBuildCompleteAndSwitchIndex(INDEX_STATUS_ID)
       .let { newStatus ->
         prisonerRepository.switchAliasIndex(newStatus.currentIndex)
-        return indexStatusService.getIndexStatus()
+        return indexStatusService.getIndexStatus(INDEX_STATUS_ID)
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
             telemetryClient.trackEvent(
               TelemetryEvents.COMPLETED_BUILDING_INDEX,
-              mapOf("index" to it.currentIndex.name),
+              mapOf("index" to it.currentIndex.enumName()),
             )
           }
       }
 
   fun switchIndex(force: Boolean): IndexStatus {
-    val indexStatus = indexStatusService.getIndexStatus()
+    val indexStatus = indexStatusService.getIndexStatus(INDEX_STATUS_ID)
     return when {
       force ->
         indexStatus
@@ -143,42 +144,42 @@ class MaintainIndexService(
   }
 
   private fun doSwitchIndex(): IndexStatus =
-    indexStatusService.switchIndex()
+    indexStatusService.switchIndex(INDEX_STATUS_ID)
       .let { newStatus ->
         prisonerRepository.switchAliasIndex(newStatus.currentIndex)
-        return indexStatusService.getIndexStatus()
+        return indexStatusService.getIndexStatus(INDEX_STATUS_ID)
           .also { latestStatus -> logIndexStatuses(latestStatus) }
           .also {
             telemetryClient.trackEvent(
               TelemetryEvents.SWITCH_INDEX,
-              mapOf("index" to it.currentIndex.name),
+              mapOf("index" to it.currentIndex.enumName()),
             )
           }
       }
 
   fun cancelIndexing(): IndexStatus =
-    indexStatusService.getIndexStatus()
+    indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       .also { logIndexStatuses(it) }
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
       .run { doCancelIndexing() }
 
   private fun doCancelIndexing(): IndexStatus {
-    indexStatusService.markBuildCancelled()
+    indexStatusService.markBuildCancelled(INDEX_STATUS_ID)
     runBlocking {
       hmppsQueueService.purgeQueue(PurgeQueueRequest(indexQueue.queueName, indexQueue.sqsClient, indexQueue.queueUrl))
     }
-    return indexStatusService.getIndexStatus()
+    return indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       .also { logIndexStatuses(it) }
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.CANCELLED_BUILDING_INDEX,
-          mapOf("index" to it.otherIndex.name),
+          mapOf("index" to it.otherIndex.enumName()),
         )
       }
   }
 
   fun indexPrisoner(prisonerNumber: String): Prisoner =
-    indexStatusService.getIndexStatus()
+    indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       .failIf(IndexStatus::activeIndexesEmpty) {
         log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
         NoActiveIndexesException(it)
