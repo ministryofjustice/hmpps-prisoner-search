@@ -14,8 +14,8 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
 @Repository
 class IncentiveRepository(
@@ -41,10 +41,6 @@ class IncentiveRepository(
     indices.firstNotNullOfOrNull {
       openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
     }
-
-  fun delete(prisonerNumber: String, index: SyncIndex) {
-    openSearchRestTemplate.delete(prisonerNumber, index.toIndexCoordinates())
-  }
 
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
