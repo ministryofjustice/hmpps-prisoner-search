@@ -124,7 +124,7 @@ class CompareIndexService(
       size(2000)
     }
     val searchRequest = SearchRequest(
-      arrayOf(indexStatusService.getIndexStatus(INDEX_STATUS_ID).currentIndex.indexName()),
+      arrayOf(indexStatusService.getIndexStatus(INDEX_STATUS_ID).currentIndex.indexName),
       searchSourceBuilder,
     ).apply {
       scroll(scroll)

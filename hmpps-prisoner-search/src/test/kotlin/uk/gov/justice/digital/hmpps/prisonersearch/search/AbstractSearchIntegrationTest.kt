@@ -34,10 +34,10 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
   @BeforeAll
   fun setup() {
     log.info("Initialising search data")
-    incentiveRepository.deleteIndex(SyncIndex.GREEN_I)
+    incentiveRepository.deleteIndex(SyncIndex.GREEN)
     prisonerRepository.deleteIndex(SyncIndex.GREEN)
     prisonerRepository.createIndex(SyncIndex.GREEN)
-    incentiveRepository.createIndex(SyncIndex.GREEN_I)
+    incentiveRepository.createIndex(SyncIndex.GREEN)
     initialiseIndexStatus()
     loadPrisonerData()
   }

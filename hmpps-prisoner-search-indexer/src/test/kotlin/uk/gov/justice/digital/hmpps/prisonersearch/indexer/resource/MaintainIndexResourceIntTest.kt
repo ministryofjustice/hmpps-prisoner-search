@@ -149,7 +149,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .expectStatus().isEqualTo(409)
         .expectBody()
         .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.otherIndex.enumName())
+          assertThat(message).contains(expectedIndexStatus.otherIndex.name)
           assertThat(message).contains(expectedIndexStatus.otherIndexState.name)
         }
 
@@ -188,7 +188,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .expectStatus().isEqualTo(409)
         .expectBody()
         .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.otherIndex.enumName())
+          assertThat(message).contains(expectedIndexStatus.otherIndex.name)
           assertThat(message).contains(expectedIndexStatus.otherIndexState.name)
         }
 
@@ -242,7 +242,7 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .expectStatus().isEqualTo(409)
         .expectBody()
         .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.otherIndex.enumName())
+          assertThat(message).contains(expectedIndexStatus.otherIndex.name)
           assertThat(message).contains(expectedIndexStatus.otherIndexState.name)
         }
 

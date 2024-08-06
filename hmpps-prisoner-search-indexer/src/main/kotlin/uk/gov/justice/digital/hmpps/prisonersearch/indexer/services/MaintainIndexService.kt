@@ -55,7 +55,7 @@ class MaintainIndexService(
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.BUILDING_INDEX,
-          mapOf("index" to indexStatus.otherIndex.enumName()),
+          mapOf("index" to indexStatus.otherIndex.name),
         )
       }
   }
@@ -121,7 +121,7 @@ class MaintainIndexService(
           .also {
             telemetryClient.trackEvent(
               TelemetryEvents.COMPLETED_BUILDING_INDEX,
-              mapOf("index" to it.currentIndex.enumName()),
+              mapOf("index" to it.currentIndex.name),
             )
           }
       }
@@ -152,7 +152,7 @@ class MaintainIndexService(
           .also {
             telemetryClient.trackEvent(
               TelemetryEvents.SWITCH_INDEX,
-              mapOf("index" to it.currentIndex.enumName()),
+              mapOf("index" to it.currentIndex.name),
             )
           }
       }
@@ -173,7 +173,7 @@ class MaintainIndexService(
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.CANCELLED_BUILDING_INDEX,
-          mapOf("index" to it.otherIndex.enumName()),
+          mapOf("index" to it.otherIndex.name),
         )
       }
   }

@@ -164,9 +164,9 @@ abstract class IntegrationTestBase {
   }
 
   fun createIncentiveIndices() {
-    incentiveRepository.createIndex(SyncIndex.GREEN_I)
-    incentiveRepository.createIndex(SyncIndex.BLUE_I)
-    incentiveRepository.createIndex(SyncIndex.NONE_I)
+    incentiveRepository.createIndex(SyncIndex.GREEN)
+    incentiveRepository.createIndex(SyncIndex.BLUE)
+    incentiveRepository.createIndex(SyncIndex.NONE)
   }
 
   fun deletePrisonerIndices() {
@@ -176,15 +176,15 @@ abstract class IntegrationTestBase {
   }
 
   fun deleteIncentiveIndices() {
-    incentiveRepository.deleteIndex(SyncIndex.GREEN_I)
-    incentiveRepository.deleteIndex(SyncIndex.BLUE_I)
-    incentiveRepository.deleteIndex(SyncIndex.NONE_I)
+    incentiveRepository.deleteIndex(SyncIndex.GREEN)
+    incentiveRepository.deleteIndex(SyncIndex.BLUE)
+    incentiveRepository.deleteIndex(SyncIndex.NONE)
   }
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
     indexStatusRepository.save(IndexStatus.newIndex(INDEX_STATUS_ID, currentIndex = SyncIndex.NONE))
-    indexStatusRepository.save(IndexStatus.newIndex(INCENTIVES_INDEX_STATUS_ID, currentIndex = SyncIndex.NONE_I))
+    indexStatusRepository.save(IndexStatus.newIndex(INCENTIVES_INDEX_STATUS_ID, currentIndex = SyncIndex.NONE))
   }
 
   fun deinitialiseIndexStatus() = indexStatusRepository.deleteAll()
@@ -214,7 +214,7 @@ abstract class IntegrationTestBase {
     await untilCallTo { getIndexCount(index) } matches { it == expectedCount }
   }
 
-  fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName())
+  fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName)
   fun getIndexCount(index: String): Long = openSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
 
   internal fun setAuthorisation(

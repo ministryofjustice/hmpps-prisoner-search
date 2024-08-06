@@ -30,7 +30,7 @@ class IncentiveRepository(
   }
 
   fun count(index: SyncIndex) = try {
-    client.count(CountRequest(index.indexName()), RequestOptions.DEFAULT).count
+    client.count(CountRequest(index.incentiveIndexName), RequestOptions.DEFAULT).count
   } catch (e: OpenSearchStatusException) {
     // if the index doesn't exist yet then we will get an exception, so catch and move on
     -1
@@ -41,7 +41,7 @@ class IncentiveRepository(
   }
 
   fun delete(prisonerNumber: String) {
-    listOf(SyncIndex.GREEN_I, SyncIndex.BLUE_I).forEach {
+    listOf(SyncIndex.GREEN, SyncIndex.BLUE).forEach {
       openSearchRestTemplate.delete(prisonerNumber, it.toIndexCoordinates())
     }
   }
@@ -52,29 +52,29 @@ class IncentiveRepository(
     }
 
   fun createIndex(index: SyncIndex) {
-    log.info("creating index {}", index.indexName())
-    client.indices().create(CreateIndexRequest(index.indexName()), RequestOptions.DEFAULT)
+    log.info("creating index {}", index.incentiveIndexName)
+    client.indices().create(CreateIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)
     addMapping(index)
   }
 
   fun addMapping(index: SyncIndex) {
-    log.info("adding mapping to index {}", index.indexName())
-    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.indexName())).apply {
+    log.info("adding mapping to index {}", index.incentiveIndexName)
+    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.incentiveIndexName)).apply {
       putMapping(createMapping(Incentive::class.java))
     }
   }
 
   fun deleteIndex(index: SyncIndex) {
-    log.info("deleting index {}", index.indexName())
-    if (client.indices().exists(GetIndexRequest(index.indexName()), RequestOptions.DEFAULT)) {
-      client.indices().delete(DeleteIndexRequest(index.indexName()), RequestOptions.DEFAULT)
+    log.info("deleting index {}", index.incentiveIndexName)
+    if (client.indices().exists(GetIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)) {
+      client.indices().delete(DeleteIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)
     } else {
-      log.warn("index {} was never there in the first place", index.indexName())
+      log.warn("index {} was never there in the first place", index.incentiveIndexName)
     }
   }
 
   fun doesIndexExist(index: SyncIndex): Boolean =
-    client.indices().exists(GetIndexRequest(index.indexName()), RequestOptions.DEFAULT)
+    client.indices().exists(GetIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)
 
   fun switchAliasIndex(index: SyncIndex) {
     val alias = client.indices().getAlias(
@@ -84,15 +84,18 @@ class IncentiveRepository(
     client.indices()
       .updateAliases(
         IndicesAliasesRequest().addAliasAction(
-          IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.indexName())
+          IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.incentiveIndexName)
             .alias(OpenSearchIndexConfiguration.INCENTIVE_INDEX),
         ),
         RequestOptions.DEFAULT,
       )
 
-    alias.aliases[index.otherIndex(INCENTIVES_INDEX_STATUS_ID).indexName()]?.forEach {
+    alias.aliases[index.otherIndex(INCENTIVES_INDEX_STATUS_ID).incentiveIndexName]?.forEach {
       client.indices()
-        .deleteAlias(DeleteAliasRequest(index.otherIndex(INCENTIVES_INDEX_STATUS_ID).indexName(), it.alias), RequestOptions.DEFAULT)
+        .deleteAlias(
+          DeleteAliasRequest(index.otherIndex(INCENTIVES_INDEX_STATUS_ID).incentiveIndexName, it.alias),
+          RequestOptions.DEFAULT,
+        )
     }
   }
 
@@ -104,3 +107,5 @@ class IncentiveRepository(
     return alias.aliases.keys
   }
 }
+
+private fun SyncIndex.toIndexCoordinates() = IndexCoordinates.of(this.incentiveIndexName)

@@ -27,7 +27,7 @@ class IncentiveRepository(
   }
 
   fun count(index: SyncIndex) = try {
-    client.count(CountRequest(index.indexName), RequestOptions.DEFAULT).count
+    client.count(CountRequest(index.incentiveIndexName), RequestOptions.DEFAULT).count
   } catch (e: OpenSearchStatusException) {
     // if the index doesn't exist yet then we will get an exception, so catch and move on
     -1
@@ -43,23 +43,23 @@ class IncentiveRepository(
     }
 
   fun createIndex(index: SyncIndex) {
-    log.info("creating index {}", index.indexName)
-    client.indices().create(CreateIndexRequest(index.indexName), RequestOptions.DEFAULT)
+    log.info("creating index {}", index.incentiveIndexName)
+    client.indices().create(CreateIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)
     addMapping(index)
   }
 
   fun addMapping(index: SyncIndex) {
-    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.indexName)).apply {
+    openSearchRestTemplate.indexOps(IndexCoordinates.of(index.incentiveIndexName)).apply {
       putMapping(createMapping(Prisoner::class.java))
     }
   }
 
   fun deleteIndex(index: SyncIndex) {
-    log.info("deleting index {}", index.indexName)
-    if (client.indices().exists(GetIndexRequest(index.indexName), RequestOptions.DEFAULT)) {
-      client.indices().delete(DeleteIndexRequest(index.indexName), RequestOptions.DEFAULT)
+    log.info("deleting index {}", index.incentiveIndexName)
+    if (client.indices().exists(GetIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)) {
+      client.indices().delete(DeleteIndexRequest(index.incentiveIndexName), RequestOptions.DEFAULT)
     } else {
-      log.warn("index {} was never there in the first place", index.indexName)
+      log.warn("index {} was never there in the first place", index.incentiveIndexName)
     }
   }
 
@@ -67,7 +67,7 @@ class IncentiveRepository(
     client.indices()
       .updateAliases(
         IndicesAliasesRequest().addAliasAction(
-          IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.indexName)
+          IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD).index(index.incentiveIndexName)
             .alias(OpenSearchIndexConfiguration.PRISONER_INDEX),
         ),
         RequestOptions.DEFAULT,

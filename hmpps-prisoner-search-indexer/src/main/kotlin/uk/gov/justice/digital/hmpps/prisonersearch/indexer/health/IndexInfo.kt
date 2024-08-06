@@ -5,9 +5,8 @@ import org.springframework.boot.actuate.info.InfoContributor
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE_I
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN_I
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IncentiveRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexStatusService
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -18,6 +17,7 @@ import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 class IndexInfo(
   private val indexStatusService: IndexStatusService,
   private val prisonerRepository: PrisonerRepository,
+  private val incentiveRepository: IncentiveRepository,
   private val hmppsQueueService: HmppsQueueService,
 ) : InfoContributor {
 
@@ -34,10 +34,10 @@ class IndexInfo(
     builder.withDetail(
       "index-size",
       mapOf(
-        GREEN to prisonerRepository.count(GREEN),
-        BLUE to prisonerRepository.count(BLUE),
-        GREEN_I to prisonerRepository.count(GREEN_I),
-        BLUE_I to prisonerRepository.count(BLUE_I),
+        "GREEN" to prisonerRepository.count(GREEN),
+        "BLUE" to prisonerRepository.count(BLUE),
+        "GREEN-incentives" to incentiveRepository.count(GREEN),
+        "BLUE-incentives" to incentiveRepository.count(BLUE),
       ),
     )
     try {
