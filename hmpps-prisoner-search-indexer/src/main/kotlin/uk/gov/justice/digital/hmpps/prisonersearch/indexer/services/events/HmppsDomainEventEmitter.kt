@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
@@ -69,6 +70,11 @@ class HmppsDomainEventEmitter(
 
     val request = SendMessageRequest.builder().queueUrl(publishQueueUrl)
       .messageBody(objectMapper.writeValueAsString(domainEvent))
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(event.eventType).build(),
+        ),
+      )
       .delaySeconds(publishDelayInSeconds)
       .build()
 

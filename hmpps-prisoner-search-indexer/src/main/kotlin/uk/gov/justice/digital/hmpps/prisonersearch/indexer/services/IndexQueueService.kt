@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
@@ -52,7 +53,11 @@ class IndexQueueService(
   private fun sendMessage(request: IndexMessageRequest): SendMessageResponse = indexSqsClient.sendMessage(
     SendMessageRequest.builder().queueUrl(indexQueueUrl)
       .messageBody(objectMapper.writeValueAsString(request))
-      .build(),
+      .messageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue.builder().dataType("String").stringValue("hmpps-prisoner-search-indexer-${request.type?.name?.lowercase()}").build(),
+        ),
+      ).build(),
   ).get()
 
   fun sendPrisonerPageMessage(prisonerPage: PrisonerPage) {
