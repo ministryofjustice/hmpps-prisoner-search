@@ -210,9 +210,7 @@ internal class PrisonerSynchroniserServiceTest {
     private val prisonerNumber = "A1234AA"
     private val oldIncentive = CurrentIncentive(IncentiveLevel("OLD", "Desc"), LocalDateTime.now(), null)
     private val newIncentive =
-      uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel(
-          "NEW", "Desc", LocalDateTime.now(), null,
-      )
+      uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel("NEW", "Desc", LocalDateTime.now(), null)
     private val prisonerDocumentSummary =
       PrisonerDocumentSummary(prisonerNumber, 2, oldIncentive, sequenceNumber = 0, primaryTerm = 0)
 
@@ -234,16 +232,15 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindexIncentive(prisonerNumber, listOf(GREEN), "event")
 
       verify(prisonerRepository).updateIncentive(
-          eq(prisonerNumber),
-          isA(),
-          check { assertThat(it).isEqualTo(GREEN) },
-          isA(),
+        eq(prisonerNumber),
+        isA(),
+        check { assertThat(it).isEqualTo(GREEN) },
+        isA(),
       )
     }
 
     @Test
     internal fun `will not save prisoner if no changes`() {
-      val existingPrisoner = Prisoner()
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(prisonerDocumentSummary.bookingId!!)).thenReturn(newIncentive)
       whenever(incentiveDifferenceService.incentiveHasChanged(any(), any())).thenReturn(false)
@@ -510,9 +507,9 @@ internal class PrisonerSynchroniserServiceTest {
       service.delete("ABC123D")
 
       verify(telemetryClient).trackEvent(
-          TelemetryEvents.PRISONER_REMOVED.name,
-          mapOf("prisonerNumber" to "ABC123D"),
-          null,
+        TelemetryEvents.PRISONER_REMOVED.name,
+        mapOf("prisonerNumber" to "ABC123D"),
+        null,
       )
     }
 

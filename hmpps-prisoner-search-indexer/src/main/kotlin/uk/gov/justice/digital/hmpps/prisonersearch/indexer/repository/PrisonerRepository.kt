@@ -12,7 +12,6 @@ import org.opensearch.client.core.CountRequest
 import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.DeleteAliasRequest
 import org.opensearch.client.indices.GetIndexRequest
-import org.opensearch.data.client.orhlc.DocumentAdapters
 import org.slf4j.LoggerFactory
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates

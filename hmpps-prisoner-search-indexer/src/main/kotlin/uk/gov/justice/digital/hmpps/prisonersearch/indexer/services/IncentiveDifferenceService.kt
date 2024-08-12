@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang3.builder.Diff
-import org.apache.commons.lang3.builder.DiffBuilder
-import org.apache.commons.lang3.builder.ToStringStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -35,7 +33,6 @@ class IncentiveDifferenceService(
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
-    private val exemptedMethods = listOf("diff", "equals", "toString", "hashCode")
   }
 
   internal val propertiesByDiffCategory: Map<DiffCategory, List<String>> =
