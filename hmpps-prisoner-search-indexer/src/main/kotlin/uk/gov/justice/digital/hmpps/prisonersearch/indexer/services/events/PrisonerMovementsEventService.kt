@@ -158,6 +158,7 @@ private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) =
 
 private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) =
   previousPrisonerSnapshot?.bookingId == null &&
+    this.bookingId != null &&
     this.status == "ACTIVE IN"
 
 private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) =
