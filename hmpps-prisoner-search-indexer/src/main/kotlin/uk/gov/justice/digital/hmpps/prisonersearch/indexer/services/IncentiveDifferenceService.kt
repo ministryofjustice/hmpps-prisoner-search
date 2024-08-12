@@ -44,11 +44,6 @@ class IncentiveDifferenceService(
       .groupBy { property -> property.findAnnotations<DiffableProperty>().first().type }
       .mapValues { propertiesByDiffCategory -> propertiesByDiffCategory.value.map { property -> property.name } }
 
-  internal val diffCategoriesByProperty: Map<String, DiffCategory> =
-    Prisoner::class.members
-      .filter { property -> property.findAnnotations<DiffableProperty>().isNotEmpty() }
-      .associate { property -> property.name to property.findAnnotations<DiffableProperty>().first().type }
-
   @Transactional
   fun handleDifferences(
     prisonerNumber: String,
@@ -61,8 +56,6 @@ class IncentiveDifferenceService(
       takeIf { updateDbHash(prisonerNumber, it) }?.run {
         generateDiffEvent(previousIncentiveSnapshot, prisonerNumber, incentive)
         generateDiffTelemetry(previousIncentiveSnapshot, prisonerNumber, bookingId, incentive, eventType)
-//        prisonerMovementsEventService.generateAnyEvents(previousIncentiveSnapshot, incentive, offenderBooking)
-//        alertsUpdatedEventService.generateAnyEvents(previousIncentiveSnapshot, incentive)
       } ?: raiseDatabaseHashUnchangedTelemetry(prisonerNumber, bookingId, eventType)
     }
   }
@@ -99,28 +92,6 @@ class IncentiveDifferenceService(
     }.onFailure {
       log.error("Prisoner difference telemetry failed with error", it)
     }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  fun reportDiffTelemetryDetails(
-    previousPrisonerSnapshot: Prisoner?,
-    prisoner: Prisoner,
-  ): List<Diff<Prisoner>> {
-    previousPrisonerSnapshot?.also {
-      val differences = DiffBuilder(it, prisoner, ToStringStyle.JSON_STYLE).apply {
-        Prisoner::class.members
-          .filterNot { exemptedMethods.contains(it.name) }
-          .forEach { property ->
-            append(
-              property.name,
-              property.call(it),
-              property.call(prisoner),
-            )
-          }
-      }.build().diffs
-      return differences as List<Diff<Prisoner>>
-    }
-    return emptyList()
   }
 
   internal fun generateDiffEvent(
@@ -197,7 +168,3 @@ class IncentiveDifferenceService(
       eventType = eventType,
     )
 }
-
-// data class IncentiveDifference(val property: String, val categoryChanged: DiffCategory, val oldValue: Any?, val newValue: Any?)
-
-// typealias IncentiveDifferences = Map<DiffCategory, List<IncentiveDifference>>

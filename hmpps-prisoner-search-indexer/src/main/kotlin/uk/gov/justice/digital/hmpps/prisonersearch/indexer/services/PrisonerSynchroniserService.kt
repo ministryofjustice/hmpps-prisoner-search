@@ -57,7 +57,7 @@ class PrisonerSynchroniserService(
   internal fun reindexIncentive(prisonerNo: String, indices: List<SyncIndex>, eventType: String) =
     prisonerRepository.getSummary(prisonerNo, indices)
       ?.runCatching {
-        val bookingId = this.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
+        val bookingId = this.bookingId ?: throw PrisonerNotFoundException(prisonerNo)
         val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
         val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
 

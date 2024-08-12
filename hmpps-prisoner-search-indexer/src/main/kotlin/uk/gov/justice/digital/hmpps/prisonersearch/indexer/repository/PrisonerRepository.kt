@@ -15,7 +15,6 @@ import org.opensearch.client.indices.GetIndexRequest
 import org.opensearch.data.client.orhlc.DocumentAdapters
 import org.slf4j.LoggerFactory
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.ScriptType
@@ -34,8 +33,6 @@ import java.time.format.DateTimeFormatter
 class PrisonerRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
-  // private val mappingElasticsearchConverter: MappingElasticsearchConverter,
-  private val elasticsearchConverter: ElasticsearchConverter,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -145,13 +142,8 @@ class PrisonerRepository(
     return alias.aliases.keys
   }
 
+  @Suppress("UNCHECKED_CAST")
   private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary {
-    val document = DocumentAdapters.from(this)
-    /*
-      DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
-        return callback.doWith(DocumentAdapters.from(response));
-
-     */
     return PrisonerDocumentSummary(
       prisonerNumber,
       source?.get("bookingId")?.toString()?.toLong(),
@@ -164,8 +156,6 @@ class PrisonerRepository(
             LocalDate.parse(currentIncentive["nextReviewDate"] as String),
           )
         },
-      // document,
-      // elasticsearchConverter.conversionService.convert(source, Prisoner::class.java),
       seqNo.toInt(),
       primaryTerm.toInt(),
     )

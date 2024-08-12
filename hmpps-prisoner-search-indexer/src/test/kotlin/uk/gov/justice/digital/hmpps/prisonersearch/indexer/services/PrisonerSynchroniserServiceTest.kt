@@ -208,7 +208,6 @@ internal class PrisonerSynchroniserServiceTest {
   @Nested
   inner class reindexIncentive {
     private val prisonerNumber = "A1234AA"
-    private val booking = OffenderBookingBuilder().anOffenderBooking()
     private val oldIncentive = CurrentIncentive(IncentiveLevel("OLD", "Desc"), LocalDateTime.now(), null)
     private val newIncentive =
       uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel(
@@ -277,7 +276,6 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     internal fun `will call prisoner difference to handle differences`() {
-      val existingPrisoner = Prisoner()
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(prisonerDocumentSummary.bookingId!!)).thenReturn(newIncentive)
       whenever(incentiveDifferenceService.incentiveHasChanged(any(), any())).thenReturn(true)
