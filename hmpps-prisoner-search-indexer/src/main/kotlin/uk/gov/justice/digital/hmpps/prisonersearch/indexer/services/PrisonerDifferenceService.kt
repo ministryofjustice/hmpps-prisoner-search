@@ -5,6 +5,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang3.builder.Diff
 import org.apache.commons.lang3.builder.DiffBuilder
+import org.apache.commons.lang3.builder.Diffable
 import org.apache.commons.lang3.builder.ToStringStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffableProperty
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_MISSING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_CREATED
@@ -67,49 +69,59 @@ class PrisonerDifferenceService(
     prisoner: Prisoner,
     eventType: String,
   ) {
-    prisoner.hash().run {
+    hash(prisoner)!!.run {
       takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
-        generateDiffEvent(previousPrisonerSnapshot, offenderBooking, prisoner)
-        generateDiffTelemetry(previousPrisonerSnapshot, offenderBooking, prisoner, eventType)
+        generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner)
+        generateDiffTelemetry(
+          previousPrisonerSnapshot,
+          offenderBooking.offenderNo,
+          offenderBooking.bookingId,
+          prisoner,
+          eventType,
+        )
         prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
         alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
-      } ?: raiseDatabaseHashUnchangedTelemetry(offenderBooking.offenderNo, offenderBooking.bookingId, eventType)
+      } ?: raiseTelemetry(PRISONER_DATABASE_NO_CHANGE, offenderBooking.offenderNo, offenderBooking.bookingId, eventType)
     }
   }
 
   fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) =
-    if (prisonerHasChanged(previousPrisonerSnapshot, prisoner)) {
+    if (hasChanged(previousPrisonerSnapshot, prisoner)) {
       reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner)
     } else {
       emptyList()
     }
 
-  fun prisonerHasChanged(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner): Boolean =
-    previousPrisonerSnapshot?.hash() != prisoner.hash()
+  fun hasChanged(previousSnapshot: Any?, current: Any): Boolean =
+    hash(previousSnapshot) != hash(current)
 
-  fun updateDbHash(nomsNumber: String, prisonerHash: String) =
+  fun updateDbHash(nomsNumber: String, hash: String) =
     // upsertIfChanged returns the number of records altered, so > 0 means that we have changed something
-    prisonerHashRepository.upsertIfChanged(nomsNumber, prisonerHash, Instant.now()) > 0
+    prisonerHashRepository.upsertIfChanged(nomsNumber, hash, Instant.now()) > 0
 
-  private fun Prisoner.hash() =
-    objectMapper.writeValueAsString(this)
-      .toByteArray()
-      .let {
-        Base64.encodeBase64String(DigestUtils.md5Digest(it))
-      }
+  fun hash(value: Any?) =
+    value?.run {
+      objectMapper.writeValueAsString(this)
+        .toByteArray()
+        .let {
+          Base64.encodeBase64String(DigestUtils.md5Digest(it))
+        }
+    }
 
-  internal fun generateDiffTelemetry(
-    previousPrisonerSnapshot: Prisoner?,
-    offenderBooking: OffenderBooking,
-    prisoner: Prisoner,
+  internal fun <T : Diffable<T>> generateDiffTelemetry(
+    previousSnapshot: T?,
+    prisonerNumber: String,
+    bookingId: Long?,
+    current: T,
     eventType: String,
   ) {
     runCatching {
-      previousPrisonerSnapshot?.also {
-        getDifferencesByCategory(it, prisoner).run {
-          raiseDifferencesTelemetry(offenderBooking.offenderNo, offenderBooking.bookingId, eventType, this)
+      previousSnapshot?.also {
+        getDifferencesByCategory(it, current).run {
+          // TODO: this is used by domains too: customise the telemetry event name?
+          raiseDifferencesTelemetry(prisonerNumber, bookingId, eventType, this)
         }
-      } ?: raiseCreatedTelemetry(offenderBooking.offenderNo, offenderBooking.bookingId, eventType)
+      } ?: raiseTelemetry(PRISONER_CREATED, prisonerNumber, bookingId, eventType)
     }.onFailure {
       log.error("Prisoner difference telemetry failed with error", it)
     }
@@ -162,24 +174,24 @@ class PrisonerDifferenceService(
     return emptyList()
   }
 
-  internal fun generateDiffEvent(
-    previousPrisonerSnapshot: Prisoner?,
-    offenderBooking: OffenderBooking,
-    prisoner: Prisoner,
+  internal fun <T : Diffable<T>> generateDiffEvent(
+    previousSnapshot: T?,
+    prisonerNumber: String,
+    current: T,
   ) {
     if (!diffProperties.events) return
-    previousPrisonerSnapshot?.also {
-      getDifferencesByCategory(it, prisoner)
+    previousSnapshot?.also {
+      getDifferencesByCategory(it, current)
         .takeIf { it.isNotEmpty() }
-        ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(offenderBooking.offenderNo, it) }
-    } ?: domainEventEmitter.emitPrisonerCreatedEvent(offenderBooking.offenderNo)
+        ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(prisonerNumber, it) }
+    } ?: domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber)
   }
 
   @Suppress("UNCHECKED_CAST")
-  internal fun getDifferencesByCategory(prisoner: Prisoner, other: Prisoner): PrisonerDifferences =
+  internal fun <T : Diffable<T>> getDifferencesByCategory(prisoner: Diffable<T>, other: T): PrisonerDifferences =
     prisoner.diff(other).let { diffResult ->
       propertiesByDiffCategory.mapValues { properties ->
-        val diffs = diffResult.diffs as List<Diff<Prisoner>>
+        val diffs = diffResult.diffs as List<Diff<T>>
         diffs.filter { diff -> properties.value.contains(diff.fieldName) }
           .map { diff -> Difference(diff.fieldName, properties.key, diff.left, diff.right) }
       }
@@ -211,26 +223,14 @@ class PrisonerDifferenceService(
       )
     }
 
-  private fun raiseDatabaseHashUnchangedTelemetry(
-    offenderNo: String,
-    bookingId: Long?,
-    eventType: String,
-  ) =
-    // the prisoner hash stored in the database is unchanged
-    telemetryClient.trackPrisonerEvent(
-      PRISONER_DATABASE_NO_CHANGE,
-      prisonerNumber = offenderNo,
-      bookingId = bookingId,
-      eventType = eventType,
-    )
-
-  private fun raiseCreatedTelemetry(
+  internal fun raiseTelemetry(
+    telemetryEvent: TelemetryEvents,
     offenderNo: String,
     bookingId: Long?,
     eventType: String,
   ) =
     telemetryClient.trackPrisonerEvent(
-      PRISONER_CREATED,
+      telemetryEvent,
       prisonerNumber = offenderNo,
       bookingId = bookingId,
       eventType = eventType,

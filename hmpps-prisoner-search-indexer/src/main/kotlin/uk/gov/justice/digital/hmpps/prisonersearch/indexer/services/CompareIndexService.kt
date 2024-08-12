@@ -138,6 +138,7 @@ class CompareIndexService(
           )
         }
       }
+      log.debug("Done ${searchHits.size} documents, scrollId = $scrollId")
 
       val scrollRequest = SearchScrollRequest(scrollId).apply { scroll(scroll) }
       val scrollResponse = openSearchClient.scroll(scrollRequest, RequestOptions.DEFAULT)

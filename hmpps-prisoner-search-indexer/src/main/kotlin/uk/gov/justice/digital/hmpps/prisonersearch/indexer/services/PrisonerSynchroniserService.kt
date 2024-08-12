@@ -2,8 +2,10 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
@@ -18,6 +20,7 @@ class PrisonerSynchroniserService(
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
+  private val incentiveDifferenceService: IncentiveDifferenceService,
 ) {
 
   // called when prisoner updated or manual prisoner index required
@@ -34,7 +37,7 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatient,
     )
     // only save to open search if we encounter any differences
-    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
       prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
@@ -51,6 +54,35 @@ class PrisonerSynchroniserService(
     restrictedPatient.onFailure { throw it }
     return prisoner
   }
+
+  internal fun reindexIncentive(prisonerNo: String, indices: List<SyncIndex>, eventType: String) =
+    prisonerRepository.getSummary(prisonerNo, indices)
+      ?.runCatching {
+        val bookingId = this.bookingId ?: throw PrisonerNotFoundException(prisonerNo)
+        val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
+        val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
+
+        // only save to open search if we encounter any differences
+        if (prisonerDifferenceService.hasChanged(this.currentIncentive, newLevel)) {
+          indices.map { index ->
+            prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
+          }
+          incentiveDifferenceService.handleDifferences(
+            prisonerNo,
+            bookingId,
+            this.currentIncentive,
+            newLevel,
+            eventType,
+          )
+        } else {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE,
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+        }
+      }?.onFailure { throw it }
 
   // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
   // we don't need to write what we have so far for the prisoner to it.
@@ -72,7 +104,7 @@ class PrisonerSynchroniserService(
       incentiveLevel = Result.success(incentiveLevel),
       restrictedPatientData = Result.success(restrictedPatient),
     )
-    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
