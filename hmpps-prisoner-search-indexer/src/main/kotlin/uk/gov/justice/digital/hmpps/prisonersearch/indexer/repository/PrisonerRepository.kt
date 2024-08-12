@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest
 import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest
@@ -21,17 +22,15 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Repository
 class PrisonerRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
+  private val objectMapper: ObjectMapper,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -57,30 +56,43 @@ class PrisonerRepository(
 
   fun updateIncentive(
     prisonerNumber: String,
-    incentive: CurrentIncentive,
+    incentive: CurrentIncentive?,
     index: SyncIndex,
     summary: PrisonerDocumentSummary,
   ) {
-    openSearchRestTemplate.update(
-      UpdateQuery.builder(prisonerNumber)
-        .withScriptType(ScriptType.INLINE)
-        .withScript(
-          "ctx._source.currentIncentive = ['level':['code':params.code, 'description':params.description], 'dateTime':params.dateTime, 'nextReviewDate':params.nextReviewDate]",
-        )
-        .withParams(
-          mapOf(
-            "code" to incentive.level.code,
-            "description" to incentive.level.description,
-            "dateTime" to incentive.dateTime.format(DATE_TIME_PATTERN),
-            "nextReviewDate" to incentive.nextReviewDate,
-          ),
-        )
-        .withLang("painless")
-        .withIfSeqNo(summary.sequenceNumber)
-        .withIfPrimaryTerm(summary.primaryTerm)
-        .build(),
-      index.toIndexCoordinates(),
-    )
+    incentive?.run {
+      openSearchRestTemplate.update(
+        UpdateQuery.builder(prisonerNumber)
+          .withScriptType(ScriptType.INLINE)
+          .withScript(
+            "ctx._source.currentIncentive = ['level':['code':params.code, 'description':params.description], 'dateTime':params.dateTime, 'nextReviewDate':params.nextReviewDate]",
+          )
+          .withParams(
+            mapOf(
+              "code" to incentive.level.code,
+              "description" to incentive.level.description,
+              "dateTime" to incentive.dateTime.format(DATE_TIME_PATTERN),
+              "nextReviewDate" to incentive.nextReviewDate,
+            ),
+          )
+          .withLang("painless")
+          .withIfSeqNo(summary.sequenceNumber)
+          .withIfPrimaryTerm(summary.primaryTerm)
+          .build(),
+        index.toIndexCoordinates(),
+      )
+    } ?: run {
+      openSearchRestTemplate.update(
+        UpdateQuery.builder(prisonerNumber)
+          .withScriptType(ScriptType.INLINE)
+          .withScript("ctx._source.currentIncentive = null")
+          .withLang("painless")
+          .withIfSeqNo(summary.sequenceNumber)
+          .withIfPrimaryTerm(summary.primaryTerm)
+          .build(),
+        index.toIndexCoordinates(),
+      )
+    }
   }
 
   fun delete(prisonerNumber: String) {
@@ -141,24 +153,17 @@ class PrisonerRepository(
     return alias.aliases.keys
   }
 
-  @Suppress("UNCHECKED_CAST")
-  private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary {
-    return PrisonerDocumentSummary(
-      prisonerNumber,
-      source?.get("bookingId")?.toString()?.toLong(),
-      (source?.get("currentIncentive") as Map<String, *>?)
-        ?.let { currentIncentive ->
-          CurrentIncentive(
-            (currentIncentive["level"] as Map<String, String>)
-              .let { level -> IncentiveLevel(level["code"] as String, level["description"] as String) },
-            LocalDateTime.parse(currentIncentive["dateTime"] as String),
-            LocalDate.parse(currentIncentive["nextReviewDate"] as String),
-          )
-        },
-      seqNo.toInt(),
-      primaryTerm.toInt(),
-    )
-  }
+  // @Suppress("UNCHECKED_CAST")
+  private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? =
+    source ?. let {
+      PrisonerDocumentSummary(
+        prisonerNumber,
+        source["bookingId"]?.toString()?.toLong(),
+        objectMapper.convertValue(source["currentIncentive"], CurrentIncentive::class.java),
+        seqNo.toInt(),
+        primaryTerm.toInt(),
+      )
+    }
 }
 
 data class PrisonerDocumentSummary(

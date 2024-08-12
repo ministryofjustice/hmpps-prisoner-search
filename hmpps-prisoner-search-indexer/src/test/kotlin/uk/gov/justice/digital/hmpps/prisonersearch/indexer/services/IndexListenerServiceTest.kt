@@ -42,9 +42,6 @@ internal class IndexListenerServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
       )
-//      val booking = OffenderBookingBuilder().anOffenderBooking()
-//      whenever(nomisService.getOffender(any())).thenReturn(booking)
-      // doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A1234AA", id = 12345),
@@ -72,8 +69,6 @@ internal class IndexListenerServiceTest {
           otherIndexState = IndexState.ABSENT,
         ),
       )
-//      val booking = OffenderBookingBuilder().anOffenderBooking()
-//      whenever(nomisService.getOffender(any())).thenReturn(booking)
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),

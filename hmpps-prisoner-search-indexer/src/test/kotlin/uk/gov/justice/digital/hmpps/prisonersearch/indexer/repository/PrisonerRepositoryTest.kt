@@ -9,6 +9,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
 import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest
 import org.opensearch.action.get.GetRequest
@@ -18,6 +19,7 @@ import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.GetIndexRequest
 import org.opensearch.client.indices.GetMappingsResponse
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.OptimisticLockingFailureException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
@@ -198,10 +200,35 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     fun `prisoner does not exist`() {
       prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" }, BLUE)
 
-      val summary = prisonerRepository.getSummary("nonexistent", listOf(BLUE))!!
-      // assertThat(summary.prisonerNumber).isNull()
-      assertThat(summary.bookingId).isNull()
-      assertThat(prisonerRepository.getSummary("X12345", listOf(GREEN))!!.bookingId).isNull()
+      assertThat(prisonerRepository.getSummary("nonexistent", listOf(BLUE))).isNull()
+      assertThat(prisonerRepository.getSummary("X12345", listOf(GREEN))).isNull()
+    }
+
+    @Test
+    fun `prisoner exists but has no bookings`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+        },
+        BLUE,
+      )
+
+      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.prisonerNumber).isEqualTo("X12345")
+      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.bookingId).isNull()
+    }
+
+    @Test
+    fun `prisoner exists but with no incentive data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          bookingId = "1234"
+        },
+        BLUE,
+      )
+
+      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.prisonerNumber).isEqualTo("X12345")
+      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.bookingId).isEqualTo(1234)
     }
 
     @Test
@@ -278,7 +305,86 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       assertThat(data.nextReviewDate).isEqualTo(LocalDate.parse("2024-11-27"))
     }
 
-    // can get org.springframework.dao.OptimisticLockingFailureException when seq is wrong
+    @Test
+    fun `will update prisoner with no incentive data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = CurrentIncentive(
+            IncentiveLevel("code1", "description1"),
+            LocalDateTime.parse("2023-07-13T14:15:16"),
+            LocalDate.parse("2023-08-17"),
+          )
+        },
+        BLUE,
+      )
+
+      prisonerRepository.updateIncentive(
+        "X12345",
+        null,
+        BLUE,
+        prisonerRepository.getSummary("X12345", listOf(BLUE))!!,
+      )
+      assertThat(prisonerRepository.get("X12345", listOf(BLUE))!!.currentIncentive).isNull()
+    }
+
+    @Test
+    fun `wrong sequence + 1 throws exception`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = CurrentIncentive(
+            IncentiveLevel("code1", "description1"),
+            LocalDateTime.parse("2023-07-13T14:15:16"),
+            LocalDate.parse("2023-08-17"),
+          )
+        },
+        BLUE,
+      )
+
+      val summary = prisonerRepository.getSummary("X12345", listOf(BLUE))!!
+      assertThrows<OptimisticLockingFailureException> {
+        prisonerRepository.updateIncentive(
+          "X12345",
+          CurrentIncentive(
+            IncentiveLevel("code2", "description2"),
+            LocalDateTime.parse("2024-08-14T15:16:17"),
+            LocalDate.parse("2024-11-27"),
+          ),
+          BLUE,
+          summary.copy(sequenceNumber = summary.sequenceNumber + 1),
+        )
+      }
+    }
+
+    @Test
+    fun `wrong primaryTerm + 1 throws exception`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = CurrentIncentive(
+            IncentiveLevel("code1", "description1"),
+            LocalDateTime.parse("2023-07-13T14:15:16"),
+            LocalDate.parse("2023-08-17"),
+          )
+        },
+        BLUE,
+      )
+
+      val summary = prisonerRepository.getSummary("X12345", listOf(BLUE))!!
+      assertThrows<OptimisticLockingFailureException> {
+        prisonerRepository.updateIncentive(
+          "X12345",
+          CurrentIncentive(
+            IncentiveLevel("code2", "description2"),
+            LocalDateTime.parse("2024-08-14T15:16:17"),
+            LocalDate.parse("2024-11-27"),
+          ),
+          BLUE,
+          summary.copy(primaryTerm = summary.primaryTerm + 1),
+        )
+      }
+    }
   }
 
   @Nested

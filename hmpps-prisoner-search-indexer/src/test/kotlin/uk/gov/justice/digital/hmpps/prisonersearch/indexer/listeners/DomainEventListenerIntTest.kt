@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExt
 
 class DomainEventListenerIntTest : IntegrationTestBase() {
   @Test
-  fun `will index a prisoner when iep message received`() {
+  fun `will index a prisoner when RP message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FD"
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
