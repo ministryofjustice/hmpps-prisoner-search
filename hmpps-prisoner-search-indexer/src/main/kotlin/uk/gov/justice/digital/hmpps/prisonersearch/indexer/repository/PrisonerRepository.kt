@@ -4,28 +4,42 @@ import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest
 import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest
+import org.opensearch.action.get.GetRequest
+import org.opensearch.action.get.GetResponse
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.core.CountRequest
 import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.DeleteAliasRequest
 import org.opensearch.client.indices.GetIndexRequest
+import org.opensearch.data.client.orhlc.DocumentAdapters
 import org.slf4j.LoggerFactory
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
+import org.springframework.data.elasticsearch.core.query.ScriptType
+import org.springframework.data.elasticsearch.core.query.UpdateQuery
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Repository
 class PrisonerRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
+  // private val mappingElasticsearchConverter: MappingElasticsearchConverter,
+  private val elasticsearchConverter: ElasticsearchConverter,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
+    private val DATE_TIME_PATTERN = DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")
   }
 
   fun count(index: SyncIndex) = try {
@@ -37,6 +51,40 @@ class PrisonerRepository(
 
   fun save(prisoner: Prisoner, index: SyncIndex) {
     openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), index.toIndexCoordinates())
+  }
+
+  fun getSummary(prisonerNumber: String, indices: List<SyncIndex>): PrisonerDocumentSummary? =
+    indices.firstNotNullOfOrNull { index ->
+      client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
+        .toPrisonerDocumentSummary(prisonerNumber)
+    }
+
+  fun updateIncentive(
+    prisonerNumber: String,
+    incentive: CurrentIncentive,
+    index: SyncIndex,
+    summary: PrisonerDocumentSummary,
+  ) {
+    openSearchRestTemplate.update(
+      UpdateQuery.builder(prisonerNumber)
+        .withScriptType(ScriptType.INLINE)
+        .withScript(
+          "ctx._source.currentIncentive = ['level':['code':params.code, 'description':params.description], 'dateTime':params.dateTime, 'nextReviewDate':params.nextReviewDate]",
+        )
+        .withParams(
+          mapOf(
+            "code" to incentive.level.code,
+            "description" to incentive.level.description,
+            "dateTime" to incentive.dateTime.format(DATE_TIME_PATTERN),
+            "nextReviewDate" to incentive.nextReviewDate,
+          ),
+        )
+        .withLang("painless")
+        .withIfSeqNo(summary.sequenceNumber)
+        .withIfPrimaryTerm(summary.primaryTerm)
+        .build(),
+      index.toIndexCoordinates(),
+    )
   }
 
   fun delete(prisonerNumber: String) {
@@ -96,6 +144,41 @@ class PrisonerRepository(
     val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
     return alias.aliases.keys
   }
+
+  private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary {
+    val document = DocumentAdapters.from(this)
+    /*
+      DocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+        return callback.doWith(DocumentAdapters.from(response));
+
+     */
+    return PrisonerDocumentSummary(
+      prisonerNumber,
+      source?.get("bookingId")?.toString()?.toLong(),
+      (source?.get("currentIncentive") as Map<String, *>?)
+        ?.let { currentIncentive ->
+          CurrentIncentive(
+            (currentIncentive["level"] as Map<String, String>)
+              .let { level -> IncentiveLevel(level["code"] as String, level["description"] as String) },
+            LocalDateTime.parse(currentIncentive["dateTime"] as String),
+            LocalDate.parse(currentIncentive["nextReviewDate"] as String),
+          )
+        },
+      // document,
+      // elasticsearchConverter.conversionService.convert(source, Prisoner::class.java),
+      seqNo.toInt(),
+      primaryTerm.toInt(),
+    )
+  }
 }
+
+data class PrisonerDocumentSummary(
+  val prisonerNumber: String?,
+  val bookingId: Long?,
+  val currentIncentive: CurrentIncentive?,
+  // val prisoner: Prisoner?,
+  val sequenceNumber: Int,
+  val primaryTerm: Int,
+)
 
 private fun SyncIndex.toIndexCoordinates() = IndexCoordinates.of(this.indexName)

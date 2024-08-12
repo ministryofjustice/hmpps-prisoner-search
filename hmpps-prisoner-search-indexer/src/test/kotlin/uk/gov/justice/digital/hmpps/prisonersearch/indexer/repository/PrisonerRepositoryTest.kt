@@ -19,10 +19,14 @@ import org.opensearch.client.indices.GetIndexRequest
 import org.opensearch.client.indices.GetMappingsResponse
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
@@ -34,7 +38,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Nested
     inner class NoIndexExists {
       @BeforeEach
-      internal fun setUp() {
+      fun setUp() {
         deletePrisonerIndices()
       }
 
@@ -58,7 +62,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Nested
     inner class OneIndexExists {
       @BeforeEach
-      internal fun setUp() {
+      fun setUp() {
         deletePrisonerIndices()
         highLevelClient.safeIndexCreate(GREEN.indexName)
       }
@@ -81,13 +85,13 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   @Nested
   inner class Count {
     @Test
-    internal fun `will count the number of prisoners in an empty index`() {
+    fun `will count the number of prisoners in an empty index`() {
       assertThat(prisonerRepository.count(BLUE)).isEqualTo(0)
       assertThat(prisonerRepository.count(GREEN)).isEqualTo(0)
     }
 
     @Test
-    internal fun `will count the prisoners`() {
+    fun `will count the prisoners`() {
       prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12341" }, BLUE)
       prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12342" }, BLUE)
       prisonerRepository.save(Prisoner().also { it.prisonerNumber = "X12343" }, BLUE)
@@ -98,7 +102,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    internal fun `will return -1 if index doesn't exist`() {
+    fun `will return -1 if index doesn't exist`() {
       assertThat(prisonerRepository.count(BLUE)).isEqualTo(0L)
       prisonerRepository.deleteIndex(BLUE)
       assertThat(prisonerRepository.count(BLUE)).isEqualTo(-1L)
@@ -109,7 +113,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   inner class Get {
 
     @Test
-    internal fun `will get a prisoner in the correct index`() {
+    fun `will get a prisoner in the correct index`() {
       prisonerRepository.save(
         Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
@@ -120,7 +124,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    internal fun `will check all supplied indices to find prisoner`() {
+    fun `will check all supplied indices to find prisoner`() {
       prisonerRepository.save(
         Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
@@ -130,7 +134,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    internal fun `will get prisoner`() {
+    fun `will get prisoner`() {
       prisonerRepository.save(
         Prisoner().apply {
           prisonerNumber = "ABC123D"
@@ -153,7 +157,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   inner class Save {
 
     @Test
-    internal fun `will save prisoner in the correct index`() {
+    fun `will save prisoner in the correct index`() {
       prisonerRepository.save(
         Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
@@ -169,7 +173,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    internal fun `will save json`() {
+    fun `will save json`() {
       prisonerRepository.save(
         Prisoner().apply {
           prisonerNumber = "ABC123D"
@@ -189,10 +193,99 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class GetSummary {
+    @Test
+    fun `prisoner does not exist`() {
+      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" }, BLUE)
+
+      val summary = prisonerRepository.getSummary("nonexistent", listOf(BLUE))!!
+      // assertThat(summary.prisonerNumber).isNull()
+      assertThat(summary.bookingId).isNull()
+      assertThat(prisonerRepository.getSummary("X12345", listOf(GREEN))!!.bookingId).isNull()
+    }
+
+    @Test
+    fun `will get incentive data`() {
+      val testIncentive = CurrentIncentive(
+        IncentiveLevel("code2", "description2"),
+        LocalDateTime.parse("2024-08-14T15:16:17"),
+        LocalDate.parse("2024-11-27"),
+      )
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = testIncentive
+        },
+        BLUE,
+      )
+
+      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))!!.currentIncentive).isEqualTo(testIncentive)
+    }
+  }
+
+  @Nested
+  inner class UpdateIncentive {
+
+    @Test
+    fun `will update prisoner with new incentive data`() {
+      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" }, BLUE)
+
+      prisonerRepository.updateIncentive(
+        "X12345",
+        CurrentIncentive(
+          IncentiveLevel("code2", "description2"),
+          LocalDateTime.parse("2024-08-14T15:16:17"),
+          LocalDate.parse("2024-11-27"),
+        ),
+        BLUE,
+        prisonerRepository.getSummary("X12345", listOf(BLUE))!!,
+      )
+      val data = prisonerRepository.get("X12345", listOf(BLUE))?.currentIncentive!!
+      assertThat(data.level.code).isEqualTo("code2")
+      assertThat(data.level.description).isEqualTo("description2")
+      assertThat(data.dateTime).isEqualTo(LocalDateTime.parse("2024-08-14T15:16:17"))
+      assertThat(data.nextReviewDate).isEqualTo(LocalDate.parse("2024-11-27"))
+    }
+
+    @Test
+    fun `will update prisoner with existing incentive data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = CurrentIncentive(
+            IncentiveLevel("code1", "description1"),
+            LocalDateTime.parse("2023-07-13T14:15:16"),
+            LocalDate.parse("2023-08-17"),
+          )
+        },
+        BLUE,
+      )
+
+      prisonerRepository.updateIncentive(
+        "X12345",
+        CurrentIncentive(
+          IncentiveLevel("code2", "description2"),
+          LocalDateTime.parse("2024-08-14T15:16:17"),
+          LocalDate.parse("2024-11-27"),
+        ),
+        BLUE,
+        prisonerRepository.getSummary("X12345", listOf(BLUE))!!,
+      )
+      val data = prisonerRepository.get("X12345", listOf(BLUE))?.currentIncentive!!
+      assertThat(data.level.code).isEqualTo("code2")
+      assertThat(data.level.description).isEqualTo("description2")
+      assertThat(data.dateTime).isEqualTo(LocalDateTime.parse("2024-08-14T15:16:17"))
+      assertThat(data.nextReviewDate).isEqualTo(LocalDate.parse("2024-11-27"))
+    }
+
+    // can get org.springframework.dao.OptimisticLockingFailureException when seq is wrong
+  }
+
+  @Nested
   inner class Delete {
 
     @Test
-    internal fun `will delete prisoner`() {
+    fun `will delete prisoner`() {
       prisonerRepository.save(
         Prisoner().apply { prisonerNumber = "X12345" },
         BLUE,
@@ -217,12 +310,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   @Nested
   inner class DeleteIndex {
     @BeforeEach
-    internal fun setUp() {
+    fun setUp() {
       deletePrisonerIndices()
     }
 
     @Test
-    internal fun `will delete an existing index`() {
+    fun `will delete an existing index`() {
       prisonerRepository.createIndex(BLUE)
 
       assertThat(highLevelClient.indices().exists(GetIndexRequest(BLUE.indexName), RequestOptions.DEFAULT)).isTrue()
@@ -235,7 +328,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    internal fun `will leave the other index alone`() {
+    fun `will leave the other index alone`() {
       prisonerRepository.createIndex(BLUE)
       prisonerRepository.createIndex(GREEN)
 
@@ -249,7 +342,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    internal fun `will not complain if index to delete does not exist`() {
+    fun `will not complain if index to delete does not exist`() {
       assertThat(highLevelClient.indices().exists(GetIndexRequest(BLUE.indexName), RequestOptions.DEFAULT)).isFalse()
 
       prisonerRepository.deleteIndex(BLUE)
@@ -261,19 +354,19 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   @Nested
   inner class DoesIndexExist {
     @BeforeEach
-    internal fun setUp() {
+    fun setUp() {
       deletePrisonerIndices()
     }
 
     @Test
-    internal fun `will report true when index exists`() {
+    fun `will report true when index exists`() {
       prisonerRepository.createIndex(BLUE)
       assertThat(prisonerRepository.doesIndexExist(BLUE)).isTrue()
       assertThat(prisonerRepository.doesIndexExist(GREEN)).isFalse()
     }
 
     @Test
-    internal fun `will report false when index does not exists`() {
+    fun `will report false when index does not exists`() {
       assertThat(prisonerRepository.doesIndexExist(BLUE)).isFalse()
       assertThat(prisonerRepository.doesIndexExist(GREEN)).isFalse()
     }
@@ -289,10 +382,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         prisonerRepository.switchAliasIndex(GREEN)
         assertThat(highLevelClient.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)).isTrue()
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices()
+            .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).containsKey(GREEN.indexName)
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices()
+            .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(BLUE.indexName)
       }
 
@@ -307,7 +402,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Nested
     inner class WhenAliasExists {
       @BeforeEach
-      internal fun setUp() {
+      fun setUp() {
         prisonerRepository.switchAliasIndex(GREEN)
       }
 
@@ -316,10 +411,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         prisonerRepository.switchAliasIndex(BLUE)
         assertThat(highLevelClient.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)).isTrue()
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices()
+            .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).containsKey(BLUE.indexName)
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices()
+            .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(GREEN.indexName)
       }
 
@@ -335,7 +432,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     @Nested
     inner class WhenAliasExistsOnCorrectIndex {
       @BeforeEach
-      internal fun setUp() {
+      fun setUp() {
         prisonerRepository.switchAliasIndex(BLUE)
       }
 
@@ -344,10 +441,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         prisonerRepository.switchAliasIndex(BLUE)
         assertThat(highLevelClient.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)).isTrue()
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices()
+            .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).containsKey(BLUE.indexName)
         assertThat(
-          highLevelClient.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
+          highLevelClient.indices()
+            .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(GREEN.indexName)
       }
     }

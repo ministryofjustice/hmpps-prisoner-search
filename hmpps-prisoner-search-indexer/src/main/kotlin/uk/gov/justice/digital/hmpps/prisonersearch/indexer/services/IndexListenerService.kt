@@ -26,8 +26,9 @@ class IndexListenerService(
       message.additionalInformation.nomsNumber,
       message.additionalInformation.id,
     )
-    sync(message.additionalInformation.nomsNumber, eventType)
+    syncIncentive(message.additionalInformation.nomsNumber, eventType)
   }
+
   fun restrictedPatientChange(message: RestrictedPatientMessage, eventType: String) {
     log.info(
       "Restricted patient change: {} for prisoner {}",
@@ -108,10 +109,26 @@ class IndexListenerService(
         }
       }
 
+  private fun reindexIncentive(prisonerNumber: String, eventType: String) {
+    indexStatusService.getIndexStatus()
+      .run {
+        if (activeIndexesEmpty()) {
+          log.info("Ignoring update of incentive for {} as no indexes were active", prisonerNumber)
+          null
+        } else {
+          prisonerSynchroniserService.reindexIncentive(prisonerNumber, activeIndexes(), eventType)
+        }
+      }
+  }
+
   private fun sync(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
       reindexPrisoner(ob = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
+
+  private fun syncIncentive(prisonerNumber: String, eventType: String) {
+    reindexIncentive(prisonerNumber, eventType)
+  }
 
   private fun sync(bookingId: Long, eventType: String): Prisoner? =
     nomisService.getNomsNumberForBooking(bookingId)?.run {

@@ -185,6 +185,19 @@ class MaintainIndexService(
       }
       .run { sync(prisonerNumber, this.activeIndexes()) }
 
+  fun updateIncentive(prisonerNumber: String) {
+    indexStatusService.getIndexStatus()
+      .failIf(IndexStatus::activeIndexesEmpty) {
+        log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
+        NoActiveIndexesException(it)
+      }
+      .run {
+        prisonerRepository.get(prisonerNumber, this.activeIndexes()) ?.run {
+          // prisonerRepository.save(prisonerNumber, this.activeIndexes())
+        }
+      }
+  }
+
   private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>) =
     nomisService.getOffender(prisonerNumber)?.let { ob ->
       prisonerSynchroniserService.reindex(ob, activeIndices, "MAINTAIN")
