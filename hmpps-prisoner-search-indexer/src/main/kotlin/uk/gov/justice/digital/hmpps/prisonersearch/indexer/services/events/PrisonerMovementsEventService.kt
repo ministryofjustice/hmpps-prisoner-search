@@ -62,49 +62,49 @@ class PrisonerMovementsEventService(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
     offenderBooking: OffenderBooking,
-  ): PossibleMovementChange {
-    return previousPrisonerSnapshot.let {
-      val prisonerNumber = prisoner.prisonerNumber!!
-      if (prisoner.isTransferIn(previousPrisonerSnapshot)) {
-        TransferIn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isCourtReturn(previousPrisonerSnapshot)) {
-        CourtReturn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isNewAdmission(previousPrisonerSnapshot) && isAdmissionAssociatedWithAMerge(offenderBooking)) {
-        MergeAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot)) {
-        MovementInChange.ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
-        NewAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isReadmission(previousPrisonerSnapshot)) {
-        Readmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTransferViaCourt(previousPrisonerSnapshot)) {
-        TransferIn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTAPReturn(previousPrisonerSnapshot)) {
-        TAPReturn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTransferViaTAP(previousPrisonerSnapshot)) {
-        TransferIn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTransferOut(previousPrisonerSnapshot)) {
-        TransferOut(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isCourtOutMovement(previousPrisonerSnapshot)) {
-        SentToCourt(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isTAPOutMovement(previousPrisonerSnapshot)) {
-        TAPRelease(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isReleaseToHospital(previousPrisonerSnapshot)) {
-        ReleasedToHospital(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isRelease(previousPrisonerSnapshot)) {
-        Released(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (
-        prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot) ||
-        prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot)
-      ) {
-        PossibleMovementChange.None.also {
-          // really can't think a scenario where will hit this line, so lets log since it means
-          // we are not dealing with all scenarios correctly
-          telemetryClient.trackPrisonerEvent(EVENTS_UNKNOWN_MOVEMENT, prisonerNumber)
-        }
-      } else {
-        PossibleMovementChange.None
+  ): PossibleMovementChange = previousPrisonerSnapshot.let {
+    val prisonerNumber = prisoner.prisonerNumber!!
+    if (prisoner.isTransferIn(previousPrisonerSnapshot)) {
+      TransferIn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isCourtReturn(previousPrisonerSnapshot)) {
+      CourtReturn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isNewAdmission(previousPrisonerSnapshot) && isAdmissionAssociatedWithAMerge(offenderBooking)) {
+      MergeAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot)) {
+      MovementInChange.ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
+      NewAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isReadmission(previousPrisonerSnapshot)) {
+      Readmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTransferViaCourt(previousPrisonerSnapshot)) {
+      TransferIn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTAPReturn(previousPrisonerSnapshot)) {
+      TAPReturn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTransferViaTAP(previousPrisonerSnapshot)) {
+      TransferIn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTransferOut(previousPrisonerSnapshot)) {
+      TransferOut(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isCourtOutMovement(previousPrisonerSnapshot)) {
+      SentToCourt(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isTAPOutMovement(previousPrisonerSnapshot)) {
+      TAPRelease(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isReleaseToHospital(previousPrisonerSnapshot)) {
+      ReleasedToHospital(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isRelease(previousPrisonerSnapshot)) {
+      Released(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
+      NewAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (
+      prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot) ||
+      prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot)
+    ) {
+      PossibleMovementChange.None.also {
+        // really can't think a scenario where will hit this line, so lets log since it means
+        // we are not dealing with all scenarios correctly
+        telemetryClient.trackPrisonerEvent(EVENTS_UNKNOWN_MOVEMENT, prisonerNumber)
       }
+    } else {
+      PossibleMovementChange.None
     }
   }
 }
@@ -156,6 +156,10 @@ private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) =
     this.status == "ACTIVE IN" &&
     this.bookingId != previousPrisonerSnapshot?.bookingId
 
+private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) =
+  previousPrisonerSnapshot?.bookingId == null &&
+    this.status == "ACTIVE IN"
+
 private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) =
   this.lastMovementTypeCode == "ADM" &&
     this.bookingId == previousPrisonerSnapshot?.bookingId &&
@@ -189,43 +193,33 @@ private fun Prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot: Prisoner?)
   this.inOutStatus == "OUT" &&
     this.status != previousPrisonerSnapshot?.status
 
-private fun isAdmissionAssociatedWithAMerge(offenderBooking: OffenderBooking): Boolean {
-  return offenderBooking.identifiersForActiveOffender("MERGED")
-    ?.any { it.whenCreated > LocalDateTime.now().minusMinutes(90) }
-    ?: false
-}
+private fun isAdmissionAssociatedWithAMerge(offenderBooking: OffenderBooking): Boolean = offenderBooking.identifiersForActiveOffender("MERGED")
+  ?.any { it.whenCreated > LocalDateTime.now().minusMinutes(90) }
+  ?: false
 
-private fun String?.isBookingBefore(previousSnapshotBookingId: String?): Boolean {
-  return (this?.toLong() ?: Long.MAX_VALUE) < (previousSnapshotBookingId?.toLong() ?: 0)
-}
+private fun String?.isBookingBefore(previousSnapshotBookingId: String?): Boolean = (this?.toLong() ?: Long.MAX_VALUE) < (previousSnapshotBookingId?.toLong() ?: 0)
 
 sealed class PossibleMovementChange {
   sealed class MovementInChange(
     val offenderNo: String,
     val prisonId: String,
     val reason: HmppsDomainEventEmitter.PrisonerReceiveReason,
-  ) :
-    PossibleMovementChange() {
+  ) : PossibleMovementChange() {
     class TransferIn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, TRANSFERRED)
     class CourtReturn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, RETURN_FROM_COURT)
-    class TAPReturn(offenderNo: String, prisonId: String) :
-      MovementInChange(offenderNo, prisonId, TEMPORARY_ABSENCE_RETURN)
+    class TAPReturn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, TEMPORARY_ABSENCE_RETURN)
 
     class NewAdmission(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, NEW_ADMISSION)
-    class MergeAdmission(offenderNo: String, prisonId: String) :
-      MovementInChange(offenderNo, prisonId, POST_MERGE_ADMISSION)
+    class MergeAdmission(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, POST_MERGE_ADMISSION)
 
     class Readmission(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, READMISSION)
     class ReadmissionSwitchBooking(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, READMISSION_SWITCH_BOOKING)
   }
 
-  sealed class MovementOutChange(val offenderNo: String, val prisonId: String, val reason: PrisonerReleaseReason) :
-    PossibleMovementChange() {
-    class TransferOut(offenderNo: String, prisonId: String) :
-      MovementOutChange(offenderNo, prisonId, PrisonerReleaseReason.TRANSFERRED)
+  sealed class MovementOutChange(val offenderNo: String, val prisonId: String, val reason: PrisonerReleaseReason) : PossibleMovementChange() {
+    class TransferOut(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, PrisonerReleaseReason.TRANSFERRED)
 
-    class TAPRelease(offenderNo: String, prisonId: String) :
-      MovementOutChange(offenderNo, prisonId, TEMPORARY_ABSENCE_RELEASE)
+    class TAPRelease(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, TEMPORARY_ABSENCE_RELEASE)
 
     class Released(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, RELEASED)
     class ReleasedToHospital(offenderNo: String, prisonId: String) : MovementOutChange(offenderNo, prisonId, RELEASED_TO_HOSPITAL)
