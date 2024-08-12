@@ -182,6 +182,24 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
   }
 
   @Nested
+  inner class NewOffenderWithMovedBookings {
+    private val previousPrisonerSnapshot = newPrisoner()
+
+    @Test
+    internal fun `will emit receive event with reason of new admission for new booking`() {
+      val prisoner = prisonerInWithMovedBooking("BXI")
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = NEW_ADMISSION,
+        prisonId = "BXI",
+      )
+    }
+  }
+
+  @Nested
   inner class ReleasedOffender {
     private val previousPrisonerSnapshot = releasedPrisoner()
 
@@ -409,6 +427,11 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
   private fun newPrisoner() = prisoner("/receive-state-changes/new-prisoner.json")
   private fun prisonerInWithBooking(prisonId: String = "NMI") =
     prisoner("/receive-state-changes/first-new-booking.json").apply {
+      this.prisonId = prisonId
+    }
+
+  private fun prisonerInWithMovedBooking(prisonId: String = "NMI") =
+    prisoner("/receive-state-changes/first-moved-booking.json").apply {
       this.prisonId = prisonId
     }
 
