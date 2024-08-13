@@ -196,7 +196,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will send prisoner updated event to the domain topic`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
+    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456))
 
     // update the prisoner on ES
     prisonApi.stubFor(
@@ -207,7 +207,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             .withBody(
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
-                bookingId = null,
+                bookingId = 123456,
                 firstName = "NEW_NAME",
               ).toOffenderBooking(),
             ),
@@ -227,7 +227,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will delay sending domain events to the topic`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
+    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456))
 
     // update the prisoner on ES
     prisonApi.stubFor(
@@ -238,7 +238,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             .withBody(
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
-                bookingId = null,
+                bookingId = 123456,
                 firstName = "NEW_NAME",
               ).toOffenderBooking(),
             ),
@@ -318,7 +318,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will send prisoner alerts change event to the domain topic when an alert is added`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null, alertCodes = listOf("X" to "XTACT")))
+    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456, alertCodes = listOf("X" to "XTACT")))
 
     // update the prisoner on ES
     prisonApi.stubOffenderNoFromBookingId("A1239DD")
@@ -330,7 +330,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             .withBody(
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
-                bookingId = null,
+                bookingId = 123456,
                 alertCodes = listOf("X" to "XTACT", "W" to "WO"),
               ).toOffenderBooking(),
             ),
@@ -351,7 +351,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will send prisoner physical details change event to the domain topic when changes are made`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null, heightCentimetres = 200))
+    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456, heightCentimetres = 200))
 
     // update the prisoner on ES
     prisonApi.stubOffenderNoFromBookingId("A1239DD")
@@ -363,7 +363,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             .withBody(
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
-                bookingId = null,
+                bookingId = 123456,
                 heightCentimetres = 190,
               ).toOffenderBooking(),
             ),
@@ -381,7 +381,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     recreatePrisoner(
       PrisonerBuilder(
         prisonerNumber = "A1239DD",
-        bookingId = null,
+        bookingId = 123456,
         alertCodes = listOf("X" to "XTACT", "W" to "WO"),
       ),
     )
@@ -397,7 +397,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
               // technically the alert should be end dated but this will work equally well
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
-                bookingId = null,
+                bookingId = 123456,
                 alertCodes = listOf("W" to "WO"),
               ).toOffenderBooking(),
             ),
@@ -418,7 +418,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will send single prisoner updated event for 2 identical updates`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
+    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456))
 
     val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
 
@@ -431,7 +431,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             .withBody(
               PrisonerBuilder(
                 prisonerNumber = "A1239DD",
-                bookingId = null,
+                bookingId = 123456,
                 firstName = "NEW_NAME",
               ).toOffenderBooking(),
             ),
