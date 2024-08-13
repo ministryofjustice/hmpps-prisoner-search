@@ -88,6 +88,10 @@ open class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var ethnicity: String? = null
 
+  @Schema(required = true, description = "Ethnicity code", example = "W1")
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  var raceCode: String? = null
+
   @Schema(required = true, description = "Youth Offender?", example = "true")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var youthOffender: Boolean? = null

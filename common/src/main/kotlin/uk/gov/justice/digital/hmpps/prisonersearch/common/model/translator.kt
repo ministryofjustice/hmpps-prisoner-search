@@ -38,12 +38,24 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.lastName = ob.lastName
 
   this.aliases =
-    ob.aliases?.map { a -> PrisonerAlias(a.title, a.firstName, a.middleName, a.lastName, a.dob, a.gender, a.ethnicity) }
+    ob.aliases?.map { a ->
+      PrisonerAlias(
+        title = a.title,
+        firstName = a.firstName,
+        middleNames = a.middleName,
+        lastName = a.lastName,
+        dateOfBirth = a.dob,
+        gender = a.gender,
+        ethnicity = a.ethnicity,
+        raceCode = a.raceCode,
+      )
+    }
   this.alerts =
     ob.alerts?.filter { a -> a.active }?.map { a -> PrisonerAlert(a.alertType, a.alertCode, a.active, a.expired) }
 
   this.gender = ob.physicalAttributes?.gender
   this.ethnicity = ob.physicalAttributes?.ethnicity
+  this.raceCode = ob.physicalAttributes?.raceCode
   this.heightCentimetres = ob.physicalAttributes?.heightCentimetres
   this.weightKilograms = ob.physicalAttributes?.weightKilograms
 

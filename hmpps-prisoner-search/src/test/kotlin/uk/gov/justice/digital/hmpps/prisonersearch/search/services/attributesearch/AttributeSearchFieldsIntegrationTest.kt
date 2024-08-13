@@ -43,6 +43,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     lastName = "Larsen"
     gender = "Male"
     ethnicity = "White: Eng./Welsh/Scot./N.Irish/British"
+    raceCode = "W1"
     maritalStatus = "Widowed"
     religion = "Church of England (Anglican)"
     nationality = "Egyptian"
@@ -61,6 +62,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
         lastName = "Larsen",
         gender = "Male",
         ethnicity = "White: Eng./Welsh/Scot./N.Irish/British",
+        raceCode = "W1",
         dateOfBirth = LocalDate.parse("1990-01-02"),
       ),
     )

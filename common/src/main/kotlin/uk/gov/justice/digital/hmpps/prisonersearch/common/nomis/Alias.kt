@@ -14,6 +14,7 @@ data class Alias(
   val dob: LocalDate,
   val gender: String? = null,
   val ethnicity: String? = null,
+  val raceCode: String? = null,
   val nameType: String? = null,
   val createDate: LocalDate,
   val offenderId: Long,
