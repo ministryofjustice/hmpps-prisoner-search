@@ -39,6 +39,7 @@ data class PrisonerBuilder(
   val weightKilograms: Int? = null,
   val gender: String? = null,
   val ethnicity: String? = null,
+  val raceCode: String? = null,
   val aliases: List<AliasBuilder> = listOf(),
   val physicalCharacteristics: PhysicalCharacteristicBuilder? = null,
   val physicalMarks: PhysicalMarkBuilder? = null,
@@ -85,6 +86,7 @@ data class BodyPartBuilder(
 data class AliasBuilder(
   val gender: String? = null,
   val ethnicity: String? = null,
+  val raceCode: String? = null,
   val title: String? = null,
   val firstName: String? = null,
 )
@@ -147,13 +149,9 @@ fun generateBookingId(): Long {
   return numbers(8).toLong()
 }
 
-fun letters(length: Int): String {
-  return RandomStringUtils.random(length, true, true)
-}
+fun letters(length: Int): String = RandomStringUtils.random(length, true, true)
 
-fun numbers(length: Int): String {
-  return RandomStringUtils.random(length, false, true)
-}
+fun numbers(length: Int): String = RandomStringUtils.random(length, false, true)
 
 fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? =
   this.currentIncentive?.let {
@@ -178,7 +176,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
     dateOfBirth = LocalDate.parse(this.dateOfBirth),
     physicalAttributes = PhysicalAttributes(
       gender = this.gender,
-      raceCode = null,
+      raceCode = this.raceCode,
       ethnicity = this.ethnicity,
       heightFeet = null,
       heightInches = null,
@@ -211,6 +209,7 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
       Alias(
         gender = a.gender,
         ethnicity = a.ethnicity,
+        raceCode = a.raceCode,
         title = a.title ?: this.title,
         firstName = a.firstName ?: this.firstName,
         middleName = null,

@@ -226,6 +226,7 @@ class PrisonerDifferenceServiceTest {
         dateOfBirth = dateOfBirth,
         gender = null,
         ethnicity = null,
+        raceCode = null,
       )
 
     @Test

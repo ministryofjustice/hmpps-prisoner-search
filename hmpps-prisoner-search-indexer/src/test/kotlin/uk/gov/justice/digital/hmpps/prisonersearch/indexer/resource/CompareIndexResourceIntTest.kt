@@ -176,7 +176,7 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
 
       assertThat(details).contains(
         "[alerts: [], [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=false)]",
-        "[aliases: [], [PrisonerAlias(title=Mr, firstName=LUCAS, middleNames=null, lastName=MORALES, dateOfBirth=1965-07-19, gender=F, ethnicity=null)]]",
+        "[aliases: [], [PrisonerAlias(title=Mr, firstName=LUCAS, middleNames=null, lastName=MORALES, dateOfBirth=1965-07-19, gender=F, ethnicity=null, raceCode=null)]]",
       )
     }
   }

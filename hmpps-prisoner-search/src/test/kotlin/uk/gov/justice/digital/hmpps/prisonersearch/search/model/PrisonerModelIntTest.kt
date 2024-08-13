@@ -20,6 +20,8 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
     bookingId = 2,
     prisonerNumber = "A1111AA",
     title = "Mr",
+    ethnicity = "Mixed White Black",
+    raceCode = "M1",
     addresses = listOf(
       AddressBuilder(
         flat = "1",
@@ -39,7 +41,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
         ),
       ),
     ),
-    aliases = listOf(AliasBuilder(title = "Ms")),
+    aliases = listOf(AliasBuilder(title = "Ms", raceCode = "W1", ethnicity = "White")),
     emailAddresses = listOf(
       EmailAddressBuilder("john.smith@gmail.com"),
       EmailAddressBuilder("john.smith@hotmail.com"),
@@ -107,6 +109,20 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .expectBody()
       .jsonPath("title").isEqualTo("Mr")
       .jsonPath("aliases[0].title").isEqualTo("Ms")
+  }
+
+  @Test
+  fun `should save and retrieve ethnicity`() {
+    webTestClient.get().uri("/prisoner/A1111AA")
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("aliases[0].raceCode").isEqualTo("W1")
+      .jsonPath("aliases[0].ethnicity").isEqualTo("White")
+      .jsonPath("ethnicity").isEqualTo("Mixed White Black")
+      .jsonPath("raceCode").isEqualTo("M1")
   }
 
   @Test
