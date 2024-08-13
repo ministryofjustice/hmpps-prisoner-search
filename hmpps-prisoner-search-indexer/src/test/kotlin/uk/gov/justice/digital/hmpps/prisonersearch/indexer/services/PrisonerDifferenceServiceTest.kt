@@ -433,12 +433,14 @@ class PrisonerDifferenceServiceTest {
 
   @Nested
   inner class GenerateDifferencesTelemetry {
+    val booking = someOffenderBooking()
+
     @Test
     fun `should report identifiers`() {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
+      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
 
       verify(telemetryClient).trackEvent(
         eq("PRISONER_UPDATED"),
@@ -456,7 +458,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
+      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
 
       verify(telemetryClient).trackEvent(
         eq("PRISONER_UPDATED"),
@@ -478,7 +480,7 @@ class PrisonerDifferenceServiceTest {
         croNumber = "someCro"
       }
 
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
+      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
 
       verify(telemetryClient).trackEvent(
         eq("PRISONER_UPDATED"),
@@ -502,7 +504,7 @@ class PrisonerDifferenceServiceTest {
         firstName = "someFirstName2"
       }
 
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
+      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
 
       verify(telemetryClient)
         .trackEvent(
@@ -522,7 +524,7 @@ class PrisonerDifferenceServiceTest {
         firstName = "someFirstName2"
       }
 
-      prisonerDifferenceService.generateDiffTelemetry(null, someOffenderBooking().copy(bookingId = 12345), prisoner2, "eventType")
+      prisonerDifferenceService.generateDiffTelemetry(null, booking.offenderNo, 12345, prisoner2, "eventType")
 
       verify(telemetryClient).trackEvent(
         eq("PRISONER_CREATED"),
@@ -542,7 +544,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc1" }
 
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
+      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
 
       verify(telemetryClient).trackEvent(
         eq("PRISONER_UPDATED_NO_DIFFERENCES"),
@@ -565,7 +567,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
       assertDoesNotThrow {
-        prisonerDifferenceService.generateDiffTelemetry(prisoner1, someOffenderBooking(), prisoner2, "eventType")
+        prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
       }
     }
   }
@@ -716,6 +718,8 @@ class PrisonerDifferenceServiceTest {
 
   @Nested
   inner class GenerateDifferencesEvent {
+    val booking = someOffenderBooking()
+
     @BeforeEach
     fun setUp() {
       whenever(diffProperties.events).thenReturn(true)
@@ -726,7 +730,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
 
       verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
         eq("someOffenderNo"),
@@ -747,7 +751,7 @@ class PrisonerDifferenceServiceTest {
         croNumber = "someCro"
       }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
 
       verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
         eq("someOffenderNo"),
@@ -770,7 +774,7 @@ class PrisonerDifferenceServiceTest {
         firstName = "someFirstName2"
       }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
 
       verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
         eq("someOffenderNo"),
@@ -788,7 +792,7 @@ class PrisonerDifferenceServiceTest {
         firstName = "someFirstName2"
       }
 
-      prisonerDifferenceService.generateDiffEvent(null, someOffenderBooking(), prisoner2)
+      prisonerDifferenceService.generateDiffEvent(null, booking.offenderNo, prisoner2)
 
       verify(domainEventsEmitter).emitPrisonerCreatedEvent("someOffenderNo")
     }
@@ -800,7 +804,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
 
       verify(domainEventsEmitter, never()).emitPrisonerDifferenceEvent(anyString(), any())
     }
@@ -818,7 +822,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
       assertThatThrownBy {
-        prisonerDifferenceService.generateDiffEvent(prisoner1, someOffenderBooking(), prisoner2)
+        prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }

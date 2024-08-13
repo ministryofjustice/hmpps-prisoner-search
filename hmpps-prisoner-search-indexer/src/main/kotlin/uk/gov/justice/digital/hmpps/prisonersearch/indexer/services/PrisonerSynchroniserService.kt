@@ -37,7 +37,7 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatient,
     )
     // only save to open search if we encounter any differences
-    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
@@ -62,7 +62,7 @@ class PrisonerSynchroniserService(
         val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
 
         // only save to open search if we encounter any differences
-        if (incentiveDifferenceService.incentiveHasChanged(this.currentIncentive, newLevel)) {
+        if (prisonerDifferenceService.hasChanged(this.currentIncentive, newLevel)) {
           indices.map { index ->
             prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
           }
@@ -102,7 +102,7 @@ class PrisonerSynchroniserService(
       incentiveLevel = Result.success(incentiveLevel),
       restrictedPatientData = Result.success(restrictedPatient),
     )
-    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }

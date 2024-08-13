@@ -442,7 +442,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
 
     // expecting 2 checks for update
-    await untilAsserted { verify(prisonerDifferenceService, times(2)).prisonerHasChanged(anyOrNull(), any()) }
+    await untilAsserted { verify(prisonerDifferenceService, times(2)).hasChanged(anyOrNull(), any()) }
 
     // expecting 1 update
     await untilAsserted { verify(prisonerDifferenceService).handleDifferences(anyOrNull(), any(), any(), any()) }
