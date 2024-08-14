@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 
@@ -36,6 +37,7 @@ class PrisonerSynchroniserService(
     // only save to open search if we encounter any differences
     if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
+      prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
       telemetryClient.trackPrisonerEvent(
@@ -56,6 +58,7 @@ class PrisonerSynchroniserService(
   internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner =
     translate(ob).also {
       indexes.map { index -> prisonerRepository.save(it, index) }
+      prisonerRepository.save(it, SyncIndex.RED)
     }
 
   internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>) {
@@ -74,6 +77,7 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
+      prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
     }
   }

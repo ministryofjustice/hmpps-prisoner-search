@@ -469,3 +469,6 @@ class PrisonerA : Prisoner()
 
 @Document(indexName = "prisoner-search-b")
 class PrisonerB : Prisoner()
+
+@Document(indexName = "prisoner-search")
+class PrisonerC : Prisoner()

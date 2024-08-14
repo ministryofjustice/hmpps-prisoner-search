@@ -16,6 +16,7 @@ import org.mockito.kotlin.isA
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -52,7 +53,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.prisonerHasChanged(any(), any())).thenReturn(true)
       service.reindex(booking, listOf(GREEN), "event")
 
-      verify(prisonerRepository).save(isA(), isA())
+      verify(prisonerRepository, times(2)).save(isA(), isA())
     }
 
     @Test
@@ -162,7 +163,7 @@ internal class PrisonerSynchroniserServiceTest {
 
       assertThatThrownBy { service.reindex(outsidePrisoner, listOf(GREEN), "event") }.hasMessage("not today thank you")
 
-      verify(prisonerRepository).save(isA(), isA())
+      verify(prisonerRepository, times(2)).save(isA(), isA())
     }
 
     @Test
@@ -195,7 +196,7 @@ internal class PrisonerSynchroniserServiceTest {
 
       assertThatThrownBy { service.reindex(booking, listOf(GREEN), "event") }.hasMessage("not today thank you")
 
-      verify(prisonerRepository).save(isA(), isA())
+      verify(prisonerRepository, times(2)).save(isA(), isA())
     }
   }
 
@@ -207,7 +208,7 @@ internal class PrisonerSynchroniserServiceTest {
     internal fun `will save prisoner to repository`() {
       service.index(booking, GREEN)
 
-      verify(prisonerRepository).save(isA(), isA())
+      verify(prisonerRepository, times(2)).save(isA(), isA())
     }
 
     @Test
