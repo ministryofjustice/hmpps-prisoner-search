@@ -63,8 +63,10 @@ class PrisonerSearchService(
 
   fun findPossibleMatchesBySearchCriteria(searchCriteria: PossibleMatchCriteria): List<Prisoner> {
     if (!searchCriteria.isValid()) {
-      log.warn("Invalid search  - no criteria provided")
-      throw BadRequestException("Invalid search  - please provide at least 1 search parameter")
+      with("Invalid search  - please provide at least 1 search parameter") {
+        log.warn(this)
+        throw BadRequestException(this)
+      }
     }
     val result = mutableListOf<Prisoner>()
     if (searchCriteria.nomsNumber != null) {
@@ -101,8 +103,10 @@ class PrisonerSearchService(
 
   private fun validateSearchForm(searchCriteria: SearchCriteria) {
     if (!searchCriteria.isValid()) {
-      log.warn("Invalid search  - no criteria provided")
-      throw BadRequestException("Invalid search  - please provide at least 1 search parameter")
+      with("Invalid search  - please provide at least 1 search parameter") {
+        log.warn(this)
+        throw BadRequestException(this)
+      }
     }
   }
 
@@ -328,8 +332,10 @@ class PrisonerSearchService(
   fun findBy(criteria: PrisonerListCriteria<Any>): List<Prisoner> {
     with(criteria) {
       if (!isValid()) {
-        log.warn("Invalid search  - no $type provided")
-        throw BadRequestException("Invalid search  - please provide a minimum of 1 and a maximum of 1000 $type")
+        with("Invalid search  - please provide a minimum of 1 and a maximum of 1000 $type") {
+          log.warn(this)
+          throw BadRequestException(this)
+        }
       }
 
       queryBy(criteria) { matchByIds(it) } onMatch {
