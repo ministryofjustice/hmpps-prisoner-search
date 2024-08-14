@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Size
 
-sealed class PrisonerListCriteria<out T>() {
+sealed class PrisonerListCriteria<out T> {
   @Schema(hidden = true)
   abstract fun isValid(): Boolean
 
