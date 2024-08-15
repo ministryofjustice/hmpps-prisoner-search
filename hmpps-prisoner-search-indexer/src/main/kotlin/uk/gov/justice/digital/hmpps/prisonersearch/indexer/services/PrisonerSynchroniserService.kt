@@ -36,6 +36,7 @@ class PrisonerSynchroniserService(
     // only save to open search if we encounter any differences
     if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
+      prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
       telemetryClient.trackPrisonerEvent(
@@ -56,6 +57,7 @@ class PrisonerSynchroniserService(
   internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner =
     translate(ob).also {
       indexes.map { index -> prisonerRepository.save(it, index) }
+      prisonerRepository.save(it, SyncIndex.RED)
     }
 
   internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>) {
@@ -74,6 +76,7 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
+      prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
     }
   }
