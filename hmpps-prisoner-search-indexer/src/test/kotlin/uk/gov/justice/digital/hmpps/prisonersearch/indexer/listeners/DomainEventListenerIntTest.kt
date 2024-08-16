@@ -71,6 +71,14 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       },
       SyncIndex.GREEN,
     )
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = prisonerNumber
+        bookingId = "1234"
+      },
+      SyncIndex.RED,
+    )
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
     incentivesApi.stubCurrentIncentive()
 
     hmppsDomainSqsClient.sendMessage(
@@ -79,9 +87,14 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
-      assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
-      assertThat(prisoner?.currentIncentive?.level?.code).isEqualTo("STD")
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))!!.apply {
+        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(currentIncentive?.level?.code).isEqualTo("STD")
+      }
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
+        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(currentIncentive?.level?.code).isEqualTo("STD")
+      }
     }
   }
 }

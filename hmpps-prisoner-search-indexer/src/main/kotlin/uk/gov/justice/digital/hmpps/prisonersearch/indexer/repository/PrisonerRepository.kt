@@ -48,11 +48,9 @@ class PrisonerRepository(
     openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), index.toIndexCoordinates())
   }
 
-  fun getSummary(prisonerNumber: String, indices: List<SyncIndex>): PrisonerDocumentSummary? =
-    indices.firstNotNullOfOrNull { index ->
-      client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
-        .toPrisonerDocumentSummary(prisonerNumber)
-    }
+  fun getSummary(prisonerNumber: String, index: SyncIndex): PrisonerDocumentSummary? =
+    client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
+      .toPrisonerDocumentSummary(prisonerNumber)
 
   fun updateIncentive(
     prisonerNumber: String,
@@ -162,7 +160,7 @@ class PrisonerRepository(
 
   // @Suppress("UNCHECKED_CAST")
   private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? =
-    source ?. let {
+    source?.let {
       PrisonerDocumentSummary(
         prisonerNumber,
         source["bookingId"]?.toString()?.toLong(),

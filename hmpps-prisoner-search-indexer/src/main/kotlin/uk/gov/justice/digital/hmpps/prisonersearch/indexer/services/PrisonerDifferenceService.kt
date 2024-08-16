@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffableProperty
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_MISSING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_CREATED
@@ -81,7 +80,12 @@ class PrisonerDifferenceService(
         )
         prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
         alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
-      } ?: raiseTelemetry(PRISONER_DATABASE_NO_CHANGE, offenderBooking.offenderNo, offenderBooking.bookingId, eventType)
+      } ?: telemetryClient.trackPrisonerEvent(
+        PRISONER_DATABASE_NO_CHANGE,
+        prisonerNumber = offenderBooking.offenderNo,
+        bookingId = offenderBooking.bookingId,
+        eventType = eventType,
+      )
     }
   }
 
@@ -121,7 +125,7 @@ class PrisonerDifferenceService(
           // TODO: this is used by domains too: customise the telemetry event name?
           raiseDifferencesTelemetry(prisonerNumber, bookingId, eventType, this)
         }
-      } ?: raiseTelemetry(PRISONER_CREATED, prisonerNumber, bookingId, eventType)
+      } ?: telemetryClient.trackPrisonerEvent(PRISONER_CREATED, prisonerNumber, bookingId, eventType)
     }.onFailure {
       log.error("Prisoner difference telemetry failed with error", it)
     }
@@ -222,19 +226,6 @@ class PrisonerDifferenceService(
         ),
       )
     }
-
-  internal fun raiseTelemetry(
-    telemetryEvent: TelemetryEvents,
-    offenderNo: String,
-    bookingId: Long?,
-    eventType: String,
-  ) =
-    telemetryClient.trackPrisonerEvent(
-      telemetryEvent,
-      prisonerNumber = offenderNo,
-      bookingId = bookingId,
-      eventType = eventType,
-    )
 }
 
 data class Difference(val property: String, val categoryChanged: DiffCategory, val oldValue: Any?, val newValue: Any?)

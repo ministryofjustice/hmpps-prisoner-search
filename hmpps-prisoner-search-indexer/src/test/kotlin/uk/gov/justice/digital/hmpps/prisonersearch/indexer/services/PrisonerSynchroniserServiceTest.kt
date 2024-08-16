@@ -220,7 +220,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(prisonerDocumentSummary.bookingId!!)).thenReturn(newIncentive)
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
-      service.reindexIncentive(prisonerNumber, listOf(GREEN), "event")
+      service.reindexIncentive(prisonerNumber, GREEN, "event")
 
       verify(prisonerRepository).updateIncentive(eq(prisonerNumber), isA(), isA(), isA())
     }
@@ -230,7 +230,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(prisonerDocumentSummary.bookingId!!)).thenReturn(newIncentive)
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
-      service.reindexIncentive(prisonerNumber, listOf(GREEN), "event")
+      service.reindexIncentive(prisonerNumber, GREEN, "event")
 
       verify(prisonerRepository).updateIncentive(
         eq(prisonerNumber),
@@ -245,7 +245,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(prisonerDocumentSummary.bookingId!!)).thenReturn(newIncentive)
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
-      service.reindexIncentive(prisonerNumber, listOf(GREEN), "event")
+      service.reindexIncentive(prisonerNumber, GREEN, "event")
 
       verify(incentiveDifferenceService, never()).handleDifferences(any(), any(), any(), any(), any())
       verify(prisonerRepository, never()).updateIncentive(any(), any(), any(), any())
@@ -266,7 +266,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will do nothing if prisoner not found`() {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(null)
 
-      service.reindexIncentive(prisonerNumber, listOf(GREEN), "event")
+      service.reindexIncentive(prisonerNumber, GREEN, "event")
 
       verifyNoInteractions(incentivesService, incentiveDifferenceService)
       verify(prisonerRepository, never()).updateIncentive(any(), any(), any(), any())
@@ -277,7 +277,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(prisonerDocumentSummary.bookingId!!)).thenReturn(newIncentive)
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
-      service.reindexIncentive(prisonerNumber, listOf(GREEN), "event")
+      service.reindexIncentive(prisonerNumber, GREEN, "event")
 
       verify(incentiveDifferenceService).handleDifferences(
         eq(prisonerNumber),

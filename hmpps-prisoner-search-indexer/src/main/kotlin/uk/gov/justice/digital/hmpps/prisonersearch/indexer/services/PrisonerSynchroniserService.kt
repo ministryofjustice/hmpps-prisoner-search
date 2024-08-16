@@ -55,8 +55,8 @@ class PrisonerSynchroniserService(
     return prisoner
   }
 
-  internal fun reindexIncentive(prisonerNo: String, indices: List<SyncIndex>, eventType: String) =
-    prisonerRepository.getSummary(prisonerNo, indices)
+  internal fun reindexIncentive(prisonerNo: String, index: SyncIndex, eventType: String) =
+    prisonerRepository.getSummary(prisonerNo, index)
       ?.runCatching {
         val bookingId = this.bookingId ?: throw PrisonerNotFoundException(prisonerNo)
         val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
@@ -64,9 +64,7 @@ class PrisonerSynchroniserService(
 
         // only save to open search if we encounter any differences
         if (prisonerDifferenceService.hasChanged(this.currentIncentive, newLevel)) {
-          indices.map { index ->
-            prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
-          }
+          prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
           incentiveDifferenceService.handleDifferences(
             prisonerNo,
             bookingId,

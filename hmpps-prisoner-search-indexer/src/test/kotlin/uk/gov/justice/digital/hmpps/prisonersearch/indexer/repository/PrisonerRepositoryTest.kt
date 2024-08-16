@@ -200,8 +200,8 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     fun `prisoner does not exist`() {
       prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" }, BLUE)
 
-      assertThat(prisonerRepository.getSummary("nonexistent", listOf(BLUE))).isNull()
-      assertThat(prisonerRepository.getSummary("X12345", listOf(GREEN))).isNull()
+      assertThat(prisonerRepository.getSummary("nonexistent", BLUE)).isNull()
+      assertThat(prisonerRepository.getSummary("X12345", GREEN)).isNull()
     }
 
     @Test
@@ -213,8 +213,8 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.prisonerNumber).isEqualTo("X12345")
-      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.bookingId).isNull()
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.prisonerNumber).isEqualTo("X12345")
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.bookingId).isNull()
     }
 
     @Test
@@ -227,8 +227,8 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.prisonerNumber).isEqualTo("X12345")
-      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))?.bookingId).isEqualTo(1234)
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.prisonerNumber).isEqualTo("X12345")
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.bookingId).isEqualTo(1234)
     }
 
     @Test
@@ -246,7 +246,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      assertThat(prisonerRepository.getSummary("X12345", listOf(BLUE))!!.currentIncentive).isEqualTo(testIncentive)
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)!!.currentIncentive).isEqualTo(testIncentive)
     }
   }
 
@@ -265,7 +265,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
           LocalDate.parse("2024-11-27"),
         ),
         BLUE,
-        prisonerRepository.getSummary("X12345", listOf(BLUE))!!,
+        prisonerRepository.getSummary("X12345", BLUE)!!,
       )
       val data = prisonerRepository.get("X12345", listOf(BLUE))?.currentIncentive!!
       assertThat(data.level.code).isEqualTo("code2")
@@ -296,7 +296,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
           LocalDate.parse("2024-11-27"),
         ),
         BLUE,
-        prisonerRepository.getSummary("X12345", listOf(BLUE))!!,
+        prisonerRepository.getSummary("X12345", BLUE)!!,
       )
       val data = prisonerRepository.get("X12345", listOf(BLUE))?.currentIncentive!!
       assertThat(data.level.code).isEqualTo("code2")
@@ -323,7 +323,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         "X12345",
         null,
         BLUE,
-        prisonerRepository.getSummary("X12345", listOf(BLUE))!!,
+        prisonerRepository.getSummary("X12345", BLUE)!!,
       )
       assertThat(prisonerRepository.get("X12345", listOf(BLUE))!!.currentIncentive).isNull()
     }
@@ -342,7 +342,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      val summary = prisonerRepository.getSummary("X12345", listOf(BLUE))!!
+      val summary = prisonerRepository.getSummary("X12345", BLUE)!!
       assertThrows<OptimisticLockingFailureException> {
         prisonerRepository.updateIncentive(
           "X12345",
@@ -371,7 +371,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      val summary = prisonerRepository.getSummary("X12345", listOf(BLUE))!!
+      val summary = prisonerRepository.getSummary("X12345", BLUE)!!
       assertThrows<OptimisticLockingFailureException> {
         prisonerRepository.updateIncentive(
           "X12345",

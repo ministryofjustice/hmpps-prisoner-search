@@ -11,6 +11,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangeAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientAdditionalInformation
@@ -33,7 +35,13 @@ internal class IndexListenerServiceTest {
   private val prisonerLocationService = mock<PrisonerLocationService>()
   private val telemetryClient = mock<TelemetryClient>()
   private val indexListenerService =
-    IndexListenerService(indexStatusService, prisonerSynchroniserService, nomisService, prisonerLocationService, telemetryClient)
+    IndexListenerService(
+      indexStatusService,
+      prisonerSynchroniserService,
+      nomisService,
+      prisonerLocationService,
+      telemetryClient,
+    )
 
   @Nested
   inner class incentiveChange {
@@ -42,6 +50,9 @@ internal class IndexListenerServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
       )
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A1234AA", id = 12345),
@@ -51,13 +62,37 @@ internal class IndexListenerServiceTest {
         "some.iep.update",
       )
 
-      verify(prisonerSynchroniserService).reindexIncentive(
+      verify(prisonerSynchroniserService).reindex(
         check {
-          assertThat(it).isEqualTo("A1234AA")
+          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
         eq(listOf(GREEN)),
         eq("some.iep.update"),
       )
+      verify(prisonerSynchroniserService).reindexIncentive(
+        check {
+          assertThat(it).isEqualTo("A1234AA")
+        },
+        eq(RED),
+        eq("some.iep.update"),
+      )
+    }
+
+    @Test
+    fun `will not do an overall reindex if prisoner not found`() {
+      whenever(indexStatusService.getIndexStatus()).thenReturn(
+        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+      )
+      indexListenerService.incentiveChange(
+        IncentiveChangedMessage(
+          additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
+          eventType = "some.iep.update",
+          description = "some desc",
+        ),
+        "some.iep.update",
+      )
+
+      verify(prisonerSynchroniserService, never()).reindex(any(), any(), any())
     }
 
     @Test
@@ -509,13 +544,14 @@ internal class IndexListenerServiceTest {
       )
     }
 
-    private fun anOffenderBookingReassignment(prisonerNumber: String?, previousPrisonerNumber: String?) = OffenderBookingReassignedMessage(
-      offenderId = 1234L,
-      previousOffenderId = 2345L,
-      bookingId = 12345L,
-      offenderIdDisplay = prisonerNumber,
-      previousOffenderIdDisplay = previousPrisonerNumber,
-    )
+    private fun anOffenderBookingReassignment(prisonerNumber: String?, previousPrisonerNumber: String?) =
+      OffenderBookingReassignedMessage(
+        offenderId = 1234L,
+        previousOffenderId = 2345L,
+        bookingId = 12345L,
+        offenderIdDisplay = prisonerNumber,
+        previousOffenderIdDisplay = previousPrisonerNumber,
+      )
   }
 
   @Nested
@@ -555,9 +591,10 @@ internal class IndexListenerServiceTest {
       verifyNoInteractions(prisonerSynchroniserService)
     }
 
-    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String? = "EWI-RES1-2-14") = PrisonerLocationChangedMessage(
-      prisonId = prisonId,
-      oldDescription = oldDescription,
-    )
+    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String? = "EWI-RES1-2-14") =
+      PrisonerLocationChangedMessage(
+        prisonId = prisonId,
+        oldDescription = oldDescription,
+      )
   }
 }
