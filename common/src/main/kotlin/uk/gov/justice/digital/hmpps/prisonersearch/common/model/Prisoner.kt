@@ -421,7 +421,7 @@ class Prisoner : Diffable<Prisoner> {
   var marks: List<BodyPartDetail>? = null
 
   @Field(type = FieldType.Nested, includeInParent = true)
-  @Schema(description = "Addresses")
+  @Schema(description = "Addresses. Note that no fixed addresses are only ever returned if they are also the primary address, otherwise they are filtered out.")
   @DiffableProperty(DiffCategory.CONTACT_DETAILS)
   var addresses: List<Address>? = null
 

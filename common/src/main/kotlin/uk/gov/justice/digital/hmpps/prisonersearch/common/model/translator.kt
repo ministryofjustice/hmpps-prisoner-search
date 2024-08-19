@@ -176,6 +176,14 @@ private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail,
   }
 
 private fun NomisAddress.toAddress(): Address {
+  if (noFixedAddress) {
+    return Address(
+      fullAddress = "No fixed address",
+      primaryAddress = primary,
+      startDate = startDate,
+      noFixedAddress = true,
+    )
+  }
   val address = mutableListOf<String>()
 
   fun MutableList<String>.addIfNotEmpty(value: String?) {
