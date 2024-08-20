@@ -20,6 +20,7 @@ import org.mockito.kotlin.verify
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
@@ -219,24 +220,16 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
       fun beforeEach() {
         prisonApi.stubOffenders(
           PrisonerBuilder("A9999AA"),
-          PrisonerBuilder("A9999AB"),
-          PrisonerBuilder("A9999AC"),
           pA9999RA,
-          PrisonerBuilder("A9999RB"),
           PrisonerBuilder("A9999RC"),
         )
-        buildAndSwitchIndex(SyncIndex.GREEN, 6)
+        buildAndSwitchIndex(SyncIndex.GREEN, 3)
       }
 
       @Test
-      fun `red comparison 1 difference`() {
+      fun `red comparison difference in 1 prisoner`() {
         // create discrepancy
-        prisonerRepository.save(Prisoner().apply { prisonerNumber = "A9999RA" }, SyncIndex.RED)
-
-        val expectedGreen =
-          """{"_class":"uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner","prisonerNumber":"A9999RA","pncNumber":"12/394773W","pncNumberCanonicalShort":"12/394773W","pncNumberCanonicalLong":"2012/394773W","croNumber":"29906/12L","bookingId":"${pA9999RA.bookingId}","bookNumber":"V61587","firstName":"LUCAS","lastName":"MORALES","dateOfBirth":"1965-07-19","youthOffender":false,"religion":"Christian","nationality":"British","status":"ACTIVE IN","lastMovementTypeCode":"ADM","lastMovementReasonCode":"I","inOutStatus":"IN","prisonId":"MDI","lastPrisonId":"WWI","prisonName":"MDI (HMP)","cellLocation":"A-1-1","aliases":[],"alerts":[],"legalStatus":"REMAND","imprisonmentStatus":"LIFE","imprisonmentStatusDescription":"Life imprisonment","restrictedPatient":false,"identifiers":[{"type":"CRO","value":"29906/12L","issuedDate":"2013-12-02","createdDateTime":"2013-12-02T20:00:00"},{"type":"PNC","value":"12/394773W","issuedDate":"2013-12-02","createdDateTime":"2013-12-02T20:00:00"}]}"""
-        val expectedRed =
-          """{"_class":"uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner","prisonerNumber":"A9999RA","restrictedPatient":false}"""
+        prisonerRepository.save(Prisoner().apply { prisonerNumber = "A9999RA" }, RED)
 
         webTestClient.get().uri("/compare-index/red")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
@@ -247,8 +240,8 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             eq("RED_DIFFERENCE_REPORTED"),
             check<Map<String, String>> {
-              assertThat(it["original"]).isEqualTo(expectedGreen)
-              assertThat(it["red"]).isEqualTo(expectedRed)
+              assertThat(it["prisonerNumber"]).isEqualTo("A9999RA")
+              assertThat(it["categoriesChanged"]).isEqualTo("""[ALERTS, IDENTIFIERS, LOCATION, PERSONAL_DETAILS, STATUS]""")
             },
             isNull(),
           )
@@ -258,8 +251,8 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
       @Test
       fun `red comparison size difference`() {
         // create discrepancy
-        prisonerRepository.delete(prisonerNumber = "A9999RA", SyncIndex.RED)
-        await untilCallTo { prisonerRepository.count(SyncIndex.RED) } matches { it == 5L }
+        prisonerRepository.delete(prisonerNumber = "A9999RA", RED)
+        await untilCallTo { prisonerRepository.count(RED) } matches { it == 2L }
 
         webTestClient.get().uri("/compare-index/red")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
@@ -270,15 +263,15 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             eq("RED_COMPARE_INDEX_SIZE"),
             check<Map<String, String>> {
-              assertThat(it["currentCount"]).isEqualTo("6")
-              assertThat(it["redCount"]).isEqualTo("5")
+              assertThat(it["currentCount"]).isEqualTo("3")
+              assertThat(it["redCount"]).isEqualTo("2")
             },
             isNull(),
           )
           verify(telemetryClient).trackEvent(
             eq("RED_DIFFERENCE_MISSING"),
             check<Map<String, String>> {
-              assertThat(it["original"]).contains("A9999RA")
+              assertThat(it["prisonerNumber"]).isEqualTo("A9999RA")
             },
             isNull(),
           )

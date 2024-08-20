@@ -508,6 +508,8 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     val prisonerNumber: String = builder.prisonerNumber
 
     prisonerRepository.delete(prisonerNumber)
+    prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
+
     prisonApi.stubFor(
       get(urlEqualTo("/api/prisoner-search/offenders/$prisonerNumber"))
         .willReturn(

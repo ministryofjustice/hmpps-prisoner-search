@@ -24,8 +24,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -214,7 +216,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       )
 
       assertThat(prisonerRepository.getSummary("X12345", BLUE)?.prisonerNumber).isEqualTo("X12345")
-      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.bookingId).isNull()
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)!!.prisoner!!.bookingId).isNull()
     }
 
     @Test
@@ -228,7 +230,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       )
 
       assertThat(prisonerRepository.getSummary("X12345", BLUE)?.prisonerNumber).isEqualTo("X12345")
-      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.bookingId).isEqualTo(1234)
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)?.prisoner?.bookingId).isEqualTo("1234")
     }
 
     @Test
@@ -246,7 +248,125 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         BLUE,
       )
 
-      assertThat(prisonerRepository.getSummary("X12345", BLUE)!!.currentIncentive).isEqualTo(testIncentive)
+      assertThat(prisonerRepository.getSummary("X12345", BLUE)!!.prisoner?.currentIncentive).isEqualTo(testIncentive)
+    }
+  }
+
+  @Nested
+  inner class UpdatePrisoner {
+
+    @Test
+    fun `will update prisoner with data`() {
+      val aliases1 = listOf(
+        PrisonerAlias(
+          firstName = "John",
+          lastName = "Smith",
+          dateOfBirth = LocalDate.parse("1995-01-01"),
+          title = "Mr",
+          middleNames = null,
+          gender = null,
+          ethnicity = null,
+          raceCode = null,
+        ),
+      )
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          pncNumber = "myPNC"
+          pncNumberCanonicalLong = "should-get-nulled-out"
+        },
+        RED,
+      )
+
+      val isUpdated = prisonerRepository.updatePrisoner(
+        "X12345",
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          pncNumber = "my-new-PNC"
+          pncNumberCanonicalShort = "my-short-canonical"
+          aliases = aliases1
+          pncNumberCanonicalLong = null
+        },
+        RED,
+        prisonerRepository.getSummary("X12345", RED)!!,
+      )
+      assertThat(isUpdated).isTrue()
+      val data = prisonerRepository.get("X12345", listOf(RED))!!
+      assertThat(data.pncNumber).isEqualTo("my-new-PNC")
+      assertThat(data.pncNumberCanonicalShort).isEqualTo("my-short-canonical")
+      assertThat(data.pncNumberCanonicalLong).isNull()
+      assertThat(data.aliases).isEqualTo(aliases1)
+    }
+
+    @Test
+    fun `wrong sequence + 1 throws exception`() {
+      prisonerRepository.save(
+        Prisoner().apply { prisonerNumber = "X12345" },
+        BLUE,
+      )
+
+      val summary = prisonerRepository.getSummary("X12345", BLUE)!!
+      assertThrows<OptimisticLockingFailureException> {
+        prisonerRepository.updatePrisoner(
+          "X12345",
+          Prisoner(),
+          BLUE,
+          summary.copy(sequenceNumber = summary.sequenceNumber + 1),
+        )
+      }
+    }
+
+    @Test
+    fun `wrong primaryTerm + 1 throws exception`() {
+      prisonerRepository.save(
+        Prisoner().apply { prisonerNumber = "X12345" },
+        BLUE,
+      )
+
+      val summary = prisonerRepository.getSummary("X12345", BLUE)!!
+      assertThrows<OptimisticLockingFailureException> {
+        prisonerRepository.updatePrisoner(
+          "X12345",
+          Prisoner(),
+          BLUE,
+          summary.copy(primaryTerm = summary.primaryTerm + 1),
+        )
+      }
+    }
+
+    @Test
+    fun `update prisoner with identical data is detected`() {
+      val prisoner = Prisoner().apply {
+        prisonerNumber = "X12345"
+        pncNumberCanonicalLong = "does-not-change"
+      }
+      prisonerRepository.save(prisoner, RED)
+
+      // Update is required as well as save because an update adds a lot of null values to the document
+      prisonerRepository.updatePrisoner(
+        "X12345",
+        prisoner,
+        RED,
+        prisonerRepository.getSummary("X12345", RED)!!,
+      )
+
+      assertThat(
+        prisonerRepository.updatePrisoner(
+          "X12345",
+          prisoner,
+          RED,
+          prisonerRepository.getSummary("X12345", RED)!!,
+        ),
+      ).isFalse()
+
+      assertThat(
+        prisonerRepository.updatePrisoner(
+          "X12345",
+          prisoner,
+          RED,
+          prisonerRepository.getSummary("X12345", RED)!!,
+        ),
+      ).isFalse()
     }
   }
 
@@ -291,7 +411,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       prisonerRepository.updateIncentive(
         "X12345",
         CurrentIncentive(
-          IncentiveLevel("code2", "description2"),
+          IncentiveLevel(null, "description2"),
           LocalDateTime.parse("2024-08-14T15:16:17"),
           LocalDate.parse("2024-11-27"),
         ),
@@ -299,7 +419,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         prisonerRepository.getSummary("X12345", BLUE)!!,
       )
       val data = prisonerRepository.get("X12345", listOf(BLUE))?.currentIncentive!!
-      assertThat(data.level.code).isEqualTo("code2")
+      assertThat(data.level.code).isNull()
       assertThat(data.level.description).isEqualTo("description2")
       assertThat(data.dateTime).isEqualTo(LocalDateTime.parse("2024-08-14T15:16:17"))
       assertThat(data.nextReviewDate).isEqualTo(LocalDate.parse("2024-11-27"))
@@ -384,6 +504,41 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
           summary.copy(primaryTerm = summary.primaryTerm + 1),
         )
       }
+    }
+
+    @Test
+    fun `update prisoner with identical data is detected`() {
+      val prisoner = Prisoner().apply {
+        prisonerNumber = "X12345"
+        pncNumberCanonicalShort = "does-not-change"
+      }
+      prisonerRepository.save(prisoner, RED)
+
+      // Update is required as well as save because an update adds a lot of null values to the document
+      prisonerRepository.updatePrisoner(
+        "X12345",
+        prisoner,
+        RED,
+        prisonerRepository.getSummary("X12345", RED)!!,
+      )
+
+      assertThat(
+        prisonerRepository.updatePrisoner(
+          "X12345",
+          prisoner,
+          RED,
+          prisonerRepository.getSummary("X12345", RED)!!,
+        ),
+      ).isFalse()
+
+      assertThat(
+        prisonerRepository.updatePrisoner(
+          "X12345",
+          prisoner,
+          RED,
+          prisonerRepository.getSummary("X12345", RED)!!,
+        ),
+      ).isFalse()
     }
   }
 
