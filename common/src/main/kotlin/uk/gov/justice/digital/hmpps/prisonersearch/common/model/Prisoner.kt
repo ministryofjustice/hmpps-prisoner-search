@@ -13,8 +13,7 @@ import org.springframework.data.elasticsearch.annotations.InnerField
 import org.springframework.data.elasticsearch.annotations.MultiField
 import java.time.LocalDate
 
-@Document(indexName = "prisoner-search")
-class Prisoner : Diffable<Prisoner> {
+open class Prisoner : Diffable<Prisoner> {
   @Id
   @Field(type = FieldType.Keyword)
   @Schema(required = true, description = "Prisoner Number", example = "A1234AA")
@@ -464,3 +463,9 @@ data class BodyPartDetail(
     example = "Skull and crossbones covering chest",
   ) var comment: String? = null,
 )
+
+@Document(indexName = "prisoner-search-a")
+class PrisonerA : Prisoner()
+
+@Document(indexName = "prisoner-search-b")
+class PrisonerB : Prisoner()
