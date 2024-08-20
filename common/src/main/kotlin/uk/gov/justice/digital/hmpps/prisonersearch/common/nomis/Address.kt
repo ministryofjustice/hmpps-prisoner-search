@@ -15,4 +15,5 @@ data class Address(
   val primary: Boolean,
   val startDate: LocalDate?,
   val phones: List<Telephone>?,
+  val noFixedAddress: Boolean = false,
 )

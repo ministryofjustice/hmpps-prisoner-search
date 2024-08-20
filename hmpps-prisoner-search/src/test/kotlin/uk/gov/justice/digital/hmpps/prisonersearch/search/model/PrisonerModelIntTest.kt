@@ -96,6 +96,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .jsonPath("addresses[0].fullAddress").isEqualTo("Flat 1, 2 High Street, Crookes, Sheffield, South Yorkshire, S12 3DE, England")
       .jsonPath("addresses[0].postalCode").isEqualTo("S12 3DE")
       .jsonPath("addresses[0].primaryAddress").isEqualTo(true)
+      .jsonPath("addresses[0].noFixedAddress").isEqualTo(false)
       .jsonPath("addresses[0].startDate").isEqualTo("2013-12-02")
   }
 
