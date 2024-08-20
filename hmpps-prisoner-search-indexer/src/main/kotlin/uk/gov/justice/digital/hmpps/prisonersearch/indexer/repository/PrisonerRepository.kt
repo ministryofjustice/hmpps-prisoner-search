@@ -4,8 +4,6 @@ import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest
 import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest
-import org.opensearch.action.get.GetRequest
-import org.opensearch.action.get.GetResponse
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.core.CountRequest
@@ -47,17 +45,10 @@ class PrisonerRepository(
     }
   }
 
-  fun delete(prisonerNumber: String, index: SyncIndex) {
-    openSearchRestTemplate.delete(prisonerNumber, index.toIndexCoordinates())
-  }
-
   fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? =
     indices.firstNotNullOfOrNull {
       openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
     }
-
-  fun getRaw(prisonerNumber: String, index: SyncIndex): GetResponse =
-    client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
 
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
