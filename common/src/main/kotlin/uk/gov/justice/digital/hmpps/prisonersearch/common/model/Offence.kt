@@ -22,4 +22,11 @@ data class Offence(
 
   @Schema(description = "Indicates this offence is for the latest NOMIS booking")
   val latestBooking: Boolean,
+
+  @Schema(description = "Start date of sentence - null if there is no associated sentence", example = "2018-03-10")
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  val sentenceStartDate: LocalDate? = null,
+
+  @Schema(description = "Primary sentence - true if it is not a consecutive sentence, false if it is a consecutive sentence, null if no sentence found for the charge.")
+  val primarySentence: Boolean? = null,
 )

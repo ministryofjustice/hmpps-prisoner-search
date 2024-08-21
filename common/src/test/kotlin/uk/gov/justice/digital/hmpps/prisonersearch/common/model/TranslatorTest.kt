@@ -964,6 +964,8 @@ class TranslatorTest {
             offenceCode = "TH68023",
             mostSerious = true,
             offenceSeverityRanking = 100,
+            sentenceStartDate = null,
+            primarySentence = null,
           ),
           OffenceHistoryDetail(
             bookingId = 2,
@@ -974,6 +976,8 @@ class TranslatorTest {
             offenceCode = "TH68037",
             mostSerious = true,
             offenceSeverityRanking = 90,
+            sentenceStartDate = LocalDate.parse("2017-02-03"),
+            primarySentence = true,
           ),
         ),
       ),
@@ -983,8 +987,8 @@ class TranslatorTest {
 
     assertThat(prisoner.allConvictedOffences)
       .containsExactlyInAnyOrder(
-        Offence("TH68", "TH68023", "Robbery", LocalDate.now().minusYears(1), false),
-        Offence("TH68", "TH68037", "Burglary other than dwelling - theft", LocalDate.now(), true),
+        Offence("TH68", "TH68023", "Robbery", LocalDate.now().minusYears(1), false, null, null),
+        Offence("TH68", "TH68037", "Burglary other than dwelling - theft", LocalDate.now(), true, LocalDate.parse("2017-02-03"), true),
       )
   }
 
