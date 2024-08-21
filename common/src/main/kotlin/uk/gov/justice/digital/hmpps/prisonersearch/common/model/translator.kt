@@ -260,5 +260,7 @@ private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List
       offenceDescription = it.offenceDescription,
       offenceDate = it.offenceDate,
       latestBooking = it.bookingId == latestBookingId,
+      sentenceStartDate = it.sentenceStartDate,
+      primarySentence = it.primarySentence,
     )
   }

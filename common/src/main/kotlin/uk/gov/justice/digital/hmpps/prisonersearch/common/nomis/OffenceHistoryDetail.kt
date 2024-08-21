@@ -11,4 +11,6 @@ data class OffenceHistoryDetail(
   val statuteCode: String,
   val mostSerious: Boolean,
   val offenceSeverityRanking: Int,
+  val sentenceStartDate: LocalDate?,
+  val primarySentence: Boolean?,
 )

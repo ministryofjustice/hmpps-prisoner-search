@@ -137,6 +137,8 @@ data class OffenceBuilder(
   val bookingId: Long,
   val mostSerious: Boolean,
   val offenceSeverityRanking: Int,
+  val sentenceStartDate: LocalDate?,
+  val primarySentence: Boolean?,
 )
 
 fun generatePrisonerNumber(): String {
@@ -311,6 +313,8 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
         bookingId = it.bookingId,
         mostSerious = it.mostSerious,
         offenceSeverityRanking = it.offenceSeverityRanking,
+        sentenceStartDate = it.sentenceStartDate,
+        primarySentence = it.primarySentence,
       )
     },
   ).let {

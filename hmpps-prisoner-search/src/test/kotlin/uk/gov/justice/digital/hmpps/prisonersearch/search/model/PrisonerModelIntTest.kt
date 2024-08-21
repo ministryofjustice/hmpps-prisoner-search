@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
@@ -68,6 +67,8 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
         bookingId = 1,
         mostSerious = true,
         offenceSeverityRanking = 100,
+        sentenceStartDate = null,
+        primarySentence = null,
       ),
       OffenceBuilder(
         statuteCode = "TH68",
@@ -77,6 +78,8 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
         bookingId = 2,
         mostSerious = true,
         offenceSeverityRanking = 100,
+        sentenceStartDate = LocalDate.parse("2017-02-03"),
+        primarySentence = true,
       ),
     ),
   )
@@ -206,11 +209,11 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .jsonPath("allConvictedOffences").value<List<Offence>> {
-        assertThat(it).extracting("statuteCode", "offenceCode", "offenceDescription", "offenceDate", "latestBooking")
+      .jsonPath("allConvictedOffences").value<List<LinkedHashMap<String, Any>>> { l ->
+        assertThat(l.map { listOf(it["statuteCode"], it["offenceCode"], it["offenceDescription"], it["offenceDate"], it["latestBooking"], it["sentenceStartDate"], it["primarySentence"]) })
           .containsExactlyInAnyOrder(
-            tuple("TH68", "TH68012", "Theft", "2020-01-01", false),
-            tuple("TH68", "TH68057", "Robbery", "2024-02-01", true),
+            listOf("TH68", "TH68012", "Theft", "2020-01-01", false, null, null),
+            listOf("TH68", "TH68057", "Robbery", "2024-02-01", true, "2017-02-03", true),
           )
       }
   }
