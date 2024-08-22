@@ -48,6 +48,19 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
   )
   fun compareIndexByIds(): Unit = compareIndexService.doCompareByIds()
 
+  @GetMapping("/red")
+  @PreAuthorize("hasRole('PRISONER_INDEX')")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @Operation(
+    summary = "Comparison of prisoners in the existing and the new RED indices",
+    description = """This endpoint will retrieve all prisoners in the current GREEN or BLUE index and compare with the RED index.
+      It will then send a COMPARE_INDEX_IDS custom event to application insights with any discrepancies.
+      It is asynchronous since the comparison can take a while.
+      Requires ROLE_PRISONER_INDEX.
+      """,
+  )
+  fun compareOldAndNewIndex(): Unit = compareIndexService.compareOldAndNewIndex()
+
   @GetMapping("/prisoner/{prisonerNumber}")
   @Operation(
     summary = "Compare a prisoner's index with Nomis",
