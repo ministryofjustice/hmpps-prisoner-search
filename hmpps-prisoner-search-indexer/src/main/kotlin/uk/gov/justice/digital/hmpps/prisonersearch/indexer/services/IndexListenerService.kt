@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.AlertEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 
