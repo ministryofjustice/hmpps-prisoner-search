@@ -18,6 +18,10 @@ api:
       prison-api: http://localhost:8093
       restricted-patients: http://localhost:8095
       incentives: http://localhost:8096
+#      oauth: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
+#      prison-api: https://prison-api-dev.prison.service.justice.gov.uk
+#      restricted-patients: https://restricted-patients-api-dev.hmpps.service.justice.gov.uk
+#      incentives: https://incentives-api-dev.hmpps.service.justice.gov.uk
 
 prison-api:
   client:
