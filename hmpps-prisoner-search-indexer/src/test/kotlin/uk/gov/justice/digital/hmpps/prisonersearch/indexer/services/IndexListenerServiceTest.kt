@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveCh
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 
 internal class IndexListenerServiceTest {
 
@@ -34,8 +33,6 @@ internal class IndexListenerServiceTest {
   private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val nomisService = mock<NomisService>()
   private val prisonerLocationService = mock<PrisonerLocationService>()
-  private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
-  private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val indexListenerService =
     IndexListenerService(
@@ -43,8 +40,6 @@ internal class IndexListenerServiceTest {
       prisonerSynchroniserService,
       nomisService,
       prisonerLocationService,
-      prisonerDifferenceService,
-      prisonerRepository,
       telemetryClient,
     )
 

@@ -1,21 +1,17 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.AlertEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 
 @Service
 class IndexListenerService(
@@ -23,12 +19,8 @@ class IndexListenerService(
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val nomisService: NomisService,
   private val prisonerLocationService: PrisonerLocationService,
-  private val prisonerDifferenceService: PrisonerDifferenceService,
-  private val prisonerRepository: PrisonerRepository,
   private val telemetryClient: TelemetryClient,
 ) {
-  private val unconfinedScope = CoroutineScope(Dispatchers.Unconfined)
-
   fun incentiveChange(message: IncentiveChangedMessage, eventType: String) {
     log.info(
       "Incentive change: {} for prisoner {} with incentive id {}",
@@ -118,16 +110,7 @@ class IndexListenerService(
           null
         } else {
           val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
-          if (prisonerSynchroniserService.reindexUpdate(ob, eventType)) {
-//            unconfinedScope.launch {
-//              delay(10) // Problems with tests where index no longer exists etc
-//              checkEqual(
-//                prisonerRepository.get(prisonerNumber = ob.offenderNo, activeIndexes()),
-//                prisonerRepository.get(prisonerNumber = ob.offenderNo, listOf(SyncIndex.RED)),
-//                eventType,
-//              )
-//            }
-          }
+          prisonerSynchroniserService.reindexUpdate(ob, eventType)
           prisoner
         }
       }
@@ -165,32 +148,6 @@ class IndexListenerService(
       telemetryClient.trackEvent(MISSING_OFFENDER_ID_DISPLAY, this)
     }
     return null
-  }
-
-  private fun checkEqual(blueGreenDocument: Prisoner?, redDocument: Prisoner?, eventType: String) {
-    if (((blueGreenDocument == null) xor (redDocument == null))) {
-      val nonNull = blueGreenDocument ?: let { redDocument!! }
-      telemetryClient.trackEvent(
-        TelemetryEvents.INDEX_INCONSISTENCY,
-        mapOf(
-          "prisonerNumber" to nonNull.prisonerNumber!!,
-          "prisoner" to nonNull.toString(),
-          "event" to eventType,
-        ),
-      )
-    } else if (blueGreenDocument != null && redDocument != null) {
-      val diffs = prisonerDifferenceService.getDifferencesByCategory(blueGreenDocument, redDocument)
-      if (diffs.isNotEmpty()) {
-        telemetryClient.trackEvent(
-          TelemetryEvents.INDEX_INCONSISTENCY,
-          mapOf(
-            "prisonerNumber" to blueGreenDocument.prisonerNumber!!,
-            "diffs" to diffs.toString(),
-            "event" to eventType,
-          ),
-        )
-      }
-    }
   }
 
   private companion object {

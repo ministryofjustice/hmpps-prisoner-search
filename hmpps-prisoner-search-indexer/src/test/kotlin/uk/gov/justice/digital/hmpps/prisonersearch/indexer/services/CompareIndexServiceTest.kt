@@ -77,11 +77,6 @@ class CompareIndexServiceTest {
 
   @Nested
   inner class DeepEquals {
-    @BeforeEach
-    internal fun setUp() {
-      // incentivesApi.stubCurrentIncentive()
-    }
-
     @Test
     fun `maps are equal ignoring nulls`() {
       assertThat(

@@ -379,7 +379,6 @@ class PrisonerRepository(
     )
   }
 
-  // @Suppress("UNCHECKED_CAST")
   private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? =
     source?.let {
       PrisonerDocumentSummary(
