@@ -99,6 +99,7 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
       strings = [
         "restricted-patients.patient.added",
         "restricted-patients.patient.removed",
+        "restricted-patients.patient.supporting-prison-changed",
       ],
     )
     internal fun `will call service for restricted patint`(eventType: String) {
