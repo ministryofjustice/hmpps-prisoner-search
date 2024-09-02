@@ -29,6 +29,7 @@ class DomainEventListener(
     private val restrictedPatientEvent = setOf(
       "restricted-patients.patient.added",
       "restricted-patients.patient.removed",
+      "restricted-patients.patient.supporting-prison-changed",
     )
   }
 
