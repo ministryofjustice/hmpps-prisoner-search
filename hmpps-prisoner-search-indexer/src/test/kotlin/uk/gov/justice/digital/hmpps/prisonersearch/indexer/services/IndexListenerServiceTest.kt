@@ -42,42 +42,22 @@ internal class IndexListenerServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
       )
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
-          additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
+          additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A1234AA", id = 12345),
           eventType = "some.iep.update",
           description = "some desc",
         ),
         "some.iep.update",
       )
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexIncentive(
         check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
+          assertThat(it).isEqualTo("A1234AA")
         },
         eq(listOf(GREEN)),
         eq("some.iep.update"),
       )
-    }
-
-    @Test
-    fun `will do nothing if prisoner not found`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
-      indexListenerService.incentiveChange(
-        IncentiveChangedMessage(
-          additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
-          eventType = "some.iep.update",
-          description = "some desc",
-        ),
-        "some.iep.update",
-      )
-
-      verifyNoInteractions(prisonerSynchroniserService)
     }
 
     @Test
@@ -89,8 +69,6 @@ internal class IndexListenerServiceTest {
           otherIndexState = IndexState.ABSENT,
         ),
       )
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
