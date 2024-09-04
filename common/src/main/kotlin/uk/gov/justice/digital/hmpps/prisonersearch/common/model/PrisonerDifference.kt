@@ -28,3 +28,10 @@ internal fun getDiffResult(prisoner: Prisoner, other: Prisoner): DiffResult<Pris
       .filter { it.findAnnotations<DiffableProperty>().isNotEmpty() }
       .forEach { property -> append(property.name, property.call(prisoner), property.call(other)) }
   }.build()
+
+internal fun getDiffResult(prisoner: Incentive, other: Incentive): DiffResult<Incentive> =
+  DiffBuilder(prisoner, other, ToStringStyle.JSON_STYLE).apply {
+    Incentive::class.members
+      .filter { it.findAnnotations<DiffableProperty>().isNotEmpty() }
+      .forEach { property -> append(property.name, property.call(prisoner), property.call(other)) }
+  }.build()

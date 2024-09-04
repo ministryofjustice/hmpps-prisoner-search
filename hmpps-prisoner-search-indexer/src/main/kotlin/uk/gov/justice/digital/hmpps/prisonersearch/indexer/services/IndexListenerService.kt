@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
@@ -28,6 +29,7 @@ class IndexListenerService(
     )
     sync(message.additionalInformation.nomsNumber, eventType)
   }
+
   fun restrictedPatientChange(message: RestrictedPatientMessage, eventType: String) {
     log.info(
       "Restricted patient change: {} for prisoner {}",
@@ -98,7 +100,7 @@ class IndexListenerService(
   }
 
   private fun reindexPrisoner(ob: OffenderBooking, eventType: String): Prisoner? =
-    indexStatusService.getIndexStatus()
+    indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       .run {
         if (activeIndexesEmpty()) {
           log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)

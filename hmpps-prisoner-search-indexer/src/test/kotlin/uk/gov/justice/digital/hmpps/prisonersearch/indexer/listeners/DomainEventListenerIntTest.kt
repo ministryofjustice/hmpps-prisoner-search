@@ -5,6 +5,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -16,7 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExt
 class DomainEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will index a prisoner when iep message received`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FD"
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
 
@@ -32,7 +33,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will update both indexes when rebuilding index`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
     val prisonerNumber = "A7089FE"
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
 

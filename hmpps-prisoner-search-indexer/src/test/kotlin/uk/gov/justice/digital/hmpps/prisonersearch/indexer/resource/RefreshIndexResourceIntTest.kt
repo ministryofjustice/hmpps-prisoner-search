@@ -4,6 +4,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -17,6 +18,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
@@ -41,7 +44,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Test
   fun `Refresh index - no differences`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
 
     reset(telemetryClient)
 
@@ -50,7 +53,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isAccepted
 
-    await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it!! > 0 }
+    await atMost Duration.ofSeconds(20) untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it!! > 0 }
     await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it == 0 }
 
     verifyNoInteractions(telemetryClient)
@@ -58,7 +61,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Test
   fun `Refresh index - unauthorised if not correct role`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
 
     webTestClient.put().uri("/refresh-index")
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_VIEW")))
@@ -68,7 +71,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Test
   fun `Automated reconciliation - endpoint unprotected`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
+    indexStatusRepository.save(IndexStatus(id = INDEX_STATUS_ID, currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
 
     webTestClient.put().uri("/refresh-index/automated")
       .exchange()

@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.INDEX_STATUS_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -27,10 +28,10 @@ class PopulateIndexService(
 
   fun populateIndex(index: SyncIndex): Int =
     executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
-      indexStatusService.getIndexStatus()
+      indexStatusService.getIndexStatus(INDEX_STATUS_ID)
         .also { maintainIndexService.logIndexStatuses(it) }
         .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
-        .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedException(it) }
+        .failIf({ it.currentIndex.otherIndex(INDEX_STATUS_ID) != index }) { WrongIndexRequestedException(it) }
         .run { doPopulateIndex() }
     }
 
@@ -67,7 +68,7 @@ class PopulateIndexService(
       TelemetryEvents.BUILD_PAGE_MSG,
       mapOf("prisonerPage" to prisonerPage.page.toString()),
     ) {
-      indexStatusService.getIndexStatus()
+      indexStatusService.getIndexStatus(INDEX_STATUS_ID)
         .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
         .run {
           nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
@@ -88,11 +89,11 @@ class PopulateIndexService(
     }
 
   fun populateIndexWithPrisoner(prisonerNumber: String): Prisoner =
-    indexStatusService.getIndexStatus()
+    indexStatusService.getIndexStatus(INDEX_STATUS_ID)
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
       .run {
         nomisService.getOffender(prisonerNumber)?.let { ob ->
-          prisonerSynchroniserService.index(ob, this.currentIndex.otherIndex())
+          prisonerSynchroniserService.index(ob, this.currentIndex.otherIndex(INDEX_STATUS_ID))
         } ?: run {
           // can happen if a prisoner is deleted or merged once indexing has started
           telemetryClient.trackPrisonerEvent(BUILD_PRISONER_NOT_FOUND, prisonerNumber)
