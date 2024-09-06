@@ -2,8 +2,10 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
@@ -34,9 +36,8 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatient,
     )
     // only save to open search if we encounter any differences
-    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
-      prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
       telemetryClient.trackPrisonerEvent(
@@ -51,6 +52,71 @@ class PrisonerSynchroniserService(
     restrictedPatient.onFailure { throw it }
     return prisoner
   }
+
+  internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Boolean {
+    val summary = prisonerRepository.getSummary(ob.offenderNo, SyncIndex.RED)
+    val isChanged = summary?.run {
+      val restrictedPatient = runCatching { getRestrictedPatient(ob) }
+
+      val prisoner = Prisoner().translate(
+        existingPrisoner = summary.prisoner,
+        ob = ob,
+        incentiveLevel = Result.failure(Exception()),
+        restrictedPatientData = restrictedPatient,
+      )
+      // opensearch reports if there are any differences
+      val isUpdated = prisonerRepository.updatePrisoner(ob.offenderNo, prisoner, SyncIndex.RED, summary)
+      if (isUpdated) {
+        // prisonerDifferenceService.handleDifferences(summary.prisoner, ob, prisoner, eventType)
+        // Already recorded and events generated in existing index update
+        telemetryClient.trackPrisonerEvent(
+          TelemetryEvents.RED_PRISONER_UPDATED,
+          prisonerNumber = ob.offenderNo,
+          bookingId = ob.bookingId,
+          eventType = eventType,
+        )
+      } else {
+        telemetryClient.trackPrisonerEvent(
+          TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE,
+          prisonerNumber = ob.offenderNo,
+          bookingId = ob.bookingId,
+          eventType = eventType,
+        )
+      }
+      restrictedPatient.onFailure { throw it }
+      isUpdated
+    } ?: run {
+      // Need to create, which means calling all domain data too
+      reindex(ob, listOf(SyncIndex.RED), eventType)
+      true
+    }
+
+    return isChanged
+  }
+
+  internal fun reindexIncentive(prisonerNo: String, index: SyncIndex, eventType: String) =
+    prisonerRepository.getSummary(prisonerNo, index)
+      ?.run {
+        val bookingId = this.prisoner?.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
+        val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
+        val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
+
+        if (prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)) {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.INCENTIVE_UPDATED,
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+        } else {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE,
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+        }
+      }
 
   // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
   // we don't need to write what we have so far for the prisoner to it.
@@ -72,7 +138,7 @@ class PrisonerSynchroniserService(
       incentiveLevel = Result.success(incentiveLevel),
       restrictedPatientData = Result.success(restrictedPatient),
     )
-    if (prisonerDifferenceService.prisonerHasChanged(existingPrisoner, prisoner)) {
+    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       indices.map { prisonerRepository.save(prisoner, it) }
@@ -90,6 +156,7 @@ class PrisonerSynchroniserService(
 
   fun delete(prisonerNumber: String) =
     prisonerRepository.delete(prisonerNumber).also {
+      prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
       telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
     }
 

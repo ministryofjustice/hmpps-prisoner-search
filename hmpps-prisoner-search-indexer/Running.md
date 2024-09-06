@@ -9,8 +9,10 @@ locally you point mostly at services running in T3. The exception is pointing at
 but HMPPS Auth, Prison Api, incentives services, restricted patients are best used directly on T3 dev environment.
 The docker-compose.yml file is provided as reference but the dependencies of dependencies are not shown and are subject
 to change. To run against T3 dependencies the environment variables as shown in the helm_deploy/values-dev.yaml file
-for paths can be used. Personal client credentials for the T3 services can be obtained from the HMPPS Auth team 
+for paths can be used, and are present commented out in application-dev.yml. Personal client credentials for the T3 services can be obtained from the HMPPS Auth team 
 with the appropriate roles.
+
+To set up the index, run one of the search tests before running the indexer, e.g. from the uk.gov.justice.digital.hmpps.prisonersearch.search.resource package.
 
 ## Running prisoner search indexer in IntelliJ or on the command line
 To run the indexer from the command line:

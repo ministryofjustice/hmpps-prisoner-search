@@ -1,4 +1,3 @@
-version: "3"
 services:
   hmpps-prisoner-search:
     image: quay.io/hmpps/hmpps-prisoner-search:latest

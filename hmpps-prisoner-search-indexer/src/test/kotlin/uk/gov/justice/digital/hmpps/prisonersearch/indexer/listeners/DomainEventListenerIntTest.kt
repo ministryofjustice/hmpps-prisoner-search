@@ -8,20 +8,23 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class DomainEventListenerIntTest : IntegrationTestBase() {
   @Test
-  fun `will index a prisoner when iep message received`() {
+  fun `will index a prisoner when RP message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FD"
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
 
     hmppsDomainSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl).messageBody(validIepMessage(prisonerNumber)).build(),
+      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
+        .messageBody(validRPMessage(prisonerNumber, "restricted-patients.patient.added")).build(),
     )
 
     await untilAsserted {
@@ -32,35 +35,104 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will update both indexes when rebuilding index`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
+    indexStatusRepository.save(
+      IndexStatus(
+        currentIndex = SyncIndex.GREEN,
+        currentIndexState = COMPLETED,
+        otherIndexState = BUILDING,
+      ),
+    )
     val prisonerNumber = "A7089FE"
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
 
     hmppsDomainSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl).messageBody(validIepMessage(prisonerNumber)).build(),
+      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
+        .messageBody(validRPMessage(prisonerNumber, "restricted-patients.patient.added")).build(),
     )
 
     await untilAsserted {
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))?.prisonerNumber).isEqualTo(prisonerNumber)
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))?.prisonerNumber).isEqualTo(
+        prisonerNumber,
+      )
+      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(
+        prisonerNumber,
+      )
     }
   }
 
-  private fun validIepMessage(prisonerNumber: String) = """
-          {
-            "Type": "Notification",
-            "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
-            "Message": "{\"eventType\":\"incentives.iep-review.inserted\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"$prisonerNumber\"}}",
-            "MessageAttributes": {
-              "eventType": {
-                "Type": "String",
-                "Value": "incentives.iep-review.updated"
-              },
-              "id": {
-                "Type": "String",
-                "Value": "cb4645f2-d0c1-4677-806a-8036ed54bf69"
-              }
-            }
-          }
-  """.trimIndent()
+  @Test
+  fun `will index incentive when iep message received`() {
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    val prisonerNumber = "A7089FF"
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = prisonerNumber
+        bookingId = "1234"
+      },
+      SyncIndex.GREEN,
+    )
+    prisonerRepository.save(
+      Prisoner().apply {
+        this.prisonerNumber = prisonerNumber
+        bookingId = "1234"
+      },
+      SyncIndex.RED,
+    )
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
+    incentivesApi.stubCurrentIncentive()
+
+    hmppsDomainSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
+        .messageBody(validIepMessage(prisonerNumber, "incentives.iep-review.inserted")).build(),
+    )
+
+    await untilAsserted {
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))!!.apply {
+        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(currentIncentive?.level?.code).isEqualTo("STD")
+      }
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
+        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(currentIncentive?.level?.code).isEqualTo("STD")
+      }
+    }
+  }
 }
+
+private fun validIepMessage(prisonerNumber: String, eventType: String) =
+  """
+    {
+      "Type": "Notification",
+      "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
+      "Message": "{\"eventType\":\"$eventType\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"$prisonerNumber\"}}",
+      "MessageAttributes": {
+        "eventType": {
+          "Type": "String",
+          "Value": "$eventType"
+        },
+        "id": {
+          "Type": "String",
+          "Value": "cb4645f2-d0c1-4677-806a-8036ed54bf69"
+        }
+      }
+    }
+  """.trimIndent()
+
+private fun validRPMessage(prisonerNumber: String, eventType: String) =
+  """
+    {
+      "Type": "Notification",
+      "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
+      "Message": "{\"eventType\":\"$eventType\", \"description\": \"some desc\", \"additionalInformation\": {\"prisonerNumber\":\"$prisonerNumber\"}}",
+      "MessageAttributes": {
+        "eventType": {
+          "Type": "String",
+          "Value": "$eventType"
+        },
+        "id": {
+          "Type": "String",
+          "Value": "cb4645f2-d0c1-4677-806a-8036ed54bf69"
+        }
+      }
+    }
+  """.trimIndent()

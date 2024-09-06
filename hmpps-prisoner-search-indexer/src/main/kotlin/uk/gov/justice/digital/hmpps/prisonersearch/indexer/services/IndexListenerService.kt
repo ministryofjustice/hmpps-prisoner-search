@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
@@ -27,7 +28,9 @@ class IndexListenerService(
       message.additionalInformation.id,
     )
     sync(message.additionalInformation.nomsNumber, eventType)
+    reindexIncentive(message.additionalInformation.nomsNumber, eventType)
   }
+
   fun restrictedPatientChange(message: RestrictedPatientMessage, eventType: String) {
     log.info(
       "Restricted patient change: {} for prisoner {}",
@@ -39,7 +42,8 @@ class IndexListenerService(
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)
 
-  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String) = sync(message.bookingId, eventType)
+  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String) =
+    sync(message.bookingId, eventType)
 
   fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) =
     message.bookingId.run {
@@ -104,9 +108,23 @@ class IndexListenerService(
           log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)
           null
         } else {
-          prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
+          val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
+          prisonerSynchroniserService.reindexUpdate(ob, eventType)
+          prisoner
         }
       }
+
+  private fun reindexIncentive(prisonerNumber: String, eventType: String) {
+    indexStatusService.getIndexStatus()
+      .run {
+        if (activeIndexesEmpty()) {
+          log.info("Ignoring update of incentive for {} as no indexes were active", prisonerNumber)
+          null
+        } else {
+          prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, eventType)
+        }
+      }
+  }
 
   private fun sync(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
