@@ -60,6 +60,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @Operation(
     summary = "Mark the current index build as complete",
     description = """Completes the index build if it is currently building and has reached the required threshold.
+      If the index isn't currently building then no action will be taken.
       Requires PRISONER_INDEX role.  Returns the new status of the index.""",
   )
   @ApiResponses(
@@ -76,7 +77,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Switch index without rebuilding",
-    description = """Current index will be switched. Both indexed have to be complete, requires PRISONER_INDEX role.""",
+    description = """Current index will be switched. Both indexes have to be complete, requires PRISONER_INDEX role.""",
   )
   @ApiResponses(
     value = [
