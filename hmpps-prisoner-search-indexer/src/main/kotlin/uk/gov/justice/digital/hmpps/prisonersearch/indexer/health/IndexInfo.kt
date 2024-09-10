@@ -5,6 +5,7 @@ import org.springframework.boot.actuate.info.InfoContributor
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexStatusService
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -33,6 +34,7 @@ class IndexInfo(
       mapOf(
         GREEN to prisonerRepository.count(GREEN),
         BLUE to prisonerRepository.count(BLUE),
+        RED to prisonerRepository.count(RED),
       ),
     )
     try {

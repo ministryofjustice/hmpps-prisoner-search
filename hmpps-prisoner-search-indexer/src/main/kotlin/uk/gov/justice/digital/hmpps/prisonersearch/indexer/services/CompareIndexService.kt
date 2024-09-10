@@ -140,7 +140,6 @@ class CompareIndexService(
             objectMapper.convertValue(hit.sourceAsMap, Prisoner::class.java),
             objectMapper.convertValue(prisonerRed.sourceAsMap, Prisoner::class.java),
           )
-          log.info("Mismatch for prisoner ${hit.id}:\n${diffs}\n${diffs.keys.map { it.name }.toList().sorted()}")
           telemetryClient.trackEvent(
             TelemetryEvents.RED_DIFFERENCE_REPORTED,
             mapOf(
@@ -233,6 +232,13 @@ class CompareIndexService(
       val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
 
       prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
+    }
+
+  fun comparePrisonerRed(prisonerNumber: String) =
+    prisonerRepository.get(prisonerNumber, listOf(indexStatusService.getIndexStatus().currentIndex))?.let { existing ->
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.let { new ->
+        prisonerDifferenceService.reportDifferencesDetails(existing, new)
+      }
     }
 
   private fun setupIndexSearch(
