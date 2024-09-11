@@ -29,7 +29,7 @@ class DomainEventPublisherListener(
       eventType = event.eventType,
       event = event.body,
       retryPolicy = NeverRetryPolicy(),
-      )
+    )
   }
 }
 
