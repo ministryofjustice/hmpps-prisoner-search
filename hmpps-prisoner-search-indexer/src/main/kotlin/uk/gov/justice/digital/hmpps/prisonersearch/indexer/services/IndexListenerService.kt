@@ -27,7 +27,7 @@ class IndexListenerService(
       message.additionalInformation.nomsNumber,
       message.additionalInformation.id,
     )
-    sync(message.additionalInformation.nomsNumber, eventType)
+    syncOld(message.additionalInformation.nomsNumber, eventType)
     reindexIncentive(message.additionalInformation.nomsNumber, eventType)
   }
 
@@ -37,13 +37,13 @@ class IndexListenerService(
       message.description,
       message.additionalInformation.prisonerNumber,
     )
-    sync(message.additionalInformation.prisonerNumber, eventType)
+    syncBoth(message.additionalInformation.prisonerNumber, eventType)
   }
 
-  fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)
+  fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = syncBoth(message.bookingId, eventType)
 
   fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String) =
-    sync(message.bookingId, eventType)
+    syncBoth(message.bookingId, eventType)
 
   fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) =
     message.bookingId.run {
@@ -54,12 +54,12 @@ class IndexListenerService(
         prisonerSynchroniserService.delete(it.value)
       }
 
-      sync(bookingId = this, eventType)
+      syncBoth(bookingId = this, eventType)
     }
 
   fun offenderChange(message: OffenderChangedMessage, eventType: String) =
     message.offenderIdDisplay?.run {
-      sync(prisonerNumber = this, eventType)
+      syncBoth(prisonerNumber = this, eventType)
     } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
 
   fun maybeDeleteOffender(message: OffenderChangedMessage, eventType: String) {
@@ -71,20 +71,20 @@ class IndexListenerService(
         prisonerSynchroniserService.delete(prisonerNumber = this)
       } else {
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
-        reindexPrisoner(offender, eventType)
+        reindexPrisonerBoth(offender, eventType)
       }
     } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
   }
 
   fun offenderBookingReassigned(message: OffenderBookingReassignedMessage, eventType: String) {
     message.offenderIdDisplay?.run {
-      sync(prisonerNumber = this, eventType)
+      syncBoth(prisonerNumber = this, eventType)
     } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
 
     // also sync the previous offender if it is different
     message.previousOffenderIdDisplay?.run {
       if (this != message.offenderIdDisplay) {
-        sync(prisonerNumber = this, eventType)
+        syncBoth(prisonerNumber = this, eventType)
       }
     } ?: customEventForMissingOffenderIdDisplay(eventType, message.previousOffenderId)
   }
@@ -96,12 +96,12 @@ class IndexListenerService(
       // need to search for all prisoners that have the old description
       val cellLocation = message.oldDescription.substringAfter("${message.prisonId}-")
       prisonerLocationService.findPrisoners(message.prisonId, cellLocation).forEach {
-        sync(prisonerNumber = it, eventType)
+        syncBoth(prisonerNumber = it, eventType)
       }
     }
   }
 
-  private fun reindexPrisoner(ob: OffenderBooking, eventType: String): Prisoner? =
+  private fun reindexPrisonerBoth(ob: OffenderBooking, eventType: String): Prisoner? =
     indexStatusService.getIndexStatus()
       .run {
         if (activeIndexesEmpty()) {
@@ -110,6 +110,18 @@ class IndexListenerService(
         } else {
           val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
           prisonerSynchroniserService.reindexUpdate(ob, eventType)
+          prisoner
+        }
+      }
+
+  private fun reindexPrisonerOld(ob: OffenderBooking, eventType: String): Prisoner? =
+    indexStatusService.getIndexStatus()
+      .run {
+        if (activeIndexesEmpty()) {
+          log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)
+          null
+        } else {
+          val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
           prisoner
         }
       }
@@ -126,14 +138,22 @@ class IndexListenerService(
       }
   }
 
-  private fun sync(prisonerNumber: String, eventType: String): Prisoner? =
+  /**
+   * Sync both the old green/blue and new red indices
+   */
+  private fun syncBoth(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
-      reindexPrisoner(ob = this, eventType)
+      reindexPrisonerBoth(ob = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
 
-  private fun sync(bookingId: Long, eventType: String): Prisoner? =
+  private fun syncOld(prisonerNumber: String, eventType: String): Prisoner? =
+    nomisService.getOffender(prisonerNumber)?.run {
+      reindexPrisonerOld(ob = this, eventType)
+    } ?: null.also { log.warn("Sync (old) requested for prisoner {} not found", prisonerNumber) }
+
+  private fun syncBoth(bookingId: Long, eventType: String): Prisoner? =
     nomisService.getNomsNumberForBooking(bookingId)?.run {
-      sync(prisonerNumber = this, eventType)
+      syncBoth(prisonerNumber = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner (by booking id) {} not found", bookingId) }
 
   private fun customEventForMissingOffenderIdDisplay(

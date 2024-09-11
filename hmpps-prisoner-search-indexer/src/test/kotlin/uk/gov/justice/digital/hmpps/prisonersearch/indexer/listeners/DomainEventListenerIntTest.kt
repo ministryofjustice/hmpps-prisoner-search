@@ -4,6 +4,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
+import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
@@ -64,22 +70,16 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
   fun `will index incentive when iep message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FF"
-    prisonerRepository.save(
-      Prisoner().apply {
-        this.prisonerNumber = prisonerNumber
-        bookingId = "1234"
-      },
-      SyncIndex.GREEN,
-    )
-    prisonerRepository.save(
-      Prisoner().apply {
-        this.prisonerNumber = prisonerNumber
-        bookingId = "1234"
-      },
-      SyncIndex.RED,
-    )
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      bookingId = "1234"
+    }
+    prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner, SyncIndex.RED)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
     incentivesApi.stubCurrentIncentive()
+
+    reset(prisonerSpyBeanRepository) // zero the call count
 
     hmppsDomainSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
@@ -96,6 +96,12 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
       }
     }
+    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
+    verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
   }
 }
 
