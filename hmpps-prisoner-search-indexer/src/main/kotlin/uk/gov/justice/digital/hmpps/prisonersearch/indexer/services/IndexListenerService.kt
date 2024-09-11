@@ -27,7 +27,7 @@ class IndexListenerService(
       message.additionalInformation.nomsNumber,
       message.additionalInformation.id,
     )
-    syncOld(message.additionalInformation.nomsNumber, eventType)
+    syncGreenBlue(message.additionalInformation.nomsNumber, eventType)
     reindexIncentive(message.additionalInformation.nomsNumber, eventType)
   }
 
@@ -114,7 +114,7 @@ class IndexListenerService(
         }
       }
 
-  private fun reindexPrisonerOld(ob: OffenderBooking, eventType: String): Prisoner? =
+  private fun reindexPrisonerGreenBlue(ob: OffenderBooking, eventType: String): Prisoner? =
     indexStatusService.getIndexStatus()
       .run {
         if (activeIndexesEmpty()) {
@@ -126,7 +126,7 @@ class IndexListenerService(
         }
       }
 
-  private fun reindexPrisonerNew(ob: OffenderBooking, eventType: String) =
+  private fun reindexPrisonerRed(ob: OffenderBooking, eventType: String) =
     indexStatusService.getIndexStatus()
       .run {
         if (activeIndexesEmpty()) {
@@ -153,13 +153,13 @@ class IndexListenerService(
    */
   private fun syncBoth(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
-      reindexPrisonerNew(ob = this, eventType)
-      reindexPrisonerOld(ob = this, eventType)
+      reindexPrisonerRed(ob = this, eventType)
+      reindexPrisonerGreenBlue(ob = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
 
-  private fun syncOld(prisonerNumber: String, eventType: String): Prisoner? =
+  private fun syncGreenBlue(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
-      reindexPrisonerOld(ob = this, eventType)
+      reindexPrisonerGreenBlue(ob = this, eventType)
     } ?: null.also { log.warn("Sync (old) requested for prisoner {} not found", prisonerNumber) }
 
   private fun syncBoth(bookingId: Long, eventType: String): Prisoner? =

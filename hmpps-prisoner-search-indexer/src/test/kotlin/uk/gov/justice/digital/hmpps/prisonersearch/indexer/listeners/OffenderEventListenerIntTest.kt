@@ -72,16 +72,13 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
-      assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
+      verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
+      verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
+      verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
+      verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
+      verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
     }
-
-    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
-    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
-    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
-    verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
-    verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
   }
 
   @Test
