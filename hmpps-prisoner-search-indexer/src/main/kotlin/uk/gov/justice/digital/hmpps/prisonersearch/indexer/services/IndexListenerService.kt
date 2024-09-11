@@ -108,9 +108,8 @@ class IndexListenerService(
           log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)
           null
         } else {
-          val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
           prisonerSynchroniserService.reindexUpdate(ob, eventType)
-          prisoner
+          prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
         }
       }
 
@@ -121,8 +120,7 @@ class IndexListenerService(
           log.info("Ignoring update (old) of prisoner {} as no indexes were active", ob.offenderNo)
           null
         } else {
-          val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
-          prisoner
+          prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
         }
       }
 
