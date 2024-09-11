@@ -28,7 +28,8 @@ class DomainEventPublisherListener(
     hmppsDomainTopic.publish(
       eventType = event.eventType,
       event = event.body,
-      retryPolicy = NeverRetryPolicy())
+      retryPolicy = NeverRetryPolicy(),
+      )
   }
 }
 
