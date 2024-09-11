@@ -6,6 +6,12 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
+import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
@@ -18,12 +24,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExt
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
-  fun `will index a prisoner when offender event message received`() {
+  fun `will create index document for a prisoner which does not yet exist when offender event message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val bookingId = 12345L
     val prisonerNumber = "O7089FD"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+
+    reset(prisonerSpyBeanRepository) // zero the call count
 
     offenderSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
@@ -33,6 +41,47 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
       assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
     }
+
+    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
+    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.RED))
+    verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+  }
+
+  @Test
+  fun `will update index for a prisoner which exists when offender event message received`() {
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    val prisonerNumber = "O7089FD"
+    val bookingId = 12345L
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      this.bookingId = bookingId.toString()
+    }
+    prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner, SyncIndex.RED)
+
+    prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+
+    reset(prisonerSpyBeanRepository) // zero the call count
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+
+    await untilAsserted {
+      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
+      assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
+    }
+
+    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
+    verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
+    verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
   }
 
   @Test
@@ -137,7 +186,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `will update both indexes when rebuilding index`() {
+  fun `will update all indexes when rebuilding index`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
     val bookingId = 12346L
     val prisonerNumber = "O7089FE"
@@ -151,6 +200,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.prisonerNumber).isEqualTo(prisonerNumber)
     }
   }
   private fun validOffenderBookingChangedMessage(bookingId: Long, eventType: String) = validMessage(

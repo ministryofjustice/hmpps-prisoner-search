@@ -40,7 +40,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `will update both indexes when rebuilding index`() {
+  fun `will update all indexes when rebuilding index`() {
     indexStatusRepository.save(
       IndexStatus(
         currentIndex = SyncIndex.GREEN,
@@ -61,6 +61,9 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
         prisonerNumber,
       )
       assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(
+        prisonerNumber,
+      )
+      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.prisonerNumber).isEqualTo(
         prisonerNumber,
       )
     }

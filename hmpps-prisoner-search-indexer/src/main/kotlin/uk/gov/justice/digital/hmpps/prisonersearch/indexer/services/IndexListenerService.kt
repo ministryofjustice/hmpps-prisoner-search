@@ -42,7 +42,7 @@ class IndexListenerService(
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = syncBoth(message.bookingId, eventType)
 
-  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String) =
+  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String): Prisoner? =
     syncBoth(message.bookingId, eventType)
 
   fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) =
@@ -118,11 +118,21 @@ class IndexListenerService(
     indexStatusService.getIndexStatus()
       .run {
         if (activeIndexesEmpty()) {
-          log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)
+          log.info("Ignoring update (old) of prisoner {} as no indexes were active", ob.offenderNo)
           null
         } else {
           val prisoner = prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
           prisoner
+        }
+      }
+
+  private fun reindexPrisonerNew(ob: OffenderBooking, eventType: String) =
+    indexStatusService.getIndexStatus()
+      .run {
+        if (activeIndexesEmpty()) {
+          log.info("Ignoring update of (new) prisoner {} as no indexes were active", ob.offenderNo)
+        } else {
+          prisonerSynchroniserService.reindexUpdate(ob, eventType)
         }
       }
 
@@ -143,7 +153,8 @@ class IndexListenerService(
    */
   private fun syncBoth(prisonerNumber: String, eventType: String): Prisoner? =
     nomisService.getOffender(prisonerNumber)?.run {
-      reindexPrisonerBoth(ob = this, eventType)
+      reindexPrisonerNew(ob = this, eventType)
+      reindexPrisonerOld(ob = this, eventType)
     } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
 
   private fun syncOld(prisonerNumber: String, eventType: String): Prisoner? =
