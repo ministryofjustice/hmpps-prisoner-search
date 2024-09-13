@@ -8,8 +8,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import java.time.LocalDate
@@ -64,6 +66,25 @@ internal class IncentivesServiceTest {
 
       val incentive = incentivesService.getCurrentIncentive(123456L)
       assertThat(incentive).isNull()
+    }
+
+    @Test
+    internal fun `will retry for any other error`() {
+      incentivesApi.stubErrorFollowedByNotFound()
+
+      val incentive = incentivesService.getCurrentIncentive(123456L)
+      assertThat(incentive).isNull()
+
+      incentivesApi.verifyGetCurrentIncentiveRequest(123456L, 2)
+    }
+
+    @Test
+    internal fun `will eventually throw exception if fails 3 times`() {
+      incentivesApi.stubError()
+
+      assertThrows<WebClientResponseException.ServiceUnavailable> { incentivesService.getCurrentIncentive(123456L) }
+
+      incentivesApi.verifyGetCurrentIncentiveRequest(123456L, 3)
     }
   }
 }

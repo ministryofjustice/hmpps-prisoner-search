@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.web.reactive.function.client.WebClient
@@ -12,6 +13,7 @@ import java.time.Duration
 
 @Configuration
 @EnableAsync
+@EnableRetry
 class WebClientConfiguration(
   @Value("\${api.base.url.prison-api}") val prisonApiBaseUri: String,
   @Value("\${api.base.url.incentives}") val incentivesBaseUri: String,

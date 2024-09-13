@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -29,6 +30,37 @@ class IncentivesMockServer : WireMockServer(8096) {
         .willReturn(
           aResponse()
             .withStatus(404),
+        ),
+    )
+  }
+
+  fun stubErrorFollowedByNotFound() {
+    stubFor(
+      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+        .inScenario("Retry Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(503),
+        ).willSetStateTo("404"),
+    )
+    stubFor(
+      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+        .inScenario("Retry Scenario")
+        .whenScenarioStateIs("404")
+        .willReturn(
+          aResponse()
+            .withStatus(404),
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubError() {
+    stubFor(
+      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+        .willReturn(
+          aResponse()
+            .withStatus(503),
         ),
     )
   }
@@ -66,8 +98,9 @@ class IncentivesMockServer : WireMockServer(8096) {
     )
   }
 
-  fun verifyGetCurrentIncentiveRequest(bookingId: Long) {
+  fun verifyGetCurrentIncentiveRequest(bookingId: Long, count: Int = 1) {
     verify(
+      count,
       getRequestedFor(urlEqualTo("/incentive-reviews/booking/$bookingId?with-details=false")),
     )
   }
