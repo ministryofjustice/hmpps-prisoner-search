@@ -4,9 +4,6 @@ orbs:
   hmpps: ministryofjustice/hmpps@10
 
 parameters:
-  releases-slack-channel:
-    type: string
-    default: dps-releases
   build-common:
     type: boolean
     default: false
