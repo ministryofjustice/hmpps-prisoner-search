@@ -27,6 +27,7 @@ Personal client credentials for the T3 services can be obtained from the HMPPS A
 To start up localstack and other dependencies with prisoner search running in Docker too:
 ```shell
 docker compose up localstack hmpps-auth prison-api restricted-patients hmpps-incentives-api hpsi-db
+```
 
 Once localstack has started then, in another terminal, run the following command to start prisoner search too:
 ```shell
