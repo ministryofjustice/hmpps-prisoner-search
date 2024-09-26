@@ -6,6 +6,7 @@
 The purpose of this service is to:
 * Keep the OpenSearch prison index up to date with changes from Prison systems (NOMIS)
 * Rebuild the index when required without an outage
+* Send domain events when prisoners have been updated
 
 ## Sections
 * [Prisoner updates](./PrisonerUpdates.md)
