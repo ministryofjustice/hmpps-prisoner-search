@@ -3,12 +3,10 @@ setup: true
 orbs:
   path-filtering: circleci/path-filtering@0.1.6 # Dynamic config must be enabled. See https://circleci.com/docs/2.0/dynamic-config
   hmpps: ministryofjustice/hmpps@10
-
 parameters:
   alerts-slack-channel:
     type: string
     default: syscon-alerts-security
-
 workflows:
   check-for-changes:
     jobs:

@@ -1,83 +1,20 @@
 name: Security trivy dependency check
-
 on:
-  workflow_call:
-    inputs:
-      subproject:
-        required: false
-        type: string
-    secrets:
-      slack_webhook_url:
-        description: Slack webhook
-        required: true
-
-permissions:
-  contents: read
-
+  workflow_dispatch:
+  schedule:
+    - cron: "20 5 * * MON-FRI" # Every weekday at 05:20 UTC
 jobs:
-  security-trivy-check:
-    name: Security trivy dependency check
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    env:
-      parent_directory: ${{ inputs.subproject == '' && '.' || inputs.subproject }}
-    steps:
-    - uses: actions/checkout@v4
-    - name: Trivy Image Vulnerability Scanner
-      id: trivy
-      uses: aquasecurity/trivy-action@b5f4977b78f81fa3d48865ff0efcc6e279210235 # v0.50.2
-      with:
-        image-ref: 'quay.io/hmpps/${{ inputs.subproject }}:latest'
-        severity: 'HIGH,CRITICAL'
-        ignore-unfixed: true
-        skip-files: /app/agent.jar
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        exit-code: 1
-        limit-severities-for-sarif: true
-    - uses: github/codeql-action/upload-sarif@v3
-      if: success() || steps.trivy.conclusion == 'failure'
-      with:
-        sarif_file: 'trivy-results.sarif'
-        category: trivy-dependency-check
-    - name: Slack failure notification
-      uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
-      if: failure()
-      with:
-        payload: |
-          {
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": ":no_entry: Failed GitHub Action:"
-                }
-              },
-              {
-                "type": "section",
-                "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Job:*\n${{ github.job }}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Repo:*\n${{ github.repository }}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Project:*\n${{ inputs.subproject }}"
-                  }
-                ]
-              }
-            ]
-          }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  security-kotlin-trivy-check-search:
+    name: Search security trivy dependency check
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_trivy.yml@v0.5 # WORKFLOW_VERSION
+    with:
+      channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
+      subproject: hmpps-prisoner-search
+    secrets: inherit
+  security-kotlin-trivy-check-indexer:
+    name: Indexer security trivy dependency check
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_trivy.yml@v0.5 # WORKFLOW_VERSION
+    with:
+      channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
+      subproject: hmpps-prisoner-search-indexer
+    secrets: inherit
