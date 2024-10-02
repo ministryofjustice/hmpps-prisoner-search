@@ -5,7 +5,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
@@ -21,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
+import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
 
 data class IndexQueueStatus(val messagesOnQueue: Int, val messagesOnDlq: Int, val messagesInFlight: Int) {
   val active
@@ -50,14 +50,11 @@ class IndexQueueService(
     }
   }
 
-  private fun sendMessage(request: IndexMessageRequest): SendMessageResponse = indexSqsClient.sendMessage(
+  private fun sendMessage(request: IndexMessageRequest, noTracing: Boolean = false): SendMessageResponse = indexSqsClient.sendMessage(
     SendMessageRequest.builder().queueUrl(indexQueueUrl)
       .messageBody(objectMapper.writeValueAsString(request))
-      .messageAttributes(
-        mapOf(
-          "eventType" to MessageAttributeValue.builder().dataType("String").stringValue("hmpps-prisoner-search-indexer-${request.type?.name?.lowercase()}").build(),
-        ),
-      ).build(),
+      .eventTypeMessageAttributes("hmpps-prisoner-search-indexer-${request.type?.name?.lowercase()}", noTracing = noTracing)
+      .build(),
   ).get()
 
   fun sendPrisonerPageMessage(prisonerPage: PrisonerPage) {
@@ -72,10 +69,10 @@ class IndexQueueService(
     }
 
   fun sendPopulatePrisonerMessage(prisonerNumber: String) =
-    sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber))
+    sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
 
   fun sendRefreshPrisonerMessage(prisonerNumber: String) =
-    sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber))
+    sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
 
   fun getNumberOfMessagesCurrentlyOnIndexQueue(): Int = indexSqsClient.countMessagesOnQueue(indexQueueUrl).get()
 

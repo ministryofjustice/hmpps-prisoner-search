@@ -4,10 +4,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
 
 @Service
 class OffenderEventQueueService(
@@ -28,11 +28,7 @@ class OffenderEventQueueService(
         // replace the event type in the raw JSON message. If we parsed the message first then we can't guarantee that
         // we've converted all the fields in the original JSON as the parser ignores unknown fields.
         .messageBody(message.replace(eventType, republishEventType))
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(republishEventType).build(),
-          ),
-        )
+        .eventTypeMessageAttributes(republishEventType)
         .delaySeconds(republishDelayInSeconds)
         .build(),
     ).get().also {
