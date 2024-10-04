@@ -13,7 +13,7 @@ import java.util.UUID
 @Repository
 interface PrisonerDifferencesRepository : JpaRepository<PrisonerDifferences, UUID> {
   fun findByNomsNumber(nomsNumber: String): List<PrisonerDifferences>
-  fun findByDateTimeBetween(from: Instant, to: Instant): List<PrisonerDifferences>
+  fun findByLabelAndDateTimeBetween(label: String, from: Instant, to: Instant): List<PrisonerDifferences>
   fun deleteByDateTimeBefore(to: Instant): Int
 }
 
@@ -25,6 +25,7 @@ class PrisonerDifferences(
   val prisonerDifferencesId: UUID? = null,
   val nomsNumber: String,
   val differences: String,
+  val label: String,
   val dateTime: Instant = Instant.now(),
 ) {
   override fun equals(other: Any?): Boolean {

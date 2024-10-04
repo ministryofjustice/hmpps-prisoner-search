@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 
+private val LABEL = "GREENBLUE"
+
 class RefreshIndexServiceTest {
 
   private val indexStatusService = mock<IndexStatusService>()
@@ -244,7 +246,7 @@ class RefreshIndexServiceTest {
 
       refreshIndexService.refreshPrisoner("ABC123D")
 
-      verify(prisonerSynchroniserService).compareAndMaybeIndex(booking, listOf(GREEN, BLUE))
+      verify(prisonerSynchroniserService).compareAndMaybeIndex(booking, listOf(GREEN, BLUE), LABEL)
       verify(nomisService).getOffender("ABC123D")
     }
 

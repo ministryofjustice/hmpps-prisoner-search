@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 
 @Service
@@ -59,7 +60,8 @@ class RefreshIndexService(
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
       .run {
         nomisService.getOffender(prisonerNumber)?.let { ob ->
-          prisonerSynchroniserService.compareAndMaybeIndex(ob, activeIndexes())
+          prisonerSynchroniserService.compareAndMaybeIndex(ob, activeIndexes(), "GREENBLUE")
+          prisonerSynchroniserService.compareAndMaybeIndex(ob, listOf(SyncIndex.RED), "RED")
         }
       }
   }

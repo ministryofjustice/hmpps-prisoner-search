@@ -126,7 +126,7 @@ class PrisonerSynchroniserService(
       prisonerRepository.save(it, SyncIndex.RED)
     }
 
-  internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>) {
+  internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>, label: String) {
     val incentiveLevel = getIncentive(ob)
     val restrictedPatient = getRestrictedPatient(ob)
 
@@ -139,10 +139,9 @@ class PrisonerSynchroniserService(
       restrictedPatientData = Result.success(restrictedPatient),
     )
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
-      prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
+      prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner, label)
 
       indices.map { prisonerRepository.save(prisoner, it) }
-      prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
     }
   }

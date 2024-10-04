@@ -12,8 +12,8 @@ import java.time.temporal.ChronoUnit
 class PrisonerDifferencesService(
   private val prisonerDifferencesRepository: PrisonerDifferencesRepository,
 ) {
-  fun retrieveDifferences(from: Instant, to: Instant): List<PrisonerDifferences> =
-    prisonerDifferencesRepository.findByDateTimeBetween(from, to)
+  fun retrieveDifferences(label: String, from: Instant, to: Instant): List<PrisonerDifferences> =
+    prisonerDifferencesRepository.findByLabelAndDateTimeBetween(label, from, to)
 
   @Transactional
   fun deleteOldData(): Int =

@@ -134,6 +134,7 @@ class PrisonerDifferenceService(
   fun reportDiffTelemetry(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
+    label: String,
   ) {
     previousPrisonerSnapshot?.also { _ ->
       getDifferencesByCategory(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
@@ -143,13 +144,14 @@ class PrisonerDifferenceService(
           mapOf(
             "prisonerNumber" to previousPrisonerSnapshot.prisonerNumber!!,
             "categoriesChanged" to it.keys.map { it.name }.toList().sorted().toString(),
+            "label" to label,
           ),
         )
       }
       // and the sensitive full differences in our postgres database
       reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
         prisonerDifferencesRepository.save(
-          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString()),
+          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString(), label = label),
         )
       }
     }

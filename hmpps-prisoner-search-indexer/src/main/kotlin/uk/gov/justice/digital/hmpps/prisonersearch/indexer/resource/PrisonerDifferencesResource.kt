@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferencesService
@@ -59,12 +60,16 @@ class PrisonerDifferencesResource(private val prisonerDifferencesService: Prison
   @GetMapping
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   fun prisonerDifferences(
+    @Parameter(description = "Select whether to get green/blue or red index differences. Possible values are GREENBLUE (default) or RED")
+    @RequestParam(value = "label", required = false, defaultValue = "GREENBLUE")
+    label: String,
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Parameter(description = "Report on differences that have been generated. Defaults to the last one day", example = "2023-01-02T02:23:45")
+    @Parameter(description = "Report on differences that have been generated. Defaults to the last one day", example = "2023-01-02T02:23:45Z")
     from: Instant?,
+    @Parameter(description = "Report on differences that have been generated. Defaults to the last one day", example = "2023-01-02T02:23:45Z")
     to: Instant?,
   ): List<PrisonerDifferences> =
-    prisonerDifferencesService.retrieveDifferences(from ?: Instant.now().minus(1, ChronoUnit.DAYS), to ?: Instant.now())
+    prisonerDifferencesService.retrieveDifferences(label, from ?: Instant.now().minus(1, ChronoUnit.DAYS), to ?: Instant.now())
 
   @Hidden
   @DeleteMapping("/delete")

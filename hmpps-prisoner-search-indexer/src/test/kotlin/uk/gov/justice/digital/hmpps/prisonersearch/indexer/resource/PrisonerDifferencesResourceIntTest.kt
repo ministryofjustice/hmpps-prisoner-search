@@ -44,11 +44,34 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `can find all the differences`() {
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]"))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]"))
+    fun `can find old-style differences`() {
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = "GREENBLUE"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = "GREENBLUE"))
 
       webTestClient.get().uri("/prisoner-differences")
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("$.[*].nomsNumber").value<JSONArray> {
+          assertThat(it.toList()).containsExactlyInAnyOrder("A1111AA", "A1111AB")
+        }.jsonPath("$.[*].differences").value<JSONArray> {
+          assertThat(it.toList()).containsExactlyInAnyOrder("[first]", "[second]")
+        }
+    }
+
+    @Test
+    fun `can find red differences`() {
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = "RED"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = "RED"))
+
+      webTestClient.get().uri("/prisoner-differences")
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().json("[]")
+
+      webTestClient.get().uri("/prisoner-differences?label=RED")
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .header("Content-Type", "application/json")
         .exchange()
@@ -67,9 +90,9 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
     @Test
     fun `endpoint deletes old data`() {
       val overAMonth = Instant.now().minus(32, ChronoUnit.DAYS)
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = overAMonth))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", dateTime = overAMonth))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[recent]"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = overAMonth, label = "GREENBLUE"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", dateTime = overAMonth, label = "GREENBLUE"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[recent]", label = "RED"))
 
       // note no roles required by the endpoint - protected by ingress config instead
       webTestClient.delete().uri("/prisoner-differences/delete")

@@ -38,7 +38,7 @@ class CompareIndexService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private const val CUTOFF = 50
-    private val scroll = Scroll(TimeValue.timeValueMinutes(1L))
+    private val scroll = Scroll(TimeValue.timeValueHours(2L))
   }
 
   fun doIndexSizeCheck(): SizeCheck {
@@ -126,6 +126,7 @@ class CompareIndexService(
 
     var scrollId = searchResponse.scrollId
     var searchHits = searchResponse.hits.hits
+    var total = 0
 
     while (!searchHits.isNullOrEmpty()) {
       searchHits.forEach { hit ->
@@ -149,7 +150,8 @@ class CompareIndexService(
           )
         }
       }
-      log.debug("Done ${searchHits.size} documents, scrollId = $scrollId")
+      total += searchHits.size
+      log.debug("Done $total documents")
 
       val scrollRequest = SearchScrollRequest(scrollId).apply { scroll(scroll) }
       val scrollResponse = openSearchClient.scroll(scrollRequest, RequestOptions.DEFAULT)

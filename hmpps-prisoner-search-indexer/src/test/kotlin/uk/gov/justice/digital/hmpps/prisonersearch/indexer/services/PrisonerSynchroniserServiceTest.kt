@@ -34,6 +34,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDo
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import java.time.LocalDateTime
 
+private val LABEL = "GREENBLUE"
+
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
   private val restrictedPatientService = mock<RestrictedPatientService>()
@@ -552,14 +554,14 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     internal fun `will get incentive level if booking present`() {
-      service.compareAndMaybeIndex(booking, listOf(GREEN))
+      service.compareAndMaybeIndex(booking, listOf(GREEN), LABEL)
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
 
     @Test
     internal fun `will not get incentive if there is no booking`() {
-      service.compareAndMaybeIndex(OffenderBookingBuilder().anOffenderBooking(null), listOf(GREEN))
+      service.compareAndMaybeIndex(OffenderBookingBuilder().anOffenderBooking(null), listOf(GREEN), LABEL)
 
       verifyNoInteractions(incentivesService)
     }
@@ -575,7 +577,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.compareAndMaybeIndex(prisonBooking, listOf(GREEN))
+      service.compareAndMaybeIndex(prisonBooking, listOf(GREEN), LABEL)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -586,7 +588,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.compareAndMaybeIndex(noLivingUnitBooking, listOf(GREEN))
+      service.compareAndMaybeIndex(noLivingUnitBooking, listOf(GREEN), LABEL)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -602,7 +604,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.compareAndMaybeIndex(outsidePrisoner, listOf(GREEN))
+      service.compareAndMaybeIndex(outsidePrisoner, listOf(GREEN), LABEL)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
     }
@@ -612,7 +614,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, listOf(GREEN))
+      service.compareAndMaybeIndex(booking, listOf(GREEN), LABEL)
 
       verify(prisonerRepository, never()).save(any(), any())
       verify(prisonerDifferenceService).hasChanged(any(), any())
@@ -624,9 +626,9 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, listOf(GREEN))
+      service.compareAndMaybeIndex(booking, listOf(GREEN), LABEL)
 
-      verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
+      verify(prisonerDifferenceService).reportDiffTelemetry(any(), any(), eq(LABEL))
       verify(prisonerRepository).save(any(), eq(GREEN))
       verify(prisonerDifferenceService).handleDifferences(any(), any(), any(), any())
     }

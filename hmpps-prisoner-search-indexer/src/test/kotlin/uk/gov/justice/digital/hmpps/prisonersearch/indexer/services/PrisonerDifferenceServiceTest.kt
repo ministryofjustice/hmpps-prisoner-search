@@ -586,7 +586,7 @@ class PrisonerDifferenceServiceTest {
         pncNumber = "somePnc2"
       }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, "GREENBLUE")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
@@ -619,7 +619,7 @@ class PrisonerDifferenceServiceTest {
         croNumber = "someCro"
       }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, "GREENBLUE")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
@@ -663,7 +663,7 @@ class PrisonerDifferenceServiceTest {
         shoeSize = 11
       }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, "GREENBLUE")
 
       verify(telemetryClient)
         .trackEvent(
@@ -695,7 +695,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc1" }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, "GREENBLUE")
 
       verifyNoInteractions(telemetryClient)
     }
@@ -704,7 +704,7 @@ class PrisonerDifferenceServiceTest {
     fun `prisoner does not exist in index`() {
       val prisoner2 = Prisoner().apply { prisonerNumber = "B1234YY" }
 
-      prisonerDifferenceService.reportDiffTelemetry(null, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(null, prisoner2, "GREENBLUE")
 
       verify(telemetryClient)
         .trackEvent(
