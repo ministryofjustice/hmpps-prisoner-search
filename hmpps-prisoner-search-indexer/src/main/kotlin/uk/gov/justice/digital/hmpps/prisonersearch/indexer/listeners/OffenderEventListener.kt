@@ -4,8 +4,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -69,7 +67,6 @@ class OffenderEventListener(
   }
 
   @SqsListener("offenderqueue", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "syscon-devs-hmpps_prisoner_search_offender_queue", kind = SpanKind.SERVER)
   fun processOffenderEvent(requestJson: String?) {
     try {
       val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)

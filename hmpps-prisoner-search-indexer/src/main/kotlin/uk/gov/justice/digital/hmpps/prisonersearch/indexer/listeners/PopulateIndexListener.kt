@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -27,7 +25,6 @@ class PopulateIndexListener(
   private val refreshIndexService: RefreshIndexService,
 ) {
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "syscon-devs-hmpps_prisoner_search_index_queue", kind = SpanKind.SERVER)
   fun processIndexRequest(requestJson: String) {
     val indexRequest = try {
       objectMapper.readValue(requestJson, IndexMessageRequest::class.java)
