@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import org.springframework.retry.policy.NeverRetryPolicy
 import org.springframework.stereotype.Service
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -21,7 +19,6 @@ class DomainEventPublisherListener(
   }
 
   @SqsListener("publish", factory = "hmppsQueueContainerFactoryProxy")
-  @WithSpan(value = "syscon-devs-hmpps_prisoner_search_publish_queue", kind = SpanKind.SERVER)
   fun publish(eventJson: String) {
     val event = fromJson<DomainEvent>(eventJson)
 

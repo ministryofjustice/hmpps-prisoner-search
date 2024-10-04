@@ -49,12 +49,7 @@ dependencies {
   implementation(project(":common"))
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.7")
-  testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-  testImplementation("org.springframework.boot:spring-boot-starter-security")
-  testImplementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.22") {
     exclude(group = "io.swagger.core.v3")
   }
