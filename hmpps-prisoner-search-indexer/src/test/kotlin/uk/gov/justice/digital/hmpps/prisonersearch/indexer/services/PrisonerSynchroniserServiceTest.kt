@@ -30,11 +30,13 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUn
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import java.time.LocalDateTime
+import kotlin.Result
 
-private val LABEL = "GREENBLUE"
+private val LABEL = GREEN_BLUE
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
@@ -553,15 +555,44 @@ internal class PrisonerSynchroniserServiceTest {
     }
 
     @Test
+    internal fun `will do nothing if no differences found`() {
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
+      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), listOf(GREEN), LABEL)
+
+      verify(prisonerRepository, never()).save(any(), any())
+      verify(prisonerDifferenceService).hasChanged(any(), any())
+      verifyNoMoreInteractions(prisonerDifferenceService)
+    }
+
+    @Test
+    internal fun `will report differences if found`() {
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
+      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), listOf(GREEN), LABEL)
+
+      verify(prisonerDifferenceService).reportDiffTelemetry(any(), any(), eq(LABEL))
+      verify(prisonerRepository).save(any(), eq(GREEN))
+      verify(prisonerDifferenceService).handleDifferences(any(), any(), any(), any())
+    }
+  }
+
+  @Nested
+  inner class GetDomainData {
+    private val booking = OffenderBookingBuilder().anOffenderBooking()
+
+    @Test
     internal fun `will get incentive level if booking present`() {
-      service.compareAndMaybeIndex(booking, listOf(GREEN), LABEL)
+      service.getDomainData(booking)
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
 
     @Test
     internal fun `will not get incentive if there is no booking`() {
-      service.compareAndMaybeIndex(OffenderBookingBuilder().anOffenderBooking(null), listOf(GREEN), LABEL)
+      service.getDomainData(OffenderBookingBuilder().anOffenderBooking(null))
 
       verifyNoInteractions(incentivesService)
     }
@@ -577,7 +608,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.compareAndMaybeIndex(prisonBooking, listOf(GREEN), LABEL)
+      service.getDomainData(prisonBooking)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -588,7 +619,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.compareAndMaybeIndex(noLivingUnitBooking, listOf(GREEN), LABEL)
+      service.getDomainData(noLivingUnitBooking)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -604,33 +635,9 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.compareAndMaybeIndex(outsidePrisoner, listOf(GREEN), LABEL)
+      service.getDomainData(outsidePrisoner)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
-    }
-
-    @Test
-    internal fun `will do nothing if no differences found`() {
-      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
-      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
-
-      service.compareAndMaybeIndex(booking, listOf(GREEN), LABEL)
-
-      verify(prisonerRepository, never()).save(any(), any())
-      verify(prisonerDifferenceService).hasChanged(any(), any())
-      verifyNoMoreInteractions(prisonerDifferenceService)
-    }
-
-    @Test
-    internal fun `will report differences if found`() {
-      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
-      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
-
-      service.compareAndMaybeIndex(booking, listOf(GREEN), LABEL)
-
-      verify(prisonerDifferenceService).reportDiffTelemetry(any(), any(), eq(LABEL))
-      verify(prisonerRepository).save(any(), eq(GREEN))
-      verify(prisonerDifferenceService).handleDifferences(any(), any(), any(), any())
     }
   }
 

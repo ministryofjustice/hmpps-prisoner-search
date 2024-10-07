@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -45,8 +47,8 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `can find old-style differences`() {
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = "GREENBLUE"))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = "GREENBLUE"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = GREEN_BLUE))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = GREEN_BLUE))
 
       webTestClient.get().uri("/prisoner-differences")
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
@@ -62,8 +64,8 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
 
     @Test
     fun `can find red differences`() {
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = "RED"))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = "RED"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = RED))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = RED))
 
       webTestClient.get().uri("/prisoner-differences")
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
@@ -90,9 +92,9 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
     @Test
     fun `endpoint deletes old data`() {
       val overAMonth = Instant.now().minus(32, ChronoUnit.DAYS)
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = overAMonth, label = "GREENBLUE"))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", dateTime = overAMonth, label = "GREENBLUE"))
-      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[recent]", label = "RED"))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = overAMonth, label = GREEN_BLUE))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", dateTime = overAMonth, label = GREEN_BLUE))
+      repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[recent]", label = RED))
 
       // note no roles required by the endpoint - protected by ingress config instead
       webTestClient.delete().uri("/prisoner-differences/delete")

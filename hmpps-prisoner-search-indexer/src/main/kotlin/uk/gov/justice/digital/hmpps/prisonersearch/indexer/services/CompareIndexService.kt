@@ -38,7 +38,7 @@ class CompareIndexService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private const val CUTOFF = 50
-    private val scroll = Scroll(TimeValue.timeValueHours(2L))
+    private val scroll = Scroll(TimeValue.timeValueMinutes(1L))
   }
 
   fun doIndexSizeCheck(): SizeCheck {
