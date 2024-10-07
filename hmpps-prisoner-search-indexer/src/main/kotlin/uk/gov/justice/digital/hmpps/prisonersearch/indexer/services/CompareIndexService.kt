@@ -126,6 +126,7 @@ class CompareIndexService(
 
     var scrollId = searchResponse.scrollId
     var searchHits = searchResponse.hits.hits
+    var total = 0
 
     while (!searchHits.isNullOrEmpty()) {
       searchHits.forEach { hit ->
@@ -149,7 +150,8 @@ class CompareIndexService(
           )
         }
       }
-      log.debug("Done ${searchHits.size} documents, scrollId = $scrollId")
+      total += searchHits.size
+      log.debug("Done $total documents")
 
       val scrollRequest = SearchScrollRequest(scrollId).apply { scroll(scroll) }
       val scrollResponse = openSearchClient.scroll(scrollRequest, RequestOptions.DEFAULT)

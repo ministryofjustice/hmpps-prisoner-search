@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
@@ -11,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 
 @Service
@@ -126,26 +129,33 @@ class PrisonerSynchroniserService(
       prisonerRepository.save(it, SyncIndex.RED)
     }
 
-  internal fun compareAndMaybeIndex(ob: OffenderBooking, indices: List<SyncIndex>) {
-    val incentiveLevel = getIncentive(ob)
-    val restrictedPatient = getRestrictedPatient(ob)
-
+  internal fun compareAndMaybeIndex(
+    ob: OffenderBooking,
+    incentiveLevelData: Result<IncentiveLevel?>,
+    restrictedPatientData: Result<RestrictedPatient?>,
+    indices: List<SyncIndex>,
+    label: PrisonerDifferencesLabel,
+  ) {
     val existingPrisoner = prisonerRepository.get(ob.offenderNo, indices)
 
     val prisoner = Prisoner().translate(
       existingPrisoner = existingPrisoner,
       ob = ob,
-      incentiveLevel = Result.success(incentiveLevel),
-      restrictedPatientData = Result.success(restrictedPatient),
+      incentiveLevel = incentiveLevelData,
+      restrictedPatientData = restrictedPatientData,
     )
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
-      prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
+      prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner, label)
 
       indices.map { prisonerRepository.save(prisoner, it) }
-      prisonerRepository.save(prisoner, SyncIndex.RED)
-      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
+      if (label == PrisonerDifferencesLabel.GREEN_BLUE) {
+        prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
+      }
     }
   }
+
+  internal fun getDomainData(ob: OffenderBooking): Pair<Result<IncentiveLevel?>, Result<RestrictedPatient?>> =
+    Pair(Result.success(getIncentive(ob)), Result.success(getRestrictedPatient(ob)))
 
   internal fun translate(ob: OffenderBooking): Prisoner =
     Prisoner().translate(

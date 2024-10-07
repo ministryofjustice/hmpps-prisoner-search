@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_DATABASE_NO_CHANGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
@@ -586,7 +587,7 @@ class PrisonerDifferenceServiceTest {
         pncNumber = "somePnc2"
       }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, GREEN_BLUE)
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
@@ -619,7 +620,7 @@ class PrisonerDifferenceServiceTest {
         croNumber = "someCro"
       }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, GREEN_BLUE)
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.DIFFERENCE_REPORTED.name),
@@ -663,7 +664,7 @@ class PrisonerDifferenceServiceTest {
         shoeSize = 11
       }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, GREEN_BLUE)
 
       verify(telemetryClient)
         .trackEvent(
@@ -695,7 +696,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc1" }
 
-      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(prisoner1, prisoner2, GREEN_BLUE)
 
       verifyNoInteractions(telemetryClient)
     }
@@ -704,7 +705,7 @@ class PrisonerDifferenceServiceTest {
     fun `prisoner does not exist in index`() {
       val prisoner2 = Prisoner().apply { prisonerNumber = "B1234YY" }
 
-      prisonerDifferenceService.reportDiffTelemetry(null, prisoner2)
+      prisonerDifferenceService.reportDiffTelemetry(null, prisoner2, GREEN_BLUE)
 
       verify(telemetryClient)
         .trackEvent(

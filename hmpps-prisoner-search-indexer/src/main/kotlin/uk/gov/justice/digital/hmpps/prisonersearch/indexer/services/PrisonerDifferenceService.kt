@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED_NO_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
@@ -134,6 +135,7 @@ class PrisonerDifferenceService(
   fun reportDiffTelemetry(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
+    label: PrisonerDifferencesLabel,
   ) {
     previousPrisonerSnapshot?.also { _ ->
       getDifferencesByCategory(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
@@ -143,13 +145,14 @@ class PrisonerDifferenceService(
           mapOf(
             "prisonerNumber" to previousPrisonerSnapshot.prisonerNumber!!,
             "categoriesChanged" to it.keys.map { it.name }.toList().sorted().toString(),
+            "label" to label.toString(),
           ),
         )
       }
       // and the sensitive full differences in our postgres database
       reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
         prisonerDifferencesRepository.save(
-          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString()),
+          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString(), label = label),
         )
       }
     }
