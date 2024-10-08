@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PersonReference.Companion.withNomsNumber
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
@@ -64,6 +65,7 @@ class HmppsDomainEventEmitter(
       version = this.version,
       description = this.description,
       detailUrl = this.detailUrl,
+      personReference = this.personReference,
     )
 
     val domainEvent = DomainEvent(eventType = event.eventType, body = objectMapper.writeValueAsString(event))
@@ -167,8 +169,8 @@ class HmppsDomainEventEmitter(
   }
 }
 
-abstract class PrisonerAdditionalInformation {
-  abstract val nomsNumber: String
+interface PrisonerAdditionalInformation {
+  val nomsNumber: String
 }
 
 open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
@@ -178,6 +180,7 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
   val version: Int,
   val description: String,
   val detailUrl: String,
+  val personReference: PersonReference,
 ) {
   constructor(
     additionalInformation: T,
@@ -185,6 +188,7 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
     host: String,
     description: String,
     eventType: String,
+    personReference: PersonReference,
   ) :
     this(
       additionalInformation = additionalInformation,
@@ -194,13 +198,23 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
       description = description,
       detailUrl = ServletUriComponentsBuilder.fromUriString(host).path("/prisoner/{offenderNo}")
         .buildAndExpand(additionalInformation.nomsNumber).toUri().toString(),
+      personReference = personReference,
     )
+}
+
+data class PersonReference(val identifiers: List<Identifier>) {
+  companion object {
+    private const val NOMS_NUMBER_TYPE = "NOMS"
+    fun withNomsNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
+  }
+
+  data class Identifier(val type: String, val value: String)
 }
 
 data class PrisonerUpdatedEvent(
   override val nomsNumber: String,
   val categoriesChanged: List<DiffCategory>,
-) : PrisonerAdditionalInformation()
+) : PrisonerAdditionalInformation
 
 class PrisonerUpdatedDomainEvent(additionalInformation: PrisonerUpdatedEvent, occurredAt: Instant, host: String) :
   PrisonerDomainEvent<PrisonerUpdatedEvent>(
@@ -209,9 +223,10 @@ class PrisonerUpdatedDomainEvent(additionalInformation: PrisonerUpdatedEvent, oc
     occurredAt = occurredAt,
     description = "A prisoner record has been updated",
     eventType = UPDATED_EVENT_TYPE,
+    personReference = withNomsNumber(additionalInformation.nomsNumber),
   )
 
-data class PrisonerCreatedEvent(override val nomsNumber: String) : PrisonerAdditionalInformation()
+data class PrisonerCreatedEvent(override val nomsNumber: String) : PrisonerAdditionalInformation
 class PrisonerCreatedDomainEvent(additionalInformation: PrisonerCreatedEvent, occurredAt: Instant, host: String) :
   PrisonerDomainEvent<PrisonerCreatedEvent>(
     additionalInformation = additionalInformation,
@@ -219,13 +234,14 @@ class PrisonerCreatedDomainEvent(additionalInformation: PrisonerCreatedEvent, oc
     occurredAt = occurredAt,
     description = "A prisoner record has been created",
     eventType = CREATED_EVENT_TYPE,
+    personReference = withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerReceivedEvent(
   override val nomsNumber: String,
   val reason: PrisonerReceiveReason,
   val prisonId: String,
-) : PrisonerAdditionalInformation()
+) : PrisonerAdditionalInformation
 
 class PrisonerReceivedDomainEvent(additionalInformation: PrisonerReceivedEvent, occurredAt: Instant, host: String) :
   PrisonerDomainEvent<PrisonerReceivedEvent>(
@@ -234,13 +250,14 @@ class PrisonerReceivedDomainEvent(additionalInformation: PrisonerReceivedEvent, 
     host = host,
     description = "A prisoner has been received into a prison with reason: ${additionalInformation.reason.description}",
     eventType = PRISONER_RECEIVED_EVENT_TYPE,
+    withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerReleasedEvent(
   override val nomsNumber: String,
   val reason: PrisonerReleaseReason,
   val prisonId: String,
-) : PrisonerAdditionalInformation()
+) : PrisonerAdditionalInformation
 
 class PrisonerReleasedDomainEvent(additionalInformation: PrisonerReleasedEvent, occurredAt: Instant, host: String) :
   PrisonerDomainEvent<PrisonerReleasedEvent>(
@@ -249,6 +266,7 @@ class PrisonerReleasedDomainEvent(additionalInformation: PrisonerReleasedEvent, 
     host = host,
     description = "A prisoner has been released from a prison with reason: ${additionalInformation.reason.description}",
     eventType = PRISONER_RELEASED_EVENT_TYPE,
+    withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerAlertsUpdatedEvent(
@@ -256,7 +274,7 @@ data class PrisonerAlertsUpdatedEvent(
   val bookingId: String?,
   val alertsAdded: Set<String>,
   val alertsRemoved: Set<String>,
-) : PrisonerAdditionalInformation()
+) : PrisonerAdditionalInformation
 
 class PrisonerAlertsUpdatedDomainEvent(
   additionalInformation: PrisonerAlertsUpdatedEvent,
@@ -269,6 +287,7 @@ class PrisonerAlertsUpdatedDomainEvent(
     host = host,
     description = "A prisoner had their alerts updated, added: ${additionalInformation.alertsAdded.size}, removed: ${additionalInformation.alertsRemoved.size}",
     eventType = PRISONER_ALERTS_UPDATED_EVENT_TYPE,
+    withNomsNumber(additionalInformation.nomsNumber),
   )
 
 fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.asMap(): Map<String, String> = mutableMapOf(
