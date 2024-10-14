@@ -65,7 +65,6 @@ class HmppsDomainEventEmitter(
       version = this.version,
       description = this.description,
       detailUrl = this.detailUrl,
-      personReference = this.personReference,
     )
 
     val domainEvent = DomainEvent(eventType = event.eventType, body = objectMapper.writeValueAsString(event))
@@ -180,7 +179,7 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
   val version: Int,
   val description: String,
   val detailUrl: String,
-  val personReference: PersonReference,
+  val personReference: PersonReference = withNomsNumber(additionalInformation.nomsNumber),
 ) {
   constructor(
     additionalInformation: T,
@@ -188,7 +187,6 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
     host: String,
     description: String,
     eventType: String,
-    personReference: PersonReference,
   ) :
     this(
       additionalInformation = additionalInformation,
@@ -198,7 +196,6 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
       description = description,
       detailUrl = ServletUriComponentsBuilder.fromUriString(host).path("/prisoner/{offenderNo}")
         .buildAndExpand(additionalInformation.nomsNumber).toUri().toString(),
-      personReference = personReference,
     )
 }
 
@@ -223,7 +220,6 @@ class PrisonerUpdatedDomainEvent(additionalInformation: PrisonerUpdatedEvent, oc
     occurredAt = occurredAt,
     description = "A prisoner record has been updated",
     eventType = UPDATED_EVENT_TYPE,
-    personReference = withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerCreatedEvent(override val nomsNumber: String) : PrisonerAdditionalInformation
@@ -234,7 +230,6 @@ class PrisonerCreatedDomainEvent(additionalInformation: PrisonerCreatedEvent, oc
     occurredAt = occurredAt,
     description = "A prisoner record has been created",
     eventType = CREATED_EVENT_TYPE,
-    personReference = withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerReceivedEvent(
@@ -250,7 +245,6 @@ class PrisonerReceivedDomainEvent(additionalInformation: PrisonerReceivedEvent, 
     host = host,
     description = "A prisoner has been received into a prison with reason: ${additionalInformation.reason.description}",
     eventType = PRISONER_RECEIVED_EVENT_TYPE,
-    withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerReleasedEvent(
@@ -266,7 +260,6 @@ class PrisonerReleasedDomainEvent(additionalInformation: PrisonerReleasedEvent, 
     host = host,
     description = "A prisoner has been released from a prison with reason: ${additionalInformation.reason.description}",
     eventType = PRISONER_RELEASED_EVENT_TYPE,
-    withNomsNumber(additionalInformation.nomsNumber),
   )
 
 data class PrisonerAlertsUpdatedEvent(
@@ -287,7 +280,6 @@ class PrisonerAlertsUpdatedDomainEvent(
     host = host,
     description = "A prisoner had their alerts updated, added: ${additionalInformation.alertsAdded.size}, removed: ${additionalInformation.alertsRemoved.size}",
     eventType = PRISONER_ALERTS_UPDATED_EVENT_TYPE,
-    withNomsNumber(additionalInformation.nomsNumber),
   )
 
 fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.asMap(): Map<String, String> = mutableMapOf(
