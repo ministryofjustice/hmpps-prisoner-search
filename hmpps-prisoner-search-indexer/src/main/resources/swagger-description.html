@@ -2,95 +2,10 @@
 <p>Background service for listening to changes to prisoners and then updating OpenSearch with the changes.</p>
 <p>A side effect of this is that the service can detect changes to prisoners and raise events.</p>
 <p>Events are only generated when this service detects a change in the index record for the prisoner.</p>
-<h4>HMPPS domain events - <b>hmpps-domain-events</b> topic</h4>
-<div>
-  This service publishes significant events to the <b>hmpps-domain-events</b> topic. All events have these common
-  fields:
-  <ul>
-    <li><b>eventType</b> string</li>
-    <li><b>occurredAt</b> ISO offset date time - when the event was recorded e.g 2021-02-08T14:41:11.526762Z</li>
-    <li><b>version</b> number - version of this event message. Currently <b>1</b></li>
-    <li><b>description</b> string - human-readable description of event</li>
-    <li><b>detailUrl</b> string - a link to the prisoner in prisoner search</li>
-    <li><b>additionalInformation.nomsNumber</b> string - NOMIS offender number also known as prison number.</li>
-  </ul>
-  The different event types are:
-  <ul>
-    <li>
-      <h4>prisoner-offender-search.prisoner.updated</h4>
-      This is when a prisoner index record has been updated. Note
-      that this means that one of the fields in the prisoner index record has changed.  No event will be
-      generated if changes are made to non-indexed fields on the prisoner.<br/>
-      <b>additionalInformation</b>
-      <ul>
-        <li><b>categoriesChanged</b> array of enum - category of change for the prisoner. This can be multiple categories,
-          where each category is one of:
-          <ul>
-            <li><b>IDENTIFIERS</b> Main identifiers have changed, so one of pncNumber, croNumber, bookingId, bookNumber for the prisoner</li>
-            <li><b>PERSONAL_DETAILS</b> Personal details e.g. first name, last name, aliases have changed</li>
-            <li><b>ALERTS</b> One of the prisoner's alerts has changed</li>
-            <li><b>STATUS</b> The status of the prisoner has changed, so one of status, inOutStatus, csra, category, legalStatus, imprisonmentStatus, imprisonmentStatusDescription, recall</li>
-            <li><b>LOCATION</b> The cell or prison has changed, so one of lastMovementTypeCode, lastMovementReasonCode, prisonId, lastPrisonId, prisonName, cellLocation, locationDescription</li>
-            <li><b>SENTENCE</b> Any sentence information or sentence dates have changed</li>
-            <li><b>RESTRICTED_PATIENT</b> Restricted patient information has changed, so restrictedPatient, supportingPrisonId, dischargedHospitalId, dischargedHospitalDescription, dischargeDate</li>
-            <li><b>INCENTIVE_LEVEL</b> The current incentive has changed</li>
-            <li><b>PHYSICAL_DETAILS</b> Physical details has changed, so heightCentimetres, weightKilograms, hairColour, rightEyeColour, leftEyeColour, facialHair, shapeOfFace, build, shoeSize, tattoos, scars, marks</li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-    <li>
-      <h4>prisoner-offender-search.prisoner.created</h4>
-      This is when a prisoner has been added to the index.
-    </li>
-    <li>
-      <h4>prisoner-offender-search.prisoner.alerts-updated</h4>
-      This is when a prisoner alerts have altered.<br/>
-      <b>additionalInformation</b>
-      <ul>
-        <li><b>bookingId</b> long - NOMIS booking id for the prisoner</li>
-        <li><b>alertsAdded</b> string - array of alerts that have been added for the prisoner.</li>
-        <li><b>alertsRemoved</b> string - array of alerts that have been removed for the prisoner.</li>
-      </ul>
-    </li>
-    <li>
-      <h4>prisoner-offender-search.prisoner.received</h4>
-      This is when a prisoner is received into prison.<br/>
-      <b>additionalInformation</b>
-      <ul>
-        <li><b>reason</b> enum - reason for admission of the prisoner. Possible values are:
-          <ul>
-            <li><b>NEW_ADMISSION</b> - admission on new charges</li>
-            <li><b>READMISSION</b> - re-admission on an existing booking</li>
-            <li><b>READMISSION_SWITCH_BOOKING</b> - re-admission on an existing previous booking - typically after a new booking is created by mistake</li>
-            <li><b>TRANSFERRED</b> - transfer from another prison</li>
-            <li><b>RETURN_FROM_COURT</b> - returned back to prison from court</li>
-            <li><b>TEMPORARY_ABSENCE_RETURN</b> - returned after a temporary absence</li>
-            <li><b>POST_MERGE_ADMISSION</b> - admission following an offender merge</li>
-          </ul>
-        </li>
-        <li><b>prisonId</b> string - three character Prison code</li>
-      </ul>
-    </li>
-    <li>
-      <h4>prisoner-offender-search.prisoner.released</h4>
-      This is when a prisoner is released from prison.<br/>
-      <b>additionalInformation</b>
-      <ul>
-        <li><b>reason</b> enum - reason for release of the prisoner. Possible values are:
-          <ul>
-            <li><b>TEMPORARY_ABSENCE_RELEASE</b> - released on temporary absence</li>
-            <li><b>RELEASED_TO_HOSPITAL</b> - released to a secure hospital</li>
-            <li><b>RELEASED</b> - released from prison</li>
-            <li><b>SENT_TO_COURT</b> - sent to court</li>
-            <li><b>TRANSFERRED</b> - transfer to another prison</li>
-          </ul>
-        </li>
-        <li><b>prisonId</b> string - three character Prison code</li>
-      </ul>
-    </li>
-  </ul>
-</div>
+<h4>Please see the link to the event docs in the
+  <a href="https://github.com/ministryofjustice/hmpps-prisoner-search/blob/main/hmpps-prisoner-search-indexer/README.md">repository README</a>
+  for information on the HMPPS domain events that are published
+</h4>
 <h3>Topic subscription</h3>
 <p>Clients are expected to use a SQS AWS queue to receive events with queue subscribed to <b>hmpps-domain-topic</b>
   to listen to the above events.</p>
