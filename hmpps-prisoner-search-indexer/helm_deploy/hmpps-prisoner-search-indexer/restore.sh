@@ -37,7 +37,7 @@ fi
 SNAPSHOT_NAMESPACE="${NAMESPACE_OVERRIDE:-${NAMESPACE}}"
 ENDPOINT_SNAPSHOT_NAMESPACE="$OPENSEARCH_PROXY_URL/_snapshot/$SNAPSHOT_NAMESPACE"
 ENDPOINT_LATEST="$ENDPOINT_SNAPSHOT_NAMESPACE/latest"
-INDICES="prisoner-search-blue,prisoner-search-green,prisoner-index-status"
+INDICES="prisoner-search-blue,prisoner-search-green,prisoner-search,prisoner-index-status"
 
 # Register restore snapshot repo if not already
 if ! check_http GET "$ENDPOINT_SNAPSHOT_NAMESPACE" &>/dev/null; then
@@ -62,7 +62,7 @@ fi
 
 # Get the original count of indices
 INDEX_COUNT=$(check_http GET "$OPENSEARCH_PROXY_URL/_cat/indices?format=json" | jq length)
-EXPECTED_INDEX_COUNT=$((INDEX_COUNT - 3)) # we're deleting 3 indices
+EXPECTED_INDEX_COUNT=$((INDEX_COUNT - 4)) # we're deleting 4 indices
 
 echo -e "\nDeleting indices"
 # the delete will return immediately with an acknowledged
