@@ -78,6 +78,10 @@ class PrisonerSynchroniserService(
           bookingId = ob.bookingId,
           eventType = eventType,
         )
+        // If the current booking id changed, some domain data needs updating too, retrieving using the new booking id
+        if (summary.prisoner?.bookingId?.toLong() != ob.bookingId) {
+          reindexIncentive(ob.offenderNo, SyncIndex.RED, eventType)
+        }
       } else {
         telemetryClient.trackPrisonerEvent(
           TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE,

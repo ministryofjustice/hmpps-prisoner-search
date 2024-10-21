@@ -63,7 +63,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     prisonerRepository.save(prisoner, SyncIndex.RED)
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
-    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
 
     reset(prisonerSpyBeanRepository) // zero the call count
 
