@@ -27,7 +27,7 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.7")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.8")
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.5.3")
   implementation("com.google.code.gson:gson:2.11.0")
   implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -48,13 +48,13 @@ dependencies {
 
   implementation(project(":common"))
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.7")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.8")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.22") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.23") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.25")
-  testImplementation("org.wiremock:wiremock-standalone:3.9.1")
+  testImplementation("org.wiremock:wiremock-standalone:3.9.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.4.1")

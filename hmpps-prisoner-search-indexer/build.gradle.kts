@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "2.0.20"
+  kotlin("plugin.jpa") version "2.0.21"
 }
 
 configurations {
@@ -30,7 +30,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 dependencies {
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.5.3")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.7")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.8")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -39,7 +39,7 @@ dependencies {
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.0.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.0.2")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.9.0")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -52,12 +52,12 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.7.4")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.7")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.22") {
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.8")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.23") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.25")
-  testImplementation("org.wiremock:wiremock-standalone:3.9.1")
+  testImplementation("org.wiremock:wiremock-standalone:3.9.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.4.1")
