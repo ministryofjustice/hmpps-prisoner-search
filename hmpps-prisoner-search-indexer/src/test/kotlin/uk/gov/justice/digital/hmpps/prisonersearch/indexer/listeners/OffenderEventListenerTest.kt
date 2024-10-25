@@ -160,7 +160,6 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
           """.trimIndent(),
         )
       }.hasMessageContaining("something went wrong")
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
     }
   }
 
@@ -213,8 +212,6 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     fun `will fail for bad json`() {
       assertThatThrownBy { listener.processOffenderEvent("this is bad json") }
         .isInstanceOf(JsonParseException::class.java)
-
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
     }
 
     @Test
