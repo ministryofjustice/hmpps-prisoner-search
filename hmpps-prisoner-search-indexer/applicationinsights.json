@@ -48,6 +48,17 @@
           }
         ],
         "percentage": 5
+      },
+      {
+        "telemetryType": "exception",
+        "attributes": [
+          {
+            "key": "exception.stacktrace",
+            "value": ".*Cannot index a document due to seq_no.*",
+            "matchType": "regexp"
+          }
+        ],
+        "percentage": 0
       }
     ]
   }
