@@ -160,6 +160,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
           """.trimIndent(),
         )
       }.hasMessageContaining("something went wrong")
+      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
     }
   }
 

@@ -69,19 +69,19 @@ class OffenderEventListener(
 
   @SqsListener("offenderqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processOffenderEvent(requestJson: String?) {
-    val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)
-    val eventType = messageAttributes.eventType.Value
-    log.debug("Received message {} type {}", messageId, eventType)
-
-    when (eventType) {
-      "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
-      in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
-      in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message), eventType)
-      "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
-      in offenderEvent -> indexListenerService.offenderChange(fromJson(message), eventType)
-      "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message), eventType)
-      "OFFENDER_BOOKING-REASSIGNED" -> indexListenerService.offenderBookingReassigned(fromJson(message), eventType)
-      "AGENCY_INTERNAL_LOCATIONS-UPDATED" -> indexListenerService.prisonerLocationChange(fromJson(message), eventType)
+    try {
+      val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)
+      val eventType = messageAttributes.eventType.Value
+      log.debug("Received message {} type {}", messageId, eventType)
+      when (eventType) {
+        "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
+        in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
+        in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message), eventType)
+        "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
+        in offenderEvent -> indexListenerService.offenderChange(fromJson(message), eventType)
+        "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message), eventType)
+        "OFFENDER_BOOKING-REASSIGNED" -> indexListenerService.offenderBookingReassigned(fromJson(message), eventType)
+        "AGENCY_INTERNAL_LOCATIONS-UPDATED" -> indexListenerService.prisonerLocationChange(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
