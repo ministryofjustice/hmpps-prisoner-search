@@ -90,7 +90,7 @@ class OffenderEventListener(
         // This is not an error and so we want to avoid exceptions being logged
         val (message, _, messageAttributes) = fromJson<Message>(requestJson)
         log.info("Detected a seq_no+primary_term conflict and trying again for message:\n$message")
-        offenderEventQueueService.republishMessageWithDelay(
+        offenderEventQueueService.requeueMessageWithDelay(
           message,
           messageAttributes.eventType.Value,
           delayInSeconds = 1,

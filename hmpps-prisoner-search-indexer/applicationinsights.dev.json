@@ -48,30 +48,6 @@
           }
         ],
         "percentage": 10
-      },
-      {
-        "telemetryType": "exception",
-        "attributes": [
-          {
-            "key": "exception.stacktrace",
-            "value": ".*Cannot index a document due to seq_no.*",
-            "matchType": "regexp"
-          }
-        ],
-        "percentage": 0
-      }
-    ]
-  },
-  "preview": {
-    "processors": [
-      {
-        "type": "metric-filter",
-        "exclude": {
-          "matchType": "regexp",
-          "metricNames": [
-            "(cache|executor|disk|http|logback|spring_).*"
-          ]
-        }
       }
     ]
   }

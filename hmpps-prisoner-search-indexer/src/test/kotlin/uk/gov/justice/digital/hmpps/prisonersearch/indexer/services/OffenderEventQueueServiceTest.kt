@@ -74,4 +74,34 @@ internal class OffenderEventQueueServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class requeueMessageWithDelay {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(offenderEventSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
+    }
+
+    @Test
+    fun `will send message with delay`() {
+      offenderEventQueueService.requeueMessageWithDelay("message", "type", 2)
+      verify(offenderEventSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.messageBody()).isEqualTo("message")
+          assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("type")
+          assertThat(it.delaySeconds()).isEqualTo(2)
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to offender queue`() {
+      offenderEventQueueService.requeueMessageWithDelay("message", "type")
+      verify(offenderEventSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:offender-queue")
+        },
+      )
+    }
+  }
 }

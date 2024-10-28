@@ -239,7 +239,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         """.trimIndent(),
       )
 
-      verify(offenderEventQueueService).republishMessageWithDelay(
+      verify(offenderEventQueueService).requeueMessageWithDelay(
         """{"eventType":"OFFENDER_ADDRESS-INSERTED", "description": "desc", "additionalInformation": {"id":"12345", "nomsNumber":"A7089FD"}}""",
         event,
         1,
