@@ -15,6 +15,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import org.springframework.dao.OptimisticLockingFailureException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.ExternalPrisonerMovementMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
@@ -37,7 +38,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   inner class ProcessOffenderEvent {
     @ParameterizedTest
     @ValueSource(strings = ["EXTERNAL_MOVEMENT_RECORD-INSERTED", "EXTERNAL_MOVEMENT-CHANGED"])
-    internal fun `will call service for external movement`(eventType: String) {
+    fun `will call service for external movement`(eventType: String) {
       listener.processOffenderEvent(validExternalMovementMessage(eventType))
       verify(indexListenerService).externalMovement(ExternalPrisonerMovementMessage(bookingId = 12345L), eventType)
     }
@@ -51,14 +52,14 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         "SENTENCING-CHANGED", "ALERT-INSERTED", "ALERT-UPDATED",
       ],
     )
-    internal fun `will call service for booking change`(eventType: String) {
+    fun `will call service for booking change`(eventType: String) {
       listener.processOffenderEvent(validOffenderBookingChangedMessage(eventType))
       verify(indexListenerService).offenderBookingChange(OffenderBookingChangedMessage(bookingId = 4323342L), eventType)
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["BOOKING_NUMBER-CHANGED"])
-    internal fun `will call service for booking number change`(eventType: String) {
+    fun `will call service for booking number change`(eventType: String) {
       listener.processOffenderEvent(validOffenderBookingChangedMessage(eventType))
       verify(indexListenerService).offenderBookNumberChange(OffenderBookingChangedMessage(bookingId = 4323342L), eventType)
     }
@@ -74,7 +75,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         "OFFENDER_PHYSICAL_ATTRIBUTES-CHANGED", "OFFENDER_IDENTIFYING_MARKS-CHANGED", "OFFENDER_ADDRESS-DELETED",
       ],
     )
-    internal fun `will call service for offender change`(eventType: String) {
+    fun `will call service for offender change`(eventType: String) {
       listener.processOffenderEvent(validOffenderChangedMessage(eventType))
       verify(indexListenerService).offenderChange(
         OffenderChangedMessage(
@@ -88,7 +89,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
     @ParameterizedTest
     @ValueSource(strings = ["OFFENDER-DELETED"])
-    internal fun `will call service for offender deletion`(eventType: String) {
+    fun `will call service for offender deletion`(eventType: String) {
       listener.processOffenderEvent(validOffenderChangedMessage(eventType))
       verify(indexListenerService).maybeDeleteOffender(
         OffenderChangedMessage(
@@ -102,7 +103,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
     @ParameterizedTest
     @ValueSource(strings = ["ASSESSMENT-UPDATED"])
-    internal fun `will call republish message for assessment updated`(eventType: String) {
+    fun `will call republish message for assessment updated`(eventType: String) {
       val requestJson = validOffenderChangedMessage(eventType)
       listener.processOffenderEvent(requestJson)
       verify(offenderEventQueueService).republishMessageWithDelay(requestJson, eventType)
@@ -110,7 +111,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
     @ParameterizedTest
     @ValueSource(strings = ["OFFENDER_BOOKING-REASSIGNED"])
-    internal fun `will call service for booking reassignment`(eventType: String) {
+    fun `will call service for booking reassignment`(eventType: String) {
       val requestJson = validOffenderBookingReassignedMessage(eventType)
       listener.processOffenderEvent(requestJson)
       verify(indexListenerService).offenderBookingReassigned(
@@ -127,7 +128,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
     @ParameterizedTest
     @ValueSource(strings = ["AGENCY_INTERNAL_LOCATIONS-UPDATED"])
-    internal fun `will process an agency internal locations updated message`(eventType: String) {
+    fun `will process an agency internal locations updated message`(eventType: String) {
       val requestJson = validPrisonerLocationChangeMessage(eventType)
       listener.processOffenderEvent(requestJson)
       verify(indexListenerService).prisonerLocationChange(
@@ -140,7 +141,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     }
 
     @Test
-    internal fun `failed request`() {
+    fun `failed request`() {
       whenever(indexListenerService.externalMovement(any(), any())).thenThrow(RuntimeException("something went wrong"))
 
       assertThatThrownBy {
@@ -159,6 +160,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
           """.trimIndent(),
         )
       }.hasMessageContaining("something went wrong")
+      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
     }
   }
 
@@ -208,13 +210,44 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   @Nested
   inner class BadMessages {
     @Test
-    internal fun `will fail for bad json`() {
+    fun `will fail for bad json`() {
       assertThatThrownBy { listener.processOffenderEvent("this is bad json") }
         .isInstanceOf(JsonParseException::class.java)
+
+      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
     }
 
     @Test
-    internal fun `will ignore unknown message type`() {
+    fun `will requeue for version number clash`() {
+      val event = "OFFENDER_ADDRESS-INSERTED"
+      val message =
+        """{\"eventType\":\"$event\", \"description\": \"desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
+      whenever(indexListenerService.offenderChange(any(), any()))
+        .thenThrow(OptimisticLockingFailureException("stack trace ... Cannot index a document due to seq_no+primary_term conflict .."))
+      listener.processOffenderEvent(
+        """
+        {
+          "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
+          "Message": "$message",
+          "MessageAttributes": {
+            "eventType": {
+              "Type": "String",
+              "Value": "$event"
+            }
+          }
+        }
+        """.trimIndent(),
+      )
+
+      verify(offenderEventQueueService).republishMessageWithDelay(
+        """{"eventType":"OFFENDER_ADDRESS-INSERTED", "description": "desc", "additionalInformation": {"id":"12345", "nomsNumber":"A7089FD"}}""",
+        event,
+        1,
+      )
+    }
+
+    @Test
+    fun `will ignore unknown message type`() {
       listener.processOffenderEvent(
         """
         {

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
@@ -68,21 +69,39 @@ class OffenderEventListener(
 
   @SqsListener("offenderqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processOffenderEvent(requestJson: String?) {
-    val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)
-    val eventType = messageAttributes.eventType.Value
-    log.debug("Received message {} type {}", messageId, eventType)
+    try {
+      val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)
+      val eventType = messageAttributes.eventType.Value
+      log.debug("Received message {} type {}", messageId, eventType)
+      when (eventType) {
+        "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
+        in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
+        in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message), eventType)
+        "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
+        in offenderEvent -> indexListenerService.offenderChange(fromJson(message), eventType)
+        "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message), eventType)
+        "OFFENDER_BOOKING-REASSIGNED" -> indexListenerService.offenderBookingReassigned(fromJson(message), eventType)
+        "AGENCY_INTERNAL_LOCATIONS-UPDATED" -> indexListenerService.prisonerLocationChange(fromJson(message), eventType)
 
-    when (eventType) {
-      "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
-      in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
-      in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message), eventType)
-      "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
-      in offenderEvent -> indexListenerService.offenderChange(fromJson(message), eventType)
-      "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message), eventType)
-      "OFFENDER_BOOKING-REASSIGNED" -> indexListenerService.offenderBookingReassigned(fromJson(message), eventType)
-      "AGENCY_INTERNAL_LOCATIONS-UPDATED" -> indexListenerService.prisonerLocationChange(fromJson(message), eventType)
-
-      else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
+        else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
+      }
+    } catch (olfe: OptimisticLockingFailureException) {
+      if (true == olfe.message?.contains("Cannot index a document due to seq_no+primary_term conflict")) {
+        // This is not an error and so we want to avoid exceptions being logged
+        val (message, _, messageAttributes) = fromJson<Message>(requestJson)
+        log.info("Detected a seq_no+primary_term conflict and trying again for message:\n$message")
+        offenderEventQueueService.republishMessageWithDelay(
+          message,
+          messageAttributes.eventType.Value,
+          delayInSeconds = 1,
+        )
+      } else {
+        log.error("processOffenderEvent() Unexpected error", olfe)
+        throw olfe
+      }
+    } catch (e: Exception) {
+      log.error("processOffenderEvent() Unexpected error", e)
+      throw e
     }
   }
 
