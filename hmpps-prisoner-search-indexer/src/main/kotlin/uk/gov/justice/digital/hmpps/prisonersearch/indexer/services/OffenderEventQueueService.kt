@@ -21,7 +21,7 @@ class OffenderEventQueueService(
   private val offenderEventSqsClient by lazy { offenderEventQueue.sqsClient }
   private val offenderEventQueueUrl by lazy { offenderEventQueue.queueUrl }
 
-  fun republishMessageWithDelay(message: String, eventType: String, delayInSeconds: Int = republishDelayInSeconds) {
+  fun republishMessageWithDelay(message: String, eventType: String) {
     val republishEventType = "${eventType}_$REPUBLISH_SUFFIX"
     offenderEventSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(offenderEventQueueUrl)
@@ -29,10 +29,22 @@ class OffenderEventQueueService(
         // we've converted all the fields in the original JSON as the parser ignores unknown fields.
         .messageBody(message.replace(eventType, republishEventType))
         .eventTypeMessageAttributes(republishEventType)
+        .delaySeconds(republishDelayInSeconds)
+        .build(),
+    ).get().also {
+      log.info("Republished message of type {} with delay {} with id {}", eventType, republishDelayInSeconds, it.messageId())
+    }
+  }
+
+  fun requeueMessageWithDelay(message: String, eventType: String, delayInSeconds: Int = republishDelayInSeconds) {
+    offenderEventSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderEventQueueUrl)
+        .messageBody(message)
+        .eventTypeMessageAttributes(eventType)
         .delaySeconds(delayInSeconds)
         .build(),
     ).get().also {
-      log.info("Republished message of type {} with delay {} with id {}", eventType, delayInSeconds, it.messageId())
+      log.info("Requeued message of type {} with delay {} with id {}", eventType, delayInSeconds, it.messageId())
     }
   }
 
