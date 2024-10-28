@@ -73,6 +73,7 @@ class OffenderEventListener(
       val (message, messageId, messageAttributes) = fromJson<Message>(requestJson)
       val eventType = messageAttributes.eventType.Value
       log.debug("Received message {} type {}", messageId, eventType)
+
       when (eventType) {
         "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
         in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
