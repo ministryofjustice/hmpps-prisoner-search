@@ -224,7 +224,8 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         """{\"eventType\":\"$event\", \"description\": \"desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
       whenever(indexListenerService.offenderChange(any(), any()))
         .thenThrow(OptimisticLockingFailureException("stack trace ... Cannot index a document due to seq_no+primary_term conflict .."))
-      listener.processOffenderEvent(
+
+      val requestJson =
         """
         {
           "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
@@ -236,14 +237,11 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
             }
           }
         }
-        """.trimIndent(),
-      )
+        """.trimIndent()
 
-      verify(offenderEventQueueService).requeueMessageWithDelay(
-        """{"eventType":"OFFENDER_ADDRESS-INSERTED", "description": "desc", "additionalInformation": {"id":"12345", "nomsNumber":"A7089FD"}}""",
-        event,
-        1,
-      )
+      listener.processOffenderEvent(requestJson)
+
+      verify(offenderEventQueueService).requeueMessageWithDelay(requestJson, event, 1)
     }
 
     @Test
