@@ -48,18 +48,6 @@ class OffenderEventQueueService(
     }
   }
 
-  fun requeueMessageWithDelay(message: String, eventType: String, delayInSeconds: Int = republishDelayInSeconds) {
-    offenderEventSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(offenderEventQueueUrl)
-        .messageBody(message)
-        .eventTypeMessageAttributes(eventType)
-        .delaySeconds(delayInSeconds)
-        .build(),
-    ).get().also {
-      log.info("Requeued message of type {} with delay {} with id {}", eventType, delayInSeconds, it.messageId())
-    }
-  }
-
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val REPUBLISH_SUFFIX = "REPUBLISHED"
