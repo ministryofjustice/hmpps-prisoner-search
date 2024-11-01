@@ -37,7 +37,8 @@ class IndexListenerService(
       message.description,
       message.additionalInformation.prisonerNumber,
     )
-    syncBoth(message.additionalInformation.prisonerNumber, eventType)
+    syncGreenBlue(message.additionalInformation.prisonerNumber, eventType)
+    reindexRestrictedPatient(message.additionalInformation.prisonerNumber, eventType)
   }
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = syncBoth(message.bookingId, eventType)
@@ -142,6 +143,20 @@ class IndexListenerService(
           null
         } else {
           prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, eventType)
+        }
+      }
+  }
+
+  private fun reindexRestrictedPatient(prisonerNumber: String, eventType: String) {
+    indexStatusService.getIndexStatus()
+      .run {
+        if (activeIndexesEmpty()) {
+          log.info("Ignoring update of RestrictedPatient for {} as no indexes were active", prisonerNumber)
+          null
+        } else {
+          nomisService.getOffender(prisonerNumber)?.let { ob ->
+            prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, SyncIndex.RED, eventType)
+          }
         }
       }
   }

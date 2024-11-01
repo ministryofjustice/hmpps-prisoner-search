@@ -8,6 +8,19 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDe
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
+import kotlin.collections.filter
+import kotlin.collections.filterNot
+import kotlin.collections.firstOrNull
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
+import kotlin.collections.mutableListOf
+import kotlin.collections.plus
+import kotlin.comparisons.compareBy
+import kotlin.let
+import kotlin.text.all
+import kotlin.text.isNullOrBlank
+import kotlin.text.lowercase
+import kotlin.text.trim
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
@@ -124,15 +137,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.indeterminateSentence = ob.indeterminateSentence
 
   restrictedPatientData.onSuccess { rp ->
-    this.restrictedPatient = rp != null
-    this.locationDescription = rp
-      ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
-      ?: ob.locationDescription
-    this.supportingPrisonId = rp?.supportingPrisonId
-    this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
-    this.dischargedHospitalDescription = rp?.dischargedHospital?.description
-    this.dischargeDate = rp?.dischargeDate
-    this.dischargeDetails = rp?.dischargeDetails
+    setRestrictedPatient(rp, ob)
   }.onFailure {
     // couldn't grab the restricted patient data, so copy across the previous information
     this.locationDescription = existingPrisoner?.locationDescription
@@ -164,6 +169,21 @@ fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
     // ES only stores to the second
     dateTime = it.iepTime.withNano(0),
   )
+}
+
+fun Prisoner.setRestrictedPatient(
+  rp: RestrictedPatient?,
+  ob: OffenderBooking,
+) {
+  this.restrictedPatient = rp != null
+  this.locationDescription = rp
+    ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
+    ?: ob.locationDescription
+  this.supportingPrisonId = rp?.supportingPrisonId
+  this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
+  this.dischargedHospitalDescription = rp?.dischargedHospital?.description
+  this.dischargeDate = rp?.dischargeDate
+  this.dischargeDetails = rp?.dischargeDetails
 }
 
 private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? =
@@ -203,8 +223,8 @@ private fun NomisAddress.toAddress(): Address {
   when {
     hasPremise && premiseIsNumber && hasStreet -> address.add("$premise $street")
     hasPremise && !premiseIsNumber && hasStreet -> address.add("$premise, $street")
-    hasPremise -> address.add(premise!!)
-    hasStreet -> address.add(street!!)
+    hasPremise -> address.add(premise)
+    hasStreet -> address.add(street)
   }
   // Add others if they exist
   address.addIfNotEmpty(locality)

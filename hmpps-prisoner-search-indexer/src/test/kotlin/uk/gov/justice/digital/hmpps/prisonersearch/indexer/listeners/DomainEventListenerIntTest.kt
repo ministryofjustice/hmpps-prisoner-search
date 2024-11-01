@@ -20,13 +20,23 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 
 class DomainEventListenerIntTest : IntegrationTestBase() {
   @Test
-  fun `will index a prisoner when RP message received`() {
+  fun `will index a prisoner's RP data when RP message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FD"
-    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      bookingId = "1234"
+    }
+    prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, agencyId = "OUT"))
+    restrictedPatientsApi.stubGetRestrictedPatient(prisonerNumber)
+
+    reset(prisonerSpyBeanRepository) // zero the call count
 
     hmppsDomainSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
@@ -34,13 +44,29 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))
-      assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))!!.apply {
+        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(supportingPrisonId).isEqualTo("HOS1")
+      }
+      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
+        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(supportingPrisonId).isEqualTo("HOS1")
+      }
     }
+    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
+    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
+    verify(prisonerSpyBeanRepository, never()).updateIncentive(any(), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, times(1)).updateRestrictedPatient(
+      eq(prisonerNumber),
+      eq(true), eq("HOS1"), any(), any(), any(), any(), eq(SyncIndex.RED), any(),
+    )
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
   }
 
   @Test
-  fun `will update all indexes when rebuilding index`() {
+  fun `will update old indexes when rebuilding index`() {
     indexStatusRepository.save(
       IndexStatus(
         currentIndex = SyncIndex.GREEN,
@@ -63,9 +89,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(
         prisonerNumber,
       )
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.prisonerNumber).isEqualTo(
-        prisonerNumber,
-      )
+      // RED index cannot be updated when the prisoner not in the index
     }
   }
 
@@ -105,6 +129,10 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, never()).updateRestrictedPatient(
+      any(), any(), any(), any(),
+      any(), any(), any(), any(), any(),
+    )
   }
 }
 

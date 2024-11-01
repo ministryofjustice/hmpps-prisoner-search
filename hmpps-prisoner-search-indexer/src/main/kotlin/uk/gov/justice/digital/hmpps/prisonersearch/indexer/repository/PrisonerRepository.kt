@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import java.time.LocalDate
 
 @Repository
 class PrisonerRepository(
@@ -115,7 +116,47 @@ class PrisonerRepository(
       UpdateResponse.Result.DELETED,
       UpdateResponse.Result.NOT_FOUND,
       null,
-      -> throw IllegalStateException("Unexpected result ${response.result} from update of $prisonerNumber")
+      -> throw IllegalStateException("Unexpected result ${response.result} from incentive update of $prisonerNumber")
+    }
+  }
+
+  fun updateRestrictedPatient(
+    prisonerNumber: String,
+    restrictedPatient: Boolean,
+    supportingPrisonId: String? = null,
+    dischargedHospitalId: String? = null,
+    dischargedHospitalDescription: String? = null,
+    dischargeDate: LocalDate? = null,
+    dischargeDetails: String? = null,
+    index: SyncIndex,
+    summary: PrisonerDocumentSummary,
+  ): Boolean {
+    val map = mapOf(
+      "restrictedPatient" to restrictedPatient,
+      "supportingPrisonId" to supportingPrisonId,
+      "dischargedHospitalId" to dischargedHospitalId,
+      "dischargedHospitalDescription" to dischargedHospitalDescription,
+      "dischargeDate" to dischargeDate,
+      "dischargeDetails" to dischargeDetails,
+    )
+    val response = openSearchRestTemplate.update(
+      UpdateQuery.builder(prisonerNumber)
+        .withDocument(Document.from(map))
+        .withIfSeqNo(summary.sequenceNumber)
+        .withIfPrimaryTerm(summary.primaryTerm)
+        .build(),
+      index.toIndexCoordinates(),
+    )
+
+    return when (response.result) {
+      UpdateResponse.Result.NOOP -> false
+      UpdateResponse.Result.UPDATED -> true
+
+      UpdateResponse.Result.CREATED,
+      UpdateResponse.Result.DELETED,
+      UpdateResponse.Result.NOT_FOUND,
+      null,
+      -> throw IllegalStateException("Unexpected result ${response.result} from restricted patient update of $prisonerNumber")
     }
   }
 

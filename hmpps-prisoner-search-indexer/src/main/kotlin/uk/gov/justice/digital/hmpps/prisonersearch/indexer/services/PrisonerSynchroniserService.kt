@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setRestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
@@ -59,13 +60,11 @@ class PrisonerSynchroniserService(
   internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Boolean {
     val summary = prisonerRepository.getSummary(ob.offenderNo, SyncIndex.RED)
     val isChanged = summary?.run {
-      val restrictedPatient = runCatching { getRestrictedPatient(ob) }
-
       val prisoner = Prisoner().translate(
         existingPrisoner = summary.prisoner,
         ob = ob,
         incentiveLevel = Result.failure(Exception()),
-        restrictedPatientData = restrictedPatient,
+        restrictedPatientData = Result.failure(Exception()),
       )
       // opensearch reports if there are any differences
       val isUpdated = prisonerRepository.updatePrisoner(ob.offenderNo, prisoner, SyncIndex.RED, summary)
@@ -90,7 +89,6 @@ class PrisonerSynchroniserService(
           eventType = eventType,
         )
       }
-      restrictedPatient.onFailure { throw it }
       isUpdated
     } ?: run {
       // Need to create, which means calling all domain data too
@@ -120,6 +118,39 @@ class PrisonerSynchroniserService(
             TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE,
             prisonerNumber = prisonerNo,
             bookingId = bookingId,
+            eventType = eventType,
+          )
+        }
+      }
+
+  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) =
+    prisonerRepository.getSummary(prisonerNo, index)
+      ?.run {
+        val restrictedPatient = getRestrictedPatient(ob)
+        this.prisoner?.setRestrictedPatient(restrictedPatient, ob)
+        if (prisonerRepository.updateRestrictedPatient(
+            prisonerNo,
+            restrictedPatient = restrictedPatient != null,
+            this.prisoner?.supportingPrisonId,
+            this.prisoner?.dischargedHospitalId,
+            this.prisoner?.dischargedHospitalDescription,
+            this.prisoner?.dischargeDate,
+            this.prisoner?.dischargeDetails,
+            index,
+            this,
+          )
+        ) {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.RESTRICTED_PATIENT_UPDATED,
+            prisonerNumber = prisonerNo,
+            bookingId = ob.bookingId,
+            eventType = eventType,
+          )
+        } else {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE,
+            prisonerNumber = prisonerNo,
+            bookingId = ob.bookingId,
             eventType = eventType,
           )
         }
