@@ -424,7 +424,6 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will call restricted patients and save RP to current index if prisoner is outside`() {
-
       whenever(prisonerRepository.getSummary(prisonerNumber, RED)).thenReturn(prisonerDocumentSummary)
       whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
 
