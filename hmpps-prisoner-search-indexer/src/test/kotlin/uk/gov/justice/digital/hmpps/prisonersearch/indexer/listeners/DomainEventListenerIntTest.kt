@@ -6,6 +6,7 @@ import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
@@ -46,23 +47,22 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))!!.apply {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-        assertThat(supportingPrisonId).isEqualTo("HOS1")
+        assertThat(supportingPrisonId).isEqualTo("LEI")
       }
       prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-        assertThat(supportingPrisonId).isEqualTo("HOS1")
+        assertThat(dischargedHospitalId).isEqualTo("HOS1")
       }
     }
     verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
-    verify(prisonerSpyBeanRepository, never()).updateIncentive(any(), any(), eq(SyncIndex.RED), any())
     verify(prisonerSpyBeanRepository, times(1)).updateRestrictedPatient(
       eq(prisonerNumber),
-      eq(true), eq("HOS1"), any(), any(), any(), any(), eq(SyncIndex.RED), any(),
+      eq(true), eq("LEI"), eq("HOS1"), isNull(), any(), isNull(), eq(SyncIndex.RED), any(),
     )
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, never()).updateIncentive(any(), any(), any(), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
   }
 
   @Test
@@ -127,8 +127,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
     verify(prisonerSpyBeanRepository, never()).updateRestrictedPatient(
       any(), any(), any(), any(),
       any(), any(), any(), any(), any(),

@@ -34,9 +34,9 @@ class RestrictedPatientApiMockServer : WireMockServer(8095, ClasspathFileSource(
             {
               "id": 1000001,
               "prisonerNumber": "$prisonerNumber",
-              "supportingPrison": "agencyId": "LEI", "agencyType":  "INST", "active":  true},
+              "supportingPrison": {"agencyId": "LEI", "agencyType":  "INST", "active":  true},
               "hospitalLocation": {"agencyId": "HOS1", "agencyType":  "HOSP", "active":  true},
-              "dischargeTime": "2024-11-10T12:00:00",
+              "dischargeTime": "2024-11-10T12:00:00"
             }
             """.trimIndent(),
           ),
