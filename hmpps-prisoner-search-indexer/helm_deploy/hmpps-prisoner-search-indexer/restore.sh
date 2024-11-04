@@ -94,9 +94,9 @@ COUNT=0
 while [[ $(check_http GET "$OPENSEARCH_PROXY_URL/_cluster/health" | jq --raw-output .status) != "green" ]]; do
   echo -n "."
   COUNT=$((COUNT+1))
-  if [[ $COUNT -gt 30 ]]; then
+  if [[ $COUNT -gt 45 ]]; then
     echo -e "\nTimed out waiting for cluster to be healthy"
-    check_http GET --print=Hbh "$OPENSEARCH_PROXY_URL/_cluster/health?pretty=true"
+    check_http --print=Hbh GET "$OPENSEARCH_PROXY_URL/_cluster/health?pretty=true"
     exit 1
   fi
   sleep 10
