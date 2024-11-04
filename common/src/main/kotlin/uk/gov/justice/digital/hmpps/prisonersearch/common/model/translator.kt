@@ -8,19 +8,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDe
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
-import kotlin.collections.filter
-import kotlin.collections.filterNot
-import kotlin.collections.firstOrNull
-import kotlin.collections.map
-import kotlin.collections.mapNotNull
-import kotlin.collections.mutableListOf
-import kotlin.collections.plus
-import kotlin.comparisons.compareBy
-import kotlin.let
-import kotlin.text.all
-import kotlin.text.isNullOrBlank
-import kotlin.text.lowercase
-import kotlin.text.trim
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
@@ -140,8 +127,9 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
     setRestrictedPatient(rp, ob)
   }.onFailure {
     // couldn't grab the restricted patient data, so copy across the previous information
-    this.locationDescription = existingPrisoner?.locationDescription
-    this.restrictedPatient = existingPrisoner?.restrictedPatient ?: false
+    this.restrictedPatient = existingPrisoner?.restrictedPatient == true
+    // When this is a non-RP event and the prisoner is not an RP, use the ob data
+    this.locationDescription = if (restrictedPatient) existingPrisoner?.locationDescription else ob.locationDescription
     this.supportingPrisonId = existingPrisoner?.supportingPrisonId
     this.dischargedHospitalId = existingPrisoner?.dischargedHospitalId
     this.dischargedHospitalDescription = existingPrisoner?.dischargedHospitalDescription
