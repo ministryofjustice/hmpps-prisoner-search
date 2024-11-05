@@ -124,19 +124,12 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.indeterminateSentence = ob.indeterminateSentence
 
   restrictedPatientData.onSuccess { rp ->
-    this.restrictedPatient = rp != null
-    this.locationDescription = rp
-      ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
-      ?: ob.locationDescription
-    this.supportingPrisonId = rp?.supportingPrisonId
-    this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
-    this.dischargedHospitalDescription = rp?.dischargedHospital?.description
-    this.dischargeDate = rp?.dischargeDate
-    this.dischargeDetails = rp?.dischargeDetails
+    setRestrictedPatient(rp, ob)
   }.onFailure {
     // couldn't grab the restricted patient data, so copy across the previous information
-    this.locationDescription = existingPrisoner?.locationDescription
-    this.restrictedPatient = existingPrisoner?.restrictedPatient ?: false
+    this.restrictedPatient = existingPrisoner?.restrictedPatient == true
+    // When this is a non-RP event and the prisoner is not an RP, use the ob data
+    this.locationDescription = if (restrictedPatient) existingPrisoner?.locationDescription else ob.locationDescription
     this.supportingPrisonId = existingPrisoner?.supportingPrisonId
     this.dischargedHospitalId = existingPrisoner?.dischargedHospitalId
     this.dischargedHospitalDescription = existingPrisoner?.dischargedHospitalDescription
@@ -164,6 +157,21 @@ fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
     // ES only stores to the second
     dateTime = it.iepTime.withNano(0),
   )
+}
+
+fun Prisoner.setRestrictedPatient(
+  rp: RestrictedPatient?,
+  ob: OffenderBooking,
+) {
+  this.restrictedPatient = rp != null
+  this.locationDescription = rp
+    ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
+    ?: ob.locationDescription
+  this.supportingPrisonId = rp?.supportingPrisonId
+  this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
+  this.dischargedHospitalDescription = rp?.dischargedHospital?.description
+  this.dischargeDate = rp?.dischargeDate
+  this.dischargeDetails = rp?.dischargeDetails
 }
 
 private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? =
@@ -203,8 +211,8 @@ private fun NomisAddress.toAddress(): Address {
   when {
     hasPremise && premiseIsNumber && hasStreet -> address.add("$premise $street")
     hasPremise && !premiseIsNumber && hasStreet -> address.add("$premise, $street")
-    hasPremise -> address.add(premise!!)
-    hasStreet -> address.add(street!!)
+    hasPremise -> address.add(premise)
+    hasStreet -> address.add(street)
   }
   // Add others if they exist
   address.addIfNotEmpty(locality)

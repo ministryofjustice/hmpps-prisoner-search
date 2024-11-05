@@ -21,6 +21,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -34,6 +36,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.Result
 
@@ -270,69 +273,6 @@ internal class PrisonerSynchroniserServiceTest {
     }
 
     @Test
-    fun `will not call restricted patients if prisoner in a prison`() {
-      val prisonBooking = OffenderBookingBuilder().anOffenderBooking().copy(
-        assignedLivingUnit = AssignedLivingUnit(
-          agencyId = "MDI",
-          locationId = 1,
-          description = "Moorland",
-          agencyName = "Moorland",
-        ),
-      )
-
-      service.reindexUpdate(prisonBooking, "event")
-
-      verifyNoInteractions(restrictedPatientService)
-    }
-
-    @Test
-    fun `will not call restricted patients if assigned living unit not set`() {
-      val noLivingUnitBooking = OffenderBookingBuilder().anOffenderBooking().copy(
-        assignedLivingUnit = null,
-      )
-
-      service.reindexUpdate(noLivingUnitBooking, "event")
-
-      verifyNoInteractions(restrictedPatientService)
-    }
-
-    @Test
-    fun `will call restricted patients if prisoner is outside`() {
-      val outsidePrisoner = OffenderBookingBuilder().anOffenderBooking().copy(
-        assignedLivingUnit = AssignedLivingUnit(
-          agencyId = "OUT",
-          locationId = 1,
-          description = "Outside",
-          agencyName = "Outside Prison",
-        ),
-      )
-      whenever(prisonerRepository.getSummary(outsidePrisoner.offenderNo, RED)).thenReturn(prisonerDocumentSummary)
-
-      service.reindexUpdate(outsidePrisoner, "event")
-
-      verify(restrictedPatientService).getRestrictedPatient("A1234AA")
-    }
-
-    @Test
-    fun `will throw exception if restricted patients service call fails, but still save prisoner`() {
-      val outsidePrisoner = OffenderBookingBuilder().anOffenderBooking().copy(
-        assignedLivingUnit = AssignedLivingUnit(
-          agencyId = "OUT",
-          locationId = 1,
-          description = "Outside",
-          agencyName = "Outside Prison",
-        ),
-      )
-      whenever(restrictedPatientService.getRestrictedPatient(any())).thenThrow(RuntimeException("not today thank you"))
-      whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(prisonerDocumentSummary)
-
-      assertThatThrownBy { service.reindexUpdate(outsidePrisoner, "event") }
-        .hasMessage("not today thank you")
-
-      verify(prisonerRepository, times(1)).updatePrisoner(isA(), isA(), isA(), isA())
-    }
-
-    @Test
     fun `will update domain data if nomis booking id has changed`() {
       val changedBookingId = 112233L
       val newIncentive =
@@ -381,15 +321,6 @@ internal class PrisonerSynchroniserServiceTest {
     }
     private val prisonerDocumentSummary =
       PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
-
-    @Test
-    fun `will save incentive to repository`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
-
-      verify(prisonerRepository).updateIncentive(eq(prisonerNumber), isA(), isA(), isA())
-    }
 
     @Test
     fun `will save incentive to current index`() {
@@ -467,6 +398,183 @@ internal class PrisonerSynchroniserServiceTest {
   }
 
   @Nested
+  inner class ReindexRestrictedPatient {
+    private val prisonerNumber = "A1234AA"
+    val outsidePrisoner = OffenderBookingBuilder().anOffenderBooking(offenderNo = prisonerNumber).copy(
+      assignedLivingUnit = AssignedLivingUnit(
+        agencyId = "OUT",
+        locationId = 1,
+        description = "Outside",
+        agencyName = "Outside Prison",
+      ),
+    )
+    private val bookingId = outsidePrisoner.bookingId
+    private val newRestrictedPatient = RestrictedPatient(
+      "SWI",
+      Agency("HOS2", null, null, "HOSP", true),
+      LocalDate.parse("2024-10-25"),
+      null,
+    )
+    val prisoner = Prisoner().apply {
+      bookingId = this@ReindexRestrictedPatient.bookingId.toString()
+      supportingPrisonId = "MDI"
+    }
+    private val prisonerDocumentSummary =
+      PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
+
+    @Test
+    fun `will call restricted patients and save RP to current index if prisoner is outside`() {
+      whenever(prisonerRepository.getSummary(prisonerNumber, RED)).thenReturn(prisonerDocumentSummary)
+      whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
+
+      whenever(
+        prisonerRepository.updateRestrictedPatient(
+          eq(prisonerNumber),
+          any(),
+          any(),
+          any(),
+          any(),
+          any(),
+          any(),
+          any(),
+          any(),
+          any(),
+        ),
+      ).thenReturn(true)
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, RED, "event")
+
+      verify(restrictedPatientService).getRestrictedPatient(prisonerNumber)
+      verify(prisonerRepository).updateRestrictedPatient(
+        eq(prisonerNumber),
+        eq(true),
+        isA(),
+        isA(),
+        isNull(),
+        isA(),
+        isNull(),
+        any(),
+        eq(RED),
+        eq(prisonerDocumentSummary),
+      )
+    }
+
+    @Test
+    fun `will create telemetry`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
+      whenever(
+        prisonerRepository.updateRestrictedPatient(
+          eq(prisonerNumber),
+          any(),
+          isA(),
+          isA(),
+          isNull(),
+          isA(),
+          isNull(),
+          any(),
+          any(),
+          any(),
+        ),
+      ).thenReturn(true)
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.RESTRICTED_PATIENT_UPDATED.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", prisonerNumber),
+            entry("bookingId", bookingId.toString()),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will not save prisoner if no changes`() {
+      whenever(prisonerRepository.getSummary(eq(prisonerNumber), any())).thenReturn(prisonerDocumentSummary)
+      whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
+      whenever(
+        prisonerRepository.updateRestrictedPatient(
+          eq("A1234AA"),
+          any(),
+          isA(),
+          isA(),
+          isA(),
+          isA(),
+          isA(),
+          any(),
+          any(),
+          any(),
+        ),
+      ).thenReturn(false)
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", prisonerNumber),
+            entry("bookingId", bookingId.toString()),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will do nothing if prisoner not found`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(null)
+
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+
+      verifyNoInteractions(incentivesService)
+      verify(prisonerRepository, never()).updateIncentive(any(), any(), any(), any())
+    }
+
+    @Test
+    fun `will NOT call prisoner difference to handle differences`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
+      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any(), any())).thenReturn(true)
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+
+      verifyNoInteractions(prisonerDifferenceService)
+    }
+
+    @Test
+    fun `will not call restricted patients if prisoner in a prison`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      val prisonBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = prisonerNumber).copy(
+        assignedLivingUnit = AssignedLivingUnit(
+          agencyId = "MDI",
+          locationId = 1,
+          description = "Moorland",
+          agencyName = "Moorland",
+        ),
+      )
+
+      service.reindexRestrictedPatient(prisonerNumber, prisonBooking, GREEN, "event")
+
+      verifyNoInteractions(restrictedPatientService)
+    }
+
+    @Test
+    fun `will not call restricted patients if assigned living unit not set`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      val noLivingUnitBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = prisonerNumber).copy(
+        assignedLivingUnit = null,
+      )
+
+      service.reindexRestrictedPatient(noLivingUnitBooking.offenderNo, noLivingUnitBooking, GREEN, "event")
+
+      verifyNoInteractions(restrictedPatientService)
+    }
+  }
+
+  @Nested
   inner class Index {
     private val booking = OffenderBookingBuilder().anOffenderBooking()
 
@@ -481,10 +589,8 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will save prisoner to current index`() {
       service.index(booking, GREEN)
 
-      verify(prisonerRepository)
-        .save(isA(), check { assertThat(it).isEqualTo(RED) })
-      verify(prisonerRepository)
-        .save(isA(), check { assertThat(it).isEqualTo(GREEN) })
+      verify(prisonerRepository).save(isA(), eq(RED))
+      verify(prisonerRepository).save(isA(), eq(GREEN))
     }
 
     @Test
