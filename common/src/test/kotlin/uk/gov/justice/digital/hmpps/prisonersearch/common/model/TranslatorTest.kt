@@ -416,14 +416,14 @@ class TranslatorTest {
     @Test
     internal fun `will fall back to booking locationDescription on failure or not an RP event`() {
       val existingPrisoner = Prisoner().translate(
-        ob = aBooking().copy(locationDescription = "OUT"),
+        ob = aBooking(),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.failure(Exception()),
       )
 
       val prisoner = Prisoner().translate(
         existingPrisoner,
-        aBooking(),
+        aBooking().copy(locationDescription = "OUT"),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
       )
@@ -461,7 +461,7 @@ class TranslatorTest {
       )
 
       assertThat(prisoner.restrictedPatient).isFalse()
-      assertThat(prisoner.locationDescription).isEqualTo("OUT")
+      assertThat(prisoner.dischargedHospitalId).isNull()
       assertThat(prisoner.supportingPrisonId).isNull()
     }
   }
