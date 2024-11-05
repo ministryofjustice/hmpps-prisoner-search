@@ -438,6 +438,7 @@ internal class PrisonerSynchroniserServiceTest {
           any(),
           any(),
           any(),
+          any(),
         ),
       ).thenReturn(true)
       service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, RED, "event")
@@ -451,6 +452,7 @@ internal class PrisonerSynchroniserServiceTest {
         isNull(),
         isA(),
         isNull(),
+        any(),
         eq(RED),
         eq(prisonerDocumentSummary),
       )
@@ -469,6 +471,7 @@ internal class PrisonerSynchroniserServiceTest {
           isNull(),
           isA(),
           isNull(),
+          any(),
           any(),
           any(),
         ),
@@ -501,6 +504,7 @@ internal class PrisonerSynchroniserServiceTest {
           isA(),
           isA(),
           isA(),
+          any(),
           any(),
           any(),
         ),

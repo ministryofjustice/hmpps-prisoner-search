@@ -128,6 +128,7 @@ class PrisonerRepository(
     dischargedHospitalDescription: String? = null,
     dischargeDate: LocalDate? = null,
     dischargeDetails: String? = null,
+    locationDescription: String? = null,
     index: SyncIndex,
     summary: PrisonerDocumentSummary,
   ): Boolean {
@@ -138,6 +139,7 @@ class PrisonerRepository(
       "dischargedHospitalDescription" to dischargedHospitalDescription,
       "dischargeDate" to dischargeDate,
       "dischargeDetails" to dischargeDetails,
+      "locationDescription" to locationDescription,
     )
     val response = openSearchRestTemplate.update(
       UpdateQuery.builder(prisonerNumber)

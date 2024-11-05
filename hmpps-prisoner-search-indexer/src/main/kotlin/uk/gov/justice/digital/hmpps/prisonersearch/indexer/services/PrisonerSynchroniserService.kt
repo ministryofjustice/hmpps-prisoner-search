@@ -136,6 +136,7 @@ class PrisonerSynchroniserService(
             this.prisoner?.dischargedHospitalDescription,
             this.prisoner?.dischargeDate,
             this.prisoner?.dischargeDetails,
+            this.prisoner?.locationDescription,
             index,
             this,
           )

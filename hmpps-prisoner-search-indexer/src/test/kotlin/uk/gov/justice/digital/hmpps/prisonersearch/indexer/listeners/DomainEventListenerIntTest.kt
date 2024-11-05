@@ -59,7 +59,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, times(1)).updateRestrictedPatient(
       eq(prisonerNumber),
-      eq(true), eq("LEI"), eq("HOS1"), isNull(), any(), isNull(), eq(SyncIndex.RED), any(),
+      eq(true), eq("LEI"), eq("HOS1"), isNull(), any(), isNull(), any(), eq(SyncIndex.RED), any(),
     )
     verify(prisonerSpyBeanRepository, never()).updateIncentive(any(), any(), any(), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
@@ -129,7 +129,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
     verify(prisonerSpyBeanRepository, never()).updateRestrictedPatient(
-      any(), any(), any(), any(),
+      any(), any(), any(), any(), any(),
       any(), any(), any(), any(), any(),
     )
   }
