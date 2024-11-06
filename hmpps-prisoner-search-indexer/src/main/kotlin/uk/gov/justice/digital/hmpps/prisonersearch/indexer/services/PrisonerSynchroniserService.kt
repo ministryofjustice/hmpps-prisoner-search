@@ -7,7 +7,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setRestrictedPatient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setLocationDescription
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setRestrictedPatientFields
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
@@ -127,7 +128,8 @@ class PrisonerSynchroniserService(
     prisonerRepository.getSummary(prisonerNo, index)
       ?.run {
         val restrictedPatient = getRestrictedPatient(ob)
-        this.prisoner?.setRestrictedPatient(restrictedPatient, ob)
+        this.prisoner?.setLocationDescription(restrictedPatient, ob)
+        this.prisoner?.setRestrictedPatientFields(restrictedPatient)
         if (prisonerRepository.updateRestrictedPatient(
             prisonerNo,
             restrictedPatient = restrictedPatient != null,

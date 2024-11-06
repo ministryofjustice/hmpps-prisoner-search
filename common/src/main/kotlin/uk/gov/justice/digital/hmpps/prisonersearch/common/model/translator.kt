@@ -124,12 +124,15 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.indeterminateSentence = ob.indeterminateSentence
 
   restrictedPatientData.onSuccess { rp ->
-    setRestrictedPatient(rp, ob)
+    setLocationDescription(rp, ob)
+    setRestrictedPatientFields(rp)
   }.onFailure {
     // couldn't grab the restricted patient data, so copy across the previous information
     this.restrictedPatient = existingPrisoner?.restrictedPatient == true
+
     // When this is a non-RP event and the prisoner is not an RP, use the ob data
     this.locationDescription = if (restrictedPatient) existingPrisoner?.locationDescription else ob.locationDescription
+
     this.supportingPrisonId = existingPrisoner?.supportingPrisonId
     this.dischargedHospitalId = existingPrisoner?.dischargedHospitalId
     this.dischargedHospitalDescription = existingPrisoner?.dischargedHospitalDescription
@@ -159,14 +162,14 @@ fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
   )
 }
 
-fun Prisoner.setRestrictedPatient(
-  rp: RestrictedPatient?,
-  ob: OffenderBooking,
-) {
-  this.restrictedPatient = rp != null
+fun Prisoner.setLocationDescription(rp: RestrictedPatient?, ob: OffenderBooking) {
   this.locationDescription = rp
     ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
     ?: ob.locationDescription
+}
+
+fun Prisoner.setRestrictedPatientFields(rp: RestrictedPatient?) {
+  this.restrictedPatient = rp != null
   this.supportingPrisonId = rp?.supportingPrisonId
   this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
   this.dischargedHospitalDescription = rp?.dischargedHospital?.description
