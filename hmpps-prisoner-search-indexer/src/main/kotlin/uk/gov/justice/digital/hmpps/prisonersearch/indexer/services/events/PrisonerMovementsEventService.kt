@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
@@ -37,24 +39,37 @@ class PrisonerMovementsEventService(
   private val domainEventEmitter: HmppsDomainEventEmitter,
   private val telemetryClient: TelemetryClient,
 ) {
+  private companion object {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
   fun generateAnyEvents(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
     offenderBooking: OffenderBooking,
+    red: Boolean = false,
   ) {
     when (val movementChange = calculateMovementChange(previousPrisonerSnapshot, prisoner, offenderBooking)) {
       PossibleMovementChange.None -> {}
-      is MovementInChange -> domainEventEmitter.emitPrisonerReceiveEvent(
-        offenderNo = movementChange.offenderNo,
-        reason = movementChange.reason,
-        prisonId = movementChange.prisonId,
-      )
+      is MovementInChange -> if (red) {
+        log.info("Simulated emitPrisonerReceiveEvent from RED index: prisoner {}", prisoner.prisonerNumber)
+      } else {
+        domainEventEmitter.emitPrisonerReceiveEvent(
+          offenderNo = movementChange.offenderNo,
+          reason = movementChange.reason,
+          prisonId = movementChange.prisonId,
+        )
+      }
 
-      is PossibleMovementChange.MovementOutChange -> domainEventEmitter.emitPrisonerReleaseEvent(
-        offenderNo = movementChange.offenderNo,
-        reason = movementChange.reason,
-        prisonId = movementChange.prisonId,
-      )
+      is PossibleMovementChange.MovementOutChange -> if (red) {
+        log.info("Simulated emitPrisonerReleaseEvent from RED index: prisoner {}", prisoner.prisonerNumber)
+      } else {
+        domainEventEmitter.emitPrisonerReleaseEvent(
+          offenderNo = movementChange.offenderNo,
+          reason = movementChange.reason,
+          prisonId = movementChange.prisonId,
+        )
+      }
     }
   }
 

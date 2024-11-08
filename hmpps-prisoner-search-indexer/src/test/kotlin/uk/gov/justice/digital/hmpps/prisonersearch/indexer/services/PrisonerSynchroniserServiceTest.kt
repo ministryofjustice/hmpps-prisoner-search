@@ -36,6 +36,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.Result
@@ -48,12 +50,17 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
+  private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
+  private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
+
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
     telemetryClient,
     restrictedPatientService,
     incentivesService,
     prisonerDifferenceService,
+    prisonerMovementsEventService,
+    alertsUpdatedEventService,
   )
 
   @Nested
