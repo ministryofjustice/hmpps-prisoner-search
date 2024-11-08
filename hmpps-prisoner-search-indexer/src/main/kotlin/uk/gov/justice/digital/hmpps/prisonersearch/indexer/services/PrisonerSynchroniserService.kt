@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 
 @Service
 class PrisonerSynchroniserService(
@@ -25,6 +27,8 @@ class PrisonerSynchroniserService(
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
+  private val prisonerMovementsEventService: PrisonerMovementsEventService,
+  private val alertsUpdatedEventService: AlertsUpdatedEventService,
 ) {
 
   // called when prisoner updated or manual prisoner index required
@@ -43,7 +47,10 @@ class PrisonerSynchroniserService(
     // only save to open search if we encounter any differences
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
-      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
+      if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)) {
+        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
+        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
+      }
     } else {
       telemetryClient.trackPrisonerEvent(
         PRISONER_OPENSEARCH_NO_CHANGE,
@@ -81,7 +88,10 @@ class PrisonerSynchroniserService(
         // If the current booking id changed, some domain data needs updating too, retrieving using the new booking id
         if (summary.prisoner?.bookingId?.toLong() != ob.bookingId) {
           reindexIncentive(ob.offenderNo, SyncIndex.RED, eventType)
+          reindexRestrictedPatient(ob.offenderNo, ob, SyncIndex.RED, eventType)
         }
+        prisonerMovementsEventService.generateAnyEvents(summary.prisoner, prisoner, ob, red = true)
+        alertsUpdatedEventService.generateAnyEvents(summary.prisoner, prisoner, red = true)
       } else {
         telemetryClient.trackPrisonerEvent(
           TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE,
@@ -187,7 +197,10 @@ class PrisonerSynchroniserService(
 
       indices.map { prisonerRepository.save(prisoner, it) }
       if (label == PrisonerDifferencesLabel.GREEN_BLUE) {
-        prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
+        if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")) {
+          prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
+          alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
+        }
       }
     }
   }

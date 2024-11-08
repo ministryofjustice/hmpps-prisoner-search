@@ -34,9 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -47,8 +45,6 @@ class PrisonerDifferenceServiceTest {
   private val diffProperties = mock<DiffProperties>()
   private val prisonerHashRepository = mock<PrisonerHashRepository>()
   private val objectMapper = mock<ObjectMapper>()
-  private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
-  private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
   private val prisonerDifferencesRepository = mock<PrisonerDifferencesRepository>()
 
   private val prisonerDifferenceService = PrisonerDifferenceService(
@@ -57,8 +53,6 @@ class PrisonerDifferenceServiceTest {
     diffProperties,
     prisonerHashRepository,
     objectMapper,
-    prisonerMovementsEventService,
-    alertsUpdatedEventService,
     prisonerDifferencesRepository,
   )
 
