@@ -96,6 +96,7 @@ cron:
   index_size_schedule: "*/10 * * * *"
   check_index_schedule: "*/15 * * * *"
   index_refresh_schedule: "05 21 * * *"
+  # remove_differences_schedule should be a short period before the index_refresh_schedule:
   remove_differences_schedule: "55 20 * * *"
   snapshot_schedule: "42 1 * * *"
 
