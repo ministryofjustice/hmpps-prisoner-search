@@ -86,6 +86,18 @@ internal class PrisonerSynchroniserServiceTest {
     }
 
     @Test
+    fun `will generate domain events`() {
+      val existingPrisoner = Prisoner()
+      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
+      whenever(prisonerDifferenceService.handleDifferences(eq(existingPrisoner), eq(booking), any(), eq("event"))).thenReturn(true)
+      service.reindex(booking, listOf(GREEN), "event")
+
+      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(false))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(false))
+    }
+
+    @Test
     fun `will not save prisoner if no changes`() {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
@@ -248,6 +260,18 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindexUpdate(booking, "event")
 
       verify(prisonerRepository, times(1)).save(isA(), isA())
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      val existingPrisoner = Prisoner()
+      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
+      whenever(prisonerDifferenceService.handleDifferences(eq(existingPrisoner), eq(booking), any(), eq("event"))).thenReturn(true)
+      service.reindexUpdate(booking, "event")
+
+      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(false))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(false))
     }
 
     @Test

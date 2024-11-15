@@ -117,21 +117,17 @@ class PrisonerSynchroniserService(
         val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
         val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
 
-        if (prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)) {
-          telemetryClient.trackPrisonerEvent(
-            TelemetryEvents.INCENTIVE_UPDATED,
-            prisonerNumber = prisonerNo,
-            bookingId = bookingId,
-            eventType = eventType,
-          )
-        } else {
-          telemetryClient.trackPrisonerEvent(
-            TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE,
-            prisonerNumber = prisonerNo,
-            bookingId = bookingId,
-            eventType = eventType,
-          )
-        }
+        val updated = prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
+        telemetryClient.trackPrisonerEvent(
+          if (updated) {
+            TelemetryEvents.INCENTIVE_UPDATED
+          } else {
+            TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE
+          },
+          prisonerNumber = prisonerNo,
+          bookingId = bookingId,
+          eventType = eventType,
+        )
       }
 
   internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) =
@@ -140,33 +136,29 @@ class PrisonerSynchroniserService(
         val restrictedPatient = getRestrictedPatient(ob)
         this.prisoner?.setLocationDescription(restrictedPatient, ob)
         this.prisoner?.setRestrictedPatientFields(restrictedPatient)
-        if (prisonerRepository.updateRestrictedPatient(
-            prisonerNo,
-            restrictedPatient = restrictedPatient != null,
-            this.prisoner?.supportingPrisonId,
-            this.prisoner?.dischargedHospitalId,
-            this.prisoner?.dischargedHospitalDescription,
-            this.prisoner?.dischargeDate,
-            this.prisoner?.dischargeDetails,
-            this.prisoner?.locationDescription,
-            index,
-            this,
-          )
-        ) {
-          telemetryClient.trackPrisonerEvent(
-            TelemetryEvents.RESTRICTED_PATIENT_UPDATED,
-            prisonerNumber = prisonerNo,
-            bookingId = ob.bookingId,
-            eventType = eventType,
-          )
-        } else {
-          telemetryClient.trackPrisonerEvent(
-            TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE,
-            prisonerNumber = prisonerNo,
-            bookingId = ob.bookingId,
-            eventType = eventType,
-          )
-        }
+
+        val updated = prisonerRepository.updateRestrictedPatient(
+          prisonerNo,
+          restrictedPatient = restrictedPatient != null,
+          this.prisoner?.supportingPrisonId,
+          this.prisoner?.dischargedHospitalId,
+          this.prisoner?.dischargedHospitalDescription,
+          this.prisoner?.dischargeDate,
+          this.prisoner?.dischargeDetails,
+          this.prisoner?.locationDescription,
+          index,
+          this,
+        )
+        telemetryClient.trackPrisonerEvent(
+          if (updated) {
+            TelemetryEvents.RESTRICTED_PATIENT_UPDATED
+          } else {
+            TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE
+          },
+          prisonerNumber = prisonerNo,
+          bookingId = ob.bookingId,
+          eventType = eventType,
+        )
       }
 
   // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
@@ -201,6 +193,9 @@ class PrisonerSynchroniserService(
           prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
           alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
         }
+      } else {
+        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
+        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner, red = true)
       }
     }
   }
