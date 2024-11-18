@@ -8,6 +8,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.Hibernate
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.UUID
@@ -16,6 +18,12 @@ import java.util.UUID
 interface PrisonerDifferencesRepository : JpaRepository<PrisonerDifferences, UUID> {
   fun findByNomsNumber(nomsNumber: String): List<PrisonerDifferences>
   fun findByLabelAndDateTimeBetween(label: PrisonerDifferencesLabel, from: Instant, to: Instant): List<PrisonerDifferences>
+
+  // This query needs to be native to avoid JPA doing a lot of unnecessary extra work
+  // and running out of memory when there is a lot of rows to delete
+  // (e.g. JPA would raise events for each row deleted)
+  @Query("delete from PRISONER_DIFFERENCES p where p.DATE_TIME < :to", nativeQuery = true)
+  @Modifying
   fun deleteByDateTimeBefore(to: Instant): Int
 }
 
