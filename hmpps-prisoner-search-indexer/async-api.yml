@@ -30,6 +30,8 @@ components:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-released.yaml
     prisoner-offender-search.prisoner.updated:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-updated.yaml
+    prisoner-offender-search.prisoner.removed:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-removed.yaml
     prisoner-offender-search.prisoner.alerts-updated:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-alerts-updated.yaml
 
@@ -49,6 +51,8 @@ channels:
         $ref: '#/components/messages/prisoner-offender-search.prisoner.released'
       prisoner-offender-search.prisoner.updated:
         $ref: '#/components/messages/prisoner-offender-search.prisoner.updated'
+      prisoner-offender-search.prisoner.removed:
+        $ref: '#/components/messages/prisoner-offender-search.prisoner.removed'
       prisoner-offender-search.prisoner.alerts-updated:
         $ref: '#/components/messages/prisoner-offender-search.prisoner.alerts-updated'
 
@@ -62,4 +66,5 @@ operations:
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.received'
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.released'
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.removed'
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.alerts-updated'

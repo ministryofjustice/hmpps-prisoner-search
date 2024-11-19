@@ -147,6 +147,25 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `sends prisoner removed events to the domain topic`() {
+    hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender")
+
+    await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
+
+    val result = hmppsEventsQueue.sqsClient.receiveFirstMessage()
+    hmppsEventsQueue.sqsClient.deleteLastMessage(result)
+
+    val message: MsgBody = objectMapper.readValue(result.body())
+
+    assertThatJson(message.Message).node("eventType").isEqualTo("test.prisoner-offender-search.prisoner.removed")
+    assertThatJson(message.Message).node("version").isEqualTo(1)
+    assertThatJson(message.Message).node("occurredAt").isEqualTo("2022-09-16T11:40:34+01:00")
+    assertThatJson(message.Message).node("detailUrl").isEqualTo("http://localhost:8080/prisoner/some_offender")
+    assertThatJson(message.Message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
+    assertThatJson(message.Message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
+  }
+
+  @Test
   fun `sends prisoner received events to the domain topic`() {
     hmppsDomainEventEmitter.emitPrisonerReceiveEvent(
       "some_offender",

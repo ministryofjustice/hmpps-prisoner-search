@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_ALERTS_UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_RECEIVED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_RELEASED_EVENT_TYPE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_REMOVED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
@@ -102,6 +103,13 @@ class HmppsDomainEventEmitter(
     }
   }
 
+  fun emitPrisonerRemovedEvent(offenderNo: String) {
+    PrisonerRemovedDomainEvent(PrisonerRemovedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
+      log.error("Failed to send event {} for offenderNo={}. Event will be retried", PRISONER_REMOVED_EVENT_TYPE, offenderNo)
+      throw it
+    }
+  }
+
   fun emitPrisonerReceiveEvent(
     offenderNo: String,
     reason: PrisonerReceiveReason,
@@ -162,6 +170,7 @@ class HmppsDomainEventEmitter(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val UPDATED_EVENT_TYPE = "prisoner-offender-search.prisoner.updated"
     const val CREATED_EVENT_TYPE = "prisoner-offender-search.prisoner.created"
+    const val PRISONER_REMOVED_EVENT_TYPE = "prisoner-offender-search.prisoner.removed"
     const val PRISONER_RECEIVED_EVENT_TYPE = "prisoner-offender-search.prisoner.received"
     const val PRISONER_RELEASED_EVENT_TYPE = "prisoner-offender-search.prisoner.released"
     const val PRISONER_ALERTS_UPDATED_EVENT_TYPE = "prisoner-offender-search.prisoner.alerts-updated"
@@ -230,6 +239,16 @@ class PrisonerCreatedDomainEvent(additionalInformation: PrisonerCreatedEvent, oc
     occurredAt = occurredAt,
     description = "A prisoner record has been created",
     eventType = CREATED_EVENT_TYPE,
+  )
+
+data class PrisonerRemovedEvent(override val nomsNumber: String) : PrisonerAdditionalInformation
+class PrisonerRemovedDomainEvent(additionalInformation: PrisonerRemovedEvent, occurredAt: Instant, host: String) :
+  PrisonerDomainEvent<PrisonerRemovedEvent>(
+    additionalInformation = additionalInformation,
+    host = host,
+    occurredAt = occurredAt,
+    description = "A prisoner record has been removed",
+    eventType = PRISONER_REMOVED_EVENT_TYPE,
   )
 
 data class PrisonerReceivedEvent(
