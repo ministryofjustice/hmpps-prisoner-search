@@ -91,6 +91,18 @@ class HmppsDomainEventsEmitterTest {
   }
 
   @Nested
+  inner class PrisonerRemovedEvent {
+    @Test
+    fun `should not swallow exceptions`() {
+      whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
+
+      assertThatThrownBy {
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender")
+      }.isInstanceOf(RuntimeException::class.java)
+    }
+  }
+
+  @Nested
   inner class PrisonerReceivedEvent {
     @Test
     fun `should also log event`() {

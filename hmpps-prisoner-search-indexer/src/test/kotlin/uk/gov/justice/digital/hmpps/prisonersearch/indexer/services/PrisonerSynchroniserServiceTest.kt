@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -52,6 +53,7 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
   private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
   private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
+  private val hmppsDomainEventEmitter = mock<HmppsDomainEventEmitter>()
 
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
@@ -61,6 +63,7 @@ internal class PrisonerSynchroniserServiceTest {
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
+    hmppsDomainEventEmitter,
   )
 
   @Nested
@@ -837,6 +840,13 @@ internal class PrisonerSynchroniserServiceTest {
       service.delete("ABC123D")
 
       verify(prisonerRepository).delete("ABC123D")
+    }
+
+    @Test
+    fun `will call events emitter to record removal of the prisoner`() {
+      service.delete("ABC123D")
+
+      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("ABC123D")
     }
   }
 }
