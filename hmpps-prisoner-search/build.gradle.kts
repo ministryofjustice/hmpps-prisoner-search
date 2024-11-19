@@ -33,7 +33,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.data:spring-data-elasticsearch:5.3.5")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.4.0")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
@@ -50,14 +50,14 @@ dependencies {
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.0.8")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.23") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.24") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.25")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.26")
   testImplementation("org.wiremock:wiremock-standalone:3.9.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:3.4.1")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.0.0")
 }
 
 kotlin {
