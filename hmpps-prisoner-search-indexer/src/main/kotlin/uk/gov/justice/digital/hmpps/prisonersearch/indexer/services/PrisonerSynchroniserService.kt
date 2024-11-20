@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 
 @Service
@@ -30,7 +29,6 @@ class PrisonerSynchroniserService(
   private val prisonerDifferenceService: PrisonerDifferenceService,
   private val prisonerMovementsEventService: PrisonerMovementsEventService,
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
-  private val hmppsDomainEventEmitter: HmppsDomainEventEmitter,
 ) {
 
   // called when prisoner updated or manual prisoner index required
@@ -215,7 +213,6 @@ class PrisonerSynchroniserService(
   fun delete(prisonerNumber: String) =
     prisonerRepository.delete(prisonerNumber).also {
       prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
-      hmppsDomainEventEmitter.emitPrisonerRemovedEvent(prisonerNumber)
       telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
     }
 
