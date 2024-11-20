@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 
 @Service
 class IndexListenerService(
@@ -19,6 +20,7 @@ class IndexListenerService(
   private val nomisService: NomisService,
   private val prisonerLocationService: PrisonerLocationService,
   private val telemetryClient: TelemetryClient,
+  private val hmppsDomainEventEmitter: HmppsDomainEventEmitter,
 ) {
   fun incentiveChange(message: IncentiveChangedMessage, eventType: String) {
     log.info(
@@ -70,6 +72,7 @@ class IndexListenerService(
       if (offender == null) {
         log.debug("Delete check: offender ID {} no longer exists, deleting", this)
         prisonerSynchroniserService.delete(prisonerNumber = this)
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this)
       } else {
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
         reindexPrisonerBoth(offender, eventType)

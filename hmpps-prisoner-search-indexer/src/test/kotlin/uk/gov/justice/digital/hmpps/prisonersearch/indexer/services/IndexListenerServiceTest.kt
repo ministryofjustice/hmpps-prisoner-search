@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveCh
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 
 internal class IndexListenerServiceTest {
 
@@ -34,6 +35,7 @@ internal class IndexListenerServiceTest {
   private val nomisService = mock<NomisService>()
   private val prisonerLocationService = mock<PrisonerLocationService>()
   private val telemetryClient = mock<TelemetryClient>()
+  private val hmppsDomainEventEmitter = mock<HmppsDomainEventEmitter>()
   private val indexListenerService =
     IndexListenerService(
       indexStatusService,
@@ -41,6 +43,7 @@ internal class IndexListenerServiceTest {
       nomisService,
       prisonerLocationService,
       telemetryClient,
+      hmppsDomainEventEmitter,
     )
 
   @Nested
@@ -416,6 +419,14 @@ internal class IndexListenerServiceTest {
       indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
       verify(prisonerSynchroniserService).delete("A123BC")
+    }
+
+    @Test
+    fun `will raise a deletion event on OFFENDER-DELETED event if no longer exists`() {
+      whenever(nomisService.getOffender(any())).thenReturn(null)
+      indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
+
+      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC")
     }
 
     @Test
