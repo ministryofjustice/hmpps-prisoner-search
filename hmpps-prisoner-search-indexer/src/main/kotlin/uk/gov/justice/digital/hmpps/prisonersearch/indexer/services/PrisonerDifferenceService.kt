@@ -28,7 +28,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.Instant
 import kotlin.reflect.full.findAnnotations
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences as PrisonerDiffs
@@ -40,6 +42,8 @@ class PrisonerDifferenceService(
   private val diffProperties: DiffProperties,
   private val prisonerHashRepository: PrisonerHashRepository,
   private val objectMapper: ObjectMapper,
+  private val prisonerMovementsEventService: PrisonerMovementsEventService,
+  private val alertsUpdatedEventService: AlertsUpdatedEventService,
   private val prisonerDifferencesRepository: PrisonerDifferencesRepository,
 ) {
   private companion object {
@@ -64,7 +68,7 @@ class PrisonerDifferenceService(
     offenderBooking: OffenderBooking,
     prisoner: Prisoner,
     eventType: String,
-  ): Boolean =
+  ) {
     hash(prisoner)!!.run {
       takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
         generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner)
@@ -75,17 +79,16 @@ class PrisonerDifferenceService(
           prisoner,
           eventType,
         )
-        return@run true
-      } ?: run {
-        telemetryClient.trackPrisonerEvent(
-          PRISONER_DATABASE_NO_CHANGE,
-          prisonerNumber = offenderBooking.offenderNo,
-          bookingId = offenderBooking.bookingId,
-          eventType = eventType,
-        )
-        return@run false
-      }
+        prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
+        alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+      } ?: telemetryClient.trackPrisonerEvent(
+        PRISONER_DATABASE_NO_CHANGE,
+        prisonerNumber = offenderBooking.offenderNo,
+        bookingId = offenderBooking.bookingId,
+        eventType = eventType,
+      )
     }
+  }
 
   fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) =
     if (hasChanged(previousPrisonerSnapshot, prisoner)) {

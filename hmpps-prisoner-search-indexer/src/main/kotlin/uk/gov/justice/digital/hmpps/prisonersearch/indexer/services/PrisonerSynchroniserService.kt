@@ -17,8 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 
 @Service
 class PrisonerSynchroniserService(
@@ -27,8 +25,6 @@ class PrisonerSynchroniserService(
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
-  private val prisonerMovementsEventService: PrisonerMovementsEventService,
-  private val alertsUpdatedEventService: AlertsUpdatedEventService,
 ) {
 
   // called when prisoner updated or manual prisoner index required
@@ -47,10 +43,7 @@ class PrisonerSynchroniserService(
     // only save to open search if we encounter any differences
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
-      if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)) {
-        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
-        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
-      }
+      prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)
     } else {
       telemetryClient.trackPrisonerEvent(
         PRISONER_OPENSEARCH_NO_CHANGE,
@@ -88,10 +81,7 @@ class PrisonerSynchroniserService(
         // If the current booking id changed, some domain data needs updating too, retrieving using the new booking id
         if (summary.prisoner?.bookingId?.toLong() != ob.bookingId) {
           reindexIncentive(ob.offenderNo, SyncIndex.RED, eventType)
-          reindexRestrictedPatient(ob.offenderNo, ob, SyncIndex.RED, eventType)
         }
-        prisonerMovementsEventService.generateAnyEvents(summary.prisoner, prisoner, ob, red = true)
-        alertsUpdatedEventService.generateAnyEvents(summary.prisoner, prisoner, red = true)
       } else {
         telemetryClient.trackPrisonerEvent(
           TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE,
@@ -117,17 +107,21 @@ class PrisonerSynchroniserService(
         val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
         val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
 
-        val updated = prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
-        telemetryClient.trackPrisonerEvent(
-          if (updated) {
-            TelemetryEvents.INCENTIVE_UPDATED
-          } else {
-            TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE
-          },
-          prisonerNumber = prisonerNo,
-          bookingId = bookingId,
-          eventType = eventType,
-        )
+        if (prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)) {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.INCENTIVE_UPDATED,
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+        } else {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE,
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+        }
       }
 
   internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) =
@@ -136,29 +130,33 @@ class PrisonerSynchroniserService(
         val restrictedPatient = getRestrictedPatient(ob)
         this.prisoner?.setLocationDescription(restrictedPatient, ob)
         this.prisoner?.setRestrictedPatientFields(restrictedPatient)
-
-        val updated = prisonerRepository.updateRestrictedPatient(
-          prisonerNo,
-          restrictedPatient = restrictedPatient != null,
-          this.prisoner?.supportingPrisonId,
-          this.prisoner?.dischargedHospitalId,
-          this.prisoner?.dischargedHospitalDescription,
-          this.prisoner?.dischargeDate,
-          this.prisoner?.dischargeDetails,
-          this.prisoner?.locationDescription,
-          index,
-          this,
-        )
-        telemetryClient.trackPrisonerEvent(
-          if (updated) {
-            TelemetryEvents.RESTRICTED_PATIENT_UPDATED
-          } else {
-            TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE
-          },
-          prisonerNumber = prisonerNo,
-          bookingId = ob.bookingId,
-          eventType = eventType,
-        )
+        if (prisonerRepository.updateRestrictedPatient(
+            prisonerNo,
+            restrictedPatient = restrictedPatient != null,
+            this.prisoner?.supportingPrisonId,
+            this.prisoner?.dischargedHospitalId,
+            this.prisoner?.dischargedHospitalDescription,
+            this.prisoner?.dischargeDate,
+            this.prisoner?.dischargeDetails,
+            this.prisoner?.locationDescription,
+            index,
+            this,
+          )
+        ) {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.RESTRICTED_PATIENT_UPDATED,
+            prisonerNumber = prisonerNo,
+            bookingId = ob.bookingId,
+            eventType = eventType,
+          )
+        } else {
+          telemetryClient.trackPrisonerEvent(
+            TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE,
+            prisonerNumber = prisonerNo,
+            bookingId = ob.bookingId,
+            eventType = eventType,
+          )
+        }
       }
 
   // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
@@ -189,13 +187,7 @@ class PrisonerSynchroniserService(
 
       indices.map { prisonerRepository.save(prisoner, it) }
       if (label == PrisonerDifferencesLabel.GREEN_BLUE) {
-        if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")) {
-          prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
-          alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
-        }
-      } else {
-        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
-        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner, red = true)
+        prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")
       }
     }
   }
