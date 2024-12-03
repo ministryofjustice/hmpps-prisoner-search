@@ -52,7 +52,7 @@ data class PrisonerDetailRequest(
   )
   val prisonIds: List<String>? = emptyList(),
 
-  @Schema(description = "Date of birth", example = "1970-02-28", required = false)
+  @Schema(description = "Date of birth to filter results by", example = "1970-02-28", required = false)
   val dateOfBirth: LocalDate? = null,
 
   @Schema(description = "Include aliases in search", example = "true", required = false, defaultValue = "true")
