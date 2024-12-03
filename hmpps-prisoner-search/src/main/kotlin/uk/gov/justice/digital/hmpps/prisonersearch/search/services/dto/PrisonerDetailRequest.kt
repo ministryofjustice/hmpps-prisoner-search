@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDate
 
 data class PrisonerDetailRequest(
   @Schema(
@@ -50,6 +51,9 @@ data class PrisonerDetailRequest(
     required = true,
   )
   val prisonIds: List<String>? = emptyList(),
+
+  @Schema(description = "Date of birth", example = "1970-02-28", required = false)
+  val dateOfBirth: LocalDate? = null,
 
   @Schema(description = "Include aliases in search", example = "true", required = false, defaultValue = "true")
   val includeAliases: Boolean = true,

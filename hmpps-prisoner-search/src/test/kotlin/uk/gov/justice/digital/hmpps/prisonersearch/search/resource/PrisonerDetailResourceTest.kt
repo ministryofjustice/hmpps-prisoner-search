@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataInte
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.KeywordRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonerDetailRequest
+import java.time.LocalDate
 
 class PrisonerDetailResourceTest : AbstractSearchDataIntegrationTest() {
   @Test
@@ -304,6 +305,14 @@ class PrisonerDetailResourceTest : AbstractSearchDataIntegrationTest() {
     detailSearch(
       detailRequest = PrisonerDetailRequest(prisonIds = listOf("MDI")),
       expectedPrisoners = listOf("A1090AA", "A7089EY", "A7089FA", "A7089FB", "A7090AA", "A7090AB", "A7090BB"),
+    )
+  }
+
+  @Test
+  fun `find by date of birth`() {
+    detailSearch(
+      detailRequest = PrisonerDetailRequest(prisonIds = listOf("MDI"), dateOfBirth = LocalDate.of(1980,2, 28)),
+      expectedPrisoners = listOf("A1090AA", "A7090AA", "A7090AB"),
     )
   }
 
