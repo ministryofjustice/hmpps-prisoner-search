@@ -151,6 +151,9 @@ class PrisonerDetailService(
         )
       }
 
+      // Filter by date of birth.
+      detailQuery.mustWhenPresent("dateOfBirth", dateOfBirth)
+
       // Filter by prison establishments provided
       prisonIds.takeIf { it != null && it.isNotEmpty() && it[0].isNotBlank() }?.let {
         detailQuery.filterWhenPresent("prisonId", it)
