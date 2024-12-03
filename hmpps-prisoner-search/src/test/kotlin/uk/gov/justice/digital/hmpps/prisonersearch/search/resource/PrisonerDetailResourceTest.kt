@@ -311,7 +311,7 @@ class PrisonerDetailResourceTest : AbstractSearchDataIntegrationTest() {
   @Test
   fun `find by date of birth`() {
     detailSearch(
-      detailRequest = PrisonerDetailRequest(prisonIds = listOf("MDI"), dateOfBirth = LocalDate.of(1980,2, 28)),
+      detailRequest = PrisonerDetailRequest(prisonIds = listOf("MDI"), dateOfBirth = LocalDate.of(1980, 2, 28)),
       expectedPrisoners = listOf("A1090AA", "A7090AA", "A7090AB"),
     )
   }
