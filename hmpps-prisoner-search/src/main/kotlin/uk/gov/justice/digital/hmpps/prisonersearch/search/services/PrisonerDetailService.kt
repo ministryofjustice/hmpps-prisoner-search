@@ -151,15 +151,8 @@ class PrisonerDetailService(
         )
       }
 
-//      detailQuery.mustWhenPresent("dateOfBirth", dateOfBirth)
-
-      dateOfBirth.takeIf { it != null }?.let {
-        detailQuery.must(
-          QueryBuilders.boolQuery().must(
-            QueryBuilders.matchQuery("dateOfBirth", it)
-          )
-        )
-      }
+      // Filter by date of birth.
+      detailQuery.mustWhenPresent("dateOfBirth", dateOfBirth)
 
       // Filter by prison establishments provided
       prisonIds.takeIf { it != null && it.isNotEmpty() && it[0].isNotBlank() }?.let {
