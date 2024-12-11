@@ -36,6 +36,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.Result
@@ -48,12 +50,17 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
+  private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
+  private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
+
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
     telemetryClient,
     restrictedPatientService,
     incentivesService,
     prisonerDifferenceService,
+    prisonerMovementsEventService,
+    alertsUpdatedEventService,
   )
 
   @Nested
@@ -76,6 +83,18 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindex(booking, listOf(GREEN), "event")
 
       verify(prisonerRepository).save(isA(), check { assertThat(it).isEqualTo(GREEN) })
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      val existingPrisoner = Prisoner()
+      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
+      whenever(prisonerDifferenceService.handleDifferences(eq(existingPrisoner), eq(booking), any(), eq("event"))).thenReturn(true)
+      service.reindex(booking, listOf(GREEN), "event")
+
+      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(false))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(false))
     }
 
     @Test
@@ -241,6 +260,18 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindexUpdate(booking, "event")
 
       verify(prisonerRepository, times(1)).save(isA(), isA())
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      val existingPrisoner = Prisoner()
+      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
+      whenever(prisonerDifferenceService.handleDifferences(eq(existingPrisoner), eq(booking), any(), eq("event"))).thenReturn(true)
+      service.reindexUpdate(booking, "event")
+
+      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(false))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(false))
     }
 
     @Test
