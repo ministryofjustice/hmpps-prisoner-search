@@ -1,18 +1,15 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 
 @Service
 class AlertsUpdatedEventService(
   private val domainEventEmitter: HmppsDomainEventEmitter,
+  private val telemetryClient: TelemetryClient,
 ) {
-  private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
   fun generateAnyEvents(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
@@ -25,7 +22,15 @@ class AlertsUpdatedEventService(
 
     if (alertsAdded.isNotEmpty() || alertsRemoved.isNotEmpty()) {
       if (red) {
-        log.info("Simulated alerts event from RED index: added {}, removed {}", alertsAdded.size, alertsRemoved.size)
+        telemetryClient.trackEvent(
+          TelemetryEvents.RED_SIMULATE_ALERT_EVENT.toString(),
+          mapOf(
+            "prisoner" to prisoner.prisonerNumber,
+            "added" to alertsAdded.size.toString(),
+            "removed" to alertsRemoved.size.toString(),
+          ),
+          null,
+        )
       } else {
         domainEventEmitter.emitPrisonerAlertsUpdatedEvent(prisoner.prisonerNumber!!, prisoner.bookingId, alertsAdded, alertsRemoved)
       }
