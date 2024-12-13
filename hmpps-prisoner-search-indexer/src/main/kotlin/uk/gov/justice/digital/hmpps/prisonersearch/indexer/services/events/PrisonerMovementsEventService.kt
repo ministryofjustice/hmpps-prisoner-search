@@ -4,6 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_UNKNOWN_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
@@ -41,20 +42,35 @@ class PrisonerMovementsEventService(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
     offenderBooking: OffenderBooking,
+    red: Boolean = false,
   ) {
     when (val movementChange = calculateMovementChange(previousPrisonerSnapshot, prisoner, offenderBooking)) {
       PossibleMovementChange.None -> {}
-      is MovementInChange -> domainEventEmitter.emitPrisonerReceiveEvent(
-        offenderNo = movementChange.offenderNo,
-        reason = movementChange.reason,
-        prisonId = movementChange.prisonId,
-      )
+      is MovementInChange -> if (red) {
+        telemetryClient.trackPrisonerEvent(
+          TelemetryEvents.RED_SIMULATE_MOVEMENT_RECEIVE_EVENT,
+          prisoner.prisonerNumber!!,
+        )
+      } else {
+        domainEventEmitter.emitPrisonerReceiveEvent(
+          offenderNo = movementChange.offenderNo,
+          reason = movementChange.reason,
+          prisonId = movementChange.prisonId,
+        )
+      }
 
-      is PossibleMovementChange.MovementOutChange -> domainEventEmitter.emitPrisonerReleaseEvent(
-        offenderNo = movementChange.offenderNo,
-        reason = movementChange.reason,
-        prisonId = movementChange.prisonId,
-      )
+      is PossibleMovementChange.MovementOutChange -> if (red) {
+        telemetryClient.trackPrisonerEvent(
+          TelemetryEvents.RED_SIMULATE_MOVEMENT_RELEASE_EVENT,
+          prisoner.prisonerNumber!!,
+        )
+      } else {
+        domainEventEmitter.emitPrisonerReleaseEvent(
+          offenderNo = movementChange.offenderNo,
+          reason = movementChange.reason,
+          prisonId = movementChange.prisonId,
+        )
+      }
     }
   }
 

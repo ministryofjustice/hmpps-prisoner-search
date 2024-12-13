@@ -83,7 +83,7 @@ class PrisonerDetailService(
       detailQuery.should(QueryBuilders.matchAllQuery())
     }
 
-    val fuzzyMatch = detailRequest.fuzzyMatch ?: false
+    val fuzzyMatch = detailRequest.fuzzyMatch == true
 
     with(detailRequest) {
       // Match by firstName, exact or by wildcard and include aliases if set - reduce score for alias matches

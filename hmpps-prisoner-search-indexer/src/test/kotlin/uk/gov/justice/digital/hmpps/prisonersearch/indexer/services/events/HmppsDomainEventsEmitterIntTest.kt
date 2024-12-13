@@ -30,8 +30,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
@@ -54,25 +54,25 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Duration
 
 class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
-  @SpyBean
+  @MockitoSpyBean
   private lateinit var hmppsDomainEventEmitter: HmppsDomainEventEmitter
 
   @Autowired
   private lateinit var objectMapper: ObjectMapper
 
-  @SpyBean
+  @MockitoSpyBean
   @Qualifier("offenderqueue-sqs-client")
   private lateinit var offenderQueueSqsClient: SqsAsyncClient
 
-  @SpyBean
+  @MockitoSpyBean
   @Qualifier("hmppseventtopic-sns-client")
   private lateinit var hmppsEventTopicSnsClient: SnsAsyncClient
 
-  @SpyBean
+  @MockitoSpyBean
   @Qualifier("publish-sqs-client")
   private lateinit var publishQueueSqsClient: SqsAsyncClient
 
-  @SpyBean
+  @MockitoSpyBean
   private lateinit var prisonerDifferenceService: PrisonerDifferenceService
 
   @Autowired
