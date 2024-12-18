@@ -10,8 +10,10 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_SEND_FAILURE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.DomainEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.CREATED_EVENT_TYPE
@@ -85,28 +87,60 @@ class HmppsDomainEventEmitter(
   fun emitPrisonerDifferenceEvent(
     offenderNo: String,
     differences: PrisonerDifferences,
+    red: Boolean = false,
   ) {
-    PrisonerUpdatedDomainEvent(
-      PrisonerUpdatedEvent(offenderNo, differences.keys.toList().sorted()),
-      Instant.now(clock),
-      diffProperties.host,
-    ).publish {
-      log.error("Failed to send event $UPDATED_EVENT_TYPE for offenderNo=$offenderNo, differences=$differences. Event will be retried")
-      throw it
+    if (red) {
+      telemetryClient.trackPrisonerEvent(
+        TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT,
+        offenderNo,
+        null,
+        "updated",
+      )
+    } else {
+      PrisonerUpdatedDomainEvent(
+        PrisonerUpdatedEvent(offenderNo, differences.keys.toList().sorted()),
+        Instant.now(clock),
+        diffProperties.host,
+      ).publish {
+        log.error("Failed to send event $UPDATED_EVENT_TYPE for offenderNo=$offenderNo, differences=$differences. Event will be retried")
+        throw it
+      }
     }
   }
 
-  fun emitPrisonerCreatedEvent(offenderNo: String) {
-    PrisonerCreatedDomainEvent(PrisonerCreatedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
-      log.error("Failed to send event $CREATED_EVENT_TYPE for offenderNo=$offenderNo. Event will be retried")
-      throw it
+  fun emitPrisonerCreatedEvent(offenderNo: String, red: Boolean = false) {
+    if (red) {
+      telemetryClient.trackPrisonerEvent(
+        TelemetryEvents.RED_SIMULATE_PRISONER_CREATED_EVENT,
+        offenderNo,
+        null,
+        "created",
+      )
+    } else {
+      PrisonerCreatedDomainEvent(PrisonerCreatedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
+        log.error("Failed to send event $CREATED_EVENT_TYPE for offenderNo=$offenderNo. Event will be retried")
+        throw it
+      }
     }
   }
 
-  fun emitPrisonerRemovedEvent(offenderNo: String) {
-    PrisonerRemovedDomainEvent(PrisonerRemovedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
-      log.error("Failed to send event {} for offenderNo={}. Event will be retried", PRISONER_REMOVED_EVENT_TYPE, offenderNo)
-      throw it
+  fun emitPrisonerRemovedEvent(offenderNo: String, red: Boolean = false) {
+    if (red) {
+      telemetryClient.trackPrisonerEvent(
+        TelemetryEvents.RED_SIMULATE_PRISONER_REMOVED_EVENT,
+        offenderNo,
+        null,
+        "deleted",
+      )
+    } else {
+      PrisonerRemovedDomainEvent(PrisonerRemovedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
+        log.error(
+          "Failed to send event {} for offenderNo={}. Event will be retried",
+          PRISONER_REMOVED_EVENT_TYPE,
+          offenderNo,
+        )
+        throw it
+      }
     }
   }
 

@@ -18,7 +18,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
+import kotlin.collections.map
 
 @Service
 class PrisonerSynchroniserService(
@@ -29,6 +31,7 @@ class PrisonerSynchroniserService(
   private val prisonerDifferenceService: PrisonerDifferenceService,
   private val prisonerMovementsEventService: PrisonerMovementsEventService,
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
+  private val domainEventEmitter: HmppsDomainEventEmitter,
 ) {
   companion object {
     private val log = org.slf4j.LoggerFactory.getLogger(this::class.java)
@@ -87,13 +90,7 @@ class PrisonerSynchroniserService(
         }
         prisonerDifferenceService.getDifferencesByCategory(summary.prisoner, prisoner)
           .also {
-            // simulating domainEventEmitter.emitPrisonerDifferenceEvent(ob.offenderNo, it)
-            telemetryClient.trackPrisonerEvent(
-              TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT,
-              prisonerNumber = ob.offenderNo,
-              bookingId = ob.bookingId,
-              eventType = eventType,
-            )
+            domainEventEmitter.emitPrisonerDifferenceEvent(ob.offenderNo, it, red = true)
           }
 
         telemetryClient.trackPrisonerEvent(
@@ -130,14 +127,7 @@ class PrisonerSynchroniserService(
       prisonerRepository.save(prisoner, SyncIndex.RED)
       prisonerMovementsEventService.generateAnyEvents(null, prisoner, ob, red = true)
       alertsUpdatedEventService.generateAnyEvents(null, prisoner, red = true)
-
-      // simulating domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo)
-      telemetryClient.trackPrisonerEvent(
-        TelemetryEvents.RED_SIMULATE_PRISONER_CREATED_EVENT,
-        prisonerNumber = ob.offenderNo,
-        bookingId = ob.bookingId,
-        eventType = eventType,
-      )
+      domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo, true)
 
       true
     }
@@ -164,25 +154,35 @@ class PrisonerSynchroniserService(
               bookingId = bookingId,
               eventType = eventType,
             )
+            if (updated) {
+              val newPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
+              newPrisoner.currentIncentive = newLevel
+              prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner, true)
+            }
           }
       }
 
   internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) =
     prisonerRepository.getSummary(prisonerNo, index)
       ?.run {
+        if (this.prisoner == null) {
+          log.warn("Prisoner not found in RED index for {}", prisonerNo)
+          throw PrisonerNotFoundException(ob.offenderNo)
+        }
+        val existingPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
         val restrictedPatient = getRestrictedPatient(ob)
-        this.prisoner?.setLocationDescription(restrictedPatient, ob)
-        this.prisoner?.setRestrictedPatientFields(restrictedPatient)
+        this.prisoner.setLocationDescription(restrictedPatient, ob)
+        this.prisoner.setRestrictedPatientFields(restrictedPatient)
 
         prisonerRepository.updateRestrictedPatient(
           prisonerNo,
           restrictedPatient = restrictedPatient != null,
-          this.prisoner?.supportingPrisonId,
-          this.prisoner?.dischargedHospitalId,
-          this.prisoner?.dischargedHospitalDescription,
-          this.prisoner?.dischargeDate,
-          this.prisoner?.dischargeDetails,
-          this.prisoner?.locationDescription,
+          this.prisoner.supportingPrisonId,
+          this.prisoner.dischargedHospitalId,
+          this.prisoner.dischargedHospitalDescription,
+          this.prisoner.dischargeDate,
+          this.prisoner.dischargeDetails,
+          this.prisoner.locationDescription,
           index,
           this,
         )
@@ -197,6 +197,9 @@ class PrisonerSynchroniserService(
               bookingId = ob.bookingId,
               eventType = eventType,
             )
+            if (updated) {
+              prisonerDifferenceService.generateDiffEvent(existingPrisoner, prisonerNo, this.prisoner, true)
+            }
           }
       }
 
