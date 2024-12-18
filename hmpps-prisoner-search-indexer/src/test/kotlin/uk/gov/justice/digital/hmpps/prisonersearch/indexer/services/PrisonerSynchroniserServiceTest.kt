@@ -41,7 +41,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.Result
 
 private val LABEL = GREEN_BLUE
 
@@ -93,7 +92,14 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
-      whenever(prisonerDifferenceService.handleDifferences(eq(existingPrisoner), eq(booking), any(), eq("event"))).thenReturn(true)
+      whenever(
+        prisonerDifferenceService.handleDifferences(
+          eq(existingPrisoner),
+          eq(booking),
+          any(),
+          eq("event"),
+        ),
+      ).thenReturn(true)
       service.reindex(booking, listOf(GREEN), "event")
 
       verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(false))
@@ -253,7 +259,12 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(prisonerDocumentSummary)
       service.reindexUpdate(booking, "event")
 
-      verify(prisonerRepository, times(1)).updatePrisoner(eq(booking.offenderNo), isA(), eq(RED), eq(prisonerDocumentSummary))
+      verify(prisonerRepository, times(1)).updatePrisoner(
+        eq(booking.offenderNo),
+        isA(),
+        eq(RED),
+        eq(prisonerDocumentSummary),
+      )
     }
 
     @Test
@@ -272,7 +283,11 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.updatePrisoner(any(), any(), eq(RED), isA())).thenReturn(true)
       service.reindexUpdate(booking, "event")
 
-      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(true)) // null for previous prisoner
+      verify(alertsUpdatedEventService).generateAnyEvents(
+        eq(existingPrisoner),
+        any(),
+        eq(true),
+      ) // null for previous prisoner
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(true))
     }
 
@@ -348,8 +363,8 @@ internal class PrisonerSynchroniserServiceTest {
       PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
 
     @BeforeEach
-    fun setup () {
-      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer{ it.getArgument(0) }
+    fun setup() {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer { it.getArgument(0) }
     }
 
     @Test
@@ -469,8 +484,8 @@ internal class PrisonerSynchroniserServiceTest {
       PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
 
     @BeforeEach
-    fun setup () {
-      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer{ it.getArgument(0) }
+    fun setup() {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer { it.getArgument(0) }
     }
 
     @Test
