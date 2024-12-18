@@ -344,6 +344,11 @@ internal class PrisonerSynchroniserServiceTest {
     private val prisonerDocumentSummary =
       PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
 
+    @BeforeEach
+    fun setup () {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer{ it.getArgument(0) }
+    }
+
     @Test
     fun `will save incentive to current index`() {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
@@ -376,6 +381,16 @@ internal class PrisonerSynchroniserServiceTest {
         },
         isNull(),
       )
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
+      whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any(), any())).thenReturn(true)
+      service.reindexIncentive(prisonerNumber, RED, "event")
+
+      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner))
     }
 
     @Test
@@ -415,7 +430,11 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any(), any())).thenReturn(true)
       service.reindexIncentive(prisonerNumber, GREEN, "event")
 
-      verifyNoInteractions(prisonerDifferenceService)
+      verify(prisonerDifferenceService).generateDiffEvent(
+        eq(prisonerDocumentSummary.prisoner),
+        eq(prisonerDocumentSummary.prisonerNumber!!),
+        eq(prisonerDocumentSummary.prisoner!!))
+      verifyNoMoreInteractions(prisonerDifferenceService)
     }
   }
 
@@ -443,6 +462,11 @@ internal class PrisonerSynchroniserServiceTest {
     }
     private val prisonerDocumentSummary =
       PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
+
+    @BeforeEach
+    fun setup () {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer{ it.getArgument(0) }
+    }
 
     @Test
     fun `will call restricted patients and save RP to current index if prisoner is outside`() {
@@ -478,6 +502,29 @@ internal class PrisonerSynchroniserServiceTest {
         eq(RED),
         eq(prisonerDocumentSummary),
       )
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
+      whenever(
+        prisonerRepository.updateRestrictedPatient(
+          eq(prisonerNumber),
+          any(),
+          isA(),
+          isA(),
+          isNull(),
+          isA(),
+          isNull(),
+          any(),
+          any(),
+          any(),
+        ),
+      ).thenReturn(true)
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, RED, "event")
+
+      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner))
     }
 
     @Test

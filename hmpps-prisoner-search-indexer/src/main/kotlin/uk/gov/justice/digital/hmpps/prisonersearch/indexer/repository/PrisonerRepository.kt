@@ -422,6 +422,9 @@ class PrisonerRepository(
     )
   }
 
+  fun copyPrisoner(prisoner: Prisoner): Prisoner =
+    objectMapper.readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)
+
   private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? =
     source?.let {
       PrisonerDocumentSummary(

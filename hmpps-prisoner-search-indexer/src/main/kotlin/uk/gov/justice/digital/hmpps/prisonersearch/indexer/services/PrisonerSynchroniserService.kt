@@ -164,25 +164,35 @@ class PrisonerSynchroniserService(
               bookingId = bookingId,
               eventType = eventType,
             )
+            if (updated) {
+              val newPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
+              newPrisoner.currentIncentive = newLevel
+              prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner)
+            }
           }
       }
 
   internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) =
     prisonerRepository.getSummary(prisonerNo, index)
       ?.run {
+        if (this.prisoner == null) {
+          log.warn("Prisoner not found in RED index for {}", prisonerNo)
+          throw PrisonerNotFoundException(ob.offenderNo)
+        }
+        val existingPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
         val restrictedPatient = getRestrictedPatient(ob)
-        this.prisoner?.setLocationDescription(restrictedPatient, ob)
-        this.prisoner?.setRestrictedPatientFields(restrictedPatient)
+        this.prisoner.setLocationDescription(restrictedPatient, ob)
+        this.prisoner.setRestrictedPatientFields(restrictedPatient)
 
         prisonerRepository.updateRestrictedPatient(
           prisonerNo,
           restrictedPatient = restrictedPatient != null,
-          this.prisoner?.supportingPrisonId,
-          this.prisoner?.dischargedHospitalId,
-          this.prisoner?.dischargedHospitalDescription,
-          this.prisoner?.dischargeDate,
-          this.prisoner?.dischargeDetails,
-          this.prisoner?.locationDescription,
+          this.prisoner.supportingPrisonId,
+          this.prisoner.dischargedHospitalId,
+          this.prisoner.dischargedHospitalDescription,
+          this.prisoner.dischargeDate,
+          this.prisoner.dischargeDetails,
+          this.prisoner.locationDescription,
           index,
           this,
         )
@@ -197,6 +207,9 @@ class PrisonerSynchroniserService(
               bookingId = ob.bookingId,
               eventType = eventType,
             )
+            if (updated) {
+              prisonerDifferenceService.generateDiffEvent(existingPrisoner, prisonerNo, this.prisoner)
+            }
           }
       }
 
