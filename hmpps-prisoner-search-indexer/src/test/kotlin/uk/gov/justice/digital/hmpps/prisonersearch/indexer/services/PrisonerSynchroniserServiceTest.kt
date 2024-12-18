@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -52,6 +53,7 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
   private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
   private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
+  private val domainEventEmitter = mock<HmppsDomainEventEmitter>()
 
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
@@ -61,6 +63,7 @@ internal class PrisonerSynchroniserServiceTest {
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
+    domainEventEmitter,
   )
 
   @Nested
@@ -390,7 +393,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any(), any())).thenReturn(true)
       service.reindexIncentive(prisonerNumber, RED, "event")
 
-      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner))
+      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner), eq(true))
     }
 
     @Test
@@ -433,7 +436,9 @@ internal class PrisonerSynchroniserServiceTest {
       verify(prisonerDifferenceService).generateDiffEvent(
         eq(prisonerDocumentSummary.prisoner),
         eq(prisonerDocumentSummary.prisonerNumber!!),
-        eq(prisonerDocumentSummary.prisoner!!))
+        eq(prisonerDocumentSummary.prisoner!!),
+        eq(true),
+      )
       verifyNoMoreInteractions(prisonerDifferenceService)
     }
   }
@@ -524,7 +529,7 @@ internal class PrisonerSynchroniserServiceTest {
       ).thenReturn(true)
       service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, RED, "event")
 
-      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner))
+      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner), eq(true))
     }
 
     @Test

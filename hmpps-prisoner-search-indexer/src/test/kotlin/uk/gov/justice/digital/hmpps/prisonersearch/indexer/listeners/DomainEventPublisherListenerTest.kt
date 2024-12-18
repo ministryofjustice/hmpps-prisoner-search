@@ -13,7 +13,7 @@ import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sns.model.PublishResponse
@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture
 
 class DomainEventPublisherListenerTest : IntegrationTestBase() {
 
-  @SpyBean
+  @MockitoSpyBean
   @Qualifier("hmppseventtopic-sns-client")
   private lateinit var hmppsEventTopicSnsClient: SnsAsyncClient
 
