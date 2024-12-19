@@ -16,12 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -84,10 +84,10 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var webTestClient: WebTestClient
 
-  @SpyBean
+  @MockitoSpyBean
   protected lateinit var indexQueueService: IndexQueueService
 
-  @SpyBean
+  @MockitoSpyBean
   lateinit var hmppsQueueService: HmppsQueueService
 
   @Autowired
@@ -96,19 +96,19 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var indexStatusRepository: IndexStatusRepository
 
-  @SpyBean
+  @MockitoSpyBean
   protected lateinit var maintainIndexService: MaintainIndexService
 
-  @SpyBean
+  @MockitoSpyBean
   lateinit var prisonerSpyBeanRepository: PrisonerRepository
 
-  @SpyBean
+  @MockitoSpyBean
   lateinit var telemetryClient: TelemetryClient
 
   @Autowired
   internal lateinit var gson: Gson
 
-  @SpyBean
+  @MockitoSpyBean
   lateinit var clock: Clock
 
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
@@ -455,8 +455,8 @@ fun generatePrisonerNumber(): String = "${letters(1)}${numbers(4)}${letters(2)}"
 // generate random number 8 digits
 fun generateBookingId(): Long = numbers(8).toLong()
 
-fun letters(length: Int): String = RandomStringUtils.random(length, true, true)
+fun letters(length: Int): String = RandomStringUtils.insecure().next(length, true, true)
 
-fun numbers(length: Int): String = RandomStringUtils.random(length, false, true)
+fun numbers(length: Int): String = RandomStringUtils.insecure().next(length, false, true)
 
 fun String.readResourceAsText(): String = IntegrationTestBase::class.java.getResource(this)!!.readText()

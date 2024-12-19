@@ -81,7 +81,7 @@ class PrisonerDifferenceServiceTest {
       prisonerDifferenceService.handleDifferences(prisoner1, someOffenderBooking(), prisoner2, "eventType")
 
       verify(prisonerHashRepository).upsertIfChanged(eq("someOffenderNo"), anyString(), any())
-      verify(domainEventsEmitter).emitPrisonerDifferenceEvent(eq("someOffenderNo"), anyMap())
+      verify(domainEventsEmitter).emitPrisonerDifferenceEvent(eq("someOffenderNo"), anyMap(), eq(false))
     }
 
     @Test
@@ -733,6 +733,7 @@ class PrisonerDifferenceServiceTest {
         check {
           assertThat(it.keys).containsExactly(DiffCategory.IDENTIFIERS)
         },
+        eq(false),
       )
     }
 
@@ -754,6 +755,7 @@ class PrisonerDifferenceServiceTest {
         check {
           assertThat(it.keys).containsExactly(DiffCategory.IDENTIFIERS)
         },
+        eq(false),
       )
     }
 
@@ -777,6 +779,7 @@ class PrisonerDifferenceServiceTest {
         check {
           assertThat(it.keys).containsExactlyInAnyOrder(DiffCategory.IDENTIFIERS, DiffCategory.PERSONAL_DETAILS)
         },
+        eq(false),
       )
     }
 
@@ -802,7 +805,7 @@ class PrisonerDifferenceServiceTest {
 
       prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
 
-      verify(domainEventsEmitter, never()).emitPrisonerDifferenceEvent(anyString(), any())
+      verify(domainEventsEmitter, never()).emitPrisonerDifferenceEvent(anyString(), any(), eq(false))
     }
 
     @Test
@@ -811,6 +814,7 @@ class PrisonerDifferenceServiceTest {
         domainEventsEmitter.emitPrisonerDifferenceEvent(
           anyString(),
           any(),
+          eq(false),
         ),
       ).thenThrow(RuntimeException::class.java)
 
