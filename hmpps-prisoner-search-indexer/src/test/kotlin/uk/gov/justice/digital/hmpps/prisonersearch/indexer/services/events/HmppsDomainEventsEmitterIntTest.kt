@@ -553,6 +553,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it != 0 }
 
     await untilCallTo { prisonerHashRepository.findById(prisonerNumber) } matches { it != null }
+    await untilCallTo { prisonerRepository.getSummary(prisonerNumber, SyncIndex.RED) } matches { it != null }
 
     purgeHmppsEventsQueue()
 
