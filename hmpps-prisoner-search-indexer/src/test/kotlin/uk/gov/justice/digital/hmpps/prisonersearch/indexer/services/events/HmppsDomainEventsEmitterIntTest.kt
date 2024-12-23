@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.atLeast
+import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
@@ -298,7 +299,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     offenderQueueSqsClient.sendMessage(
       "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"),
     )
-    await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
+    await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
     val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
 
     assertThat(nextTwoEventTypes).containsExactlyInAnyOrder(
@@ -329,7 +330,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     offenderQueueSqsClient.sendMessage(
       "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"),
     )
-    await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
+    await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
     val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
 
@@ -549,9 +550,10 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/$prisonerNumber") } matches { it == 1 }
 
     // delete create events
-    await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it != 0 }
+    await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it != 0 }
 
     await untilCallTo { prisonerHashRepository.findById(prisonerNumber) } matches { it != null }
+    await untilCallTo { prisonerRepository.getSummary(prisonerNumber, SyncIndex.RED) } matches { it != null }
 
     purgeHmppsEventsQueue()
 

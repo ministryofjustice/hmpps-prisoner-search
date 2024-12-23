@@ -30,6 +30,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import java.time.Instant
+import kotlin.collections.isNotEmpty
+import kotlin.collections.map
+import kotlin.collections.mapValues
 import kotlin.reflect.full.findAnnotations
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences as PrisonerDiffs
 
@@ -67,7 +70,7 @@ class PrisonerDifferenceService(
   ): Boolean =
     hash(prisoner)!!.run {
       takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
-        generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner)
+        generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner, false)
         generateDiffTelemetry(
           previousPrisonerSnapshot,
           offenderBooking.offenderNo,
@@ -182,13 +185,14 @@ class PrisonerDifferenceService(
     previousSnapshot: T?,
     prisonerNumber: String,
     current: T,
+    red: Boolean = false,
   ) {
     if (!diffProperties.events) return
     previousSnapshot?.also {
       getDifferencesByCategory(it, current)
         .takeIf { it.isNotEmpty() }
-        ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(prisonerNumber, it) }
-    } ?: domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber)
+        ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(prisonerNumber, it, red) }
+    } ?: domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber, red)
   }
 
   @Suppress("UNCHECKED_CAST")

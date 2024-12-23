@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.commons.lang3.builder.EqualsBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.awaitility.kotlin.await
@@ -21,6 +22,7 @@ import org.opensearch.client.indices.GetMappingsResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.OptimisticLockingFailureException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -710,6 +712,31 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
             .getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT).aliases,
         ).doesNotContainKey(GREEN.indexName)
       }
+    }
+  }
+
+  @Nested
+  inner class CopyPrisoner {
+    val prisoner = Prisoner().apply {
+      prisonerNumber = "X12345"
+      currentIncentive = CurrentIncentive(
+        IncentiveLevel("code1", "description1"),
+        LocalDateTime.parse("2023-07-13T14:15:16"),
+        LocalDate.parse("2023-08-17"),
+      )
+      build = "build"
+      addresses = listOf(Address("fullAddress", "postalCode", LocalDate.parse("2023-08-17"), true))
+    }
+
+    @Test
+    fun `will make an accurate copy`() {
+      assertThat(EqualsBuilder.reflectionEquals(prisoner, prisonerRepository.copyPrisoner(prisoner))).isTrue
+    }
+
+    @Test
+    fun `copy is a different object`() {
+      assertThat(prisonerRepository.copyPrisoner(prisoner)).isNotSameAs(prisoner)
+      assertThat(prisonerRepository.copyPrisoner(prisoner).currentIncentive!!.level).isNotSameAs(prisoner.currentIncentive!!.level)
     }
   }
 }
