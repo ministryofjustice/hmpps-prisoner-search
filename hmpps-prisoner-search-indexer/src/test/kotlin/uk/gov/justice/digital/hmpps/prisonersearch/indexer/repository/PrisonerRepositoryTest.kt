@@ -301,6 +301,33 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `will not update domain data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = CurrentIncentive(IncentiveLevel("code-original", "description1"), LocalDateTime.now())
+          supportingPrisonId = "OLD"
+        },
+        RED,
+      )
+
+      val isUpdated = prisonerRepository.updatePrisoner(
+        "X12345",
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          currentIncentive = CurrentIncentive(IncentiveLevel("code-new", "description1"), LocalDateTime.now())
+          supportingPrisonId = "NEW"
+        },
+        RED,
+        prisonerRepository.getSummary("X12345", RED)!!,
+      )
+      assertThat(isUpdated).isTrue()
+      val data = prisonerRepository.get("X12345", listOf(RED))!!
+      assertThat(data.currentIncentive?.level?.code).isEqualTo("code-original")
+      assertThat(data.supportingPrisonId).isEqualTo("OLD")
+    }
+
+    @Test
     fun `wrong sequence + 1 throws exception`() {
       prisonerRepository.save(
         Prisoner().apply { prisonerNumber = "X12345" },

@@ -442,6 +442,16 @@ internal class PrisonerSynchroniserServiceTest {
     }
 
     @Test
+    fun `Updates ok when no incentive data`() {
+      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(null)
+
+      service.reindexIncentive(prisonerNumber, GREEN, "event")
+
+      verify(prisonerRepository).updateIncentive(eq("A1234AA"), isNull(), eq(GREEN), eq(prisonerDocumentSummary))
+    }
+
+    @Test
     fun `will NOT call prisoner difference to handle differences`() {
       whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
