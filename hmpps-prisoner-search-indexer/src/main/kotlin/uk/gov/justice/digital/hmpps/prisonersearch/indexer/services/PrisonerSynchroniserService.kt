@@ -140,7 +140,7 @@ class PrisonerSynchroniserService(
       ?.run {
         val bookingId = this.prisoner?.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
         val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
-        val newLevel: CurrentIncentive = incentiveLevel.toCurrentIncentive()!!
+        val newLevel: CurrentIncentive? = incentiveLevel.toCurrentIncentive()
 
         prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
           .also { updated ->

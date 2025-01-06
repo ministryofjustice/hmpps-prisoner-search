@@ -69,6 +69,16 @@ class PrisonerRepository(
 
     prisonerMap.remove("currentIncentive")
 
+    prisonerMap.remove("restrictedPatient")
+    prisonerMap.remove("supportingPrisonId")
+    prisonerMap.remove("dischargedHospitalId")
+    prisonerMap.remove("dischargedHospitalDescription")
+    prisonerMap.remove("dischargeDate")
+    prisonerMap.remove("dischargeDetails")
+    if (summary.prisoner?.restrictedPatient == true) {
+      prisonerMap.remove("locationDescription")
+    }
+
     val response = openSearchRestTemplate.update(
       UpdateQuery.builder(prisonerNumber)
         .withDocument(Document.from(prisonerMap))
