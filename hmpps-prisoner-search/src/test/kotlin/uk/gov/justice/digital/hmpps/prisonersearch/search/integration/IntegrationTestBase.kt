@@ -6,11 +6,11 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.cache.CacheManager
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
@@ -29,10 +29,10 @@ abstract class IntegrationTestBase {
   @Autowired
   internal lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
-  @SpyBean
+  @MockitoSpyBean
   internal lateinit var telemetryClient: TelemetryClient
 
-  @SpyBean
+  @MockitoSpyBean
   internal lateinit var attributeSearchService: AttributeSearchService
 
   @Autowired
@@ -50,10 +50,10 @@ abstract class IntegrationTestBase {
   @Autowired
   internal lateinit var indexStatusRepository: IndexStatusRepository
 
-  @SpyBean
+  @MockitoSpyBean
   internal lateinit var searchService: PrisonersInPrisonService
 
-  @SpyBean
+  @MockitoSpyBean
   internal lateinit var elasticsearchClient: SearchClient
 
   @Autowired
