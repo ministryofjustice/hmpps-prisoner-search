@@ -18,9 +18,9 @@ import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.GetIndexRequest
-import org.opensearch.client.indices.GetMappingsResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.OptimisticLockingFailureException
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
@@ -251,6 +251,44 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       )
 
       assertThat(prisonerRepository.getSummary("X12345", BLUE)!!.prisoner?.currentIncentive).isEqualTo(testIncentive)
+    }
+  }
+
+  @Nested
+  inner class CreatePrisoner {
+
+    @Test
+    fun `will create prisoner with data`() {
+      prisonerRepository.createPrisoner(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          pncNumber = "PNC-1"
+        },
+        RED,
+      )
+      val data = prisonerRepository.get("X12345", listOf(RED))!!
+      assertThat(data.pncNumber).isEqualTo("PNC-1")
+    }
+
+    @Test
+    fun `will not update if already exists`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+        },
+        RED,
+      )
+
+      assertThrows<UncategorizedElasticsearchException> {
+        prisonerRepository.createPrisoner(
+          Prisoner().apply {
+            prisonerNumber = "X12345"
+          },
+          RED,
+        )
+      }.also {
+        assertThat(it.message).contains("version conflict, document already exists")
+      }
     }
   }
 
@@ -772,13 +810,6 @@ fun RestHighLevelClient.safeIndexCreate(name: String) {
   if (this.indices().exists(GetIndexRequest(name), RequestOptions.DEFAULT).not()) {
     this.indices().create(CreateIndexRequest(name), RequestOptions.DEFAULT)
   }
-}
-
-fun GetMappingsResponse.properties(index: String): Map<String, Any> {
-  val mapping = this.mappings()[index]?.sourceAsMap()!!
-  val mappingProperties = mapping["properties"] as Map<*, *>
-  @Suppress("UNCHECKED_CAST")
-  return mappingProperties as Map<String, Any>
 }
 
 fun Map<*, *>.value(property: String): String {

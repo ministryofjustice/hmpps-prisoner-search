@@ -44,7 +44,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
     verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
-    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.RED))
+    verify(prisonerSpyBeanRepository, times(1)).createPrisoner(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
@@ -74,7 +74,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
       verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
-      verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
+      verify(prisonerSpyBeanRepository, never()).createPrisoner(any(), eq(SyncIndex.RED))
       verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
       verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
       verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
