@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRe
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
-import kotlin.collections.map
 
 @Service
 class PrisonerSynchroniserService(
@@ -116,7 +115,9 @@ class PrisonerSynchroniserService(
       }
       isUpdated
     } ?: run {
-      // Need to create, which means calling all domain data too
+      // Need to create, which means calling all domain data too.
+      // NOTE if multiple messages are received for the same prisoner at the same time
+      // the create operation could be attempted multiple times
 
       val prisoner = Prisoner().translate(
         existingPrisoner = null,
@@ -124,11 +125,12 @@ class PrisonerSynchroniserService(
         incentiveLevel = runCatching { getIncentive(ob) },
         restrictedPatientData = runCatching { getRestrictedPatient(ob) },
       )
-      prisonerRepository.save(prisoner, SyncIndex.RED)
+      prisonerRepository.createPrisoner(prisoner, SyncIndex.RED)
+      // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
+
+      domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo, true)
       prisonerMovementsEventService.generateAnyEvents(null, prisoner, ob, red = true)
       alertsUpdatedEventService.generateAnyEvents(null, prisoner, red = true)
-      domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo, true)
-
       true
     }
 

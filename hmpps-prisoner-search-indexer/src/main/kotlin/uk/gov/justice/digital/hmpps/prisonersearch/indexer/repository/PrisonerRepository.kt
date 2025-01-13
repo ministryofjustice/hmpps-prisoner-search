@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.document.Document
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
+import org.springframework.data.elasticsearch.core.query.IndexQuery
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.ScriptType
 import org.springframework.data.elasticsearch.core.query.UpdateQuery
@@ -58,6 +59,19 @@ class PrisonerRepository(
   fun getSummary(prisonerNumber: String, index: SyncIndex): PrisonerDocumentSummary? =
     client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
       .toPrisonerDocumentSummary(prisonerNumber)
+
+  fun createPrisoner(prisoner: Prisoner, index: SyncIndex) {
+    val response = openSearchRestTemplate.index(
+      IndexQueryBuilder()
+        .withObject(prisoner)
+        .withOpType(IndexQuery.OpType.CREATE)
+        .build(),
+      index.toIndexCoordinates(),
+    )
+    if (response != prisoner.prisonerNumber) {
+      throw IllegalStateException("Unexpected result $response from create of ${prisoner.prisonerNumber}")
+    }
+  }
 
   fun updatePrisoner(
     prisonerNumber: String,

@@ -272,7 +272,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(null)
       service.reindexUpdate(booking, "event")
 
-      verify(prisonerRepository, times(1)).save(isA(), eq(RED))
+      verify(prisonerRepository, times(1)).createPrisoner(isA(), eq(RED))
       verify(alertsUpdatedEventService).generateAnyEvents(isNull(), any(), eq(true))
       verify(prisonerMovementsEventService).generateAnyEvents(isNull(), any(), eq(booking), eq(true))
     }
