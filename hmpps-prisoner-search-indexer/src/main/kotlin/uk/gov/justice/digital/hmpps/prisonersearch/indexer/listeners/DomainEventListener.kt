@@ -7,13 +7,17 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
 
 @Service
 class DomainEventListener(
   private val objectMapper: ObjectMapper,
   private val indexListenerService: IndexListenerService,
+  private val offenderEventQueueService: OffenderEventQueueService,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -44,6 +48,8 @@ class DomainEventListener(
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
+    } catch (olfe: OptimisticLockingFailureException) {
+      offenderEventQueueService.handleLockingFailure(olfe, RequeueDestination.DOMAIN, requestJson)
     } catch (e: Exception) {
       log.error("processDomainEvent() Unexpected error", e)
       throw e

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.Companion.REPUBLISH_SUFFIX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
 
 @Service
 class OffenderEventListener(
@@ -88,19 +89,7 @@ class OffenderEventListener(
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
     } catch (olfe: OptimisticLockingFailureException) {
-      if (olfe.message?.contains("Cannot index a document due to seq_no+primary_term conflict") == true) {
-        // This is not an error and so we want to avoid exceptions being logged
-        val (message, _, messageAttributes) = fromJson<Message>(requestJson)
-        log.info("Detected a seq_no+primary_term conflict and trying again for message:\n{}", message)
-        offenderEventQueueService.requeueMessageWithDelay(
-          requestJson!!,
-          messageAttributes.eventType.Value,
-          delayInSeconds = 1,
-        )
-      } else {
-        log.error("processOffenderEvent() Unexpected error", olfe)
-        throw olfe
-      }
+      offenderEventQueueService.handleLockingFailure(olfe, RequeueDestination.OFFENDER, requestJson)
     } catch (e: Exception) {
       log.error("processOffenderEvent() Unexpected error", e)
       throw e
