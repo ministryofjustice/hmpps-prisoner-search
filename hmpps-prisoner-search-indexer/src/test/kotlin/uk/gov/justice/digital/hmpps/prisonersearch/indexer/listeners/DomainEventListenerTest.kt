@@ -17,12 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 
 @JsonTest
 internal class DomainEventListenerTest(@Autowired private val objectMapper: ObjectMapper) {
   private val indexListenerService = mock<IndexListenerService>()
+  private val offenderEventQueueService: OffenderEventQueueService = mock()
 
-  private val listener = DomainEventListener(objectMapper, indexListenerService)
+  private val listener = DomainEventListener(objectMapper, indexListenerService, offenderEventQueueService)
 
   private val logAppender = findLogAppender(DomainEventListener::class.java)
 

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBook
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBookingReassignedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerLocationChangedMessage
 
 @JsonTest
@@ -223,8 +224,10 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
       val event = "OFFENDER_ADDRESS-INSERTED"
       val message =
         """{\"eventType\":\"$event\", \"description\": \"desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
+      val expectedException =
+        OptimisticLockingFailureException("stack trace ... Cannot index a document due to seq_no+primary_term conflict ..")
       whenever(indexListenerService.offenderChange(any(), any()))
-        .thenThrow(OptimisticLockingFailureException("stack trace ... Cannot index a document due to seq_no+primary_term conflict .."))
+        .thenThrow(expectedException)
 
       val requestJson =
         """
@@ -242,7 +245,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
       listener.processOffenderEvent(requestJson)
 
-      verify(offenderEventQueueService).requeueMessageWithDelay(requestJson, event, 1)
+      verify(offenderEventQueueService).handleLockingFailure(expectedException, RequeueDestination.OFFENDER, requestJson)
     }
 
     @Test

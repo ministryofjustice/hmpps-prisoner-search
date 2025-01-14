@@ -10,6 +10,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.slf4j.LoggerFactory
+import org.springframework.test.json.JsonCompareMode
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -124,7 +125,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isOk
-      .expectBody().json(fileAssert.readResourceAsText(), true)
+      .expectBody().json(fileAssert.readResourceAsText(), JsonCompareMode.STRICT)
   }
 
   fun search(searchCriteria: SearchCriteria, fileAssert: String) {

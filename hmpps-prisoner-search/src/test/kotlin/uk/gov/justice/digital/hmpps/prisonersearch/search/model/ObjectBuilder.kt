@@ -151,9 +151,9 @@ fun generateBookingId(): Long {
   return numbers(8).toLong()
 }
 
-fun letters(length: Int): String = RandomStringUtils.random(length, true, true)
+fun letters(length: Int): String = RandomStringUtils.insecure().next(length, true, true)
 
-fun numbers(length: Int): String = RandomStringUtils.random(length, false, true)
+fun numbers(length: Int): String = RandomStringUtils.insecure().next(length, false, true)
 
 fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? =
   this.currentIncentive?.let {
