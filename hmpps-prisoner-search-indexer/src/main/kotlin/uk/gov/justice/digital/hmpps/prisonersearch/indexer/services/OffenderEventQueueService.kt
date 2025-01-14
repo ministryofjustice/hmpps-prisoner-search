@@ -57,7 +57,7 @@ class OffenderEventQueueService(
           when (destination) {
             RequeueDestination.OFFENDER -> offenderEventQueueUrl
             RequeueDestination.DOMAIN -> domainEventQueueUrl
-          }
+          },
         )
         .messageBody(message)
         .eventTypeMessageAttributes(eventType)
@@ -94,6 +94,7 @@ class OffenderEventQueueService(
   }
 
   enum class RequeueDestination {
-    OFFENDER, DOMAIN
+    OFFENDER,
+    DOMAIN,
   }
 }
