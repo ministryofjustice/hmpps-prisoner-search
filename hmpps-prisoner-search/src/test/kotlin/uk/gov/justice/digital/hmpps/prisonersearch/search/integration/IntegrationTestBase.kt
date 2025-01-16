@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.extension.ExtendWith
+import org.opensearch.client.RestHighLevelClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cache.CacheManager
@@ -55,6 +56,9 @@ abstract class IntegrationTestBase {
 
   @MockitoSpyBean
   internal lateinit var elasticsearchClient: SearchClient
+
+  @MockitoSpyBean
+  internal lateinit var openSearchClient: RestHighLevelClient
 
   @Autowired
   internal lateinit var cacheManager: CacheManager

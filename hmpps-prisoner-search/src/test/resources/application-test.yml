@@ -11,3 +11,8 @@ api.base.url:
 
 opensearch:
   uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
+
+search:
+  location:
+    scroll-timeout-minutes: 1
+    scroll-results: 10

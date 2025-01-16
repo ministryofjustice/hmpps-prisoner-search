@@ -84,3 +84,6 @@ search:
   reference:
     timeout-seconds: 10
     max-results: 300
+  location:
+    scroll-timeout-minutes: 5
+    scroll-results: 10000

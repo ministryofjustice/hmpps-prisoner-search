@@ -19,6 +19,7 @@
   "inOutStatus": "OUT",
   "prisonId": "OUT",
   "prisonName": "Outside",
+  "lastPrisonId": "DNI",
   "aliases": [
     {
       "firstName": "AN",
