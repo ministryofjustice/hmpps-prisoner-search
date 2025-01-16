@@ -44,7 +44,7 @@ class SearchClient(
       }
     }
 
-  private fun isRetryable(e: OpenSearchStatusException): Boolean {
+  fun isRetryable(e: OpenSearchStatusException): Boolean {
     val cause = e.cause
     if (cause !is ResponseException) return false
     if (cause.response == null) return false
