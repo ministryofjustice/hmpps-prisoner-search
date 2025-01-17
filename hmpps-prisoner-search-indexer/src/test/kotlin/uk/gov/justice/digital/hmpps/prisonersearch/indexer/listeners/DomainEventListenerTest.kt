@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isA
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -54,11 +56,11 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
 
     @Test
     internal fun `failed request`() {
-      whenever(indexListenerService.incentiveChange(any(), any())).thenThrow(RuntimeException("something went wrong"))
+      val expectedException = RuntimeException("something went wrong")
+      whenever(indexListenerService.incentiveChange(any(), any())).thenThrow(expectedException)
 
-      assertThatThrownBy {
-        listener.processDomainEvent(
-          """
+      listener.processDomainEvent(
+        """
         {
           "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
           "Message": "{\"eventType\":\"incentives.iep-review.inserted\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
@@ -69,10 +71,10 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
             }
           }
         }
-          """.trimIndent(),
-        )
-      }.hasMessageContaining("something went wrong")
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
+        """.trimIndent(),
+      )
+
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(eq(expectedException), any(), any())
     }
   }
 
@@ -119,11 +121,11 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
 
     @Test
     internal fun `failed request`() {
-      whenever(indexListenerService.restrictedPatientChange(any(), any())).thenThrow(RuntimeException("something went wrong"))
+      val expectedException = RuntimeException("something went wrong")
+      whenever(indexListenerService.restrictedPatientChange(any(), any())).thenThrow(expectedException)
 
-      assertThatThrownBy {
-        listener.processDomainEvent(
-          """
+      listener.processDomainEvent(
+        """
         {
           "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
           "Message": "{\"eventType\":\"restricted-patients.patient.added\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"prisonerNumber\":\"A7089FD\"}}",
@@ -134,10 +136,9 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
             }
           }
         }
-          """.trimIndent(),
-        )
-      }.hasMessageContaining("something went wrong")
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
+        """.trimIndent(),
+      )
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(eq(expectedException), any(), any())
     }
   }
 
@@ -163,10 +164,13 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
   inner class BadMessages {
     @Test
     internal fun `will fail for bad json`() {
-      assertThatThrownBy { listener.processDomainEvent("this is bad json") }
-        .isInstanceOf(JsonParseException::class.java)
+      whenever(offenderEventQueueService.handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any()))
+        .thenThrow(RuntimeException("JsonParseException re-thrown"))
 
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
+      assertThatThrownBy { listener.processDomainEvent("this is bad json") }
+        .isInstanceOf(RuntimeException::class.java)
+
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any())
     }
 
     @Test
