@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 
@@ -76,6 +77,9 @@ class AllPrisonerLocationResourceTest : AbstractSearchDataIntegrationTest() {
           PrisonerLocation("A7089EZ", "LEI", null),
           PrisonerLocation("A9999RB", "OUT", "DNI"),
         ).hasSizeGreaterThan(20)
+
+        // check that we have actually scrolled
+        verify(openSearchClient, atLeastOnce()).scroll(any(), any())
 
         // and check that we have cleared the scroll at the end
         verify(openSearchClient).clearScroll(any(), any())
