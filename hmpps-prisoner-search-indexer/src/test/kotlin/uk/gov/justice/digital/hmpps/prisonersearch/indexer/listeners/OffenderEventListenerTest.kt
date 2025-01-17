@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isA
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -62,7 +64,10 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     @ValueSource(strings = ["BOOKING_NUMBER-CHANGED"])
     fun `will call service for booking number change`(eventType: String) {
       listener.processOffenderEvent(validOffenderBookingChangedMessage(eventType))
-      verify(indexListenerService).offenderBookNumberChange(OffenderBookingChangedMessage(bookingId = 4323342L), eventType)
+      verify(indexListenerService).offenderBookNumberChange(
+        OffenderBookingChangedMessage(bookingId = 4323342L),
+        eventType,
+      )
     }
 
     @ParameterizedTest
@@ -144,11 +149,11 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
     @Test
     fun `failed request`() {
-      whenever(indexListenerService.externalMovement(any(), any())).thenThrow(RuntimeException("something went wrong"))
+      val expectedException = RuntimeException("something went wrong")
+      whenever(indexListenerService.externalMovement(any(), any())).thenThrow(expectedException)
 
-      assertThatThrownBy {
-        listener.processOffenderEvent(
-          """
+      listener.processOffenderEvent(
+        """
         {
           "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
           "Message": "{\"eventType\":\"EXTERNAL_MOVEMENT-CHANGED\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
@@ -159,10 +164,10 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
             }
           }
         }
-          """.trimIndent(),
-        )
-      }.hasMessageContaining("something went wrong")
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
+        """.trimIndent(),
+      )
+
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(eq(expectedException), any(), any())
     }
   }
 
@@ -213,10 +218,13 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   inner class BadMessages {
     @Test
     fun `will fail for bad json`() {
-      assertThatThrownBy { listener.processOffenderEvent("this is bad json") }
-        .isInstanceOf(JsonParseException::class.java)
+      whenever(offenderEventQueueService.handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any()))
+        .thenThrow(RuntimeException("JsonParseException re-thrown"))
 
-      assertThat(logAppender.list).anyMatch { it.message.contains("Unexpected error") && it.level == Level.ERROR }
+      assertThatThrownBy { listener.processOffenderEvent("this is bad json") }
+        .isInstanceOf(RuntimeException::class.java)
+
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any())
     }
 
     @Test
@@ -245,7 +253,11 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
       listener.processOffenderEvent(requestJson)
 
-      verify(offenderEventQueueService).handleLockingFailure(expectedException, RequeueDestination.OFFENDER, requestJson)
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(
+        expectedException,
+        RequeueDestination.OFFENDER,
+        requestJson,
+      )
     }
 
     @Test

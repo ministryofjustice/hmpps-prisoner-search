@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
@@ -88,11 +87,8 @@ class OffenderEventListener(
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
-    } catch (olfe: OptimisticLockingFailureException) {
-      offenderEventQueueService.handleLockingFailure(olfe, RequeueDestination.OFFENDER, requestJson)
     } catch (e: Exception) {
-      log.error("processOffenderEvent() Unexpected error", e)
-      throw e
+      offenderEventQueueService.handleLockingFailureOrThrow(e, RequeueDestination.OFFENDER, requestJson)
     }
   }
 

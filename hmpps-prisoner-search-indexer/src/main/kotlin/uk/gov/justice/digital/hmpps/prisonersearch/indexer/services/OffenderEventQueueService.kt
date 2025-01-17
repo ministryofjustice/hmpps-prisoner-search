@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.OptimisticLockingFailureException
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.Message
@@ -68,14 +69,14 @@ class OffenderEventQueueService(
     }
   }
 
-  fun handleLockingFailure(olfe: OptimisticLockingFailureException, destination: RequeueDestination, requestJson: String?) {
+  fun handleLockingFailureOrThrow(ex: Exception, destination: RequeueDestination, requestJson: String?) {
     if (
-      olfe.message?.contains("Cannot index a document due to seq_no+primary_term conflict") == true ||
-      olfe.message?.contains("version conflict, document already exists") == true
+      (ex is OptimisticLockingFailureException && ex.message?.contains("Cannot index a document due to seq_no+primary_term conflict") == true) ||
+      (ex is UncategorizedElasticsearchException && ex.message?.contains("version conflict, document already exists") == true)
     ) {
       // This is not an error, and so we want to avoid exceptions being logged
       val (message, _, messageAttributes) = objectMapper.readValue(requestJson, Message::class.java)
-      log.info("Detected a seq_no+primary_term conflict and trying again for message:\n{}", message)
+      log.info("Detected a seq_no+primary_term conflict and trying again for $destination message:\n{}", message)
       requeueMessageWithDelay(
         requestJson!!,
         messageAttributes.eventType.Value,
@@ -83,8 +84,8 @@ class OffenderEventQueueService(
         delayInSeconds = 1,
       )
     } else {
-      log.error("Unexpected error", olfe)
-      throw olfe
+      log.error("handleLockingFailure(): Unexpected error", ex)
+      throw ex
     }
   }
 
