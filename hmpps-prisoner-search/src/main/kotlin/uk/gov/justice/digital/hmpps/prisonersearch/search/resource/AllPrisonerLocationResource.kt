@@ -71,4 +71,8 @@ data class PrisonerLocation(
   val prisonId: String?,
   @Schema(description = "Last prison id. If prisonId is OUT then will contain last prison, otherwise will be the same as prisonId. Will not be returned if no bookings.", example = "MDI")
   val lastPrisonId: String?,
+  @Schema(description = "First Name", example = "Robert")
+  var firstName: String,
+  @Schema(description = "Last name", example = "Larsen")
+  var lastName: String,
 )
