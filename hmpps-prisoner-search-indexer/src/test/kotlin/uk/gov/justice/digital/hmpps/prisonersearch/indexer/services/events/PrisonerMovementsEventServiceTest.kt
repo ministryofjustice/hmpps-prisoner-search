@@ -241,6 +241,41 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         prisonId = "BXI",
       )
     }
+
+    @Test
+    internal fun `will emit reason of readmission with switch booking even if there was a recent merge`() {
+      val prisoner = recalledPrisoner("BXI", bookingId = "99")
+      val identifiers = listOf(
+        OffenderIdentifier(
+          whenCreated = LocalDateTime.now().minusMinutes(2),
+          type = "CRO",
+          value = "1234",
+          issuedAuthorityText = null,
+          issuedDate = null,
+          offenderId = 1L,
+        ),
+        OffenderIdentifier(
+          whenCreated = LocalDateTime.now().minusMinutes(70),
+          type = "MERGED",
+          value = "1234",
+          issuedAuthorityText = null,
+          issuedDate = null,
+          offenderId = 1L,
+        ),
+      )
+      val offenderBooking = offenderBooking(identifiers).apply {
+        // The admission movement happened after the merge
+        this.lastMovementTime = LocalDateTime.now().minusMinutes(69)
+      }
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = READMISSION_SWITCH_BOOKING,
+        prisonId = "BXI",
+      )
+    }
   }
 
   @Nested
@@ -301,6 +336,41 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
       )
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking(identifiers))
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = NEW_ADMISSION,
+        prisonId = "BXI",
+      )
+    }
+
+    @Test
+    internal fun `will ignore merge if admission took place since the merge`() {
+      val prisoner = prisonerInWithBooking("BXI")
+      val identifiers = listOf(
+        OffenderIdentifier(
+          whenCreated = LocalDateTime.now().minusMinutes(2),
+          type = "CRO",
+          value = "1234",
+          issuedAuthorityText = null,
+          issuedDate = null,
+          offenderId = 1L,
+        ),
+        OffenderIdentifier(
+          whenCreated = LocalDateTime.now().minusMinutes(70),
+          type = "MERGED",
+          value = "1234",
+          issuedAuthorityText = null,
+          issuedDate = null,
+          offenderId = 1L,
+        ),
+      )
+      val offenderBooking = offenderBooking(identifiers).apply {
+        // The admission movement happened after the merge
+        this.lastMovementTime = LocalDateTime.now().minusMinutes(69)
+      }
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
