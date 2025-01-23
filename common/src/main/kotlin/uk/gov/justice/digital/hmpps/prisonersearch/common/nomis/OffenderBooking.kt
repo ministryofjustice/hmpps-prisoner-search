@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.common.nomis
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class OffenderBooking(
   val offenderNo: String,
@@ -17,6 +18,7 @@ data class OffenderBooking(
   val inOutStatus: String? = null,
   var lastMovementTypeCode: String? = null,
   var lastMovementReasonCode: String? = null,
+  var lastMovementTime: LocalDateTime? = null,
   val religion: String? = null,
   val alerts: List<Alert>? = null,
   val assignedLivingUnit: AssignedLivingUnit? = null,

@@ -210,7 +210,8 @@ private fun Prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot: Prisoner?)
     this.status != previousPrisonerSnapshot?.status
 
 private fun isAdmissionAssociatedWithAMerge(offenderBooking: OffenderBooking): Boolean = offenderBooking.identifiersForActiveOffender("MERGED")
-  ?.any { it.whenCreated > LocalDateTime.now().minusMinutes(90) }
+  // check the merge is after the admission movement - or if there is no movement then check the merge happened in the last 90 minutes
+  ?.any { it.whenCreated > maxOf(offenderBooking.lastMovementTime ?: LocalDateTime.MIN, LocalDateTime.now().minusMinutes(90)) }
   ?: false
 
 private fun String?.isBookingBefore(previousSnapshotBookingId: String?): Boolean = (this?.toLong() ?: Long.MAX_VALUE) < (previousSnapshotBookingId?.toLong() ?: 0)
