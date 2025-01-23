@@ -74,8 +74,8 @@ class AllPrisonerLocationResourceTest : AbstractSearchDataIntegrationTest() {
         }
 
         assertThat(hits).contains(
-          PrisonerLocation("A7089EZ", "LEI", null),
-          PrisonerLocation("A9999RB", "OUT", "DNI"),
+          PrisonerLocation("A7089EZ", "LEI", null, "JOHN", "SMYTH"),
+          PrisonerLocation("A9999RB", "OUT", "DNI", "HOSP", "PATIENTONE"),
         ).hasSizeGreaterThan(20)
 
         // check that we have actually scrolled
