@@ -464,9 +464,12 @@ class MaintainIndexServiceTest {
     @Test
     fun `will delegate to synchronisation service if prisoner found in NOMIS`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(prisonerSynchroniserService.reindex(any(), any(), any())).thenReturn(Prisoner().apply {
-         prisonerNumber = booking.offenderNo
-      })
+      whenever(prisonerSynchroniserService.reindex(any(), any(), any()))
+        .thenReturn(
+          Prisoner().apply {
+            prisonerNumber = booking.offenderNo
+          },
+        )
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       whenever(nomisService.getOffender(booking.offenderNo)).thenReturn(booking)
