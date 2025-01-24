@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.NONE
@@ -62,7 +63,7 @@ class MaintainIndexServiceTest {
   @Nested
   inner class BuildIndex {
     @BeforeEach
-    internal fun setUp() {
+    fun setUp() {
       whenever(indexStatusService.initialiseIndexWhenRequired()).thenReturn(indexStatusService)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(IndexQueueStatus(0, 0, 0))
     }
@@ -101,7 +102,7 @@ class MaintainIndexServiceTest {
     }
 
     @Test
-    internal fun `will create the current index if it doesn't exist`() {
+    fun `will create the current index if it doesn't exist`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, currentIndexState = ABSENT, otherIndexState = ABSENT))
 
@@ -113,7 +114,7 @@ class MaintainIndexServiceTest {
     }
 
     @Test
-    internal fun `will delete the index if it exists`() {
+    fun `will delete the index if it exists`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
 
@@ -126,7 +127,7 @@ class MaintainIndexServiceTest {
     }
 
     @Test
-    internal fun `won't bother deleting index if it does not exist`() {
+    fun `won't bother deleting index if it does not exist`() {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = ABSENT))
       whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
@@ -204,7 +205,7 @@ class MaintainIndexServiceTest {
   @Nested
   inner class MarkIndexingComplete {
     @BeforeEach
-    internal fun setUp() {
+    fun setUp() {
       whenever(indexStatusService.markBuildCompleteAndSwitchIndex()).thenReturn(IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED))
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(IndexQueueStatus(0, 0, 0))
     }
@@ -461,20 +462,28 @@ class MaintainIndexServiceTest {
   @Nested
   inner class IndexOffender {
     @Test
-    internal fun `will delegate to synchronisation service if prisoner found in NOMIS`() {
-      whenever(prisonerSynchroniserService.reindex(any(), any(), any())).thenReturn(Prisoner())
+    fun `will delegate to synchronisation service if prisoner found in NOMIS`() {
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(prisonerSynchroniserService.reindex(any(), any(), any()))
+        .thenReturn(
+          Prisoner().apply {
+            prisonerNumber = booking.offenderNo
+          },
+        )
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      whenever(nomisService.getOffender(booking.offenderNo)).thenReturn(booking)
 
-      maintainIndexService.indexPrisoner("ABC123D")
+      maintainIndexService.indexPrisoner(booking.offenderNo)
 
       verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN), "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexIncentive(booking.offenderNo, SyncIndex.RED, "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexRestrictedPatient(booking.offenderNo, booking, SyncIndex.RED, "MAINTAIN")
     }
 
     @Test
-    internal fun `will delete from index if prisoner only found in indices`() {
+    fun `will delete from index if prisoner only found in indices`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
@@ -485,7 +494,7 @@ class MaintainIndexServiceTest {
     }
 
     @Test
-    internal fun `will raise a telemetry event if prisoner not found in NOMIS or indices`() {
+    fun `will raise a telemetry event if prisoner not found in NOMIS or indices`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
@@ -496,7 +505,7 @@ class MaintainIndexServiceTest {
     }
 
     @Test
-    internal fun `will return the not found if prisoner not found in NOMIS or indices`() {
+    fun `will return the not found if prisoner not found in NOMIS or indices`() {
       val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = ABSENT)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
