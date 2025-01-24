@@ -478,7 +478,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       prisonerRepository.updateIncentive(
         "X12345",
         CurrentIncentive(
-          IncentiveLevel(null, "description2"),
+          IncentiveLevel("code2", "description2"),
           LocalDateTime.parse("2024-08-14T15:16:17"),
           LocalDate.parse("2024-11-27"),
         ),
@@ -486,7 +486,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         prisonerRepository.getSummary("X12345", BLUE)!!,
       )
       val data = prisonerRepository.get("X12345", listOf(BLUE))?.currentIncentive!!
-      assertThat(data.level.code).isNull()
+      assertThat(data.level.code).isEqualTo("code2")
       assertThat(data.level.description).isEqualTo("description2")
       assertThat(data.dateTime).isEqualTo(LocalDateTime.parse("2024-08-14T15:16:17"))
       assertThat(data.nextReviewDate).isEqualTo(LocalDate.parse("2024-11-27"))
