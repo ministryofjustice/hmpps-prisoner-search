@@ -73,6 +73,7 @@ class IndexListenerService(
         log.debug("Delete check: offender ID {} no longer exists, deleting", this)
         prisonerSynchroniserService.delete(prisonerNumber = this)
         hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this, red = false)
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this, red = true)
       } else {
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
         reindexPrisonerBoth(offender, eventType)

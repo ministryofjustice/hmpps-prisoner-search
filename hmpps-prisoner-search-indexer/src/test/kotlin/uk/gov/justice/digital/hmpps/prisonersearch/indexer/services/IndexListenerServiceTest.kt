@@ -426,7 +426,8 @@ internal class IndexListenerServiceTest {
       whenever(nomisService.getOffender(any())).thenReturn(null)
       indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
-      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC")
+      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC", false)
+      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC", true)
     }
 
     @Test
