@@ -186,21 +186,27 @@ class MaintainIndexService(
       }
       .run { sync(prisonerNumber, this.activeIndexes()) }
 
-  private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>) =
-    nomisService.getOffender(prisonerNumber)?.let { ob ->
+  private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>): Prisoner {
+    val offenderBooking = nomisService.getOffender(prisonerNumber)
+    return offenderBooking?.let { ob ->
       prisonerSynchroniserService.reindex(ob, activeIndices, "MAINTAIN")
     }
+      ?.also {
+        prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")
+        prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, "MAINTAIN")
+        prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, SyncIndex.RED, "MAINTAIN")
+      }
       ?: prisonerRepository.get(prisonerNumber, activeIndices)
-        ?.run {
-          // Prisoner not in NOMIS, but found in index so remove
+        ?.apply {
+          // Prisoner not in NOMIS, but found in indexes so remove
           prisonerSynchroniserService.delete(prisonerNumber)
-          this
         }
       ?: run {
         // not found in either NOMIS or index, so log and throw
         telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
         throw PrisonerNotFoundException(prisonerNumber)
       }
+  }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
