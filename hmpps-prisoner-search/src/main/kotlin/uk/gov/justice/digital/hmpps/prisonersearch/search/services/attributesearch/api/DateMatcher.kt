@@ -48,29 +48,27 @@ data class DateMatcher(
     }
   }
 
-  override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> =
-    attributes[attribute]?.let {
-      when {
-        minValue != null && maxValue != null -> {
-          QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
-        }
-        minValue != null -> {
-          QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive)
-        }
-        maxValue != null -> {
-          QueryBuilders.rangeQuery(it.openSearchName).to(maxValue).includeUpper(maxInclusive)
-        }
-        else -> throw AttributeSearchException("Attribute $attribute must have a min or max value")
+  override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> = attributes[attribute]?.let {
+    when {
+      minValue != null && maxValue != null -> {
+        QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive).to(maxValue).includeUpper(maxInclusive)
       }
-    } ?: throw AttributeSearchException("Attribute $attribute not recognised")
-
-  override fun toString() =
-    if (minValue != null && maxValue != null && minValue == maxValue) {
-      "$attribute = $minValue"
-    } else {
-      val min = minValue?.let { attribute + if (minInclusive) " >= $minValue" else " > $minValue" } ?: ""
-      val max = maxValue?.let { attribute + if (maxInclusive) " <= $maxValue" else " < $maxValue" } ?: ""
-      val join = if (minValue !== null && maxValue != null) " AND " else ""
-      if (join.isEmpty()) "$min$join$max" else "($min$join$max)"
+      minValue != null -> {
+        QueryBuilders.rangeQuery(it.openSearchName).from(minValue).includeLower(minInclusive)
+      }
+      maxValue != null -> {
+        QueryBuilders.rangeQuery(it.openSearchName).to(maxValue).includeUpper(maxInclusive)
+      }
+      else -> throw AttributeSearchException("Attribute $attribute must have a min or max value")
     }
+  } ?: throw AttributeSearchException("Attribute $attribute not recognised")
+
+  override fun toString() = if (minValue != null && maxValue != null && minValue == maxValue) {
+    "$attribute = $minValue"
+  } else {
+    val min = minValue?.let { attribute + if (minInclusive) " >= $minValue" else " > $minValue" } ?: ""
+    val max = maxValue?.let { attribute + if (maxInclusive) " <= $maxValue" else " < $maxValue" } ?: ""
+    val join = if (minValue !== null && maxValue != null) " AND " else ""
+    if (join.isEmpty()) "$min$join$max" else "($min$join$max)"
+  }
 }

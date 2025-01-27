@@ -23,16 +23,15 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestControllerAdvice
 class HmppsPrisonerSearchIndexerExceptionHandler {
   @ExceptionHandler(ValidationException::class)
-  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Validation failure: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("Validation exception: {}", e.message) }
+  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Validation failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Validation exception: {}", e.message) }
 
   @ExceptionHandler(HttpMessageNotReadableException::class)
   fun handleException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> = ResponseEntity
@@ -43,40 +42,37 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
     }
 
   @ExceptionHandler(ResponseStatusException::class)
-  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(e.statusCode)
-      .body(
-        ErrorResponse(
-          status = e.statusCode.value(),
-          userMessage = "Response status error: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("Response status exception with message {}", e.message) }
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(e.statusCode)
+    .body(
+      ErrorResponse(
+        status = e.statusCode.value(),
+        userMessage = "Response status error: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Response status exception with message {}", e.message) }
 
   @ExceptionHandler(IndexConflictException::class)
-  fun handleIndexConflictException(e: IndexConflictException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(CONFLICT)
-      .body(
-        ErrorResponse(
-          status = CONFLICT,
-          userMessage = "Index conflict exception: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.error("Index conflict exception", e) }
+  fun handleIndexConflictException(e: IndexConflictException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(CONFLICT)
+    .body(
+      ErrorResponse(
+        status = CONFLICT,
+        userMessage = "Index conflict exception: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.error("Index conflict exception", e) }
 
   @ExceptionHandler(PrisonerNotFoundException::class)
-  fun handlePrisonerNotFoundException(e: PrisonerNotFoundException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(NOT_FOUND)
-      .body(
-        ErrorResponse(
-          status = NOT_FOUND,
-          userMessage = "Prisoner not found exception: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.error("Prisoner not found exception", e) }
+  fun handlePrisonerNotFoundException(e: PrisonerNotFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(NOT_FOUND)
+    .body(
+      ErrorResponse(
+        status = NOT_FOUND,
+        userMessage = "Prisoner not found exception: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.error("Prisoner not found exception", e) }
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleEntityNotFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
@@ -85,28 +81,26 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
     .body(ErrorResponse(status = NOT_FOUND, developerMessage = e.message))
 
   @ExceptionHandler(WrongIndexRequestedException::class)
-  fun handleWrongIndexRequestedException(e: WrongIndexRequestedException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Wrong index requested exception: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.error("Wrong index requested exception", e) }
+  fun handleWrongIndexRequestedException(e: WrongIndexRequestedException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Wrong index requested exception: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.error("Wrong index requested exception", e) }
 
   @ExceptionHandler(Exception::class)
-  fun handleException(e: Exception): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(INTERNAL_SERVER_ERROR)
-      .body(
-        ErrorResponse(
-          status = INTERNAL_SERVER_ERROR,
-          userMessage = "Unexpected error: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.error("Unexpected exception", e) }
+  fun handleException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(INTERNAL_SERVER_ERROR)
+    .body(
+      ErrorResponse(
+        status = INTERNAL_SERVER_ERROR,
+        userMessage = "Unexpected error: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.error("Unexpected exception", e) }
 
   @ExceptionHandler(AccessDeniedException::class)
   fun handleException(e: AccessDeniedException?): ResponseEntity<ErrorResponse> = ResponseEntity

@@ -106,7 +106,10 @@ class IncentivesMockServer : WireMockServer(8096) {
   }
 }
 
-class IncentivesApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class IncentivesApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val incentivesApi = IncentivesMockServer()

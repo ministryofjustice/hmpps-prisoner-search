@@ -495,20 +495,17 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
   }
 
   private fun newPrisoner() = prisoner("/receive-state-changes/new-prisoner.json")
-  private fun prisonerInWithBooking(prisonId: String = "NMI") =
-    prisoner("/receive-state-changes/first-new-booking.json").apply {
-      this.prisonId = prisonId
-    }
+  private fun prisonerInWithBooking(prisonId: String = "NMI") = prisoner("/receive-state-changes/first-new-booking.json").apply {
+    this.prisonId = prisonId
+  }
 
-  private fun prisonerInWithMovedBooking(prisonId: String = "NMI") =
-    prisoner("/receive-state-changes/first-moved-booking.json").apply {
-      this.prisonId = prisonId
-    }
+  private fun prisonerInWithMovedBooking(prisonId: String = "NMI") = prisoner("/receive-state-changes/first-moved-booking.json").apply {
+    this.prisonId = prisonId
+  }
 
-  private fun prisonerInWithNewBooking(prisonId: String = "NMI") =
-    prisoner("/receive-state-changes/second-new-booking.json").apply {
-      this.prisonId = prisonId
-    }
+  private fun prisonerInWithNewBooking(prisonId: String = "NMI") = prisoner("/receive-state-changes/second-new-booking.json").apply {
+    this.prisonId = prisonId
+  }
 
   private fun releasedPrisoner() = prisoner("/receive-state-changes/released.json")
   private fun recalledPrisoner(prisonId: String = "NMI", bookingId: String = "1203208") = prisoner("/receive-state-changes/recalled.json").apply {
@@ -518,23 +515,19 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
   private fun releasedPrisonerToHospital() = prisoner("/receive-state-changes/released-to-hospital.json")
 
   private fun prisonerBeingTransferred() = prisoner("/receive-state-changes/transfer-out.json")
-  private fun prisonerTransferredIn(prisonId: String = "WWI") =
-    prisoner("/receive-state-changes/transfer-in.json").apply {
-      this.prisonId = prisonId
-    }
+  private fun prisonerTransferredIn(prisonId: String = "WWI") = prisoner("/receive-state-changes/transfer-in.json").apply {
+    this.prisonId = prisonId
+  }
 
   private fun prisonerOutAtCourt() = prisoner("/receive-state-changes/court-out.json")
   private fun prisonerReturnFromCourtSamePrison() = prisoner("/receive-state-changes/court-in-same-prison.json")
-  private fun prisonerReturnFromCourtDifferentPrison(prisonId: String = "NMI") =
-    prisoner("/receive-state-changes/court-in-different-prison.json").apply { this.prisonId = prisonId }
+  private fun prisonerReturnFromCourtDifferentPrison(prisonId: String = "NMI") = prisoner("/receive-state-changes/court-in-different-prison.json").apply { this.prisonId = prisonId }
 
   private fun prisonerOutOnTAP() = prisoner("/receive-state-changes/tap-out.json")
   private fun prisonerReturnFromTAPSamePrison() = prisoner("/receive-state-changes/tap-in-same-prison.json")
-  private fun prisonerReturnFromTAPDifferentPrison(prisonId: String = "NMI") =
-    prisoner("/receive-state-changes/tap-in-different-prison.json").apply { this.prisonId = prisonId }
+  private fun prisonerReturnFromTAPDifferentPrison(prisonId: String = "NMI") = prisoner("/receive-state-changes/tap-in-different-prison.json").apply { this.prisonId = prisonId }
 
-  private fun prisoner(resource: String): Prisoner =
-    objectMapper.readValue(resource.readResourceAsText(), Prisoner::class.java)
+  private fun prisoner(resource: String): Prisoner = objectMapper.readValue(resource.readResourceAsText(), Prisoner::class.java)
 
   private fun offenderBooking(identifiers: List<OffenderIdentifier>? = null) = OffenderBooking(
     "A9460DY",
@@ -546,6 +539,5 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
     allIdentifiers = identifiers,
   )
 
-  private fun String.readResourceAsText(): String =
-    PrisonerMovementsEventServiceTest::class.java.getResource(this)!!.readText()
+  private fun String.readResourceAsText(): String = PrisonerMovementsEventServiceTest::class.java.getResource(this)!!.readText()
 }

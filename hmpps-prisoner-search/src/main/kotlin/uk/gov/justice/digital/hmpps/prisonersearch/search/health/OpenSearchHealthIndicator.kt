@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class OpenSearchHealthIndicator(private val template: ElasticsearchOperations) : AbstractHealthIndicator() {
-  override fun doHealthCheck(builder: Health.Builder): Unit =
-    processResponse(builder, template.cluster().health())
+  override fun doHealthCheck(builder: Health.Builder): Unit = processResponse(builder, template.cluster().health())
 
   private fun processResponse(builder: Health.Builder, response: ClusterHealth) {
     if (response.isTimedOut) {

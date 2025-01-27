@@ -22,36 +22,34 @@ class AttributeResolver {
 /**
  * Derive all attributes that can be searched for in queries
  */
-internal fun getAttributes(kClass: KClass<*>): Attributes =
-  kClass.memberProperties.flatMap { prop -> findAttributes(prop) }.toMap()
+internal fun getAttributes(kClass: KClass<*>): Attributes = kClass.memberProperties.flatMap { prop -> findAttributes(prop) }.toMap()
 
 private fun findAttributes(
   prop: KProperty1<*, *>,
   prefix: String = "",
   nested: Boolean = false,
-): List<Pair<String, Attribute>> =
-  when (prop.getPropertyType()) {
-    // We've found a type supported by a matcher - create an attribute
-    PropertyType.SUPPORTED_TYPE -> {
-      val propertyClass = prop.getPropertyClass()
-      val propertyName = prefix + prop.name
-      val openSearchName = prefix + prop.getOpenSearchName()
-      val fuzzy = propertyName.isFuzzyAttribute()
-      listOf(propertyName to Attribute(propertyClass, openSearchName, nested, fuzzy))
-    }
-    // Prevent lists of supported types as they are not extensible
-    PropertyType.LIST_SUPPORTED_TYPES -> throw InvalidAttributeTypeException("Attribute '${prefix}${prop.name}' is invalid. Lists of simple types are not supported because they cannot be extended. Please change to a list of objects. See [Prisoner.emailAddresses] for an example.")
-    // We've found a list of objects - use recursion with this method to derive the object's attributes
-    PropertyType.LIST_OBJECTS -> {
-      prop.getGenericTypeClass().memberProperties
-        .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
-    }
-    // We've found a nested object - use recursion with this method to derive the object's attributes
-    PropertyType.OBJECT -> {
-      prop.getPropertyClass().memberProperties
-        .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
-    }
+): List<Pair<String, Attribute>> = when (prop.getPropertyType()) {
+  // We've found a type supported by a matcher - create an attribute
+  PropertyType.SUPPORTED_TYPE -> {
+    val propertyClass = prop.getPropertyClass()
+    val propertyName = prefix + prop.name
+    val openSearchName = prefix + prop.getOpenSearchName()
+    val fuzzy = propertyName.isFuzzyAttribute()
+    listOf(propertyName to Attribute(propertyClass, openSearchName, nested, fuzzy))
   }
+  // Prevent lists of supported types as they are not extensible
+  PropertyType.LIST_SUPPORTED_TYPES -> throw InvalidAttributeTypeException("Attribute '${prefix}${prop.name}' is invalid. Lists of simple types are not supported because they cannot be extended. Please change to a list of objects. See [Prisoner.emailAddresses] for an example.")
+  // We've found a list of objects - use recursion with this method to derive the object's attributes
+  PropertyType.LIST_OBJECTS -> {
+    prop.getGenericTypeClass().memberProperties
+      .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
+  }
+  // We've found a nested object - use recursion with this method to derive the object's attributes
+  PropertyType.OBJECT -> {
+    prop.getPropertyClass().memberProperties
+      .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
+  }
+}
 
 // Get the generic type of a list, e.g. List<OffenderIdentifier> -> OffenderIdentifier
 private fun KProperty1<*, *>.getGenericTypeClass() = returnType.genericType()
@@ -60,16 +58,14 @@ private fun KProperty1<*, *>.getGenericTypeClass() = returnType.genericType()
 private fun KProperty1<*, *>.getPropertyClass() = returnType.classifier as KClass<*>
 
 // Get the name of a property as used by OpenSearch, e.g. firstName -> firstName.keyword
-private fun KProperty1<*, *>.getOpenSearchName(): String =
-  if (getPropertyClass().simpleName != "String" || (hasFieldAnnotation("Keyword"))) {
-    name
-  } else {
-    "$name.keyword"
-  }
+private fun KProperty1<*, *>.getOpenSearchName(): String = if (getPropertyClass().simpleName != "String" || (hasFieldAnnotation("Keyword"))) {
+  name
+} else {
+  "$name.keyword"
+}
 
 // Checks if a property has an annotation of the passed type
-private fun KProperty1<*, *>.hasFieldAnnotation(fieldType: String): Boolean =
-  getFieldType() == fieldType
+private fun KProperty1<*, *>.hasFieldAnnotation(fieldType: String): Boolean = getFieldType() == fieldType
 
 private fun KProperty1<*, *>.getFieldType(): String? {
   if (javaField?.annotations?.size == 0) return null
@@ -92,16 +88,15 @@ private enum class PropertyType {
   LIST_OBJECTS,
 }
 
-private fun KProperty1<*, *>.getPropertyType(): PropertyType =
-  when (returnType.classifier) {
-    List::class -> {
-      when (this.getGenericTypeClass()) {
-        in TypeMatcher.getSupportedTypes() -> PropertyType.LIST_SUPPORTED_TYPES
-        else -> PropertyType.LIST_OBJECTS
-      }
+private fun KProperty1<*, *>.getPropertyType(): PropertyType = when (returnType.classifier) {
+  List::class -> {
+    when (this.getGenericTypeClass()) {
+      in TypeMatcher.getSupportedTypes() -> PropertyType.LIST_SUPPORTED_TYPES
+      else -> PropertyType.LIST_OBJECTS
     }
-    in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
-    else -> PropertyType.OBJECT
   }
+  in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
+  else -> PropertyType.OBJECT
+}
 
 class InvalidAttributeTypeException(message: String) : RuntimeException(message)

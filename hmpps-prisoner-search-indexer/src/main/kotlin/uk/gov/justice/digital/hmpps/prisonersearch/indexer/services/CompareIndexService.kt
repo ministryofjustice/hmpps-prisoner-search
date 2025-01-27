@@ -170,30 +170,30 @@ class CompareIndexService(
     return EqualsBuilder.reflectionEquals(p1, p2)
   }
 
-  private fun deepEqualsAlt(map: Map<String, Any>, other: Map<String, Any>): Boolean =
-    map.entries
-      .stream()
-      .allMatch { e: Map.Entry<String, Any> ->
-        val mapValue = e.value
-        val otherValue = other[e.key]
-        if (mapValue is Map<*, *> && otherValue is Map<*, *>) {
-          @Suppress("UNCHECKED_CAST")
-          deepEqualsAlt(mapValue as Map<String, Any>, otherValue as Map<String, Any>)
-        } else {
-          other.containsKey(e.key) && Objects.deepEquals(
+  private fun deepEqualsAlt(map: Map<String, Any>, other: Map<String, Any>): Boolean = map.entries
+    .stream()
+    .allMatch { e: Map.Entry<String, Any> ->
+      val mapValue = e.value
+      val otherValue = other[e.key]
+      if (mapValue is Map<*, *> && otherValue is Map<*, *>) {
+        @Suppress("UNCHECKED_CAST")
+        deepEqualsAlt(mapValue as Map<String, Any>, otherValue as Map<String, Any>)
+      } else {
+        other.containsKey(e.key) &&
+          Objects.deepEquals(
             mapValue,
             otherValue,
           )
-        }
       }
+    }
 
-  internal fun equalsIgnoringNulls(mapWithNulls: Map<String, Any?>, other: Map<String, Any?>): Boolean {
-    return mapWithNulls
-      .entries
-      .stream()
-      .allMatch { e: Map.Entry<String, Any?> ->
-        val mapWithNullsValue = e.value
-        (isDeeplyNull(mapWithNullsValue) && !other.containsKey(e.key)) || run {
+  internal fun equalsIgnoringNulls(mapWithNulls: Map<String, Any?>, other: Map<String, Any?>): Boolean = mapWithNulls
+    .entries
+    .stream()
+    .allMatch { e: Map.Entry<String, Any?> ->
+      val mapWithNullsValue = e.value
+      (isDeeplyNull(mapWithNullsValue) && !other.containsKey(e.key)) ||
+        run {
           val otherValue: Any? = other[e.key]
           if (mapWithNullsValue is List<*> && otherValue is List<*>) {
             var i = 0
@@ -213,35 +213,31 @@ class CompareIndexService(
             Objects.deepEquals(mapWithNullsValue, otherValue)
           }
         }
-      }
+    }
+
+  private fun isDeeplyNull(value: Any?): Boolean = value == null ||
+    (
+      value is Map<*, *> &&
+        @Suppress("UNCHECKED_CAST")
+        (value as Map<String, Any>)
+          .entries
+          .stream()
+          .allMatch { isDeeplyNull(it.value) }
+      ) ||
+    (value is List<*> && value.all { isDeeplyNull(it) })
+
+  fun comparePrisoner(prisonerNumber: String) = nomisService.getOffender(prisonerNumber)?.let { ob ->
+    val calculated = prisonerSynchroniserService.translate(ob)
+    val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
+
+    prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
   }
 
-  private fun isDeeplyNull(value: Any?): Boolean =
-    value == null ||
-      (
-        value is Map<*, *> &&
-          @Suppress("UNCHECKED_CAST")
-          (value as Map<String, Any>)
-            .entries
-            .stream()
-            .allMatch { isDeeplyNull(it.value) }
-        ) ||
-      (value is List<*> && value.all { isDeeplyNull(it) })
-
-  fun comparePrisoner(prisonerNumber: String) =
-    nomisService.getOffender(prisonerNumber)?.let { ob ->
-      val calculated = prisonerSynchroniserService.translate(ob)
-      val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
-
-      prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
+  fun comparePrisonerRed(prisonerNumber: String) = prisonerRepository.get(prisonerNumber, listOf(indexStatusService.getIndexStatus().currentIndex))?.let { existing ->
+    prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.let { new ->
+      prisonerDifferenceService.reportDifferencesDetails(existing, new)
     }
-
-  fun comparePrisonerRed(prisonerNumber: String) =
-    prisonerRepository.get(prisonerNumber, listOf(indexStatusService.getIndexStatus().currentIndex))?.let { existing ->
-      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.let { new ->
-        prisonerDifferenceService.reportDifferencesDetails(existing, new)
-      }
-    }
+  }
 
   private fun setupIndexSearch(
     index: SyncIndex,
@@ -266,6 +262,5 @@ class CompareIndexService(
     log.info("clearScroll isSucceeded=${clearScrollResponse.isSucceeded}, numFreed=${clearScrollResponse.numFreed}")
   }
 
-  private fun toLogMessage(onlyList: List<String>): String =
-    if (onlyList.size <= CUTOFF) onlyList.toString() else onlyList.slice(IntRange(0, CUTOFF)).toString() + "..."
+  private fun toLogMessage(onlyList: List<String>): String = if (onlyList.size <= CUTOFF) onlyList.toString() else onlyList.slice(IntRange(0, CUTOFF)).toString() + "..."
 }

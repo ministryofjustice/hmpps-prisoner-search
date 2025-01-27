@@ -43,7 +43,10 @@ class OAuthMockServer : WireMockServer(8090) {
   }
 }
 
-class HmppsAuthApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class HmppsAuthApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val hmppsAuth = OAuthMockServer()

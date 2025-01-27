@@ -28,9 +28,8 @@ interface Matcher {
  *
  * We need to know about these because OpenSearch handles them differently.
  */
-internal fun List<Matcher>.findNestedMatchers(attributes: Attributes) =
-  filterIsInstance(TypeMatcher::class.java)
-    .filter {
-      attributes[it.attribute]?.isNested
-        ?: throw AttributeSearchException("Unknown attribute: ${it.attribute}")
-    }
+internal fun List<Matcher>.findNestedMatchers(attributes: Attributes) = filterIsInstance(TypeMatcher::class.java)
+  .filter {
+    attributes[it.attribute]?.isNested
+      ?: throw AttributeSearchException("Unknown attribute: ${it.attribute}")
+  }

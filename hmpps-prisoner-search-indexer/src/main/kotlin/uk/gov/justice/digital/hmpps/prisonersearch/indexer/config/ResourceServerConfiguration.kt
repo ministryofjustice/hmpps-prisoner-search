@@ -12,7 +12,9 @@ class ResourceServerConfiguration {
       addPaths = setOf(
         "/queue-admin/retry-all-dlqs",
         // These endpoints are secured in the ingress rather than the app so that they can be called from within the namespace without requiring authentication
-        "/maintain-index/check-complete", "/compare-index/size", "/prisoner-differences/delete",
+        "/maintain-index/check-complete",
+        "/compare-index/size",
+        "/prisoner-differences/delete",
         "/refresh-index/automated",
       )
     }

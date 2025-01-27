@@ -122,8 +122,7 @@ fun shouldMatchOneOf(query: String, values: List<*>): BoolQueryBuilder {
   return nestedQuery
 }
 
-fun BoolQueryBuilder.mustWhenPresentGender(query: String, value: Any?) =
-  if (value == "ALL") this else mustWhenPresent(query, value)
+fun BoolQueryBuilder.mustWhenPresentGender(query: String, value: Any?) = if (value == "ALL") this else mustWhenPresent(query, value)
 
 fun BoolQueryBuilder.matchesDateRange(earliest: LocalDate?, latest: LocalDate?, vararg query: String): BoolQueryBuilder {
   val nestedClauses = QueryBuilders.boolQuery()
@@ -135,8 +134,7 @@ fun BoolQueryBuilder.matchesDateRange(earliest: LocalDate?, latest: LocalDate?, 
   return this.must(nestedClauses)
 }
 
-fun BoolQueryBuilder.shouldAll(vararg queries: QueryBuilder?): BoolQueryBuilder =
-  shouldAll(queries.asList().filterNotNull())
+fun BoolQueryBuilder.shouldAll(vararg queries: QueryBuilder?): BoolQueryBuilder = shouldAll(queries.asList().filterNotNull())
 
 fun BoolQueryBuilder.shouldAll(queries: List<QueryBuilder>): BoolQueryBuilder {
   queries.forEach {

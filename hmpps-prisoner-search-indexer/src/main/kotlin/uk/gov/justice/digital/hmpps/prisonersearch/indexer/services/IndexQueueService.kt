@@ -63,16 +63,13 @@ class IndexQueueService(
     }
   }
 
-  fun sendRefreshPrisonerPageMessage(prisonerPage: PrisonerPage) =
-    sendMessage(IndexMessageRequest(type = REFRESH_PRISONER_PAGE, prisonerPage = prisonerPage)).also {
-      log.info("Sent {} prisoner page message request {} for page {}", REFRESH_PRISONER_PAGE, it.messageId(), prisonerPage)
-    }
+  fun sendRefreshPrisonerPageMessage(prisonerPage: PrisonerPage) = sendMessage(IndexMessageRequest(type = REFRESH_PRISONER_PAGE, prisonerPage = prisonerPage)).also {
+    log.info("Sent {} prisoner page message request {} for page {}", REFRESH_PRISONER_PAGE, it.messageId(), prisonerPage)
+  }
 
-  fun sendPopulatePrisonerMessage(prisonerNumber: String) =
-    sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
+  fun sendPopulatePrisonerMessage(prisonerNumber: String) = sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
 
-  fun sendRefreshPrisonerMessage(prisonerNumber: String) =
-    sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
+  fun sendRefreshPrisonerMessage(prisonerNumber: String) = sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
 
   fun getNumberOfMessagesCurrentlyOnIndexQueue(): Int = indexSqsClient.countMessagesOnQueue(indexQueueUrl).get()
 

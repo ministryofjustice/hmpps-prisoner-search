@@ -30,20 +30,17 @@ class WebClientConfiguration(
   fun prisonApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(prisonApiBaseUri, healthTimeout)
 
   @Bean
-  fun prisonApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "prison-api", url = prisonApiBaseUri, timeout)
+  fun prisonApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "prison-api", url = prisonApiBaseUri, timeout)
 
   @Bean
   fun restrictedPatientsHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(restrictedPatientBaseUrl, healthTimeout)
 
   @Bean
-  fun restrictedPatientsWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "restricted-patients-api", url = restrictedPatientBaseUrl, timeout)
+  fun restrictedPatientsWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "restricted-patients-api", url = restrictedPatientBaseUrl, timeout)
 
   @Bean
   fun incentivesHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(incentivesBaseUri, healthTimeout)
 
   @Bean
-  fun incentivesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "incentives-api", url = incentivesBaseUri, timeout)
+  fun incentivesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "incentives-api", url = incentivesBaseUri, timeout)
 }

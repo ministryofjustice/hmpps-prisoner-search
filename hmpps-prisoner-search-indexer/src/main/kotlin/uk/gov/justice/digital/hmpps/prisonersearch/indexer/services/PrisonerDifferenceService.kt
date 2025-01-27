@@ -67,51 +67,46 @@ class PrisonerDifferenceService(
     offenderBooking: OffenderBooking,
     prisoner: Prisoner,
     eventType: String,
-  ): Boolean =
-    hash(prisoner)!!.run {
-      takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
-        generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner, false)
-        generateDiffTelemetry(
-          previousPrisonerSnapshot,
-          offenderBooking.offenderNo,
-          offenderBooking.bookingId,
-          prisoner,
-          eventType,
-        )
-        return@run true
-      } ?: run {
-        telemetryClient.trackPrisonerEvent(
-          PRISONER_DATABASE_NO_CHANGE,
-          prisonerNumber = offenderBooking.offenderNo,
-          bookingId = offenderBooking.bookingId,
-          eventType = eventType,
-        )
-        return@run false
-      }
+  ): Boolean = hash(prisoner)!!.run {
+    takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
+      generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner, false)
+      generateDiffTelemetry(
+        previousPrisonerSnapshot,
+        offenderBooking.offenderNo,
+        offenderBooking.bookingId,
+        prisoner,
+        eventType,
+      )
+      return@run true
+    } ?: run {
+      telemetryClient.trackPrisonerEvent(
+        PRISONER_DATABASE_NO_CHANGE,
+        prisonerNumber = offenderBooking.offenderNo,
+        bookingId = offenderBooking.bookingId,
+        eventType = eventType,
+      )
+      return@run false
     }
+  }
 
-  fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) =
-    if (hasChanged(previousPrisonerSnapshot, prisoner)) {
-      reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner)
-    } else {
-      emptyList()
-    }
+  fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) = if (hasChanged(previousPrisonerSnapshot, prisoner)) {
+    reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner)
+  } else {
+    emptyList()
+  }
 
-  fun hasChanged(previousSnapshot: Any?, current: Any): Boolean =
-    hash(previousSnapshot) != hash(current)
+  fun hasChanged(previousSnapshot: Any?, current: Any): Boolean = hash(previousSnapshot) != hash(current)
 
-  fun updateDbHash(nomsNumber: String, hash: String) =
-    // upsertIfChanged returns the number of records altered, so > 0 means that we have changed something
+  fun updateDbHash(nomsNumber: String, hash: String) = // upsertIfChanged returns the number of records altered, so > 0 means that we have changed something
     prisonerHashRepository.upsertIfChanged(nomsNumber, hash, Instant.now()) > 0
 
-  fun hash(value: Any?) =
-    value?.run {
-      objectMapper.writeValueAsString(this)
-        .toByteArray()
-        .let {
-          Base64.encodeBase64String(DigestUtils.md5Digest(it))
-        }
-    }
+  fun hash(value: Any?) = value?.run {
+    objectMapper.writeValueAsString(this)
+      .toByteArray()
+      .let {
+        Base64.encodeBase64String(DigestUtils.md5Digest(it))
+      }
+  }
 
   internal fun <T : Diffable<T>> generateDiffTelemetry(
     previousSnapshot: T?,
@@ -196,40 +191,38 @@ class PrisonerDifferenceService(
   }
 
   @Suppress("UNCHECKED_CAST")
-  internal fun <T : Diffable<T>> getDifferencesByCategory(prisoner: Diffable<T>, other: T): PrisonerDifferences =
-    prisoner.diff(other).let { diffResult ->
-      propertiesByDiffCategory.mapValues { properties ->
-        val diffs = diffResult.diffs as List<Diff<T>>
-        diffs.filter { diff -> properties.value.contains(diff.fieldName) }
-          .map { diff -> Difference(diff.fieldName, properties.key, diff.left, diff.right) }
-      }
-    }.filter { differencesByCategory -> differencesByCategory.value.isNotEmpty() }
+  internal fun <T : Diffable<T>> getDifferencesByCategory(prisoner: Diffable<T>, other: T): PrisonerDifferences = prisoner.diff(other).let { diffResult ->
+    propertiesByDiffCategory.mapValues { properties ->
+      val diffs = diffResult.diffs as List<Diff<T>>
+      diffs.filter { diff -> properties.value.contains(diff.fieldName) }
+        .map { diff -> Difference(diff.fieldName, properties.key, diff.left, diff.right) }
+    }
+  }.filter { differencesByCategory -> differencesByCategory.value.isNotEmpty() }
 
   private fun raiseDifferencesTelemetry(
     offenderNo: String,
     bookingId: Long?,
     eventType: String,
     differences: PrisonerDifferences,
-  ) =
-    if (differences.isEmpty()) {
-      // we've detected a change in the hash for the prisoner, but no differences are recorded
-      telemetryClient.trackPrisonerEvent(
-        PRISONER_UPDATED_NO_DIFFERENCES,
-        prisonerNumber = offenderNo,
-        bookingId = bookingId,
-        eventType = eventType,
-      )
-    } else {
-      telemetryClient.trackEvent(
-        PRISONER_UPDATED,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "bookingId" to (bookingId?.toString() ?: "not set"),
-          "event" to eventType,
-          "categoriesChanged" to differences.keys.map { it.name }.toList().sorted().toString(),
-        ),
-      )
-    }
+  ) = if (differences.isEmpty()) {
+    // we've detected a change in the hash for the prisoner, but no differences are recorded
+    telemetryClient.trackPrisonerEvent(
+      PRISONER_UPDATED_NO_DIFFERENCES,
+      prisonerNumber = offenderNo,
+      bookingId = bookingId,
+      eventType = eventType,
+    )
+  } else {
+    telemetryClient.trackEvent(
+      PRISONER_UPDATED,
+      mapOf(
+        "prisonerNumber" to offenderNo,
+        "bookingId" to (bookingId?.toString() ?: "not set"),
+        "event" to eventType,
+        "categoriesChanged" to differences.keys.map { it.name }.toList().sorted().toString(),
+      ),
+    )
+  }
 }
 
 data class Difference(val property: String, val categoryChanged: DiffCategory, val oldValue: Any?, val newValue: Any?)

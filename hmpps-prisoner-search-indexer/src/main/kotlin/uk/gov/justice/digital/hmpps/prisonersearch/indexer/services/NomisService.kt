@@ -29,8 +29,7 @@ class NomisService(
 
   fun getTotalNumberOfPrisoners(): Long = getOffendersIds(0, 1).totalElements
 
-  fun getPrisonerNumbers(page: Int, pageSize: Int): List<String> =
-    getOffendersIds(page, pageSize).content
+  fun getPrisonerNumbers(page: Int, pageSize: Int): List<String> = getOffendersIds(page, pageSize).content
 
   fun getNomsNumberForBooking(bookingId: Long): String? = prisonApiWebClient.get()
     .uri("/api/bookings/{bookingId}?basicInfo=true", bookingId)

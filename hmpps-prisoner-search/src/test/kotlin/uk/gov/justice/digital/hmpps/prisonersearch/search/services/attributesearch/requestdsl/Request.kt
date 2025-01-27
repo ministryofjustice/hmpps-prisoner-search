@@ -36,10 +36,9 @@ interface RequestDsl {
   ): Query
 
   companion object {
-    operator fun invoke(dsl: RequestDsl.() -> Unit): AttributeSearchRequest =
-      RequestBuilder()
-        .apply(dsl)
-        .build()
+    operator fun invoke(dsl: RequestDsl.() -> Unit): AttributeSearchRequest = RequestBuilder()
+      .apply(dsl)
+      .build()
   }
 }
 
@@ -47,11 +46,10 @@ class RequestBuilder : RequestDsl {
   override var joinType: JoinType = AND
   private val queries = mutableListOf<Query>()
 
-  override fun query(dsl: QueryDsl.() -> Unit) =
-    QueryBuilder()
-      .apply(dsl)
-      .build()
-      .also { queries += it }
+  override fun query(dsl: QueryDsl.() -> Unit) = QueryBuilder()
+    .apply(dsl)
+    .build()
+    .also { queries += it }
 
   fun build(): AttributeSearchRequest = AttributeSearchRequest(joinType, queries)
 }

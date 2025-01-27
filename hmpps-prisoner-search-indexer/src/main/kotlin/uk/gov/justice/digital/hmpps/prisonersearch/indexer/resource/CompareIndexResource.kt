@@ -80,8 +80,7 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
-  ): String =
-    // deliberately return a string here as need to call toString on org.apache.commons.lang3.builder.Diff
+  ): String = // deliberately return a string here as need to call toString on org.apache.commons.lang3.builder.Diff
     // so that we get a proper representation of each difference
     compareIndexService.comparePrisoner(prisonerNumber).toString()
 
@@ -104,8 +103,7 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
     @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
-  ): String =
-    // deliberately return a string here as need to call toString on org.apache.commons.lang3.builder.Diff
+  ): String = // deliberately return a string here as need to call toString on org.apache.commons.lang3.builder.Diff
     // so that we get a proper representation of each difference
     compareIndexService.comparePrisonerRed(prisonerNumber).toString()
 }

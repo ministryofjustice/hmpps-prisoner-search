@@ -45,8 +45,6 @@ class ResourceSecurityTest : IntegrationTestBase() {
   }
 }
 
-private fun RequestMappingInfo.getMappings() =
-  methodsCondition.methods.map { it.name }.flatMap {
-      method ->
-    pathPatternsCondition?.patternValues?.map { "$method $it" } ?: emptyList()
-  }
+private fun RequestMappingInfo.getMappings() = methodsCondition.methods.map { it.name }.flatMap { method ->
+  pathPatternsCondition?.patternValues?.map { "$method $it" } ?: emptyList()
+}

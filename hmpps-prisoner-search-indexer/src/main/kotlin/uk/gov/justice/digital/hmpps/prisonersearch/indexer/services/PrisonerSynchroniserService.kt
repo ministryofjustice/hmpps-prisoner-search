@@ -137,81 +137,78 @@ class PrisonerSynchroniserService(
     return isChanged
   }
 
-  internal fun reindexIncentive(prisonerNo: String, index: SyncIndex, eventType: String) =
-    prisonerRepository.getSummary(prisonerNo, index)
-      ?.run {
-        val bookingId = this.prisoner?.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
-        val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
-        val newLevel: CurrentIncentive? = incentiveLevel.toCurrentIncentive()
+  internal fun reindexIncentive(prisonerNo: String, index: SyncIndex, eventType: String) = prisonerRepository.getSummary(prisonerNo, index)
+    ?.run {
+      val bookingId = this.prisoner?.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
+      val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
+      val newLevel: CurrentIncentive? = incentiveLevel.toCurrentIncentive()
 
-        prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
-          .also { updated ->
-            telemetryClient.trackPrisonerEvent(
-              if (updated) {
-                TelemetryEvents.INCENTIVE_UPDATED
-              } else {
-                TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE
-              },
-              prisonerNumber = prisonerNo,
-              bookingId = bookingId,
-              eventType = eventType,
-            )
+      prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
+        .also { updated ->
+          telemetryClient.trackPrisonerEvent(
             if (updated) {
-              val newPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
-              newPrisoner.currentIncentive = newLevel
-              prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner, true)
-            }
+              TelemetryEvents.INCENTIVE_UPDATED
+            } else {
+              TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE
+            },
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+          if (updated) {
+            val newPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
+            newPrisoner.currentIncentive = newLevel
+            prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner, true)
           }
-      }
-
-  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) =
-    prisonerRepository.getSummary(prisonerNo, index)
-      ?.run {
-        if (this.prisoner == null) {
-          log.warn("Prisoner not found in RED index for {}", prisonerNo)
-          throw PrisonerNotFoundException(ob.offenderNo)
         }
-        val existingPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
-        val restrictedPatient = getRestrictedPatient(ob)
-        this.prisoner.setLocationDescription(restrictedPatient, ob)
-        this.prisoner.setRestrictedPatientFields(restrictedPatient)
+    }
 
-        prisonerRepository.updateRestrictedPatient(
-          prisonerNo,
-          restrictedPatient = restrictedPatient != null,
-          this.prisoner.supportingPrisonId,
-          this.prisoner.dischargedHospitalId,
-          this.prisoner.dischargedHospitalDescription,
-          this.prisoner.dischargeDate,
-          this.prisoner.dischargeDetails,
-          this.prisoner.locationDescription,
-          index,
-          this,
-        )
-          .also { updated ->
-            telemetryClient.trackPrisonerEvent(
-              if (updated) {
-                TelemetryEvents.RESTRICTED_PATIENT_UPDATED
-              } else {
-                TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE
-              },
-              prisonerNumber = prisonerNo,
-              bookingId = ob.bookingId,
-              eventType = eventType,
-            )
-            if (updated) {
-              prisonerDifferenceService.generateDiffEvent(existingPrisoner, prisonerNo, this.prisoner, true)
-            }
-          }
+  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) = prisonerRepository.getSummary(prisonerNo, index)
+    ?.run {
+      if (this.prisoner == null) {
+        log.warn("Prisoner not found in RED index for {}", prisonerNo)
+        throw PrisonerNotFoundException(ob.offenderNo)
       }
+      val existingPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
+      val restrictedPatient = getRestrictedPatient(ob)
+      this.prisoner.setLocationDescription(restrictedPatient, ob)
+      this.prisoner.setRestrictedPatientFields(restrictedPatient)
+
+      prisonerRepository.updateRestrictedPatient(
+        prisonerNo,
+        restrictedPatient = restrictedPatient != null,
+        this.prisoner.supportingPrisonId,
+        this.prisoner.dischargedHospitalId,
+        this.prisoner.dischargedHospitalDescription,
+        this.prisoner.dischargeDate,
+        this.prisoner.dischargeDetails,
+        this.prisoner.locationDescription,
+        index,
+        this,
+      )
+        .also { updated ->
+          telemetryClient.trackPrisonerEvent(
+            if (updated) {
+              TelemetryEvents.RESTRICTED_PATIENT_UPDATED
+            } else {
+              TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE
+            },
+            prisonerNumber = prisonerNo,
+            bookingId = ob.bookingId,
+            eventType = eventType,
+          )
+          if (updated) {
+            prisonerDifferenceService.generateDiffEvent(existingPrisoner, prisonerNo, this.prisoner, true)
+          }
+        }
+    }
 
   // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
   // we don't need to write what we have so far for the prisoner to it.
-  internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner =
-    translate(ob).also {
-      indexes.map { index -> prisonerRepository.save(it, index) }
-      prisonerRepository.save(it, SyncIndex.RED)
-    }
+  internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner = translate(ob).also {
+    indexes.map { index -> prisonerRepository.save(it, index) }
+    prisonerRepository.save(it, SyncIndex.RED)
+  }
 
   internal fun compareAndMaybeIndex(
     ob: OffenderBooking,
@@ -244,26 +241,22 @@ class PrisonerSynchroniserService(
     }
   }
 
-  internal fun getDomainData(ob: OffenderBooking): Pair<Result<IncentiveLevel?>, Result<RestrictedPatient?>> =
-    Pair(Result.success(getIncentive(ob)), Result.success(getRestrictedPatient(ob)))
+  internal fun getDomainData(ob: OffenderBooking): Pair<Result<IncentiveLevel?>, Result<RestrictedPatient?>> = Pair(Result.success(getIncentive(ob)), Result.success(getRestrictedPatient(ob)))
 
-  internal fun translate(ob: OffenderBooking): Prisoner =
-    Prisoner().translate(
-      ob = ob,
-      incentiveLevel = Result.success(getIncentive(ob)),
-      restrictedPatientData = Result.success(getRestrictedPatient(ob)),
-    )
+  internal fun translate(ob: OffenderBooking): Prisoner = Prisoner().translate(
+    ob = ob,
+    incentiveLevel = Result.success(getIncentive(ob)),
+    restrictedPatientData = Result.success(getRestrictedPatient(ob)),
+  )
 
-  fun delete(prisonerNumber: String) =
-    prisonerRepository.delete(prisonerNumber).also {
-      prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
-      telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
-    }
+  fun delete(prisonerNumber: String) = prisonerRepository.delete(prisonerNumber).also {
+    prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
+    telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
+  }
 
-  private fun getRestrictedPatient(ob: OffenderBooking) =
-    ob.takeIf { it.assignedLivingUnit?.agencyId == "OUT" }?.let {
-      restrictedPatientService.getRestrictedPatient(it.offenderNo)
-    }
+  private fun getRestrictedPatient(ob: OffenderBooking) = ob.takeIf { it.assignedLivingUnit?.agencyId == "OUT" }?.let {
+    restrictedPatientService.getRestrictedPatient(it.offenderNo)
+  }
 
   private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }
 }

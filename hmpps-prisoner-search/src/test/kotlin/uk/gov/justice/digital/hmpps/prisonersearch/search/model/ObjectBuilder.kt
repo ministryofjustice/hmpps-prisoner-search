@@ -155,15 +155,14 @@ fun letters(length: Int): String = RandomStringUtils.insecure().next(length, tru
 
 fun numbers(length: Int): String = RandomStringUtils.insecure().next(length, false, true)
 
-fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? =
-  this.currentIncentive?.let {
-    IncentiveLevel(
-      iepCode = it.levelCode,
-      iepLevel = it.levelDescription,
-      iepTime = it.dateTime,
-      nextReviewDate = it.nextReviewDate,
-    )
-  }
+fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? = this.currentIncentive?.let {
+  IncentiveLevel(
+    iepCode = it.levelCode,
+    iepLevel = it.levelDescription,
+    iepTime = it.dateTime,
+    nextReviewDate = it.nextReviewDate,
+  )
+}
 
 fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
   val offenderId = Random.nextLong()
@@ -335,11 +334,8 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
   }
 }
 
-fun PrisonerBuilder.toPrisoner(): Prisoner =
-  toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)
+fun PrisonerBuilder.toPrisoner(): Prisoner = toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)
 
-private fun getOffenderBookingTemplate(): OffenderBooking =
-  GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
+private fun getOffenderBookingTemplate(): OffenderBooking = GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
 
-fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) =
-  Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), Result.success(restrictedPatientData)) }
+fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) = Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), Result.success(restrictedPatientData)) }

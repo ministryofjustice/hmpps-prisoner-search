@@ -109,22 +109,20 @@ class MaintainIndexService(
       .run { doMarkIndexingComplete() }
   }
 
-  private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean =
-    prisonerRepository.count(indexStatus.currentIndex.otherIndex()) < indexBuildProperties.completeThreshold
+  private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean = prisonerRepository.count(indexStatus.currentIndex.otherIndex()) < indexBuildProperties.completeThreshold
 
-  private fun doMarkIndexingComplete(): IndexStatus =
-    indexStatusService.markBuildCompleteAndSwitchIndex()
-      .let { newStatus ->
-        prisonerRepository.switchAliasIndex(newStatus.currentIndex)
-        return indexStatusService.getIndexStatus()
-          .also { latestStatus -> logIndexStatuses(latestStatus) }
-          .also {
-            telemetryClient.trackEvent(
-              TelemetryEvents.COMPLETED_BUILDING_INDEX,
-              mapOf("index" to it.currentIndex.name),
-            )
-          }
-      }
+  private fun doMarkIndexingComplete(): IndexStatus = indexStatusService.markBuildCompleteAndSwitchIndex()
+    .let { newStatus ->
+      prisonerRepository.switchAliasIndex(newStatus.currentIndex)
+      return indexStatusService.getIndexStatus()
+        .also { latestStatus -> logIndexStatuses(latestStatus) }
+        .also {
+          telemetryClient.trackEvent(
+            TelemetryEvents.COMPLETED_BUILDING_INDEX,
+            mapOf("index" to it.currentIndex.name),
+          )
+        }
+    }
 
   fun switchIndex(force: Boolean): IndexStatus {
     val indexStatus = indexStatusService.getIndexStatus()
@@ -143,25 +141,23 @@ class MaintainIndexService(
       .run { doSwitchIndex() }
   }
 
-  private fun doSwitchIndex(): IndexStatus =
-    indexStatusService.switchIndex()
-      .let { newStatus ->
-        prisonerRepository.switchAliasIndex(newStatus.currentIndex)
-        return indexStatusService.getIndexStatus()
-          .also { latestStatus -> logIndexStatuses(latestStatus) }
-          .also {
-            telemetryClient.trackEvent(
-              TelemetryEvents.SWITCH_INDEX,
-              mapOf("index" to it.currentIndex.name),
-            )
-          }
-      }
+  private fun doSwitchIndex(): IndexStatus = indexStatusService.switchIndex()
+    .let { newStatus ->
+      prisonerRepository.switchAliasIndex(newStatus.currentIndex)
+      return indexStatusService.getIndexStatus()
+        .also { latestStatus -> logIndexStatuses(latestStatus) }
+        .also {
+          telemetryClient.trackEvent(
+            TelemetryEvents.SWITCH_INDEX,
+            mapOf("index" to it.currentIndex.name),
+          )
+        }
+    }
 
-  fun cancelIndexing(): IndexStatus =
-    indexStatusService.getIndexStatus()
-      .also { logIndexStatuses(it) }
-      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
-      .run { doCancelIndexing() }
+  fun cancelIndexing(): IndexStatus = indexStatusService.getIndexStatus()
+    .also { logIndexStatuses(it) }
+    .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+    .run { doCancelIndexing() }
 
   private fun doCancelIndexing(): IndexStatus {
     indexStatusService.markBuildCancelled()
@@ -178,13 +174,12 @@ class MaintainIndexService(
       }
   }
 
-  fun indexPrisoner(prisonerNumber: String): Prisoner =
-    indexStatusService.getIndexStatus()
-      .failIf(IndexStatus::activeIndexesEmpty) {
-        log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
-        NoActiveIndexesException(it)
-      }
-      .run { sync(prisonerNumber, this.activeIndexes()) }
+  fun indexPrisoner(prisonerNumber: String): Prisoner = indexStatusService.getIndexStatus()
+    .failIf(IndexStatus::activeIndexesEmpty) {
+      log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
+      NoActiveIndexesException(it)
+    }
+    .run { sync(prisonerNumber, this.activeIndexes()) }
 
   private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>): Prisoner {
     val offenderBooking = nomisService.getOffender(prisonerNumber)
@@ -211,11 +206,10 @@ class MaintainIndexService(
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
     onFail: (IndexStatus) -> IndexException,
-  ): IndexStatus =
-    when (check(this)) {
-      false -> this
-      true -> throw onFail(this)
-    }
+  ): IndexStatus = when (check(this)) {
+    false -> this
+    true -> throw onFail(this)
+  }
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)

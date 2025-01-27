@@ -18,8 +18,7 @@ class PrisonerDifferencesService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun retrieveDifferences(label: PrisonerDifferencesLabel, from: Instant, to: Instant): List<PrisonerDifferences> =
-    prisonerDifferencesRepository.findByLabelAndDateTimeBetween(label, from, to)
+  fun retrieveDifferences(label: PrisonerDifferencesLabel, from: Instant, to: Instant): List<PrisonerDifferences> = prisonerDifferencesRepository.findByLabelAndDateTimeBetween(label, from, to)
 
   @Transactional
   fun deleteOldData(): Int {

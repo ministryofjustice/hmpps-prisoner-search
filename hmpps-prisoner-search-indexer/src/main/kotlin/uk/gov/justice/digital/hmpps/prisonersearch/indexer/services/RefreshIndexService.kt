@@ -35,11 +35,10 @@ class RefreshIndexService(
       }
   }
 
-  fun refreshIndex(): Int =
-    indexStatusService.getIndexStatus()
-      // no point refreshing index if we're already building the other one
-      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-      .run { doRefreshIndex() }
+  fun refreshIndex(): Int = indexStatusService.getIndexStatus()
+    // no point refreshing index if we're already building the other one
+    .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
+    .run { doRefreshIndex() }
 
   private fun doRefreshIndex(): Int {
     val totalNumberOfPrisoners = nomisService.getTotalNumberOfPrisoners()
@@ -49,11 +48,10 @@ class RefreshIndexService(
       .onEach { indexQueueService.sendRefreshPrisonerPageMessage(it) }.size
   }
 
-  fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit =
-    nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
-      .forEach {
-        indexQueueService.sendRefreshPrisonerMessage(it)
-      }
+  fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit = nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
+    .forEach {
+      indexQueueService.sendRefreshPrisonerMessage(it)
+    }
 
   fun refreshPrisoner(prisonerNumber: String) {
     indexStatusService.getIndexStatus()
@@ -75,9 +73,8 @@ class RefreshIndexService(
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
     onFail: (IndexStatus) -> IndexException,
-  ): IndexStatus =
-    when (check(this)) {
-      false -> this
-      true -> throw onFail(this)
-    }
+  ): IndexStatus = when (check(this)) {
+    false -> this
+    true -> throw onFail(this)
+  }
 }

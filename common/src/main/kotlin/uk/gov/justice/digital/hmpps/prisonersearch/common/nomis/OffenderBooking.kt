@@ -45,14 +45,12 @@ data class OffenderBooking(
   val phones: List<Telephone>? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
 ) {
-  fun latestIdentifier(type: String) =
-    allIdentifiers
-      ?.filter { it.type == type }
-      ?.takeIf { it.isNotEmpty() }
-      ?.maxBy { it.whenCreated }
+  fun latestIdentifier(type: String) = allIdentifiers
+    ?.filter { it.type == type }
+    ?.takeIf { it.isNotEmpty() }
+    ?.maxBy { it.whenCreated }
 
-  fun identifiersForActiveOffender(type: String) =
-    allIdentifiers
-      ?.filter { it.offenderId == offenderId }
-      ?.filter { it.type == type }
+  fun identifiersForActiveOffender(type: String) = allIdentifiers
+    ?.filter { it.offenderId == offenderId }
+    ?.filter { it.type == type }
 }

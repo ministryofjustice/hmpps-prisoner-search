@@ -132,14 +132,13 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     search(searchCriteria).json(fileAssert.readResourceAsText())
   }
 
-  fun search(searchCriteria: SearchCriteria): WebTestClient.BodyContentSpec =
-    webTestClient.post().uri("/prisoner-search/match-prisoners")
-      .body(BodyInserters.fromValue(gson.toJson(searchCriteria)))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-      .expectBody()
+  fun search(searchCriteria: SearchCriteria): WebTestClient.BodyContentSpec = webTestClient.post().uri("/prisoner-search/match-prisoners")
+    .body(BodyInserters.fromValue(gson.toJson(searchCriteria)))
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
+    .expectStatus().isOk
+    .expectBody()
 
   fun globalSearch(globalSearchCriteria: GlobalSearchCriteria, fileAssert: String) {
     webTestClient.post().uri("/global-search")

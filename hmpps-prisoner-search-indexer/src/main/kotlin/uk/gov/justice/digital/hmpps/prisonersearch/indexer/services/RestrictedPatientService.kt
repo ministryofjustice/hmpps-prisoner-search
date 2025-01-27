@@ -11,21 +11,20 @@ import java.time.LocalDateTime
 
 @Service
 class RestrictedPatientService(@Qualifier("restrictedPatientsWebClient") private val webClient: WebClient) {
-  fun getRestrictedPatient(prisonerNumber: String): RestrictedPatient? =
-    webClient.get()
-      .uri("/restricted-patient/prison-number/{prisonerNumber}", prisonerNumber)
-      .retrieve()
-      .bodyToMono(RestrictedPatientDto::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
-      .block()
-      ?.let {
-        RestrictedPatient(
-          supportingPrisonId = it.supportingPrison.agencyId,
-          dischargedHospital = it.hospitalLocation,
-          dischargeDate = it.dischargeTime.toLocalDate(),
-          dischargeDetails = it.commentText,
-        )
-      }
+  fun getRestrictedPatient(prisonerNumber: String): RestrictedPatient? = webClient.get()
+    .uri("/restricted-patient/prison-number/{prisonerNumber}", prisonerNumber)
+    .retrieve()
+    .bodyToMono(RestrictedPatientDto::class.java)
+    .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+    .block()
+    ?.let {
+      RestrictedPatient(
+        supportingPrisonId = it.supportingPrison.agencyId,
+        dischargedHospital = it.hospitalLocation,
+        dischargeDate = it.dischargeTime.toLocalDate(),
+        dischargeDetails = it.commentText,
+      )
+    }
 }
 
 private data class RestrictedPatientDto(

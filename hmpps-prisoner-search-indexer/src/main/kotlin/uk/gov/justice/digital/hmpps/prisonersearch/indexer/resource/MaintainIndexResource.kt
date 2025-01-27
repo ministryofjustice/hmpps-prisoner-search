@@ -70,8 +70,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       ApiResponse(responseCode = "409", description = "Conflict, the index was not currently building"),
     ],
   )
-  fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) =
-    maintainIndexService.markIndexingComplete(ignoreThreshold)
+  fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) = maintainIndexService.markIndexingComplete(ignoreThreshold)
 
   @PutMapping("/switch")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -89,8 +88,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       ),
     ],
   )
-  fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) =
-    maintainIndexService.switchIndex(force)
+  fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) = maintainIndexService.switchIndex(force)
 
   @PutMapping("/index-prisoner/{prisonerNumber}")
   @PreAuthorize("hasRole('PRISONER_INDEX')")

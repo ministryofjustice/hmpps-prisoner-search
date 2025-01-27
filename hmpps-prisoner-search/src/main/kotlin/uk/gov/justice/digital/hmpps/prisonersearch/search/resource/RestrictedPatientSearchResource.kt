@@ -33,6 +33,5 @@ class RestrictedPatientSearchResource(private val restrictedPatientSearchService
     @Parameter(required = true) @RequestBody searchCriteria: RestrictedPatientSearchCriteria,
     @ParameterObject @PageableDefault
     pageable: Pageable,
-  ) =
-    restrictedPatientSearchService.findBySearchCriteria(searchCriteria, pageable)
+  ) = restrictedPatientSearchService.findBySearchCriteria(searchCriteria, pageable)
 }

@@ -187,18 +187,15 @@ sealed class GlobalResult {
   data class Match(val matches: List<Prisoner>, val totalHits: Long) : GlobalResult()
 }
 
-inline infix fun GlobalResult.onMatch(block: (GlobalResult.Match) -> Nothing) {
-  return when (this) {
-    is GlobalResult.NoMatch -> {
-    }
-
-    is GlobalResult.Match -> block(this)
+inline infix fun GlobalResult.onMatch(block: (GlobalResult.Match) -> Nothing) = when (this) {
+  is GlobalResult.NoMatch -> {
   }
+
+  is GlobalResult.Match -> block(this)
 }
 
-private fun BoolQueryBuilder.withDefaults(globalSearchCriteria: GlobalSearchCriteria) =
-  when (globalSearchCriteria.location) {
-    "IN" -> mustNotWhenPresent("prisonId", "OUT")
-    "OUT" -> filterWhenPresent("prisonId", "OUT")
-    else -> this
-  }
+private fun BoolQueryBuilder.withDefaults(globalSearchCriteria: GlobalSearchCriteria) = when (globalSearchCriteria.location) {
+  "IN" -> mustNotWhenPresent("prisonId", "OUT")
+  "OUT" -> filterWhenPresent("prisonId", "OUT")
+  else -> this
+}

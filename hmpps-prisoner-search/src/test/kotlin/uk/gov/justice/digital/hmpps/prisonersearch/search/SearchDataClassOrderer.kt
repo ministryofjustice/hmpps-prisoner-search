@@ -9,6 +9,5 @@ class SearchDataClassOrderer : ClassOrderer {
     classOrdererContext.classDescriptors.sortWith(Comparator.comparingInt { getOrder(it) })
   }
 
-  private fun getOrder(classDescriptor: ClassDescriptor): Int =
-    if (AbstractSearchDataIntegrationTest::class.java.isAssignableFrom(classDescriptor.testClass)) 1 else 2
+  private fun getOrder(classDescriptor: ClassDescriptor): Int = if (AbstractSearchDataIntegrationTest::class.java.isAssignableFrom(classDescriptor.testClass)) 1 else 2
 }

@@ -51,7 +51,10 @@ class RestrictedPatientApiMockServer : WireMockServer(8095, ClasspathFileSource(
   }
 }
 
-class RestrictedPatientsApiExtension : BeforeAllCallback, AfterAllCallback, BeforeEachCallback {
+class RestrictedPatientsApiExtension :
+  BeforeAllCallback,
+  AfterAllCallback,
+  BeforeEachCallback {
   companion object {
     @JvmField
     val restrictedPatientsApi = RestrictedPatientApiMockServer()

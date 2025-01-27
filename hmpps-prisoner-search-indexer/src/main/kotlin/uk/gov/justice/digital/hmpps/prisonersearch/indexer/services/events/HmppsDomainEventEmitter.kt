@@ -326,14 +326,13 @@ class PrisonerAlertsUpdatedDomainEvent(
   additionalInformation: PrisonerAlertsUpdatedEvent,
   occurredAt: Instant,
   host: String,
-) :
-  PrisonerDomainEvent<PrisonerAlertsUpdatedEvent>(
-    additionalInformation = additionalInformation,
-    occurredAt = occurredAt,
-    host = host,
-    description = "A prisoner had their alerts updated, added: ${additionalInformation.alertsAdded.size}, removed: ${additionalInformation.alertsRemoved.size}",
-    eventType = PRISONER_ALERTS_UPDATED_EVENT_TYPE,
-  )
+) : PrisonerDomainEvent<PrisonerAlertsUpdatedEvent>(
+  additionalInformation = additionalInformation,
+  occurredAt = occurredAt,
+  host = host,
+  description = "A prisoner had their alerts updated, added: ${additionalInformation.alertsAdded.size}, removed: ${additionalInformation.alertsRemoved.size}",
+  eventType = PRISONER_ALERTS_UPDATED_EVENT_TYPE,
+)
 
 fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.asMap(): Map<String, String> = mutableMapOf(
   "occurredAt" to occurredAt,

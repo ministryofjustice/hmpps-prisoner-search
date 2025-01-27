@@ -562,14 +562,13 @@ internal class IndexListenerServiceTest {
       )
     }
 
-    private fun anOffenderBookingReassignment(prisonerNumber: String?, previousPrisonerNumber: String?) =
-      OffenderBookingReassignedMessage(
-        offenderId = 1234L,
-        previousOffenderId = 2345L,
-        bookingId = 12345L,
-        offenderIdDisplay = prisonerNumber,
-        previousOffenderIdDisplay = previousPrisonerNumber,
-      )
+    private fun anOffenderBookingReassignment(prisonerNumber: String?, previousPrisonerNumber: String?) = OffenderBookingReassignedMessage(
+      offenderId = 1234L,
+      previousOffenderId = 2345L,
+      bookingId = 12345L,
+      offenderIdDisplay = prisonerNumber,
+      previousOffenderIdDisplay = previousPrisonerNumber,
+    )
   }
 
   @Nested
@@ -615,10 +614,9 @@ internal class IndexListenerServiceTest {
       verifyNoInteractions(prisonerSynchroniserService)
     }
 
-    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String? = "EWI-RES1-2-14") =
-      PrisonerLocationChangedMessage(
-        prisonId = prisonId,
-        oldDescription = oldDescription,
-      )
+    private fun anPrisonerLocationChange(prisonId: String = "EWI", oldDescription: String? = "EWI-RES1-2-14") = PrisonerLocationChangedMessage(
+      prisonId = prisonId,
+      oldDescription = oldDescription,
+    )
   }
 }

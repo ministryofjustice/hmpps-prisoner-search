@@ -122,15 +122,14 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
     webTestClient.getAlertTypes()
   }
 
-  private fun WebTestClient.getAlertTypes() =
-    get()
-      .uri("/reference-data/alerts/types")
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .exchange()
-      .expectStatus().isOk
-      .returnResult<ReferenceDataAlertsResponse>()
-      .responseBody
-      .blockFirst()!!
+  private fun WebTestClient.getAlertTypes() = get()
+    .uri("/reference-data/alerts/types")
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .exchange()
+    .expectStatus().isOk
+    .returnResult<ReferenceDataAlertsResponse>()
+    .responseBody
+    .blockFirst()!!
 
   val alertTypes = """
     [

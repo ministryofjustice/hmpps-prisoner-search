@@ -21,12 +21,11 @@ class IndexStatusService(private val indexStatusRepository: IndexStatusRepositor
     return this
   }
 
-  private fun checkIndexStatusExistsIgnoringMissingRepo(): Boolean =
-    try {
-      indexStatusRepository.existsById("STATUS")
-    } catch (e: Exception) {
-      false
-    }
+  private fun checkIndexStatusExistsIgnoringMissingRepo(): Boolean = try {
+    indexStatusRepository.existsById("STATUS")
+  } catch (e: Exception) {
+    false
+  }
 
   fun getIndexStatus(): IndexStatus = indexStatusRepository.findById(INDEX_STATUS_ID).orElseThrow()
 

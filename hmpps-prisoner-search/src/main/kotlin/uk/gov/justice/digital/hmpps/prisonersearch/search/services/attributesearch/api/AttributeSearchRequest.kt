@@ -25,14 +25,13 @@ data class AttributeSearchRequest(
       }
   }
 
-  override fun toString(): String =
-    if (queries.size > 1) {
-      queries.joinToString(" ${joinType.name} ") { "($it)" }
-    } else if (queries.size == 1) {
-      queries[0].toString()
-    } else {
-      ""
-    }
+  override fun toString(): String = if (queries.size > 1) {
+    queries.joinToString(" ${joinType.name} ") { "($it)" }
+  } else if (queries.size == 1) {
+    queries[0].toString()
+  } else {
+    ""
+  }
 }
 
 fun AttributeSearchRequest.getAllQueries(): List<Query> = queries.getAllQueries()

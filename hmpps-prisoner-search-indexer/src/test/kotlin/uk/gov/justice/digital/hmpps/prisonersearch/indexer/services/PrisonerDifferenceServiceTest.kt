@@ -212,17 +212,16 @@ class PrisonerDifferenceServiceTest {
         )
     }
 
-    private fun alias(firstName: String, lastName: String, dateOfBirth: LocalDate) =
-      PrisonerAlias(
-        title = null,
-        firstName = firstName,
-        middleNames = null,
-        lastName = lastName,
-        dateOfBirth = dateOfBirth,
-        gender = null,
-        ethnicity = null,
-        raceCode = null,
-      )
+    private fun alias(firstName: String, lastName: String, dateOfBirth: LocalDate) = PrisonerAlias(
+      title = null,
+      firstName = firstName,
+      middleNames = null,
+      lastName = lastName,
+      dateOfBirth = dateOfBirth,
+      gender = null,
+      ethnicity = null,
+      raceCode = null,
+    )
 
     @Test
     fun `should handle LocalDate difference`() {
@@ -423,8 +422,7 @@ class PrisonerDifferenceServiceTest {
       alertCode: String = "SOME_CODE",
       active: Boolean = true,
       expired: Boolean = false,
-    ) =
-      PrisonerAlert(alertType, alertCode, active, expired)
+    ) = PrisonerAlert(alertType, alertCode, active, expired)
   }
 
   @Nested
@@ -827,12 +825,11 @@ class PrisonerDifferenceServiceTest {
     }
   }
 
-  private fun someOffenderBooking() =
-    OffenderBooking(
-      offenderId = 1L,
-      offenderNo = "someOffenderNo",
-      firstName = "someFirstName",
-      lastName = "someLastName",
-      dateOfBirth = LocalDate.now(),
-    )
+  private fun someOffenderBooking() = OffenderBooking(
+    offenderId = 1L,
+    offenderNo = "someOffenderNo",
+    firstName = "someFirstName",
+    lastName = "someLastName",
+    dateOfBirth = LocalDate.now(),
+  )
 }

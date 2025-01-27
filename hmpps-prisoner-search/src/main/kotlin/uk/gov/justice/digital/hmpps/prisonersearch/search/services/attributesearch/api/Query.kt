@@ -24,20 +24,19 @@ data class Query(
     }
   }
 
-  fun buildQuery(attributes: Attributes): BoolQueryBuilder =
-    QueryBuilders.boolQuery()
-      .apply {
+  fun buildQuery(attributes: Attributes): BoolQueryBuilder = QueryBuilders.boolQuery()
+    .apply {
+      when (joinType) {
+        AND -> addAndQueries(attributes)
+        OR -> matchers?.forEach { should(it.buildQuery(attributes)) }
+      }
+      subQueries?.forEach {
         when (joinType) {
-          AND -> addAndQueries(attributes)
-          OR -> matchers?.forEach { should(it.buildQuery(attributes)) }
-        }
-        subQueries?.forEach {
-          when (joinType) {
-            AND -> must(it.buildQuery(attributes))
-            OR -> should(it.buildQuery(attributes))
-          }
+          AND -> must(it.buildQuery(attributes))
+          OR -> should(it.buildQuery(attributes))
         }
       }
+    }
 
   private fun BoolQueryBuilder.addAndQueries(attributes: Attributes) {
     val nestedMatchers = matchers?.findNestedMatchers(attributes) ?: emptyList()
@@ -71,18 +70,16 @@ data class Query(
   }
 }
 
-fun List<Query>.getAllQueries(): List<Query> =
-  fold<Query, MutableList<Query>>(mutableListOf()) { allMatchers, matcher ->
-    allMatchers.apply {
-      add(matcher)
-      addAll(matcher.subQueries?.getAllQueries() ?: emptyList())
-    }
-  }.toList()
+fun List<Query>.getAllQueries(): List<Query> = fold<Query, MutableList<Query>>(mutableListOf()) { allMatchers, matcher ->
+  allMatchers.apply {
+    add(matcher)
+    addAll(matcher.subQueries?.getAllQueries() ?: emptyList())
+  }
+}.toList()
 
-fun List<Query>.getAllTypeMatchers(): List<TypeMatcher<*>> =
-  fold<Query, MutableList<TypeMatcher<*>>>(mutableListOf()) { allTypeMatchers, matcher ->
-    allTypeMatchers.apply {
-      addAll(matcher.matchers?.filterIsInstance(TypeMatcher::class.java) ?: emptyList())
-      addAll(matcher.subQueries?.getAllTypeMatchers() ?: emptyList())
-    }
-  }.toList()
+fun List<Query>.getAllTypeMatchers(): List<TypeMatcher<*>> = fold<Query, MutableList<TypeMatcher<*>>>(mutableListOf()) { allTypeMatchers, matcher ->
+  allTypeMatchers.apply {
+    addAll(matcher.matchers?.filterIsInstance(TypeMatcher::class.java) ?: emptyList())
+    addAll(matcher.subQueries?.getAllTypeMatchers() ?: emptyList())
+  }
+}.toList()
