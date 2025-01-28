@@ -2,11 +2,9 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.config
 
 import com.microsoft.applicationinsights.TelemetryClient
 
-fun TelemetryClient.trackEvent(event: TelemetryEvents, properties: Map<String, String>) =
-  this.trackEvent(event.name, properties, null)
+fun TelemetryClient.trackEvent(event: TelemetryEvents, properties: Map<String, String>) = this.trackEvent(event.name, properties, null)
 
-fun TelemetryClient.trackPrisonerEvent(event: TelemetryEvents, prisonerNumber: String) =
-  this.trackEvent(event.name, mapOf("prisonerNumber" to prisonerNumber), null)
+fun TelemetryClient.trackPrisonerEvent(event: TelemetryEvents, prisonerNumber: String) = this.trackEvent(event.name, mapOf("prisonerNumber" to prisonerNumber), null)
 
 fun TelemetryClient.trackPrisonerEvent(
   event: TelemetryEvents,

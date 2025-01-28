@@ -125,89 +125,73 @@ class PrisonerMovementsEventService(
   }
 }
 
-private fun Prisoner.isTransferIn(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "TRN" && inOutStatus == "IN"
+private fun Prisoner.isTransferIn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "TRN" && inOutStatus == "IN"
 
-private fun Prisoner.isTransferOut(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "IN" && inOutStatus == "TRN"
+private fun Prisoner.isTransferOut(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" && inOutStatus == "TRN"
 
-private fun Prisoner.isCourtReturn(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-    previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
-    this.inOutStatus == "IN" &&
-    this.lastMovementTypeCode == "CRT"
-
-private fun Prisoner.isCourtOutMovement(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "IN" &&
-    this.inOutStatus == "OUT" &&
-    this.lastMovementTypeCode == "CRT"
-
-private fun Prisoner.isTAPReturn(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-    previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
-    this.inOutStatus == "IN" &&
-    this.lastMovementTypeCode == "TAP"
-
-private fun Prisoner.isTAPOutMovement(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "IN" &&
-    this.inOutStatus == "OUT" &&
-    this.lastMovementTypeCode == "TAP"
-
-private fun Prisoner.isTransferViaCourt(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-    previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
-    this.inOutStatus == "IN" &&
-    this.lastMovementTypeCode == "ADM" &&
-    this.lastMovementReasonCode == "TRNCRT"
-
-private fun Prisoner.isTransferViaTAP(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-    previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
-    this.inOutStatus == "IN" &&
-    this.lastMovementTypeCode == "ADM" &&
-    this.lastMovementReasonCode == "TRNTAP"
-
-private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) =
-  this.lastMovementTypeCode == "ADM" &&
-    this.status == "ACTIVE IN" &&
-    this.bookingId != previousPrisonerSnapshot?.bookingId
-
-private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) =
-  previousPrisonerSnapshot?.bookingId == null &&
-    this.status == "ACTIVE IN"
-
-private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) =
-  this.lastMovementTypeCode == "ADM" &&
-    this.bookingId == previousPrisonerSnapshot?.bookingId &&
-    this.status == "ACTIVE IN" &&
-    previousPrisonerSnapshot?.status == "INACTIVE OUT"
-
-private fun Prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot: Prisoner?) =
-  this.lastMovementTypeCode == "ADM" &&
-    previousPrisonerSnapshot?.bookingId != null &&
-    this.bookingId != previousPrisonerSnapshot.bookingId &&
-    this.bookingId.isBookingBefore(previousPrisonerSnapshot.bookingId) &&
-    this.status == "ACTIVE IN" &&
-    previousPrisonerSnapshot.status == "INACTIVE OUT"
-
-private fun Prisoner.isRelease(previousPrisonerSnapshot: Prisoner?) =
-  this.lastMovementTypeCode == "REL" &&
-    this.status == "INACTIVE OUT" &&
-    previousPrisonerSnapshot?.active == true
-
-private fun Prisoner.isReleaseToHospital(previousPrisonerSnapshot: Prisoner?) =
-  this.lastMovementTypeCode == "REL" &&
-    this.lastMovementReasonCode == "HP" &&
-    this.status == "INACTIVE OUT" &&
-    previousPrisonerSnapshot?.active == true
-
-private fun Prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot: Prisoner?) =
+private fun Prisoner.isCourtReturn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
   this.inOutStatus == "IN" &&
-    this.status != previousPrisonerSnapshot?.status
+  this.lastMovementTypeCode == "CRT"
 
-private fun Prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot: Prisoner?) =
+private fun Prisoner.isCourtOutMovement(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" &&
   this.inOutStatus == "OUT" &&
-    this.status != previousPrisonerSnapshot?.status
+  this.lastMovementTypeCode == "CRT"
+
+private fun Prisoner.isTAPReturn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
+  this.inOutStatus == "IN" &&
+  this.lastMovementTypeCode == "TAP"
+
+private fun Prisoner.isTAPOutMovement(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" &&
+  this.inOutStatus == "OUT" &&
+  this.lastMovementTypeCode == "TAP"
+
+private fun Prisoner.isTransferViaCourt(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
+  this.inOutStatus == "IN" &&
+  this.lastMovementTypeCode == "ADM" &&
+  this.lastMovementReasonCode == "TRNCRT"
+
+private fun Prisoner.isTransferViaTAP(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
+  this.inOutStatus == "IN" &&
+  this.lastMovementTypeCode == "ADM" &&
+  this.lastMovementReasonCode == "TRNTAP"
+
+private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
+  this.status == "ACTIVE IN" &&
+  this.bookingId != previousPrisonerSnapshot?.bookingId
+
+private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.bookingId == null &&
+  this.status == "ACTIVE IN"
+
+private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
+  this.bookingId == previousPrisonerSnapshot?.bookingId &&
+  this.status == "ACTIVE IN" &&
+  previousPrisonerSnapshot?.status == "INACTIVE OUT"
+
+private fun Prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
+  previousPrisonerSnapshot?.bookingId != null &&
+  this.bookingId != previousPrisonerSnapshot.bookingId &&
+  this.bookingId.isBookingBefore(previousPrisonerSnapshot.bookingId) &&
+  this.status == "ACTIVE IN" &&
+  previousPrisonerSnapshot.status == "INACTIVE OUT"
+
+private fun Prisoner.isRelease(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "REL" &&
+  this.status == "INACTIVE OUT" &&
+  previousPrisonerSnapshot?.active == true
+
+private fun Prisoner.isReleaseToHospital(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "REL" &&
+  this.lastMovementReasonCode == "HP" &&
+  this.status == "INACTIVE OUT" &&
+  previousPrisonerSnapshot?.active == true
+
+private fun Prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot: Prisoner?) = this.inOutStatus == "IN" &&
+  this.status != previousPrisonerSnapshot?.status
+
+private fun Prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot: Prisoner?) = this.inOutStatus == "OUT" &&
+  this.status != previousPrisonerSnapshot?.status
 
 private fun isAdmissionAssociatedWithAMerge(offenderBooking: OffenderBooking): Boolean = offenderBooking.identifiersForActiveOffender("MERGED")
   // check the merge is after the admission movement - or if there is no movement then check the merge happened in the last 90 minutes

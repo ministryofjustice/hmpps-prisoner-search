@@ -18,6 +18,5 @@ class SmokeTestConfiguration(@Value("\${smoketest.endpoint.url}") private val sm
   private val webClientBuilder: Builder = WebClient.builder()
 
   @Bean
-  fun smokeTestWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient =
-    webClientBuilder.authorisedWebClient(authorizedClientManager, registrationId = "smoketest-service", url = smokeTestUrl)
+  fun smokeTestWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient = webClientBuilder.authorisedWebClient(authorizedClientManager, registrationId = "smoketest-service", url = smokeTestUrl)
 }

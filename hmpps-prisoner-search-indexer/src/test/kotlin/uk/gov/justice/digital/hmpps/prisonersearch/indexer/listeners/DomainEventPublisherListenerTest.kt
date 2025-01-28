@@ -63,8 +63,7 @@ class DomainEventPublisherListenerTest : IntegrationTestBase() {
     }
   }
 
-  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int? =
-    hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
+  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int? = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
 
   @Test
   fun `can publish a message`() {

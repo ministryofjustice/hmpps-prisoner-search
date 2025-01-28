@@ -54,7 +54,6 @@ class GlobalSearchResource(
     security = [SecurityRequirement(name = "view-prisoner-data-role"), SecurityRequirement(name = "prisoner-search-role")],
   )
   @Tag(name = "Popular")
-  fun findByPrisonNumber(@PathVariable id: String): Prisoner? =
-    prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null)).firstOrNull()
-      ?: throw NotFoundException("$id not found")
+  fun findByPrisonNumber(@PathVariable id: String): Prisoner? = prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null)).firstOrNull()
+    ?: throw NotFoundException("$id not found")
 }

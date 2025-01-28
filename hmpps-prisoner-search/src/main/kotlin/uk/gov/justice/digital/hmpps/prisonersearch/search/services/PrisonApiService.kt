@@ -7,17 +7,16 @@ import org.springframework.web.reactive.function.client.bodyToMono
 @Component
 class PrisonApiService(val prisonApiWebClient: WebClient) {
 
-  fun getAllAlerts(): List<PrisonAlertType> =
-    getAlertTypes().map { type ->
-      PrisonAlertType(
-        type = type.code,
-        description = type.description,
-        active = type.activeFlag == "Y",
-        alertCodes = type.subCodes.map {
-          PrisonAlertCode(it.code, it.description, it.activeFlag == "Y")
-        },
-      )
-    }
+  fun getAllAlerts(): List<PrisonAlertType> = getAlertTypes().map { type ->
+    PrisonAlertType(
+      type = type.code,
+      description = type.description,
+      active = type.activeFlag == "Y",
+      alertCodes = type.subCodes.map {
+        PrisonAlertCode(it.code, it.description, it.activeFlag == "Y")
+      },
+    )
+  }
 
   private fun getAlertTypes() = prisonApiWebClient.get()
     .uri("/api/reference-domains/alertTypes")

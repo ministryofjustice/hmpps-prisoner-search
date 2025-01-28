@@ -54,17 +54,16 @@ class PrisonerLocationService(
     return processResponse(scroll(request))
   }
 
-  fun scroll(searchRequest: SearchScrollRequest): SearchResponse =
-    try {
+  fun scroll(searchRequest: SearchScrollRequest): SearchResponse = try {
+    openSearchClient.scroll(searchRequest, RequestOptions.DEFAULT)
+  } catch (e: OpenSearchStatusException) {
+    if (searchClient.isRetryable(e)) {
+      log.warn("Retrying scroll", e)
       openSearchClient.scroll(searchRequest, RequestOptions.DEFAULT)
-    } catch (e: OpenSearchStatusException) {
-      if (searchClient.isRetryable(e)) {
-        log.warn("Retrying scroll", e)
-        openSearchClient.scroll(searchRequest, RequestOptions.DEFAULT)
-      } else {
-        throw e
-      }
+    } else {
+      throw e
     }
+  }
 
   private fun processResponse(
     response: SearchResponse,

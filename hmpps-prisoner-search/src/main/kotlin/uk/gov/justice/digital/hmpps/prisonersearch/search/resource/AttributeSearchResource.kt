@@ -224,8 +224,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   fun attributeSearch(
     @Parameter(required = true) @RequestBody request: AttributeSearchRequest,
     @ParameterObject @PageableDefault pageable: Pageable,
-  ) =
-    attributeSearchService.search(request, pageable)
+  ) = attributeSearchService.search(request, pageable)
 
   @GetMapping("/attributes")
   @Tag(name = "Attribute search")

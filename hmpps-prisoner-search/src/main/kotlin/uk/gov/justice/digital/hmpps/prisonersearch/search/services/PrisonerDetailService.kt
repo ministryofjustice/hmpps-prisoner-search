@@ -189,13 +189,11 @@ class PrisonerDetailService(
     return searchHits.map { gson.fromJson(it.sourceAsString, Prisoner::class.java) }
   }
 
-  private fun noCriteriaProvided(request: PrisonerDetailRequest): Boolean {
-    return request.firstName.isNullOrEmpty() &&
-      request.lastName.isNullOrEmpty() &&
-      request.nomsNumber.isNullOrEmpty() &&
-      request.pncNumber.isNullOrEmpty() &&
-      request.croNumber.isNullOrEmpty()
-  }
+  private fun noCriteriaProvided(request: PrisonerDetailRequest): Boolean = request.firstName.isNullOrEmpty() &&
+    request.lastName.isNullOrEmpty() &&
+    request.nomsNumber.isNullOrEmpty() &&
+    request.pncNumber.isNullOrEmpty() &&
+    request.croNumber.isNullOrEmpty()
 
   private fun customEventForFindBySearchCriteria(
     detailRequest: PrisonerDetailRequest,

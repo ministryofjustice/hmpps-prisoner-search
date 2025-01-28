@@ -95,8 +95,7 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
     )
   }
 
-  private fun prisoner(): Prisoner =
-    objectMapper.readValue(
-      AlertsUpdatedEventService::class.java.getResource("/receive-state-changes/first-new-booking.json")!!.readText(),
-    )
+  private fun prisoner(): Prisoner = objectMapper.readValue(
+    AlertsUpdatedEventService::class.java.getResource("/receive-state-changes/first-new-booking.json")!!.readText(),
+  )
 }

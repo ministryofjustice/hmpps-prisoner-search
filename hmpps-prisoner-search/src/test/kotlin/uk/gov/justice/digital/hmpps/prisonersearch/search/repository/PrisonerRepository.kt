@@ -37,10 +37,9 @@ class PrisonerRepository(
     openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), index.toIndexCoordinates())
   }
 
-  fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? =
-    indices.firstNotNullOfOrNull {
-      openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
-    }
+  fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? = indices.firstNotNullOfOrNull {
+    openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
+  }
 
   fun delete(prisonerNumber: String, index: SyncIndex) {
     openSearchRestTemplate.delete(prisonerNumber, index.toIndexCoordinates())

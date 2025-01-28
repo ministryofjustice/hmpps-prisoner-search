@@ -61,8 +61,7 @@ data class DateTimeMatcher(
     } ?: throw AttributeSearchException("Attribute $attribute not recognised")
   }
 
-  private fun LocalDateTime.truncateToSeconds() =
-    truncatedTo(SECONDS).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+  private fun LocalDateTime.truncateToSeconds() = truncatedTo(SECONDS).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
   override fun toString(): String {
     val min = minValue?.let { "$attribute > $minValue" } ?: ""

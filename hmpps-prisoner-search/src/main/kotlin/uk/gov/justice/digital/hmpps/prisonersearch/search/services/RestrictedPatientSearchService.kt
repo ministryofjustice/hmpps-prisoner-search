@@ -123,9 +123,7 @@ class RestrictedPatientSearchService(
     }
   }
 
-  private fun anyMatch(): BoolQueryBuilder {
-    return QueryBuilders.boolQuery()
-  }
+  private fun anyMatch(): BoolQueryBuilder = QueryBuilders.boolQuery()
 
   private fun getSearchResult(response: SearchResponse): List<Prisoner> {
     val searchHits = response.hits.hits.asList()
@@ -156,14 +154,11 @@ sealed class RestrictedPatientResult {
   data class Match(val matches: List<Prisoner>, val totalHits: Long) : RestrictedPatientResult()
 }
 
-inline infix fun RestrictedPatientResult.onMatch(block: (RestrictedPatientResult.Match) -> Nothing) =
-  when (this) {
-    is RestrictedPatientResult.NoMatch -> {
-    }
-    is RestrictedPatientResult.Match -> block(this)
+inline infix fun RestrictedPatientResult.onMatch(block: (RestrictedPatientResult.Match) -> Nothing) = when (this) {
+  is RestrictedPatientResult.NoMatch -> {
   }
-
-private fun BoolQueryBuilder.withDefaults(searchCriteria: RestrictedPatientSearchCriteria): BoolQueryBuilder {
-  return this.must("restrictedPatient", true)
-    .filterWhenPresent("supportingPrisonId", searchCriteria.supportingPrisonIds)
+  is RestrictedPatientResult.Match -> block(this)
 }
+
+private fun BoolQueryBuilder.withDefaults(searchCriteria: RestrictedPatientSearchCriteria): BoolQueryBuilder = this.must("restrictedPatient", true)
+  .filterWhenPresent("supportingPrisonId", searchCriteria.supportingPrisonIds)

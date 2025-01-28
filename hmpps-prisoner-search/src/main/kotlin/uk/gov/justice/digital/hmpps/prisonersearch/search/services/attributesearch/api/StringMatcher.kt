@@ -35,36 +35,35 @@ data class StringMatcher(
     }
   }
 
-  override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> =
-    attributes[attribute]
-      ?.let { attr ->
-        val query = when (condition) {
-          IS -> QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
-          IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true))
-          CONTAINS -> {
-            if (searchTerm.hasWildcard()) {
-              QueryBuilders.wildcardQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
-            } else {
-              QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
-            }
+  override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> = attributes[attribute]
+    ?.let { attr ->
+      val query = when (condition) {
+        IS -> QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
+        IS_NOT -> QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery(attr.openSearchName, searchTerm).caseInsensitive(true))
+        CONTAINS -> {
+          if (searchTerm.hasWildcard()) {
+            QueryBuilders.wildcardQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
+          } else {
+            QueryBuilders.wildcardQuery(attr.openSearchName, "*$searchTerm*").caseInsensitive(true)
           }
-          STARTSWITH -> QueryBuilders.prefixQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
-          IN -> QueryBuilders.termsQuery(attr.openSearchName, listSearchTerms)
         }
-        return when {
-          attr.isFuzzy && condition == IS -> {
-            QueryBuilders.boolQuery()
-              .should(query)
-              .should(QueryBuilders.fuzzyQuery(attr.openSearchName, searchTerm))
-          }
-          attr.isFuzzy && condition == CONTAINS && !searchTerm.hasWildcard() -> {
-            QueryBuilders.boolQuery()
-              .should(query)
-              .should(QueryBuilders.matchQuery(attribute, searchTerm).fuzziness(Fuzziness.AUTO))
-          }
-          else -> query
+        STARTSWITH -> QueryBuilders.prefixQuery(attr.openSearchName, searchTerm).caseInsensitive(true)
+        IN -> QueryBuilders.termsQuery(attr.openSearchName, listSearchTerms)
+      }
+      return when {
+        attr.isFuzzy && condition == IS -> {
+          QueryBuilders.boolQuery()
+            .should(query)
+            .should(QueryBuilders.fuzzyQuery(attr.openSearchName, searchTerm))
         }
-      } ?: throw AttributeSearchException("Attribute $attribute not recognised")
+        attr.isFuzzy && condition == CONTAINS && !searchTerm.hasWildcard() -> {
+          QueryBuilders.boolQuery()
+            .should(query)
+            .should(QueryBuilders.matchQuery(attribute, searchTerm).fuzziness(Fuzziness.AUTO))
+        }
+        else -> query
+      }
+    } ?: throw AttributeSearchException("Attribute $attribute not recognised")
 
   private fun String.hasWildcard() = contains("?") || contains("*")
 

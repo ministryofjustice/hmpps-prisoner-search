@@ -351,42 +351,37 @@ class AttributeSearchPagingIntegrationTest : AbstractSearchIntegrationTest() {
       .expectPage(page = 2)
   }
 
-  private fun <T> WebTestClient.ResponseSpec.expectResults(field: String, vararg fieldValues: T) =
-    expectBody().expectResults(field, *fieldValues)
+  private fun <T> WebTestClient.ResponseSpec.expectResults(field: String, vararg fieldValues: T) = expectBody().expectResults(field, *fieldValues)
 
-  private fun <T> WebTestClient.BodyContentSpec.expectResults(field: String, vararg fieldValues: T) =
-    jsonPath("$.content[*].$field").value<List<T>> {
-      assertThat(it).containsExactlyInAnyOrderElementsOf(listOf(*fieldValues))
-    }
-      .jsonPath("numberOfElements").isEqualTo(fieldValues.size)
-      .jsonPath("totalElements").isEqualTo(prisonerCount)
+  private fun <T> WebTestClient.BodyContentSpec.expectResults(field: String, vararg fieldValues: T) = jsonPath("$.content[*].$field").value<List<T>> {
+    assertThat(it).containsExactlyInAnyOrderElementsOf(listOf(*fieldValues))
+  }
+    .jsonPath("numberOfElements").isEqualTo(fieldValues.size)
+    .jsonPath("totalElements").isEqualTo(prisonerCount)
 
-  private fun WebTestClient.BodyContentSpec.expectPage(page: Int, size: Int = defaultPageSize) =
-    jsonPath("pageable.pageNumber").isEqualTo(page)
-      .also {
-        when (page) {
-          0 -> {
-            it.jsonPath("first").isEqualTo(true)
-            it.jsonPath("last").isEqualTo(false)
-          }
-          prisoners.size / size -> {
-            it.jsonPath("first").isEqualTo(false)
-            it.jsonPath("last").isEqualTo(true)
-          }
-          else -> {
-            it.jsonPath("first").isEqualTo(false)
-            it.jsonPath("last").isEqualTo(false)
-          }
+  private fun WebTestClient.BodyContentSpec.expectPage(page: Int, size: Int = defaultPageSize) = jsonPath("pageable.pageNumber").isEqualTo(page)
+    .also {
+      when (page) {
+        0 -> {
+          it.jsonPath("first").isEqualTo(true)
+          it.jsonPath("last").isEqualTo(false)
+        }
+        prisoners.size / size -> {
+          it.jsonPath("first").isEqualTo(false)
+          it.jsonPath("last").isEqualTo(true)
+        }
+        else -> {
+          it.jsonPath("first").isEqualTo(false)
+          it.jsonPath("last").isEqualTo(false)
         }
       }
+    }
 
-  private fun WebTestClient.attributeSearchFails(page: Int = 0, size: Int = defaultPageSize, sortBy: List<String> = listOf()) =
-    attributeSearch(page, size, sortBy)
-      .expectStatus().isBadRequest
+  private fun WebTestClient.attributeSearchFails(page: Int = 0, size: Int = defaultPageSize, sortBy: List<String> = listOf()) = attributeSearch(page, size, sortBy)
+    .expectStatus().isBadRequest
 
-  private fun WebTestClient.attributeSearchOk(page: Int = 0, size: Int = defaultPageSize, sortBy: List<String> = listOf()) =
-    attributeSearch(page, size, sortBy)
-      .expectStatus().isOk
+  private fun WebTestClient.attributeSearchOk(page: Int = 0, size: Int = defaultPageSize, sortBy: List<String> = listOf()) = attributeSearch(page, size, sortBy)
+    .expectStatus().isOk
 
   private fun WebTestClient.attributeSearch(
     page: Int,

@@ -1935,18 +1935,16 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
   }
 
-  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) =
-    post()
-      .uri("/attribute-search")
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .bodyValue(objectMapper.writeValueAsString(request))
-      .exchange()
-      .expectStatus().isOk
+  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) = post()
+    .uri("/attribute-search")
+    .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+    .header("Content-Type", "application/json")
+    .bodyValue(objectMapper.writeValueAsString(request))
+    .exchange()
+    .expectStatus().isOk
 
-  private fun WebTestClient.ResponseSpec.expectPrisoners(vararg prisonerNumbers: String) =
-    expectBody()
-      .jsonPath("$.content[*].prisonerNumber").value<List<String>> {
-        assertThat(it).containsExactlyInAnyOrderElementsOf(listOf(*prisonerNumbers))
-      }
+  private fun WebTestClient.ResponseSpec.expectPrisoners(vararg prisonerNumbers: String) = expectBody()
+    .jsonPath("$.content[*].prisonerNumber").value<List<String>> {
+      assertThat(it).containsExactlyInAnyOrderElementsOf(listOf(*prisonerNumbers))
+    }
 }

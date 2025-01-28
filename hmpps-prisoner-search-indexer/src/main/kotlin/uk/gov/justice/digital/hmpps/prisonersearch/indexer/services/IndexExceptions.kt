@@ -15,16 +15,13 @@ class BuildAbsentException(indexStatus: IndexStatus) : IndexConflictException(st
 class BuildNotInProgressException(indexStatus: IndexStatus) : IndexConflictException(endStateMessage(indexStatus))
 class WrongIndexRequestedException(indexStatus: IndexStatus) : IndexException(endStateMessage(indexStatus))
 
-class NoActiveIndexesException(indexStatus: IndexStatus) :
-  IndexConflictException("Cannot update current index ${indexStatus.currentIndex} which is in state ${indexStatus.currentIndexState} and other index ${indexStatus.otherIndex} is in state ${indexStatus.otherIndexState}")
+class NoActiveIndexesException(indexStatus: IndexStatus) : IndexConflictException("Cannot update current index ${indexStatus.currentIndex} which is in state ${indexStatus.currentIndexState} and other index ${indexStatus.otherIndex} is in state ${indexStatus.otherIndexState}")
 
 class PrisonerNotFoundException(prisonerNumber: String) : IndexException("The prisoner $prisonerNumber could not be found")
 
-class ActiveMessagesExistException(index: SyncIndex, indexQueueStatus: IndexQueueStatus, action: String) :
-  IndexConflictException("The index ${index.indexName} has active messages $indexQueueStatus so we cannot process $action")
+class ActiveMessagesExistException(index: SyncIndex, indexQueueStatus: IndexQueueStatus, action: String) : IndexConflictException("The index ${index.indexName} has active messages $indexQueueStatus so we cannot process $action")
 
-class ThresholdNotReachedException(index: SyncIndex, threshold: Long) :
-  IndexConflictException("The index ${index.indexName} has not reached threshold $threshold so we cannot mark the index as complete")
+class ThresholdNotReachedException(index: SyncIndex, threshold: Long) : IndexConflictException("The index ${index.indexName} has not reached threshold $threshold so we cannot mark the index as complete")
 
 private fun startAlreadyMessage(indexStatus: IndexStatus) = "The build for ${indexStatus.otherIndex} is already ${indexStatus.otherIndexState} (started at ${indexStatus.otherIndexStartBuildTime})"
 private fun endStateMessage(indexStatus: IndexStatus) = "The index ${indexStatus.otherIndex} is in state ${indexStatus.otherIndexState} (ended at ${indexStatus.otherIndexEndBuildTime})"

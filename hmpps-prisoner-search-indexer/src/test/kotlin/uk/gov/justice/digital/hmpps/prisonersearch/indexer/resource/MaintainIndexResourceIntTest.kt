@@ -52,14 +52,13 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
   @Nested
   @TestInstance(PER_CLASS)
   inner class SecureEndpoints {
-    private fun secureEndpoints() =
-      listOf(
-        "/maintain-index/build",
-        "/maintain-index/mark-complete",
-        "/maintain-index/switch",
-        "/maintain-index/cancel",
-        "/maintain-index/index-prisoner/SOME_NOMIS",
-      )
+    private fun secureEndpoints() = listOf(
+      "/maintain-index/build",
+      "/maintain-index/mark-complete",
+      "/maintain-index/switch",
+      "/maintain-index/cancel",
+      "/maintain-index/index-prisoner/SOME_NOMIS",
+    )
 
     @ParameterizedTest
     @MethodSource("secureEndpoints")

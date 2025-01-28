@@ -221,32 +221,31 @@ class ReferenceDataResourceTest : AbstractSearchIntegrationTest() {
       .expectStatus().isOk
   }
 
-  private fun attributeData(): Stream<Arguments> =
-    Stream.of(
-      arguments(build, listOf("Muscular", "Obese", "Proportional"), null),
-      arguments(category, listOf("C", "Q"), null),
-      arguments(csra, listOf("High", "Low"), null),
-      arguments(ethnicity, listOf("Prefer not to say", "White: Any other background"), null),
-      arguments(facialHair, listOf("Clean Shaven", "Goatee Beard", "Not Asked"), null),
-      arguments(gender, listOf("Female", "Male", "Not Known / Not Recorded"), null),
-      arguments(hairColour, listOf("Balding", "Mouse", "Red"), null),
-      arguments(imprisonmentStatusDescription, listOf("Life imprisonment"), null),
-      arguments(incentiveLevel, listOf("Basic", "Enhanced"), null),
-      arguments(inOutStatus, listOf("IN"), listOf("Inside")),
-      arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing"), null),
-      arguments(legalStatus, listOf("REMAND"), listOf("Remand")),
-      arguments(marksBodyPart, listOf("Lip", "Torso"), null),
-      arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership"), null),
-      arguments(nationality, listOf("British", "Irish"), null),
-      arguments(religion, listOf("Agnostic", "Jedi Knight"), null),
-      arguments(rightEyeColour, listOf("Clouded", "Green", "Missing"), null),
-      arguments(scarsBodyPart, listOf("Finger", "Foot", "Knee", "Toe"), null),
-      arguments(shapeOfFace, listOf("Bullet", "Oval", "Round"), null),
-      arguments(status, listOf("ACTIVE IN"), listOf("Active Inside")),
-      arguments(tattoosBodyPart, listOf("Ankle", "Finger", "Foot", "Knee"), null),
-      arguments(title, listOf("Mr", "Mrs", "Ms"), null),
-      arguments(youthOffender, listOf("false", "true"), listOf("No", "Yes")),
-    )
+  private fun attributeData(): Stream<Arguments> = Stream.of(
+    arguments(build, listOf("Muscular", "Obese", "Proportional"), null),
+    arguments(category, listOf("C", "Q"), null),
+    arguments(csra, listOf("High", "Low"), null),
+    arguments(ethnicity, listOf("Prefer not to say", "White: Any other background"), null),
+    arguments(facialHair, listOf("Clean Shaven", "Goatee Beard", "Not Asked"), null),
+    arguments(gender, listOf("Female", "Male", "Not Known / Not Recorded"), null),
+    arguments(hairColour, listOf("Balding", "Mouse", "Red"), null),
+    arguments(imprisonmentStatusDescription, listOf("Life imprisonment"), null),
+    arguments(incentiveLevel, listOf("Basic", "Enhanced"), null),
+    arguments(inOutStatus, listOf("IN"), listOf("Inside")),
+    arguments(leftEyeColour, listOf("Brown", "Hazel", "Missing"), null),
+    arguments(legalStatus, listOf("REMAND"), listOf("Remand")),
+    arguments(marksBodyPart, listOf("Lip", "Torso"), null),
+    arguments(maritalStatus, listOf("Married", "Single-not married/in civil partnership"), null),
+    arguments(nationality, listOf("British", "Irish"), null),
+    arguments(religion, listOf("Agnostic", "Jedi Knight"), null),
+    arguments(rightEyeColour, listOf("Clouded", "Green", "Missing"), null),
+    arguments(scarsBodyPart, listOf("Finger", "Foot", "Knee", "Toe"), null),
+    arguments(shapeOfFace, listOf("Bullet", "Oval", "Round"), null),
+    arguments(status, listOf("ACTIVE IN"), listOf("Active Inside")),
+    arguments(tattoosBodyPart, listOf("Ankle", "Finger", "Foot", "Knee"), null),
+    arguments(title, listOf("Mr", "Mrs", "Ms"), null),
+    arguments(youthOffender, listOf("false", "true"), listOf("No", "Yes")),
+  )
 
   @ParameterizedTest
   @MethodSource("attributeData")

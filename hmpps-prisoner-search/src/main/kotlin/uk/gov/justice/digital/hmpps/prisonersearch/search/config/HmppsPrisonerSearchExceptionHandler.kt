@@ -22,76 +22,70 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestControllerAdvice
 class HmppsPrisonerSearchExceptionHandler {
   @ExceptionHandler(BadRequestException::class)
-  fun handleBadRequestException(e: BadRequestException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Validation failure: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("BadRequest exception: {}", e.message) }
+  fun handleBadRequestException(e: BadRequestException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Validation failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("BadRequest exception: {}", e.message) }
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
-  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Method argument failure: ${e.message}",
-          developerMessage = e.developerMessage(),
-        ),
-      ).also { log.info("MethodArgumentNotValid exception: {}", e.message) }
+  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Method argument failure: ${e.message}",
+        developerMessage = e.developerMessage(),
+      ),
+    ).also { log.info("MethodArgumentNotValid exception: {}", e.message) }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Method argument failure: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("MethodArgumentTypeMismatchException exception: {}", e.message) }
+  fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Method argument failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("MethodArgumentTypeMismatchException exception: {}", e.message) }
 
   @ExceptionHandler(ValidationException::class)
-  fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Validation failure: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("Validation exception: {}", e.message) }
+  fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Validation failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Validation exception: {}", e.message) }
 
   @ExceptionHandler(HttpMessageNotReadableException::class)
-  fun handleValidationException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Failed to parse request: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("Failed to parse request: {}", e.message) }
+  fun handleValidationException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Failed to parse request: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Failed to parse request: {}", e.message) }
 
   @ExceptionHandler(ResponseStatusException::class)
-  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> =
-    ResponseEntity
-      .status(e.statusCode)
-      .body(
-        ErrorResponse(
-          status = e.statusCode.value(),
-          userMessage = "Response status error: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.info("Response status exception with message {}", e.message) }
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(e.statusCode)
+    .body(
+      ErrorResponse(
+        status = e.statusCode.value(),
+        userMessage = "Response status error: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Response status exception with message {}", e.message) }
 
   @ExceptionHandler(NotFoundException::class)
   fun handleEntityNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
@@ -106,16 +100,15 @@ class HmppsPrisonerSearchExceptionHandler {
     .body(ErrorResponse(status = HttpStatus.NOT_FOUND, developerMessage = e.message))
 
   @ExceptionHandler(Exception::class)
-  fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? =
-    ResponseEntity
-      .status(INTERNAL_SERVER_ERROR)
-      .body(
-        ErrorResponse(
-          status = INTERNAL_SERVER_ERROR,
-          userMessage = "Unexpected error: ${e.message}",
-          developerMessage = e.message,
-        ),
-      ).also { log.error("Unexpected exception", e) }
+  fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? = ResponseEntity
+    .status(INTERNAL_SERVER_ERROR)
+    .body(
+      ErrorResponse(
+        status = INTERNAL_SERVER_ERROR,
+        userMessage = "Unexpected error: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.error("Unexpected exception", e) }
 
   @ExceptionHandler(AccessDeniedException::class)
   fun handleAccessDeniedException(e: AccessDeniedException): ResponseEntity<ErrorResponse> = ResponseEntity
@@ -128,6 +121,4 @@ class HmppsPrisonerSearchExceptionHandler {
   }
 }
 
-private fun MethodArgumentNotValidException.developerMessage(): String {
-  return this.bindingResult.allErrors.joinToString { it.defaultMessage ?: "unknown" }
-}
+private fun MethodArgumentNotValidException.developerMessage(): String = this.bindingResult.allErrors.joinToString { it.defaultMessage ?: "unknown" }

@@ -193,14 +193,13 @@ fun Prisoner.setRestrictedPatientFields(rp: RestrictedPatient?) {
   this.dischargeDetails = rp?.dischargeDetails
 }
 
-private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? =
-  if (bodyPart.comment?.lowercase()?.contains(keyword) == true) {
-    bodyPart.copy().let {
-      this?.plus(it) ?: listOf(it)
-    }
-  } else {
-    this
+private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? = if (bodyPart.comment?.lowercase()?.contains(keyword) == true) {
+  bodyPart.copy().let {
+    this?.plus(it) ?: listOf(it)
   }
+} else {
+  this
+}
 
 private fun NomisAddress.toAddress(): Address {
   if (noFixedAddress) {
@@ -249,9 +248,8 @@ private fun NomisAddress.toAddress(): Address {
   )
 }
 
-private fun List<Telephone>.toPhoneNumbers(): List<PhoneNumber> =
-  filter { SupportedPhoneNumberTypes.supports(it.type) }
-    .map { PhoneNumber(it.type, it.number.extractNumbers()) }
+private fun List<Telephone>.toPhoneNumbers(): List<PhoneNumber> = filter { SupportedPhoneNumberTypes.supports(it.type) }
+  .map { PhoneNumber(it.type, it.number.extractNumbers()) }
 
 private enum class SupportedPhoneNumberTypes {
   HOME,
@@ -263,31 +261,28 @@ private enum class SupportedPhoneNumberTypes {
   }
 }
 
-private fun String.extractNumbers() =
-  split(Regex("\\D+"))
-    .filter { it.isNotBlank() }
-    .joinToString(separator = "")
+private fun String.extractNumbers() = split(Regex("\\D+"))
+  .filter { it.isNotBlank() }
+  .joinToString(separator = "")
 
-private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? =
-  this?.mapNotNull {
-    when (it.type) {
-      "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
-      "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
-      else -> null
-    }
-  }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
+private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? = this?.mapNotNull {
+  when (it.type) {
+    "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+    "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+    else -> null
+  }
+}?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
 
 private fun String.toPncNumber(): String = if (this.isPNCNumber()) this.canonicalPNCNumberShort()!! else this
 
-private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List<Offence>? =
-  this?.map {
-    Offence(
-      statuteCode = it.statuteCode,
-      offenceCode = it.offenceCode,
-      offenceDescription = it.offenceDescription,
-      offenceDate = it.offenceDate,
-      latestBooking = it.bookingId == latestBookingId,
-      sentenceStartDate = it.sentenceStartDate,
-      primarySentence = it.primarySentence,
-    )
-  }
+private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List<Offence>? = this?.map {
+  Offence(
+    statuteCode = it.statuteCode,
+    offenceCode = it.offenceCode,
+    offenceDescription = it.offenceDescription,
+    offenceDate = it.offenceDate,
+    latestBooking = it.bookingId == latestBookingId,
+    sentenceStartDate = it.sentenceStartDate,
+    primarySentence = it.primarySentence,
+  )
+}

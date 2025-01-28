@@ -213,12 +213,10 @@ class KeywordService(
     return searchHits.map { gson.fromJson(it.sourceAsString, Prisoner::class.java) }
   }
 
-  private fun noKeyWordsSpecified(request: KeywordRequest): Boolean {
-    return request.andWords.isNullOrEmpty() &&
-      request.exactPhrase.isNullOrEmpty() &&
-      request.orWords.isNullOrEmpty() &&
-      request.notWords.isNullOrEmpty()
-  }
+  private fun noKeyWordsSpecified(request: KeywordRequest): Boolean = request.andWords.isNullOrEmpty() &&
+    request.exactPhrase.isNullOrEmpty() &&
+    request.orWords.isNullOrEmpty() &&
+    request.notWords.isNullOrEmpty()
 
   private fun customEventForFindBySearchCriteria(
     keywordRequest: KeywordRequest,
@@ -261,9 +259,7 @@ class KeywordService(
     return newTokens.trim()
   }
 
-  private fun String.isPncNumber() =
-    matches("^\\d{4}/([0-9]+)[a-zA-Z]$".toRegex()) || matches("^\\d{2}/([0-9]+)[a-zA-Z]$".toRegex())
+  private fun String.isPncNumber() = matches("^\\d{4}/([0-9]+)[a-zA-Z]$".toRegex()) || matches("^\\d{2}/([0-9]+)[a-zA-Z]$".toRegex())
 
-  private fun String.isCroNumber() =
-    matches("^([0-9]+)/([0-9]+)[a-zA-Z]$".toRegex())
+  private fun String.isCroNumber() = matches("^([0-9]+)/([0-9]+)[a-zA-Z]$".toRegex())
 }

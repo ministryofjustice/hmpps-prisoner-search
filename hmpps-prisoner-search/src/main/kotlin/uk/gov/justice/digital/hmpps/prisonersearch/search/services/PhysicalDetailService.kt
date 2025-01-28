@@ -224,5 +224,4 @@ class PhysicalDetailService(
   }
 }
 
-private fun BoolQueryBuilder.shouldOrMust(lenient: Boolean, query: QueryBuilder) =
-  if (lenient) this.should(query) else this.must(query)
+private fun BoolQueryBuilder.shouldOrMust(lenient: Boolean, query: QueryBuilder) = if (lenient) this.should(query) else this.must(query)

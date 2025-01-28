@@ -69,8 +69,7 @@ class PrisonerDifferencesResource(private val prisonerDifferencesService: Prison
     from: Instant?,
     @Parameter(description = "Report on differences that have been generated. Defaults to the last one day", example = "2023-01-02T02:23:45Z")
     to: Instant?,
-  ): List<PrisonerDifferences> =
-    prisonerDifferencesService.retrieveDifferences(label, from ?: Instant.now().minus(1, ChronoUnit.DAYS), to ?: Instant.now())
+  ): List<PrisonerDifferences> = prisonerDifferencesService.retrieveDifferences(label, from ?: Instant.now().minus(1, ChronoUnit.DAYS), to ?: Instant.now())
 
   @Hidden
   @DeleteMapping("/delete")

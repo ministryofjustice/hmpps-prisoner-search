@@ -89,13 +89,11 @@ data class IndexStatus(
     otherIndexState = currentIndexState,
   )
 
-  fun toBuildCancelled(): IndexStatus =
-    this.copy(otherIndexEndBuildTime = LocalDateTime.now(), otherIndexState = IndexState.CANCELLED)
+  fun toBuildCancelled(): IndexStatus = this.copy(otherIndexEndBuildTime = LocalDateTime.now(), otherIndexState = IndexState.CANCELLED)
 
-  fun activeIndexes(): List<SyncIndex> =
-    listOf(Pair(currentIndexState, currentIndex), Pair(otherIndexState, otherIndex))
-      .filter { it.first.active }
-      .map { it.second }
+  fun activeIndexes(): List<SyncIndex> = listOf(Pair(currentIndexState, currentIndex), Pair(otherIndexState, otherIndex))
+    .filter { it.first.active }
+    .map { it.second }
 
   fun activeIndexesEmpty(): Boolean = activeIndexes().isEmpty()
 

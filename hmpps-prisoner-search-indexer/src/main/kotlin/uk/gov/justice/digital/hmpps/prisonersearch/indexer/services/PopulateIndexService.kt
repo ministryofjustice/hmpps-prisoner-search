@@ -25,14 +25,13 @@ class PopulateIndexService(
 ) {
   private val pageSize = indexBuildProperties.pageSize
 
-  fun populateIndex(index: SyncIndex): Int =
-    executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
-      indexStatusService.getIndexStatus()
-        .also { maintainIndexService.logIndexStatuses(it) }
-        .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
-        .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedException(it) }
-        .run { doPopulateIndex() }
-    }
+  fun populateIndex(index: SyncIndex): Int = executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
+    indexStatusService.getIndexStatus()
+      .also { maintainIndexService.logIndexStatuses(it) }
+      .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+      .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedException(it) }
+      .run { doPopulateIndex() }
+  }
 
   private inline fun <R> executeAndTrackTimeMillis(
     trackEventName: TelemetryEvents,
@@ -62,52 +61,49 @@ class PopulateIndexService(
       }.size
   }
 
-  fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit =
-    executeAndTrackTimeMillis(
-      TelemetryEvents.BUILD_PAGE_MSG,
-      mapOf("prisonerPage" to prisonerPage.page.toString()),
-    ) {
-      indexStatusService.getIndexStatus()
-        .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
-        .run {
-          nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
-            .forEachIndexed { index, offenderIdentifier ->
-              if (index == 0 || index == prisonerPage.pageSize - 1) {
-                telemetryClient.trackEvent(
-                  TelemetryEvents.BUILD_PAGE_BOUNDARY,
-                  mutableMapOf(
-                    "page" to prisonerPage.page.toString(),
-                    "IndexOnPage" to index.toString(),
-                    "prisonerNumber" to offenderIdentifier,
-                  ),
-                )
-              }
-              indexQueueService.sendPopulatePrisonerMessage(offenderIdentifier)
-            }
-        }
-    }
-
-  fun populateIndexWithPrisoner(prisonerNumber: String): Prisoner =
+  fun populateIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit = executeAndTrackTimeMillis(
+    TelemetryEvents.BUILD_PAGE_MSG,
+    mapOf("prisonerPage" to prisonerPage.page.toString()),
+  ) {
     indexStatusService.getIndexStatus()
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
       .run {
-        nomisService.getOffender(prisonerNumber)?.let { ob ->
-          prisonerSynchroniserService.index(ob, this.currentIndex.otherIndex())
-        } ?: run {
-          // can happen if a prisoner is deleted or merged once indexing has started
-          telemetryClient.trackPrisonerEvent(BUILD_PRISONER_NOT_FOUND, prisonerNumber)
-          throw PrisonerNotFoundException(prisonerNumber)
-        }
+        nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
+          .forEachIndexed { index, offenderIdentifier ->
+            if (index == 0 || index == prisonerPage.pageSize - 1) {
+              telemetryClient.trackEvent(
+                TelemetryEvents.BUILD_PAGE_BOUNDARY,
+                mutableMapOf(
+                  "page" to prisonerPage.page.toString(),
+                  "IndexOnPage" to index.toString(),
+                  "prisonerNumber" to offenderIdentifier,
+                ),
+              )
+            }
+            indexQueueService.sendPopulatePrisonerMessage(offenderIdentifier)
+          }
       }
+  }
+
+  fun populateIndexWithPrisoner(prisonerNumber: String): Prisoner = indexStatusService.getIndexStatus()
+    .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
+    .run {
+      nomisService.getOffender(prisonerNumber)?.let { ob ->
+        prisonerSynchroniserService.index(ob, this.currentIndex.otherIndex())
+      } ?: run {
+        // can happen if a prisoner is deleted or merged once indexing has started
+        telemetryClient.trackPrisonerEvent(BUILD_PRISONER_NOT_FOUND, prisonerNumber)
+        throw PrisonerNotFoundException(prisonerNumber)
+      }
+    }
 
   private inline fun IndexStatus.failIf(
     check: (IndexStatus) -> Boolean,
     onFail: (IndexStatus) -> IndexException,
-  ): IndexStatus =
-    when (check(this)) {
-      false -> this
-      true -> throw onFail(this)
-    }
+  ): IndexStatus = when (check(this)) {
+    false -> this
+    true -> throw onFail(this)
+  }
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)

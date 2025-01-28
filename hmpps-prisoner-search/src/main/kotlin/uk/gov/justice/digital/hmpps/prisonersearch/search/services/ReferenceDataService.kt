@@ -41,12 +41,11 @@ class ReferenceDataService(
     }
   }
 
-  private fun createSourceBuilder(attribute: ReferenceDataAttribute): SearchSourceBuilder =
-    SearchSourceBuilder().apply {
-      timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
-      size(0)
-      aggregation(TermsAggregationBuilder(attribute.name).size(maxSearchResults).field(attribute.field))
-    }
+  private fun createSourceBuilder(attribute: ReferenceDataAttribute): SearchSourceBuilder = SearchSourceBuilder().apply {
+    timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
+    size(0)
+    aggregation(TermsAggregationBuilder(attribute.name).size(maxSearchResults).field(attribute.field))
+  }
 
   // we have implemented a cache loader in CacheConfig so that will call the findAlertsReferenceData method below
   @Cacheable(cacheNames = ["alertsReferenceData"])
@@ -70,8 +69,7 @@ class ReferenceDataService(
           )
         }.sortedBy { alertCode -> alertCode.description },
       )
-    }.sortedBy {
-        alertType ->
+    }.sortedBy { alertType ->
       alertType.description
     }.let {
       ReferenceDataAlertsResponse(it)

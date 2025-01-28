@@ -20,29 +20,27 @@ class SearchClient(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun search(searchRequest: SearchRequest): SearchResponse =
-    try {
+  fun search(searchRequest: SearchRequest): SearchResponse = try {
+    elasticsearchClient.search(searchRequest, RequestOptions.DEFAULT)
+  } catch (e: OpenSearchStatusException) {
+    if (isRetryable(e)) {
+      log.warn("Retrying search", e)
       elasticsearchClient.search(searchRequest, RequestOptions.DEFAULT)
-    } catch (e: OpenSearchStatusException) {
-      if (isRetryable(e)) {
-        log.warn("Retrying search", e)
-        elasticsearchClient.search(searchRequest, RequestOptions.DEFAULT)
-      } else {
-        throw e
-      }
+    } else {
+      throw e
     }
+  }
 
-  fun count(countRequest: CountRequest): CountResponse =
-    try {
+  fun count(countRequest: CountRequest): CountResponse = try {
+    elasticsearchClient.count(countRequest, RequestOptions.DEFAULT)
+  } catch (e: OpenSearchStatusException) {
+    if (isRetryable(e)) {
+      log.warn("Retrying count", e)
       elasticsearchClient.count(countRequest, RequestOptions.DEFAULT)
-    } catch (e: OpenSearchStatusException) {
-      if (isRetryable(e)) {
-        log.warn("Retrying count", e)
-        elasticsearchClient.count(countRequest, RequestOptions.DEFAULT)
-      } else {
-        throw e
-      }
+    } else {
+      throw e
     }
+  }
 
   fun isRetryable(e: OpenSearchStatusException): Boolean {
     val cause = e.cause

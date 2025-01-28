@@ -12,9 +12,7 @@ class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchIntegrationTes
     loadPrisonersFromBuilders(prisonerData)
   }
 
-  private fun getTestPrisonerNumbers(count: Int): List<String> {
-    return List(count) { i -> "AN$i" }
-  }
+  private fun getTestPrisonerNumbers(count: Int): List<String> = List(count) { i -> "AN$i" }
 
   @Test
   fun `prisoner number search returns bad request when no prison numbers provided`() {

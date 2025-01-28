@@ -126,15 +126,12 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       }
       """.trimIndent()
 
-      private fun String.withJoinType(joinType: String) =
-        replace(""""joinType": "AND"""", """"joinType": "$joinType"""")
+      private fun String.withJoinType(joinType: String) = replace(""""joinType": "AND"""", """"joinType": "$joinType"""")
 
       private fun String.withType(type: String) = replace(""""type": "String"""", """"type": "$type"""")
-      private fun String.withAttribute(attribute: String) =
-        replace(""""attribute": "lastName"""", """"attribute": "$attribute"""")
+      private fun String.withAttribute(attribute: String) = replace(""""attribute": "lastName"""", """"attribute": "$attribute"""")
 
-      private fun String.withCondition(condition: String) =
-        replace(""""condition": "IS"""", """"condition": "$condition"""")
+      private fun String.withCondition(condition: String) = replace(""""condition": "IS"""", """"condition": "$condition"""")
 
       private fun String.withSearchTermJson(searchTermJson: String) = replace(""""searchTerm": "Smith"""", searchTermJson)
 
@@ -269,8 +266,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       """.trimIndent()
 
       private fun String.withType(type: String) = replace(""""type": "Boolean"""", """"type": "$type"""")
-      private fun String.withAttribute(attribute: String) =
-        replace(""""attribute": "active"""", """"attribute": "$attribute"""")
+      private fun String.withAttribute(attribute: String) = replace(""""attribute": "active"""", """"attribute": "$attribute"""")
 
       private fun String.withConditionJson(conditionJson: String) = replace(""""condition": true""", conditionJson)
 
@@ -382,14 +378,11 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       """.trimIndent()
 
       private fun String.withType(type: String) = replace(""""type": "Date"""", """"type": "$type"""")
-      private fun String.withAttribute(attribute: String) =
-        replace(""""attribute": "releaseDate"""", """"attribute": "$attribute"""")
+      private fun String.withAttribute(attribute: String) = replace(""""attribute": "releaseDate"""", """"attribute": "$attribute"""")
 
-      private fun String.withMinValueJson(minValueJson: String) =
-        replace(""""minValue": "2023-01-01"""", minValueJson)
+      private fun String.withMinValueJson(minValueJson: String) = replace(""""minValue": "2023-01-01"""", minValueJson)
 
-      private fun String.withMaxValueJson(maxValueJson: String) =
-        replace(""""maxValue": "2024-01-01"""", maxValueJson)
+      private fun String.withMaxValueJson(maxValueJson: String) = replace(""""maxValue": "2024-01-01"""", maxValueJson)
 
       @Test
       fun `should return OK for a valid request`() {
@@ -485,14 +478,11 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       """.trimIndent()
 
       private fun String.withType(type: String) = replace(""""type": "DateTime"""", """"type": "$type"""")
-      private fun String.withAttribute(attribute: String) =
-        replace(""""attribute": "currentIncentive.dateTime"""", """"attribute": "$attribute"""")
+      private fun String.withAttribute(attribute: String) = replace(""""attribute": "currentIncentive.dateTime"""", """"attribute": "$attribute"""")
 
-      private fun String.withMinValueJson(minValueJson: String) =
-        replace(""""minValue": "2023-01-01T09:14:33"""", minValueJson)
+      private fun String.withMinValueJson(minValueJson: String) = replace(""""minValue": "2023-01-01T09:14:33"""", minValueJson)
 
-      private fun String.withMaxValueJson(maxValueJson: String) =
-        replace(""""maxValue": "2023-02-28T21:41:44"""", maxValueJson)
+      private fun String.withMaxValueJson(maxValueJson: String) = replace(""""maxValue": "2023-02-28T21:41:44"""", maxValueJson)
 
       @Test
       fun `should return OK for a valid request`() {
@@ -578,14 +568,11 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       """.trimIndent()
 
       private fun String.withType(type: String) = replace(""""type": "Int"""", """"type": "$type"""")
-      private fun String.withAttribute(attribute: String) =
-        replace(""""attribute": "heightCentimetres"""", """"attribute": "$attribute"""")
+      private fun String.withAttribute(attribute: String) = replace(""""attribute": "heightCentimetres"""", """"attribute": "$attribute"""")
 
-      private fun String.withMinValueJson(minValueJson: String) =
-        replace(""""minValue": 150""", minValueJson)
+      private fun String.withMinValueJson(minValueJson: String) = replace(""""minValue": 150""", minValueJson)
 
-      private fun String.withMaxValueJson(maxValueJson: String) =
-        replace(""""maxValue": 160""", maxValueJson)
+      private fun String.withMaxValueJson(maxValueJson: String) = replace(""""maxValue": 160""", maxValueJson)
 
       @Test
       fun `should return OK for a valid request`() {

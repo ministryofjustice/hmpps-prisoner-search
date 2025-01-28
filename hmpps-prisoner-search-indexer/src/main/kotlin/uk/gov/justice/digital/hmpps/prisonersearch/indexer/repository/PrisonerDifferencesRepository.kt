@@ -51,8 +51,7 @@ class PrisonerDifferences(
 
   override fun hashCode(): Int = prisonerDifferencesId?.hashCode() ?: 0
 
-  override fun toString(): String =
-    "PrisonerDifferences(prisonerDifferencesId=$prisonerDifferencesId, nomsNumber='$nomsNumber', differences='$differences', dateTime=$dateTime)"
+  override fun toString(): String = "PrisonerDifferences(prisonerDifferencesId=$prisonerDifferencesId, nomsNumber='$nomsNumber', differences='$differences', dateTime=$dateTime)"
 }
 
 enum class PrisonerDifferencesLabel { GREEN_BLUE, RED }

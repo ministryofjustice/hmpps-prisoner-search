@@ -47,8 +47,7 @@ class AllPrisonerLocationResource(private val prisonerLocationService: PrisonerL
       scroll id will be invalid.
       Requires PRISONER_SEARCH__PRISONER_LOCATION__RO role.""",
   )
-  fun scroll(@PathVariable("scroll-id") scrollId: String) =
-    prisonerLocationService.scrollPrisonerLocations(scrollId)
+  fun scroll(@PathVariable("scroll-id") scrollId: String) = prisonerLocationService.scrollPrisonerLocations(scrollId)
 }
 
 @Schema(description = "Prisoner location response")

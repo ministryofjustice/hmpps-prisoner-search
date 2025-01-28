@@ -56,9 +56,8 @@ class PrisonerRepository(
     openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), index.toIndexCoordinates())
   }
 
-  fun getSummary(prisonerNumber: String, index: SyncIndex): PrisonerDocumentSummary? =
-    client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
-      .toPrisonerDocumentSummary(prisonerNumber)
+  fun getSummary(prisonerNumber: String, index: SyncIndex): PrisonerDocumentSummary? = client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
+    .toPrisonerDocumentSummary(prisonerNumber)
 
   fun createPrisoner(prisoner: Prisoner, index: SyncIndex) {
     val response = openSearchRestTemplate.index(
@@ -196,13 +195,11 @@ class PrisonerRepository(
     openSearchRestTemplate.delete(prisonerNumber, index.toIndexCoordinates())
   }
 
-  fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? =
-    indices.firstNotNullOfOrNull {
-      openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
-    }
+  fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? = indices.firstNotNullOfOrNull {
+    openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
+  }
 
-  fun getRaw(prisonerNumber: String, index: SyncIndex): GetResponse =
-    client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
+  fun getRaw(prisonerNumber: String, index: SyncIndex): GetResponse = client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
 
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
@@ -226,8 +223,7 @@ class PrisonerRepository(
     }
   }
 
-  fun doesIndexExist(index: SyncIndex): Boolean =
-    client.indices().exists(GetIndexRequest(index.indexName), RequestOptions.DEFAULT)
+  fun doesIndexExist(index: SyncIndex): Boolean = client.indices().exists(GetIndexRequest(index.indexName), RequestOptions.DEFAULT)
 
   fun switchAliasIndex(index: SyncIndex) {
     val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
@@ -446,18 +442,16 @@ class PrisonerRepository(
     )
   }
 
-  fun copyPrisoner(prisoner: Prisoner): Prisoner =
-    objectMapper.readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)
+  fun copyPrisoner(prisoner: Prisoner): Prisoner = objectMapper.readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)
 
-  private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? =
-    source?.let {
-      PrisonerDocumentSummary(
-        prisonerNumber,
-        objectMapper.convertValue(source, Prisoner::class.java),
-        seqNo.toInt(),
-        primaryTerm.toInt(),
-      )
-    }
+  private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? = source?.let {
+    PrisonerDocumentSummary(
+      prisonerNumber,
+      objectMapper.convertValue(source, Prisoner::class.java),
+      seqNo.toInt(),
+      primaryTerm.toInt(),
+    )
+  }
 }
 
 data class PrisonerDocumentSummary(

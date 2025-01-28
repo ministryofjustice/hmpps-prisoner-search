@@ -2,19 +2,17 @@ package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
 fun String.canonicalPNCNumber(): String = if (isPNCNumber()) combinePNC(splitPNC()) else this
 
-fun String.canonicalPNCNumberShort(): String? =
-  when {
-    isPNCNumberShort() -> combinePNC(splitPNC())
-    isPNCNumberLong() -> with(splitPNC()) { combinePNC(Pnc(year.substring(2, 4), serialNumber, checksum)) }
-    else -> null
-  }
+fun String.canonicalPNCNumberShort(): String? = when {
+  isPNCNumberShort() -> combinePNC(splitPNC())
+  isPNCNumberLong() -> with(splitPNC()) { combinePNC(Pnc(year.substring(2, 4), serialNumber, checksum)) }
+  else -> null
+}
 
-fun String.canonicalPNCNumberLong(): String? =
-  when {
-    isPNCNumberLong() -> combinePNC(splitPNC())
-    isPNCNumberShort() -> with(splitPNC()) { combinePNC(Pnc(addCenturyToYear(year), serialNumber, checksum)) }
-    else -> null
-  }
+fun String.canonicalPNCNumberLong(): String? = when {
+  isPNCNumberLong() -> combinePNC(splitPNC())
+  isPNCNumberShort() -> with(splitPNC()) { combinePNC(Pnc(addCenturyToYear(year), serialNumber, checksum)) }
+  else -> null
+}
 
 private fun combinePNC(pnc: Pnc) = with(pnc) { "$year/$serialNumber$checksum".uppercase() }
 

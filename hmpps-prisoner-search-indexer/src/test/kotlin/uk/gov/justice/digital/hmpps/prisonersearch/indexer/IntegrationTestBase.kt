@@ -202,44 +202,40 @@ abstract class IntegrationTestBase {
     fun offenderQueueSqsClient(
       hmppsSqsProperties: HmppsSqsProperties,
       @Qualifier("offenderqueue-sqs-dlq-client") offenderQueueSqsDlqClient: SqsAsyncClient,
-    ): SqsAsyncClient =
-      with(hmppsSqsProperties) {
-        val config = queues["offenderqueue"]
-          ?: throw MissingQueueException("HmppsSqsProperties config for offenderqueue not found")
-        hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, offenderQueueSqsDlqClient)
-      }
+    ): SqsAsyncClient = with(hmppsSqsProperties) {
+      val config = queues["offenderqueue"]
+        ?: throw MissingQueueException("HmppsSqsProperties config for offenderqueue not found")
+      hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, offenderQueueSqsDlqClient)
+    }
 
     @Bean("publish-sqs-client")
     fun publishSqsClient(
       hmppsSqsProperties: HmppsSqsProperties,
       @Qualifier("publish-sqs-dlq-client") publishSqsDlqClient: SqsAsyncClient,
-    ): SqsAsyncClient =
-      with(hmppsSqsProperties) {
-        val config = queues["publish"]
-          ?: throw MissingQueueException("HmppsSqsProperties config for publish not found")
-        hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, publishSqsDlqClient)
-      }
+    ): SqsAsyncClient = with(hmppsSqsProperties) {
+      val config = queues["publish"]
+        ?: throw MissingQueueException("HmppsSqsProperties config for publish not found")
+      hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, publishSqsDlqClient)
+    }
 
     @Bean("hmppsdomainqueue-sqs-client")
     fun hmppsDomainQueueSqsClient(
       hmppsSqsProperties: HmppsSqsProperties,
       @Qualifier("hmppsdomainqueue-sqs-dlq-client") hmppsDomainQueueSqsDlqClient: SqsAsyncClient,
-    ): SqsAsyncClient =
-      with(hmppsSqsProperties) {
-        val config = queues["hmppsdomainqueue"]
-          ?: throw MissingQueueException("HmppsSqsProperties config for hmppsdomainqueue not found")
-        hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, hmppsDomainQueueSqsDlqClient)
-      }
+    ): SqsAsyncClient = with(hmppsSqsProperties) {
+      val config = queues["hmppsdomainqueue"]
+        ?: throw MissingQueueException("HmppsSqsProperties config for hmppsdomainqueue not found")
+      hmppsQueueFactory.createSqsAsyncClient(config, hmppsSqsProperties, hmppsDomainQueueSqsDlqClient)
+    }
 
     @Bean("hmppseventtopic-sns-client")
     fun eventTopicSnsClient(
       hmppsSqsProperties: HmppsSqsProperties,
-    ): SnsAsyncClient =
-      with(hmppsSqsProperties) {
-        val config = topics["hmppseventtopic"]
-          ?: throw MissingTopicException("HmppsSqsProperties config for hmppseventtopic not found")
-        hmppsTopicFactory.createSnsAsyncClient("hmppseventtopic", config, hmppsSqsProperties)
-      }
+    ): SnsAsyncClient = with(hmppsSqsProperties) {
+      val config = topics["hmppseventtopic"]
+        ?: throw MissingTopicException("HmppsSqsProperties config for hmppseventtopic not found")
+      hmppsTopicFactory.createSnsAsyncClient("hmppseventtopic", config, hmppsSqsProperties)
+    }
   }
 }
 

@@ -25,25 +25,26 @@ class GsonConfig {
     .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
     .create()
 
-  internal class LocalDateAdapter : JsonSerializer<LocalDate?>, JsonDeserializer<LocalDate?> {
-    override fun serialize(src: LocalDate?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement =
-      JsonPrimitive(src?.format(DateTimeFormatter.ISO_LOCAL_DATE))
+  internal class LocalDateAdapter :
+    JsonSerializer<LocalDate?>,
+    JsonDeserializer<LocalDate?> {
+    override fun serialize(src: LocalDate?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement = JsonPrimitive(src?.format(DateTimeFormatter.ISO_LOCAL_DATE))
 
-    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): LocalDate? =
-      LocalDate.parse(json?.asJsonPrimitive?.asString)
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): LocalDate? = LocalDate.parse(json?.asJsonPrimitive?.asString)
   }
 
-  internal class LocalDateTimeAdapter : JsonSerializer<LocalDateTime?>, JsonDeserializer<LocalDateTime> {
+  internal class LocalDateTimeAdapter :
+    JsonSerializer<LocalDateTime?>,
+    JsonDeserializer<LocalDateTime> {
     override fun serialize(
       localDateTime: LocalDateTime?,
       srcType: Type,
       context: JsonSerializationContext,
     ): JsonElement = JsonPrimitive(DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(localDateTime))
 
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LocalDateTime =
-      LocalDateTime.parse(
-        json.asString,
-        DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ENGLISH),
-      )
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LocalDateTime = LocalDateTime.parse(
+      json.asString,
+      DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ENGLISH),
+    )
   }
 }

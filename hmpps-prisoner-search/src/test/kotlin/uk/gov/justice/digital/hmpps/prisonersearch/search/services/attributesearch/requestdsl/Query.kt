@@ -84,40 +84,33 @@ class QueryBuilder : QueryDsl {
   private val matchers = mutableListOf<Matcher>()
   private val subQueries = mutableListOf<Query>()
 
-  override fun stringMatcher(stringAssertion: StringAssertion) =
-    StringMatcherBuilder(stringAssertion)
-      .build()
-      .also { matchers += it }
+  override fun stringMatcher(stringAssertion: StringAssertion) = StringMatcherBuilder(stringAssertion)
+    .build()
+    .also { matchers += it }
 
-  override fun intMatcher(intAssertion: IntAssertion) =
-    IntMatcherBuilder(intAssertion)
-      .build()
-      .also { matchers += it }
+  override fun intMatcher(intAssertion: IntAssertion) = IntMatcherBuilder(intAssertion)
+    .build()
+    .also { matchers += it }
 
-  override fun booleanMatcher(booleanAssertion: BooleanAssertion) =
-    BooleanMatcherBuilder(booleanAssertion)
-      .build()
-      .also { matchers += it }
+  override fun booleanMatcher(booleanAssertion: BooleanAssertion) = BooleanMatcherBuilder(booleanAssertion)
+    .build()
+    .also { matchers += it }
 
-  override fun dateTimeMatcher(dateTimeAssertion: DateTimeAssertion): DateTimeMatcher =
-    DateTimeMatcherBuilder(dateTimeAssertion)
-      .build()
-      .also { matchers += it }
+  override fun dateTimeMatcher(dateTimeAssertion: DateTimeAssertion): DateTimeMatcher = DateTimeMatcherBuilder(dateTimeAssertion)
+    .build()
+    .also { matchers += it }
 
-  override fun dateMatcher(dateAssertion: DateAssertion): DateMatcher =
-    DateMatcherBuilder(dateAssertion)
-      .build()
-      .also { matchers += it }
+  override fun dateMatcher(dateAssertion: DateAssertion): DateMatcher = DateMatcherBuilder(dateAssertion)
+    .build()
+    .also { matchers += it }
 
-  override fun pncMatcher(pncNumber: String): PncMatcher =
-    PncMatcher(pncNumber)
-      .also { matchers += it }
+  override fun pncMatcher(pncNumber: String): PncMatcher = PncMatcher(pncNumber)
+    .also { matchers += it }
 
-  override fun subQuery(dsl: QueryDsl.() -> Unit): Query =
-    QueryBuilder()
-      .apply(dsl)
-      .build()
-      .also { subQueries += it }
+  override fun subQuery(dsl: QueryDsl.() -> Unit): Query = QueryBuilder()
+    .apply(dsl)
+    .build()
+    .also { subQueries += it }
 
   fun build(): Query = Query(joinType, matchers, subQueries)
 }

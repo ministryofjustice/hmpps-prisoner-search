@@ -50,15 +50,14 @@ class AttributeSearchService(
     }
   }
 
-  private fun buildQuery(request: AttributeSearchRequest): BoolQueryBuilder =
-    QueryBuilders.boolQuery().apply {
-      request.queries.forEach {
-        when (request.joinType) {
-          AND -> must(it.buildQuery(attributes))
-          OR -> should(it.buildQuery(attributes))
-        }
+  private fun buildQuery(request: AttributeSearchRequest): BoolQueryBuilder = QueryBuilders.boolQuery().apply {
+    request.queries.forEach {
+      when (request.joinType) {
+        AND -> must(it.buildQuery(attributes))
+        OR -> should(it.buildQuery(attributes))
       }
     }
+  }
 
   private fun BoolQueryBuilder.search(pageable: Pageable, telemetryMap: MutableMap<String, String>): SearchResponse {
     val searchSourceBuilder = pageable.searchSourceBuilder(this)
@@ -73,9 +72,8 @@ class AttributeSearchService(
 
   private fun String.extractInt() = "\\d+".toRegex().find(this)?.value?.toIntOrNull()?.toString()
 
-  private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> =
-    hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
-      .let { PageImpl(it, pageable, hits.totalHits?.value ?: 0) }
+  private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> = hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
+    .let { PageImpl(it, pageable, hits.totalHits?.value ?: 0) }
 
   private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder): SearchSourceBuilder {
     val sortBuilders = sort.map {
@@ -91,10 +89,9 @@ class AttributeSearchService(
     }
   }
 
-  private fun getSortableAttribute(it: Sort.Order): String =
-    attributes[it.property]
-      ?.openSearchName
-      ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
+  private fun getSortableAttribute(it: Sort.Order): String = attributes[it.property]
+    ?.openSearchName
+    ?: throw AttributeSearchException("Sort attribute '${it.property}' not found")
 
   fun getAttributes() = attributes.map { (name, attribute) ->
     Attribute(name, attribute.type.matcherType(), name.isFuzzyAttribute())

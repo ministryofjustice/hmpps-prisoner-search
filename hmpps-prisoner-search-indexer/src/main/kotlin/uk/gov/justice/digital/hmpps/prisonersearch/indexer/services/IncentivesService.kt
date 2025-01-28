@@ -13,12 +13,11 @@ class IncentivesService(
   private val incentivesWebClient: WebClient,
 ) {
   @Retryable(maxAttempts = 3, backoff = Backoff(delay = 100))
-  fun getCurrentIncentive(bookingId: Long): IncentiveLevel? =
-    incentivesWebClient.get().uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
-      .retrieve()
-      .bodyToMono(IncentiveLevel::class.java)
-      .onErrorResume(WebClientResponseException.NotFound::class.java) {
-        Mono.empty()
-      }
-      .block()
+  fun getCurrentIncentive(bookingId: Long): IncentiveLevel? = incentivesWebClient.get().uri("/incentive-reviews/booking/{bookingId}?with-details=false", bookingId)
+    .retrieve()
+    .bodyToMono(IncentiveLevel::class.java)
+    .onErrorResume(WebClientResponseException.NotFound::class.java) {
+      Mono.empty()
+    }
+    .block()
 }

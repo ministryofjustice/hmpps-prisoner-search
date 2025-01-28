@@ -42,8 +42,7 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
     description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
   )
   @Tag(name = "Deprecated")
-  fun findByCriteria(@Parameter(required = true) @RequestBody prisonSearch: PrisonSearch) =
-    prisonerSearchService.findBySearchCriteria(prisonSearch.toSearchCriteria())
+  fun findByCriteria(@Parameter(required = true) @RequestBody prisonSearch: PrisonSearch) = prisonerSearchService.findBySearchCriteria(prisonSearch.toSearchCriteria())
 
   @PostMapping("/match-prisoners")
   @Operation(
@@ -55,8 +54,7 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
   )
   @Tag(name = "Matching")
   @Tag(name = "Popular")
-  fun findByCriteria(@Parameter(required = true) @RequestBody searchCriteria: SearchCriteria) =
-    prisonerSearchService.findBySearchCriteria(searchCriteria)
+  fun findByCriteria(@Parameter(required = true) @RequestBody searchCriteria: SearchCriteria) = prisonerSearchService.findBySearchCriteria(searchCriteria)
 
   @PostMapping("/possible-matches")
   @Operation(
@@ -68,8 +66,7 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
        """,
   )
   @Tag(name = "Matching")
-  fun findPossibleMatchesBySearchCriteria(@Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria) =
-    prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria)
+  fun findPossibleMatchesBySearchCriteria(@Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria) = prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria)
 
   @PostMapping("/prisoner-numbers")
   @Operation(
@@ -78,8 +75,7 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
   )
   @Tag(name = "Batch")
   @Tag(name = "Popular")
-  fun findByNumbers(@Parameter(required = true) @Valid @RequestBody criteria: PrisonerNumbers) =
-    prisonerSearchService.findBy(criteria)
+  fun findByNumbers(@Parameter(required = true) @Valid @RequestBody criteria: PrisonerNumbers) = prisonerSearchService.findBy(criteria)
 
   @PostMapping("/booking-ids")
   @Operation(
@@ -87,8 +83,7 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
     description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
   )
   @Tag(name = "Batch")
-  fun findByIds(@Parameter(required = true) @Valid @RequestBody criteria: BookingIds) =
-    prisonerSearchService.findBy(criteria)
+  fun findByIds(@Parameter(required = true) @Valid @RequestBody criteria: BookingIds) = prisonerSearchService.findBy(criteria)
 
   @PostMapping("/release-date-by-prison")
   @Operation(

@@ -175,15 +175,11 @@ class MatchService(
     }
   }
 
-  private fun allLenientDateVariations(date: LocalDate): List<LocalDate> {
-    return swapMonthDay(date) + everyOtherValidMonth(date) + aroundDateInSameMonth(date)
-  }
+  private fun allLenientDateVariations(date: LocalDate): List<LocalDate> = swapMonthDay(date) + everyOtherValidMonth(date) + aroundDateInSameMonth(date)
 
-  private fun aroundDateInSameMonth(date: LocalDate) =
-    listOf(date.minusDays(1), date.minusDays(-1), date).filter { it.month == date.month }
+  private fun aroundDateInSameMonth(date: LocalDate) = listOf(date.minusDays(1), date.minusDays(-1), date).filter { it.month == date.month }
 
-  private fun everyOtherValidMonth(date: LocalDate): List<LocalDate> =
-    (1..12).filterNot { date.monthValue == it }.mapNotNull { setMonthDay(date, it) }
+  private fun everyOtherValidMonth(date: LocalDate): List<LocalDate> = (1..12).filterNot { date.monthValue == it }.mapNotNull { setMonthDay(date, it) }
 
   private fun swapMonthDay(date: LocalDate): List<LocalDate> = try {
     listOf(LocalDate.of(date.year, date.dayOfMonth, date.monthValue))
@@ -223,14 +219,10 @@ sealed class PrisonerResult {
   data class Match(val matches: List<PrisonerMatch>) : PrisonerResult()
 }
 
-inline infix fun PrisonerResult.onPrisonerMatch(block: (PrisonerResult.Match) -> Nothing) {
-  return when (this) {
-    is PrisonerResult.NoMatch -> {
-    }
-    is PrisonerResult.Match -> block(this)
+inline infix fun PrisonerResult.onPrisonerMatch(block: (PrisonerResult.Match) -> Nothing) = when (this) {
+  is PrisonerResult.NoMatch -> {
   }
+  is PrisonerResult.Match -> block(this)
 }
 
-private fun BoolQueryBuilder.withDefaults(matchRequest: MatchRequest): BoolQueryBuilder {
-  return this
-}
+private fun BoolQueryBuilder.withDefaults(matchRequest: MatchRequest): BoolQueryBuilder = this

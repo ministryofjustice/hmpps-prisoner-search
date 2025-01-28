@@ -194,6 +194,5 @@ class DomainEventsResourceIntTest : IntegrationTestBase() {
     return objectMapper.readValue<MsgBody>(updateResult.body()).Message
   }
 
-  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int? =
-    hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
+  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int? = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
 }

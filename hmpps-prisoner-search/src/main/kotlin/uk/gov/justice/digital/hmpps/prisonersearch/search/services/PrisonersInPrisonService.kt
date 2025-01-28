@@ -237,9 +237,7 @@ class PrisonersInPrisonService(
     return newTokens.trim()
   }
 
-  private fun String.isPncNumber() =
-    matches("^\\d{4}/([0-9]+)[a-zA-Z]$".toRegex()) || matches("^\\d{2}/([0-9]+)[a-zA-Z]$".toRegex())
+  private fun String.isPncNumber() = matches("^\\d{4}/([0-9]+)[a-zA-Z]$".toRegex()) || matches("^\\d{2}/([0-9]+)[a-zA-Z]$".toRegex())
 
-  private fun String.isCroNumber() =
-    matches("^([0-9]+)/([0-9]+)[a-zA-Z]$".toRegex())
+  private fun String.isCroNumber() = matches("^([0-9]+)/([0-9]+)[a-zA-Z]$".toRegex())
 }

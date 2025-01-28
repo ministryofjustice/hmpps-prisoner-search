@@ -372,19 +372,18 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     webTestClient.attributeSearch(request).expectSingleResult("pncNumber", pncNumber.canonicalPNCNumberShort()!!)
   }
 
-  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) =
-    post()
-      .uri {
-        it.path("/attribute-search")
-          .queryParam("page", 0)
-          .queryParam("size", 1)
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .bodyValue(objectMapper.writeValueAsString(request))
-      .exchange()
-      .expectStatus().isOk
+  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) = post()
+    .uri {
+      it.path("/attribute-search")
+        .queryParam("page", 0)
+        .queryParam("size", 1)
+        .build()
+    }
+    .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+    .header("Content-Type", "application/json")
+    .bodyValue(objectMapper.writeValueAsString(request))
+    .exchange()
+    .expectStatus().isOk
 
   private fun WebTestClient.ResponseSpec.expectSingleResult(field: String, value: Any) {
     val attribute =
