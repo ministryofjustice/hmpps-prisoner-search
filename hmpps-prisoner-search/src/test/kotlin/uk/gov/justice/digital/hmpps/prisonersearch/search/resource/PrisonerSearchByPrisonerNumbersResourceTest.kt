@@ -51,6 +51,7 @@ class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchIntegrationTes
       .jsonPath("$[0].prisonerNumber").isEqualTo("AN2")
       .jsonPath("$[0].imprisonmentStatus").isEqualTo("LIFE")
       .jsonPath("$[0].imprisonmentStatusDescription").isEqualTo("Life imprisonment")
+      .jsonPath("$[0].convictedStatus").isEqualTo("Remand")
   }
 
   @Test

@@ -79,6 +79,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     legalStatus = "SENTENCED"
     imprisonmentStatus = "LIFE"
     imprisonmentStatusDescription = "Serving Life Imprisonment"
+    convictedStatus = "Remand"
     mostSeriousOffence = "Robbery"
     nonDtoReleaseDateType = "ARD"
     locationDescription = "HMP Moorland"
@@ -219,6 +220,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "legalStatus,SENTENCED",
     "imprisonmentStatus,LIFE",
     "imprisonmentStatusDescription,Serving Life Imprisonment",
+    "convictedStatus,Remand",
     "mostSeriousOffence,Robbery",
     "nonDtoReleaseDateType,ARD",
     "locationDescription,HMP Moorland",

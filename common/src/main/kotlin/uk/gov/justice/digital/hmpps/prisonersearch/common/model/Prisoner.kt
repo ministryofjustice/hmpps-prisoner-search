@@ -178,6 +178,10 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.STATUS)
   var imprisonmentStatusDescription: String? = null
 
+  @Schema(description = "The prisoner's convicted status code.", example = "Convicted", allowableValues = ["Convicted", "Remand"])
+  @DiffableProperty(DiffCategory.STATUS)
+  var convictedStatus: String? = null
+
   @Schema(required = true, description = "Most serious offence for this sentence", example = "Robbery")
   @DiffableProperty(DiffCategory.SENTENCE)
   var mostSeriousOffence: String? = null

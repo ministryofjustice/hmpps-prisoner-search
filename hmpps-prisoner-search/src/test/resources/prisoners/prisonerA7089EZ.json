@@ -58,6 +58,7 @@
   "category": "C",
   "legalStatus": "SENTENCED",
   "imprisonmentStatus": "LR_HDC",
+  "convictedStatus": "Remand",
   "mostSeriousOffence": "Burglary dwelling - with intent to steal",
   "releaseDate": "2020-04-28",
   "nonDtoReleaseDate": "2020-04-28",

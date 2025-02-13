@@ -296,6 +296,7 @@ class PrisonerRepository(
             |ctx._source.legalStatus = params.legalStatus;
             |ctx._source.imprisonmentStatus = params.imprisonmentStatus;
             |ctx._source.imprisonmentStatusDescription = params.imprisonmentStatusDescription;
+            |ctx._source.convictedStatus = params.convictedStatus;
             |ctx._source.mostSeriousOffence = params.mostSeriousOffence;
             |ctx._source.recall = params.recall;
             |ctx._source.indeterminateSentence = params.indeterminateSentence;
@@ -383,6 +384,7 @@ class PrisonerRepository(
             "legalStatus" to prisonerMap["legalStatus"],
             "imprisonmentStatus" to prisonerMap["imprisonmentStatus"],
             "imprisonmentStatusDescription" to prisonerMap["imprisonmentStatusDescription"],
+            "convictedStatus" to prisonerMap["convictedStatus"],
             "mostSeriousOffence" to prisonerMap["mostSeriousOffence"],
             "recall" to prisonerMap["recall"],
             "indeterminateSentence" to prisonerMap["indeterminateSentence"],

@@ -121,6 +121,7 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.legalStatus = ob.legalStatus
   this.imprisonmentStatus = ob.imprisonmentStatus
   this.imprisonmentStatusDescription = ob.imprisonmentStatusDescription
+  this.convictedStatus = ob.convictedStatus
   this.indeterminateSentence = ob.indeterminateSentence
 
   // setting of locationDescription in RED index:

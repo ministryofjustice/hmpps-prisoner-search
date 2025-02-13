@@ -161,7 +161,7 @@ class TranslatorTest {
   }
 
   @Test
-  fun `imprisonmentStatus and description are present`() {
+  fun `imprisonmentStatus and description and convictedStatus are present`() {
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
         offenderNo = "A1234AA",
@@ -171,12 +171,14 @@ class TranslatorTest {
         dateOfBirth = LocalDate.of(1976, 5, 15),
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Serving Life Imprisonment",
+        convictedStatus = "Remand",
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
     )
     assertThat(prisoner.imprisonmentStatus).isEqualTo("LIFE")
     assertThat(prisoner.imprisonmentStatusDescription).isEqualTo("Serving Life Imprisonment")
+    assertThat(prisoner.convictedStatus).isEqualTo("Remand")
   }
 
   @Test
