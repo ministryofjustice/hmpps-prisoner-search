@@ -58,7 +58,7 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.28")
-  testImplementation("org.wiremock:wiremock-standalone:3.11.0")
+  testImplementation("org.wiremock:wiremock-standalone:3.12.0")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.0")
