@@ -87,6 +87,7 @@
       "category":"C",
       "legalStatus":"SENTENCED",
       "imprisonmentStatus":"LASPO_DR",
+      "convictedStatus": "Remand",
       "mostSeriousOffence":"Handle stolen goods",
       "recall":false,
       "indeterminateSentence":true,

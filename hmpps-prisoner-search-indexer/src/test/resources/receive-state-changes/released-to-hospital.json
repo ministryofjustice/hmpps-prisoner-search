@@ -18,6 +18,7 @@
   "legalStatus": "SENTENCED",
   "imprisonmentStatus": "ADIMP_ORA",
   "imprisonmentStatusDescription": "ORA CJA03 Standard Determinate Sentence",
+  "convictedStatus": "Remand",
   "recall": false,
   "indeterminateSentence": false,
   "receptionDate": "2022-10-28",

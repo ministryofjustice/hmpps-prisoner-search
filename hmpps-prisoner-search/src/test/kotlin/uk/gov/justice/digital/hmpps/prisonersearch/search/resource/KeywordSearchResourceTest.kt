@@ -439,8 +439,8 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   fun `can find those prisoner who are on remand in Moorland`() {
     keywordSearch(
       keywordRequest = KeywordRequest(exactPhrase = "remand", prisonIds = listOf("MDI")),
-      expectedCount = 4,
-      expectedPrisoners = listOf("A7089FA", "A7090AA", "A7090AB", "A7090BB"),
+      expectedCount = 5,
+      expectedPrisoners = listOf("A7089FA", "A7090AA", "A7090AB", "A7090BB", "A7089EY"),
     )
   }
 }

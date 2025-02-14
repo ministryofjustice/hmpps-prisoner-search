@@ -69,5 +69,6 @@
   "legalStatus": "REMAND",
   "imprisonmentStatus": "LIFE",
   "imprisonmentStatusDescription": "Life imprisonment",
+  "convictedStatus": "Remand",
   "latestLocationId": "WWI"
 }

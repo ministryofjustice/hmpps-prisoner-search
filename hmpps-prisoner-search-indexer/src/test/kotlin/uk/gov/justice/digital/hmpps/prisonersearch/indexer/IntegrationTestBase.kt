@@ -386,6 +386,7 @@ data class PrisonerBuilder(
         legalStatus = "REMAND",
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Life imprisonment",
+        convictedStatus = "Convicted",
         latestLocationId = "WWI",
         sentenceDetail = this.sentenceDetail,
       ).let {

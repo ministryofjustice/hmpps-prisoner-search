@@ -19,6 +19,7 @@
   "legalStatus": "SENTENCED",
   "imprisonmentStatus": "RECEP_DET",
   "imprisonmentStatusDescription": "Determinate sentence (reception)",
+  "convictedStatus": "Convicted",
   "recall": false,
   "indeterminateSentence": false,
   "receptionDate": "2022-10-28",
