@@ -440,6 +440,43 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `e2e - will send prisoner convicted status change event to the domain topic when a convictedStatus change occurs`() {
+    recreatePrisoner(
+      PrisonerBuilder(
+        prisonerNumber = "A1239DD",
+        bookingId = 123456,
+        convictedStatus = "Convicted",
+      ),
+    )
+
+    // update the prisoner on ES
+    prisonApi.stubOffenderNoFromBookingId("A1239DD")
+    prisonApi.stubFor(
+      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              PrisonerBuilder(
+                prisonerNumber = "A1239DD",
+                bookingId = 123456,
+                convictedStatus = "Remand",
+              ).toOffenderBooking(),
+            ),
+        ),
+    )
+    offenderQueueSqsClient.sendMessage("/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"))
+    await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
+
+    val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
+
+    assertThat(nextTwoEventTypes).containsExactlyInAnyOrder(
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.convicted-status-changed",
+    )
+  }
+
+  @Test
   fun `e2e - will send single prisoner updated event for 2 identical updates`() {
     recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456))
 

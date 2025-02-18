@@ -260,6 +260,7 @@ data class PrisonerBuilder(
   val currentIncentive: CurrentIncentive? = null,
   val assignedLivingUnitLocationId: Long? = Random.nextLong(),
   val sentenceDetail: SentenceDetail? = null,
+  val convictedStatus: String? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
 ) {
 
@@ -386,7 +387,7 @@ data class PrisonerBuilder(
         legalStatus = "REMAND",
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Life imprisonment",
-        convictedStatus = "Convicted",
+        convictedStatus = convictedStatus,
         latestLocationId = "WWI",
         sentenceDetail = this.sentenceDetail,
       ).let {

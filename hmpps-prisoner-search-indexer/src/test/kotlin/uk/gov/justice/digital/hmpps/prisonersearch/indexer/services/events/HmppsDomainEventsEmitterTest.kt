@@ -180,4 +180,43 @@ class HmppsDomainEventsEmitterTest {
       )
     }
   }
+
+  @Nested
+  inner class PrisonerConvictedStatusChangedEvent {
+    @Test
+    fun `should also log event`() {
+      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted")
+
+      verify(telemetryClient).trackEvent(
+        eq("test.prisoner-offender-search.prisoner.convicted-status-changed"),
+        check {
+          assertThat(it["eventType"]).isEqualTo("test.prisoner-offender-search.prisoner.convicted-status-changed")
+          assertThat(it["version"]).isEqualTo("1")
+          assertThat(it["description"]).isEqualTo("A prisoner had their convicted status changed to Convicted")
+          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
+          assertThat(it["additionalInformation.bookingId"]).isEqualTo("1234567")
+          assertThat(it["additionalInformation.convictedStatus"]).isEqualTo("Convicted")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should swallow exceptions and indicate a manual fix is required`() {
+      whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
+
+      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted")
+
+      verify(telemetryClient).trackEvent(
+        eq("EVENTS_SEND_FAILURE"),
+        check {
+          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.convicted-status-changed")
+          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
+          assertThat(it["additionalInformation.bookingId"]).isEqualTo("1234567")
+          assertThat(it["additionalInformation.convictedStatus"]).isEqualTo("Convicted")
+        },
+        isNull(),
+      )
+    }
+  }
 }

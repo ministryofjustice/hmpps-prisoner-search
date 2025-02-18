@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.ConvictedStatusEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 
@@ -30,6 +31,7 @@ class PrisonerSynchroniserService(
   private val prisonerDifferenceService: PrisonerDifferenceService,
   private val prisonerMovementsEventService: PrisonerMovementsEventService,
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
+  private val convictedStatusEventService: ConvictedStatusEventService,
   private val domainEventEmitter: HmppsDomainEventEmitter,
 ) {
   companion object {
@@ -53,8 +55,7 @@ class PrisonerSynchroniserService(
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
       if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)) {
-        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
-        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
+        generateAnyEvents(existingPrisoner, prisoner, ob)
       }
     } else {
       telemetryClient.trackPrisonerEvent(
@@ -103,8 +104,7 @@ class PrisonerSynchroniserService(
           reindexIncentive(ob.offenderNo, SyncIndex.RED, eventType)
           reindexRestrictedPatient(ob.offenderNo, ob, SyncIndex.RED, eventType)
         }
-        prisonerMovementsEventService.generateAnyEvents(summary.prisoner, prisoner, ob, red = true)
-        alertsUpdatedEventService.generateAnyEvents(summary.prisoner, prisoner, red = true)
+        generateAnyEvents(summary.prisoner, prisoner, ob, red = true)
       } else {
         telemetryClient.trackPrisonerEvent(
           TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE,
@@ -129,8 +129,7 @@ class PrisonerSynchroniserService(
       // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
 
       domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo, true)
-      prisonerMovementsEventService.generateAnyEvents(null, prisoner, ob, red = true)
-      alertsUpdatedEventService.generateAnyEvents(null, prisoner, red = true)
+      generateAnyEvents(null, prisoner, ob, red = true)
       true
     }
 
@@ -231,14 +230,18 @@ class PrisonerSynchroniserService(
       indices.map { prisonerRepository.save(prisoner, it) }
       if (label == PrisonerDifferencesLabel.GREEN_BLUE) {
         if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")) {
-          prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
-          alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
+          generateAnyEvents(existingPrisoner, prisoner, ob)
         }
       } else {
-        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
-        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner, red = true)
+        generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
       }
     }
+  }
+
+  internal fun generateAnyEvents(existingPrisoner: Prisoner?, prisoner: Prisoner, ob: OffenderBooking, red: Boolean = false) {
+    prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob, red)
+    alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner, red)
+    convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner, red)
   }
 
   internal fun getDomainData(ob: OffenderBooking): Pair<Result<IncentiveLevel?>, Result<RestrictedPatient?>> = Pair(Result.success(getIncentive(ob)), Result.success(getRestrictedPatient(ob)))

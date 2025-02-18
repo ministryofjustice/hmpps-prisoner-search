@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.ConvictedStatusEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
@@ -52,6 +53,7 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
   private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
   private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
+  private val convictedStatusEventService = mock<ConvictedStatusEventService>()
   private val domainEventEmitter = mock<HmppsDomainEventEmitter>()
 
   private val service = PrisonerSynchroniserService(
@@ -62,6 +64,7 @@ internal class PrisonerSynchroniserServiceTest {
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
+    convictedStatusEventService,
     domainEventEmitter,
   )
 
