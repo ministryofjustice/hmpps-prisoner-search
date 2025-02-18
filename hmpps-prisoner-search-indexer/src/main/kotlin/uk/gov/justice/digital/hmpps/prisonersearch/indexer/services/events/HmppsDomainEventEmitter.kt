@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.DomainEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferences
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.CONVICTED_STATUS_CHANGED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.CREATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_ALERTS_UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.PRISONER_RECEIVED_EVENT_TYPE
@@ -157,6 +158,18 @@ class HmppsDomainEventEmitter(
     ).publish()
   }
 
+  fun emitConvictedStatusChangedEvent(
+    offenderNo: String,
+    bookingId: String?,
+    convictedStatus: String?,
+  ) {
+    ConvictedStatusChangedDomainEvent(
+      ConvictedStatusChangedEvent(offenderNo, bookingId, convictedStatus),
+      Instant.now(clock),
+      diffProperties.host,
+    ).publish()
+  }
+
   enum class PrisonerReceiveReason(val description: String) {
     NEW_ADMISSION("admission on new charges"),
     READMISSION("re-admission on an existing booking"),
@@ -204,6 +217,7 @@ class HmppsDomainEventEmitter(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val UPDATED_EVENT_TYPE = "prisoner-offender-search.prisoner.updated"
     const val CREATED_EVENT_TYPE = "prisoner-offender-search.prisoner.created"
+    const val CONVICTED_STATUS_CHANGED_EVENT_TYPE = "prisoner-offender-search.prisoner.convicted-status-changed"
     const val PRISONER_REMOVED_EVENT_TYPE = "prisoner-offender-search.prisoner.removed"
     const val PRISONER_RECEIVED_EVENT_TYPE = "prisoner-offender-search.prisoner.received"
     const val PRISONER_RELEASED_EVENT_TYPE = "prisoner-offender-search.prisoner.released"
@@ -313,6 +327,20 @@ class PrisonerReleasedDomainEvent(additionalInformation: PrisonerReleasedEvent, 
     host = host,
     description = "A prisoner has been released from a prison with reason: ${additionalInformation.reason.description}",
     eventType = PRISONER_RELEASED_EVENT_TYPE,
+  )
+
+data class ConvictedStatusChangedEvent(
+  override val nomsNumber: String,
+  val bookingId: String?,
+  val convictedStatus: String?,
+) : PrisonerAdditionalInformation
+class ConvictedStatusChangedDomainEvent(additionalInformation: ConvictedStatusChangedEvent, occurredAt: Instant, host: String) :
+  PrisonerDomainEvent<ConvictedStatusChangedEvent>(
+    additionalInformation = additionalInformation,
+    occurredAt = occurredAt,
+    host = host,
+    description = "A prisoner had their convicted status changed to ${additionalInformation.convictedStatus}",
+    eventType = CONVICTED_STATUS_CHANGED_EVENT_TYPE,
   )
 
 data class PrisonerAlertsUpdatedEvent(
