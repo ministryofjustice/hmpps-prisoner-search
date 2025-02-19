@@ -88,10 +88,7 @@ class PrisonerSynchroniserService(
           log.warn("Prisoner not found in RED index for {}", ob.offenderNo)
           throw PrisonerNotFoundException(ob.offenderNo)
         }
-        prisonerDifferenceService.getDifferencesByCategory(summary.prisoner, prisoner)
-          .also {
-            domainEventEmitter.emitPrisonerDifferenceEvent(ob.offenderNo, it, red = true)
-          }
+        prisonerDifferenceService.generateDiffEvent(summary.prisoner, ob.offenderNo, prisoner, true)
 
         telemetryClient.trackPrisonerEvent(
           TelemetryEvents.RED_PRISONER_UPDATED,

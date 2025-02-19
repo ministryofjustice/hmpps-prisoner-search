@@ -91,11 +91,15 @@ class HmppsDomainEventEmitter(
     red: Boolean = false,
   ) {
     if (red) {
-      telemetryClient.trackPrisonerEvent(
-        TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT,
-        offenderNo,
+      telemetryClient.trackEvent(
+        TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT.name,
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "bookingId" to "not set",
+          "event" to "updated",
+          "categoriesChanged" to differences.keys.map { it.name }.toList().sorted().toString(),
+        ),
         null,
-        "updated",
       )
     } else {
       PrisonerUpdatedDomainEvent(

@@ -12,6 +12,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
@@ -20,9 +21,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHash
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var prisonerHashRepository: PrisonerHashRepository
+
   @Test
   fun `will create index document for a prisoner which does not yet exist when offender event message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
@@ -58,9 +65,14 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber
       this.bookingId = bookingId.toString()
+      this.inOutStatus = "IN"
+      this.status = "ACTIVE IN"
     }
     prisonerRepository.save(prisoner, SyncIndex.GREEN)
     prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerHashRepository.save(
+      PrisonerHash(prisonerNumber = prisonerNumber, prisonerHash = "123456"),
+    )
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
@@ -68,7 +80,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     reset(prisonerSpyBeanRepository) // zero the call count
 
     offenderSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
     )
 
     await untilAsserted {
@@ -78,6 +91,38 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
       verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
       verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    }
+
+    await untilAsserted {
+      verify(telemetryClient).trackEvent(
+        "PRISONER_UPDATED",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to bookingId.toString(),
+          "event" to "OFFENDER_BOOKING-CHANGED",
+          "categoriesChanged" to "[ALERTS, IDENTIFIERS, LOCATION, PERSONAL_DETAILS, STATUS]",
+        ),
+        null,
+      )
+      verify(telemetryClient).trackEvent(
+        "RED_PRISONER_UPDATED",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to bookingId.toString(),
+          "event" to "OFFENDER_BOOKING-CHANGED",
+        ),
+        null,
+      )
+      verify(telemetryClient).trackEvent(
+        "RED_SIMULATE_PRISONER_DIFFERENCE_EVENT",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to "not set",
+          "event" to "updated",
+          "categoriesChanged" to "[ALERTS, IDENTIFIERS, LOCATION, PERSONAL_DETAILS, STATUS]",
+        ),
+        null,
+      )
     }
   }
 
