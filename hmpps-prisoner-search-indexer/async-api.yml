@@ -34,6 +34,8 @@ components:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-removed.yaml
     prisoner-offender-search.prisoner.alerts-updated:
       $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-alerts-updated.yaml
+    prisoner-offender-search.prisoner.convicted-status-changed:
+      $ref: https://raw.githubusercontent.com/ministryofjustice/hmpps-domain-events/main/spec/schemas/prisoner-offender-search/prisoner-convicted-status-changed.yaml
 
 
 channels:
@@ -55,7 +57,8 @@ channels:
         $ref: '#/components/messages/prisoner-offender-search.prisoner.removed'
       prisoner-offender-search.prisoner.alerts-updated:
         $ref: '#/components/messages/prisoner-offender-search.prisoner.alerts-updated'
-
+      prisoner-offender-search.prisoner.convicted-status-changed:
+        $ref: '#/components/messages/prisoner-offender-search.prisoner.convicted-status-changed'
 operations:
   publish-event:
     action: send
@@ -68,3 +71,4 @@ operations:
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.updated'
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.removed'
       - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.alerts-updated'
+      - $ref: '#/channels/hmpps-domain-events/messages/prisoner-offender-search.prisoner.convicted-status-changed'
