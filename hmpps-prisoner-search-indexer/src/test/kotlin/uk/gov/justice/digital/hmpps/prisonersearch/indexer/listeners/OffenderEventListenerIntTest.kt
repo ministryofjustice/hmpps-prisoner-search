@@ -227,11 +227,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val trackedData = mapOf<String, String>(
-        "prisonerNumber" to prisonerNumber,
-        "bookingId" to bookingId.toString(),
-        "event" to "OFFENDER_BOOKING-CHANGED",
-      )
       verify(telemetryClient).trackEvent(eq("PRISONER_DATABASE_NO_CHANGE"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
       verify(telemetryClient, never()).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
