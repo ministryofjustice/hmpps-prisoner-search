@@ -8,10 +8,12 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
@@ -20,9 +22,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHash
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var prisonerHashRepository: PrisonerHashRepository
+
   @Test
   fun `will create index document for a prisoner which does not yet exist when offender event message received`() {
     indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
@@ -58,9 +66,12 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber
       this.bookingId = bookingId.toString()
+      this.inOutStatus = "IN"
+      this.status = "ACTIVE IN"
     }
     prisonerRepository.save(prisoner, SyncIndex.GREEN)
     prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerHashRepository.save(PrisonerHash(prisonerNumber, prisonerHash = "123456"))
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
@@ -68,7 +79,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     reset(prisonerSpyBeanRepository) // zero the call count
 
     offenderSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
     )
 
     await untilAsserted {
@@ -78,6 +90,146 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
       verify(prisonerSpyBeanRepository, never()).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.GREEN), any())
       verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    }
+
+    await untilAsserted {
+      verify(telemetryClient).trackEvent(
+        "PRISONER_UPDATED",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to bookingId.toString(),
+          "event" to "OFFENDER_BOOKING-CHANGED",
+          "categoriesChanged" to "[ALERTS, IDENTIFIERS, LOCATION, PERSONAL_DETAILS, STATUS]",
+        ),
+        null,
+      )
+      verify(telemetryClient).trackEvent(
+        "RED_PRISONER_UPDATED",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to bookingId.toString(),
+          "event" to "OFFENDER_BOOKING-CHANGED",
+        ),
+        null,
+      )
+      verify(telemetryClient).trackEvent(
+        "RED_SIMULATE_PRISONER_DIFFERENCE_EVENT",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to "not set",
+          "event" to "updated",
+          "categoriesChanged" to "[ALERTS, IDENTIFIERS, LOCATION, PERSONAL_DETAILS, STATUS]",
+        ),
+        null,
+      )
+    }
+  }
+
+  @Test
+  fun `when nothing has changed, will report as such`() {
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    val prisonerNumber = "O7089FD"
+    val bookingId = 12345L
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      this.bookingId = bookingId.toString()
+      this.inOutStatus = "IN"
+      this.status = "ACTIVE IN"
+    }
+    prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerHashRepository.save(PrisonerHash(prisonerNumber, prisonerHash = "123456"))
+
+    prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
+
+    // First we update the prisoner to a known state
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+    await untilAsserted {
+      verify(prisonerSpyBeanRepository, times(2)).save(any(), eq(SyncIndex.GREEN))
+      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(telemetryClient).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+      // Note: By some quirk we would get a "PRISONER_DATABASE_NO_CHANGE" event if no hash were stored in the db
+    }
+    reset(prisonerSpyBeanRepository) // zero the call count
+    reset(telemetryClient) // zero the call count
+
+    // Now we send the same message again, which should result in no changes
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+
+    await untilAsserted {
+      val trackedData = mapOf<String, String>(
+        "prisonerNumber" to prisonerNumber,
+        "bookingId" to bookingId.toString(),
+        "event" to "OFFENDER_BOOKING-CHANGED",
+      )
+      verify(telemetryClient).trackEvent("PRISONER_OPENSEARCH_NO_CHANGE", trackedData, null)
+      verify(telemetryClient).trackEvent("RED_PRISONER_OPENSEARCH_NO_CHANGE", trackedData, null)
+    }
+  }
+
+  @Test
+  fun `when only a non-diffable change occurred, no event is generated`() {
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    val prisonerNumber = "O7089FD"
+    val bookingId = 12345L
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      this.bookingId = bookingId.toString()
+      this.inOutStatus = "IN"
+      this.status = "ACTIVE IN"
+    }
+    prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerHashRepository.save(PrisonerHash(prisonerNumber, prisonerHash = "123456"))
+
+    prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
+
+    // First we update the prisoner to a known state
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+    await untilAsserted {
+      verify(prisonerSpyBeanRepository, times(2)).save(any(), eq(SyncIndex.GREEN))
+      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(telemetryClient).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+    }
+    reset(prisonerSpyBeanRepository) // zero the call count
+    reset(telemetryClient) // zero the call count
+
+    // Now we change a non-diffable index field and send the same message again, which should not create an event
+
+    val prisoner2 = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!
+    prisoner2.pncNumberCanonicalShort = "different"
+    prisonerRepository.save(prisoner2, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner2, SyncIndex.RED)
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+
+    await untilAsserted {
+      verify(telemetryClient).trackEvent(eq("PRISONER_DATABASE_NO_CHANGE"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+      verify(telemetryClient, never()).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
     }
   }
 
