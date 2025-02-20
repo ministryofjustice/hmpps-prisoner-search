@@ -8,6 +8,7 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
@@ -71,7 +72,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     prisonerRepository.save(prisoner, SyncIndex.GREEN)
     prisonerRepository.save(prisoner, SyncIndex.RED)
     prisonerHashRepository.save(
-      PrisonerHash(prisonerNumber = prisonerNumber, prisonerHash = "123456"),
+      PrisonerHash(prisonerNumber, prisonerHash = "123456"),
     )
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
@@ -123,6 +124,57 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         ),
         null,
       )
+    }
+  }
+
+  @Test
+  fun `when nothing has changed, will report as such`() {
+    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
+    val prisonerNumber = "O7089FD"
+    val bookingId = 12345L
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      this.bookingId = bookingId.toString()
+      this.inOutStatus = "IN"
+      this.status = "ACTIVE IN"
+    }
+    prisonerRepository.save(prisoner, SyncIndex.GREEN)
+    prisonerRepository.save(prisoner, SyncIndex.RED)
+
+    prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
+    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
+
+    // First we update the prisoner to a known state
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+    await untilAsserted {
+      verify(prisonerSpyBeanRepository, times(2)).save(any(), eq(SyncIndex.GREEN))
+      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(telemetryClient).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
+      // TODO: Note that either a "test.prisoner-offender-search.prisoner.updated" or "PRISONER_DATABASE_NO_CHANGE" event is also logged
+      // depending on whether the test is run in isolation
+    }
+    reset(prisonerSpyBeanRepository) // zero the call count
+    reset(telemetryClient) // zero the call count
+
+    // Now we send the same message again, which should result in no changes
+
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
+        .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
+    )
+
+    await untilAsserted {
+      val trackedData = mapOf<String, String>(
+        "prisonerNumber" to prisonerNumber,
+        "bookingId" to bookingId.toString(),
+        "event" to "OFFENDER_BOOKING-CHANGED",
+      )
+      verify(telemetryClient).trackEvent("PRISONER_OPENSEARCH_NO_CHANGE", trackedData, null)
+      verify(telemetryClient).trackEvent("RED_PRISONER_OPENSEARCH_NO_CHANGE", trackedData, null)
     }
   }
 
