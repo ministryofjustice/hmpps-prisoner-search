@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
@@ -120,7 +119,7 @@ class PrisonerSearchService(
         query(query.withDefaults(searchCriteria))
         size(RESULT_HITS_MAX)
       }
-      val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val prisonerMatches = getSearchResult(searchClient.search(searchRequest))
       return if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)
     } ?: Result.NoMatch
@@ -136,7 +135,7 @@ class PrisonerSearchService(
         size(RESULT_HITS_MAX)
         query(it)
       }
-      val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val prisonerMatches = getSearchResult(searchClient.search(searchRequest))
       return if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)
     } ?: Result.NoMatch
@@ -157,7 +156,7 @@ class PrisonerSearchService(
         sort("prisonerNumber")
         trackTotalHits(true)
       }
-      val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val searchResults = searchClient.search(searchRequest)
       val prisonerMatches = getSearchResult(searchResults)
       return if (prisonerMatches.isEmpty()) {
@@ -186,7 +185,7 @@ class PrisonerSearchService(
         sort("prisonerNumber")
         trackTotalHits(true)
       }
-      val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val searchResults = searchClient.search(searchRequest)
       val prisonerMatches = getSearchResult(searchResults)
       return if (prisonerMatches.isEmpty()) {

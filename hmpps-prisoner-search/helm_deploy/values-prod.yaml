@@ -12,3 +12,4 @@ generic-service:
   env:
     API_BASE_URL_HMPPS_AUTH: "https://sign-in.hmpps.service.justice.gov.uk/auth"
     API_BASE_URL_PRISON_API: "https://prison-api.prison.service.justice.gov.uk"
+    SEARCH_REGIME: RED

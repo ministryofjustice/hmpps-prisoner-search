@@ -16,7 +16,6 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Attribute
@@ -61,7 +60,7 @@ class AttributeSearchService(
 
   private fun BoolQueryBuilder.search(pageable: Pageable, telemetryMap: MutableMap<String, String>): SearchResponse {
     val searchSourceBuilder = pageable.searchSourceBuilder(this)
-    val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+    val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
     return elasticsearchClient.search(searchRequest)
       .also {
         telemetryMap["resultCount"] = it.hits.hits.size.toString()

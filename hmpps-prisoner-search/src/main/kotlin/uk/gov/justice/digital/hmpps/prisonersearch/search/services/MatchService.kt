@@ -10,7 +10,6 @@ import org.opensearch.search.builder.SearchSourceBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
@@ -199,7 +198,7 @@ class MatchService(
       val searchSourceBuilder = SearchSourceBuilder().apply {
         query(matchQuery.withDefaults(matchRequest))
       }
-      val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+      val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
       val prisonerMatches = getSearchResult(elasticsearchClient.search(searchRequest))
       return if (prisonerMatches.isEmpty()) PrisonerResult.NoMatch else PrisonerResult.Match(prisonerMatches)
     } ?: PrisonerResult.NoMatch

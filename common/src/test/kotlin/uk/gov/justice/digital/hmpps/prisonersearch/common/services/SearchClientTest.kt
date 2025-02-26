@@ -20,6 +20,8 @@ import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.core.CountRequest
 import org.opensearch.client.core.CountResponse
 import org.opensearch.core.rest.RestStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
 class SearchClientTest {
   private val restHighLevelClient = mock<RestHighLevelClient>()
@@ -87,5 +89,17 @@ class SearchClientTest {
 
     assertThat(searchClient.count(countRequest)).isSameAs(countResponse)
     verify(restHighLevelClient, times(2)).count(countRequest, RequestOptions.DEFAULT)
+  }
+
+  @Test
+  fun `alias is returned when old regime`() {
+    val searchClient = SearchClient(restHighLevelClient, "GREEN_BLUE")
+    assertThat(searchClient.getAlias().first()).isSameAs(OpenSearchIndexConfiguration.PRISONER_INDEX)
+  }
+
+  @Test
+  fun `red index name is returned when new regime`() {
+    val searchClient = SearchClient(restHighLevelClient, "RED")
+    assertThat(searchClient.getAlias().first()).isSameAs(SyncIndex.RED.indexName)
   }
 }

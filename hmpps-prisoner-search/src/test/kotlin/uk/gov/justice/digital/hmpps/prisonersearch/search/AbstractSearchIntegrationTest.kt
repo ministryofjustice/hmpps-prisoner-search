@@ -31,6 +31,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
+
+  val testIndex = SyncIndex.RED
+
   @BeforeAll
   fun setup() {
     log.info("Initialising search data")
@@ -40,14 +43,14 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     loadPrisonerData()
   }
 
-  fun createPrisonerIndex() = prisonerRepository.createIndex(SyncIndex.GREEN)
+  fun createPrisonerIndex() = prisonerRepository.createIndex(testIndex)
 
-  fun deletePrisonerIndex() = prisonerRepository.deleteIndex(SyncIndex.GREEN)
+  fun deletePrisonerIndex() = prisonerRepository.deleteIndex(testIndex)
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN))
-    prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
+    indexStatusRepository.save(IndexStatus(currentIndex = testIndex))
+    prisonerRepository.switchAliasIndex(testIndex)
   }
 
   fun loadPrisonerData() {
@@ -59,7 +62,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     prisoners.forEach {
       val sourceAsString = "/prisoners/prisoner$it.json".readResourceAsText()
       val prisoner = gson.fromJson(sourceAsString, Prisoner::class.java)
-      prisonerRepository.save(prisoner, SyncIndex.GREEN)
+      prisonerRepository.save(prisoner, testIndex)
     }
     waitForPrisonerLoading(prisoners.size)
   }
@@ -68,14 +71,14 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
 
   fun loadPrisoners(prisoners: List<Prisoner>) {
     prisoners.forEach { prisoner ->
-      prisonerRepository.save(prisoner, SyncIndex.GREEN)
+      prisonerRepository.save(prisoner, testIndex)
     }
     waitForPrisonerLoading(prisoners.size)
   }
 
   protected fun waitForPrisonerLoading(expectedCount: Int) {
     await untilCallTo {
-      prisonerRepository.count(SyncIndex.GREEN)
+      prisonerRepository.count(testIndex)
     } matches { it == expectedCount.toLong() }
   }
 

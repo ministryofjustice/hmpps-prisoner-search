@@ -338,6 +338,7 @@ data class ConvictedStatusChangedEvent(
   val bookingId: String?,
   val convictedStatus: String?,
 ) : PrisonerAdditionalInformation
+
 class ConvictedStatusChangedDomainEvent(additionalInformation: ConvictedStatusChangedEvent, occurredAt: Instant, host: String) :
   PrisonerDomainEvent<ConvictedStatusChangedEvent>(
     additionalInformation = additionalInformation,
