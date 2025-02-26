@@ -76,12 +76,13 @@ class MaintainIndexService(
 
   fun logIndexStatuses(indexStatus: IndexStatus) {
     log.info(
-      "Current index status is {}.  Index counts {}={} and {}={}.  Queue counts: Queue={} and DLQ={}",
+      "Current index status is {}.  Index counts {}={}, {}={}, RED={}.  Queue counts: Queue={} and DLQ={}",
       indexStatus,
       indexStatus.currentIndex,
       prisonerRepository.count(indexStatus.currentIndex),
       indexStatus.otherIndex,
       prisonerRepository.count(indexStatus.otherIndex),
+      prisonerRepository.count(SyncIndex.RED),
       indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue(),
       indexQueueService.getNumberOfMessagesCurrentlyOnIndexDLQ(),
     )

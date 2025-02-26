@@ -21,6 +21,7 @@ generic-service:
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
+    SEARCH_REGIME: GREEN_BLUE
 
   namespace_secrets:
     application-insights:
