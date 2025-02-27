@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
@@ -78,7 +77,7 @@ class GlobalSearchService(
         trackTotalHits(true)
       }
 
-      val searchRequest = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder)
+      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val searchResults = searchClient.search(searchRequest)
       val prisonerMatches = getSearchResult(searchResults)
       return if (prisonerMatches.isEmpty()) {

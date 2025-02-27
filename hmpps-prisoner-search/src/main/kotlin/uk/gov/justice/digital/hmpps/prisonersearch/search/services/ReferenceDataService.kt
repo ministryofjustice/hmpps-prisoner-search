@@ -12,7 +12,6 @@ import org.opensearch.search.builder.SearchSourceBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import java.util.concurrent.TimeUnit
 
@@ -29,7 +28,7 @@ class ReferenceDataService(
 
   fun findReferenceData(attribute: ReferenceDataAttribute): ReferenceDataResponse {
     val searchSourceBuilder = createSourceBuilder(attribute)
-    val searchRequest = SearchRequest(arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX), searchSourceBuilder)
+    val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
 
     val searchResponse = elasticsearchClient.search(searchRequest)
     val aggregation: MultiBucketsAggregation = searchResponse.aggregations.get(attribute.name)
@@ -84,7 +83,7 @@ class ReferenceDataService(
       size(0)
       aggregation(NestedAggregationBuilder("alerts", "alerts").subAggregation(aggs))
     }
-    val searchRequest = SearchRequest(arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX), searchSourceBuilder)
+    val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
     val searchResponse = elasticsearchClient.search(searchRequest)
     return searchResponse.unpackAlertBuckets()
   }

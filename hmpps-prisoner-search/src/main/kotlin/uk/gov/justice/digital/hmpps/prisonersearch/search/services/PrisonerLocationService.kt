@@ -15,7 +15,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.PrisonerLocation
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.PrisonerLocationResponse
@@ -40,7 +39,7 @@ class PrisonerLocationService(
       fetchSource(arrayOf("prisonerNumber", "prisonId", "lastPrisonId", "firstName", "lastName"), null)
       size(results)
     }
-    val request = SearchRequest(arrayOf(PRISONER_INDEX), searchSourceBuilder).apply {
+    val request = SearchRequest(searchClient.getAlias(), searchSourceBuilder).apply {
       scroll(scroll)
     }
 

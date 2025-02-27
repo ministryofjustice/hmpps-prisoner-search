@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
 /**
  * Test class to initialise the standard set of search data only once.
@@ -37,7 +36,7 @@ abstract class AbstractSearchDataIntegrationTest : AbstractSearchIntegrationTest
     prisoners.forEach {
       val sourceAsString = "/prisoners/prisoner$it.json".readResourceAsText()
       val prisoner = gson.fromJson(sourceAsString, Prisoner::class.java)
-      prisonerRepository.save(prisoner, SyncIndex.GREEN)
+      prisonerRepository.save(prisoner, testIndex)
     }
     waitForPrisonerLoading(prisoners.size)
   }
