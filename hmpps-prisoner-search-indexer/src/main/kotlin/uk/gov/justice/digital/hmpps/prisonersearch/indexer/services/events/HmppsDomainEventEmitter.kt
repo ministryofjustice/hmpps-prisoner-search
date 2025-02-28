@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_SEND_FAILURE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.DomainEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.CONVICTED_STATUS_CHANGED_EVENT_TYPE
@@ -88,57 +87,61 @@ class HmppsDomainEventEmitter(
   fun emitPrisonerDifferenceEvent(
     offenderNo: String,
     differences: PrisonerDifferences,
-    red: Boolean = false,
+    red: Boolean,
   ) {
+    val prisonerUpdatedEvent = PrisonerUpdatedEvent(offenderNo, differences.keys.toList().sorted())
+    val event = PrisonerUpdatedDomainEvent(prisonerUpdatedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
       telemetryClient.trackEvent(
-        TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT.name,
+        TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT,
         mapOf(
           "prisonerNumber" to offenderNo,
-          "bookingId" to "not set",
-          "event" to "updated",
-          "categoriesChanged" to differences.keys.map { it.name }.toList().sorted().toString(),
+          "event" to prisonerUpdatedEvent.toString(),
+          "eventType" to event.eventType,
         ),
-        null,
       )
     } else {
-      PrisonerUpdatedDomainEvent(
-        PrisonerUpdatedEvent(offenderNo, differences.keys.toList().sorted()),
-        Instant.now(clock),
-        diffProperties.host,
-      ).publish {
+      event.publish {
         log.error("Failed to send event $UPDATED_EVENT_TYPE for offenderNo=$offenderNo, differences=$differences. Event will be retried")
         throw it
       }
     }
   }
 
-  fun emitPrisonerCreatedEvent(offenderNo: String, red: Boolean = false) {
+  fun emitPrisonerCreatedEvent(offenderNo: String, red: Boolean) {
+    val prisonerCreatedEvent = PrisonerCreatedEvent(offenderNo)
+    val event = PrisonerCreatedDomainEvent(prisonerCreatedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
-      telemetryClient.trackPrisonerEvent(
+      telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_PRISONER_CREATED_EVENT,
-        offenderNo,
-        null,
-        "created",
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "event" to prisonerCreatedEvent.toString(),
+          "eventType" to event.eventType,
+        ),
       )
     } else {
-      PrisonerCreatedDomainEvent(PrisonerCreatedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
+      event.publish {
         log.error("Failed to send event $CREATED_EVENT_TYPE for offenderNo=$offenderNo. Event will be retried")
         throw it
       }
     }
   }
 
-  fun emitPrisonerRemovedEvent(offenderNo: String, red: Boolean = false) {
+  fun emitPrisonerRemovedEvent(offenderNo: String, red: Boolean) {
+    val prisonerRemovedEvent = PrisonerRemovedEvent(offenderNo)
+    val event = PrisonerRemovedDomainEvent(prisonerRemovedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
-      telemetryClient.trackPrisonerEvent(
+      telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_PRISONER_REMOVED_EVENT,
-        offenderNo,
-        null,
-        "deleted",
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "event" to prisonerRemovedEvent.toString(),
+          "eventType" to event.eventType,
+        ),
       )
     } else {
-      PrisonerRemovedDomainEvent(PrisonerRemovedEvent(offenderNo), Instant.now(clock), diffProperties.host).publish {
+      event.publish {
         log.error(
           "Failed to send event {} for offenderNo={}. Event will be retried",
           PRISONER_REMOVED_EVENT_TYPE,
@@ -154,24 +157,48 @@ class HmppsDomainEventEmitter(
     reason: PrisonerReceiveReason,
     prisonId: String,
     occurredAt: Instant? = null,
+    red: Boolean,
   ) {
-    PrisonerReceivedDomainEvent(
-      PrisonerReceivedEvent(offenderNo, reason, prisonId),
-      occurredAt ?: Instant.now(clock),
-      diffProperties.host,
-    ).publish()
+    val prisonerReceivedEvent = PrisonerReceivedEvent(offenderNo, reason, prisonId)
+    val event = PrisonerReceivedDomainEvent(prisonerReceivedEvent, occurredAt ?: Instant.now(clock), diffProperties.host)
+    if (red) {
+      telemetryClient.trackEvent(
+        TelemetryEvents.RED_SIMULATE_MOVEMENT_RECEIVE_EVENT,
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "event" to prisonerReceivedEvent.toString(),
+          "eventType" to event.eventType,
+        ),
+      )
+    } else {
+      event.publish()
+    }
   }
 
   fun emitConvictedStatusChangedEvent(
     offenderNo: String,
     bookingId: String?,
     convictedStatus: String?,
+    red: Boolean,
   ) {
-    ConvictedStatusChangedDomainEvent(
-      ConvictedStatusChangedEvent(offenderNo, bookingId, convictedStatus),
+    val convictedStatusChangedEvent = ConvictedStatusChangedEvent(offenderNo, bookingId, convictedStatus)
+    val event = ConvictedStatusChangedDomainEvent(
+      convictedStatusChangedEvent,
       Instant.now(clock),
       diffProperties.host,
-    ).publish()
+    )
+    if (red) {
+      telemetryClient.trackEvent(
+        TelemetryEvents.RED_SIMULATE_CONVICTED_STATUS_CHANGED_EVENT,
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "event" to convictedStatusChangedEvent.toString(),
+          "eventType" to event.eventType,
+        ),
+      )
+    } else {
+      event.publish()
+    }
   }
 
   enum class PrisonerReceiveReason(val description: String) {
@@ -196,12 +223,22 @@ class HmppsDomainEventEmitter(
     offenderNo: String,
     reason: PrisonerReleaseReason,
     prisonId: String,
+    red: Boolean,
   ) {
-    PrisonerReleasedDomainEvent(
-      PrisonerReleasedEvent(offenderNo, reason, prisonId),
-      Instant.now(clock),
-      diffProperties.host,
-    ).publish()
+    val prisonerReleasedEvent = PrisonerReleasedEvent(offenderNo, reason, prisonId)
+    val event = PrisonerReleasedDomainEvent(prisonerReleasedEvent, Instant.now(clock), diffProperties.host)
+    if (red) {
+      telemetryClient.trackEvent(
+        TelemetryEvents.RED_SIMULATE_MOVEMENT_RELEASE_EVENT,
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "event" to prisonerReleasedEvent.toString(),
+          "eventType" to event.eventType,
+        ),
+      )
+    } else {
+      event.publish()
+    }
   }
 
   fun emitPrisonerAlertsUpdatedEvent(
@@ -209,12 +246,26 @@ class HmppsDomainEventEmitter(
     bookingId: String?,
     alertsAdded: Set<String>,
     alertsRemoved: Set<String>,
+    red: Boolean,
   ) {
-    PrisonerAlertsUpdatedDomainEvent(
-      PrisonerAlertsUpdatedEvent(offenderNo, bookingId, alertsAdded, alertsRemoved),
+    val prisonerAlertsUpdatedEvent = PrisonerAlertsUpdatedEvent(offenderNo, bookingId, alertsAdded, alertsRemoved)
+    val event = PrisonerAlertsUpdatedDomainEvent(
+      prisonerAlertsUpdatedEvent,
       Instant.now(clock),
       diffProperties.host,
-    ).publish()
+    )
+    if (red) {
+      telemetryClient.trackEvent(
+        TelemetryEvents.RED_SIMULATE_ALERT_EVENT,
+        mapOf(
+          "prisonerNumber" to offenderNo,
+          "event" to prisonerAlertsUpdatedEvent.toString(),
+          "eventType" to event.eventType,
+        ),
+      )
+    } else {
+      event.publish()
+    }
   }
 
   companion object {

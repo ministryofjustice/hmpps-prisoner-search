@@ -42,12 +42,23 @@ class DomainEventsResource(private val domainEventEmitter: HmppsDomainEventEmitt
     @RequestBody
     @Valid
     details: PrisonerReceivedEventDetails,
-  ) = domainEventEmitter.emitPrisonerReceiveEvent(
-    prisonerNumber,
-    details.reason,
-    details.prisonId,
-    occurredAt = details.occurredAt.atZone(ZoneId.of("Europe/London")).toInstant(),
-  )
+  ) {
+    val occurredAtTime = details.occurredAt.atZone(ZoneId.of("Europe/London")).toInstant()
+    domainEventEmitter.emitPrisonerReceiveEvent(
+      prisonerNumber,
+      details.reason,
+      details.prisonId,
+      occurredAt = occurredAtTime,
+      red = false,
+    )
+    domainEventEmitter.emitPrisonerReceiveEvent(
+      prisonerNumber,
+      details.reason,
+      details.prisonId,
+      occurredAt = occurredAtTime,
+      red = true,
+    )
+  }
 }
 
 data class PrisonerReceivedEventDetails(

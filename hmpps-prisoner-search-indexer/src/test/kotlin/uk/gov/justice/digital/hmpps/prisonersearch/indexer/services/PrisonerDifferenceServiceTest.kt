@@ -791,7 +791,7 @@ class PrisonerDifferenceServiceTest {
 
       prisonerDifferenceService.generateDiffEvent(null, booking.offenderNo, prisoner2)
 
-      verify(domainEventsEmitter).emitPrisonerCreatedEvent("someOffenderNo")
+      verify(domainEventsEmitter).emitPrisonerCreatedEvent("someOffenderNo", red = false)
     }
 
     @Test
