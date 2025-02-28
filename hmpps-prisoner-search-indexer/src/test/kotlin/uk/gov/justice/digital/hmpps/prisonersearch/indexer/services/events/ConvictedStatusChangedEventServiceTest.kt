@@ -44,6 +44,7 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = "Convicted",
+      red = false,
     )
   }
 
@@ -60,6 +61,7 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = null,
+      red = false,
     )
   }
 
@@ -77,6 +79,7 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = "Remand",
+      red = false,
     )
   }
 

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 
 @Service
 class AlertsUpdatedEventService(
@@ -21,19 +20,13 @@ class AlertsUpdatedEventService(
     val alertsRemoved = previousAlerts - alerts
 
     if (alertsAdded.isNotEmpty() || alertsRemoved.isNotEmpty()) {
-      if (red) {
-        telemetryClient.trackEvent(
-          TelemetryEvents.RED_SIMULATE_ALERT_EVENT.toString(),
-          mapOf(
-            "prisoner" to prisoner.prisonerNumber,
-            "added" to alertsAdded.size.toString(),
-            "removed" to alertsRemoved.size.toString(),
-          ),
-          null,
-        )
-      } else {
-        domainEventEmitter.emitPrisonerAlertsUpdatedEvent(prisoner.prisonerNumber!!, prisoner.bookingId, alertsAdded, alertsRemoved)
-      }
+      domainEventEmitter.emitPrisonerAlertsUpdatedEvent(
+        prisoner.prisonerNumber!!,
+        prisoner.bookingId,
+        alertsAdded,
+        alertsRemoved,
+        red,
+      )
     }
   }
 }

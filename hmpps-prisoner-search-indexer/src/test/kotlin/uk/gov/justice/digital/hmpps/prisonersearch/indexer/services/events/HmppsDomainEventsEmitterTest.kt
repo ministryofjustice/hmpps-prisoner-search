@@ -73,7 +73,7 @@ class HmppsDomainEventsEmitterTest {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()))
+        hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()), red = false)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }
@@ -85,7 +85,7 @@ class HmppsDomainEventsEmitterTest {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender")
+        hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = false)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }
@@ -97,7 +97,7 @@ class HmppsDomainEventsEmitterTest {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender")
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = false)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }
@@ -106,7 +106,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerReceivedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI")
+      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = false)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.received"),
@@ -126,7 +126,7 @@ class HmppsDomainEventsEmitterTest {
     fun `should swallow exceptions and indicate a manual fix is required`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI")
+      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = false)
       verify(telemetryClient).trackEvent(
         eq("EVENTS_SEND_FAILURE"),
         check {
@@ -144,7 +144,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerAlertsUpdatedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA", "XT"), setOf("ZZ"))
+      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA", "XT"), setOf("ZZ"), red = false)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.alerts-updated"),
@@ -165,7 +165,7 @@ class HmppsDomainEventsEmitterTest {
     fun `should swallow exceptions and indicate a manual fix is required`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf())
+      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf(), red = false)
 
       verify(telemetryClient).trackEvent(
         eq("EVENTS_SEND_FAILURE"),
@@ -185,7 +185,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerConvictedStatusChangedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted")
+      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = false)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.convicted-status-changed"),
@@ -205,7 +205,7 @@ class HmppsDomainEventsEmitterTest {
     fun `should swallow exceptions and indicate a manual fix is required`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted")
+      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = false)
 
       verify(telemetryClient).trackEvent(
         eq("EVENTS_SEND_FAILURE"),

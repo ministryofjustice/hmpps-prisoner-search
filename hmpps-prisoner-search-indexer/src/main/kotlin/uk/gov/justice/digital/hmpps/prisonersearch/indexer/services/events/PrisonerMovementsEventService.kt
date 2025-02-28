@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_UNKNOWN_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
@@ -46,31 +45,21 @@ class PrisonerMovementsEventService(
   ) {
     when (val movementChange = calculateMovementChange(previousPrisonerSnapshot, prisoner, offenderBooking)) {
       PossibleMovementChange.None -> {}
-      is MovementInChange -> if (red) {
-        telemetryClient.trackPrisonerEvent(
-          TelemetryEvents.RED_SIMULATE_MOVEMENT_RECEIVE_EVENT,
-          prisoner.prisonerNumber!!,
-        )
-      } else {
+      is MovementInChange ->
         domainEventEmitter.emitPrisonerReceiveEvent(
           offenderNo = movementChange.offenderNo,
           reason = movementChange.reason,
           prisonId = movementChange.prisonId,
+          red = red,
         )
-      }
 
-      is PossibleMovementChange.MovementOutChange -> if (red) {
-        telemetryClient.trackPrisonerEvent(
-          TelemetryEvents.RED_SIMULATE_MOVEMENT_RELEASE_EVENT,
-          prisoner.prisonerNumber!!,
-        )
-      } else {
+      is PossibleMovementChange.MovementOutChange ->
         domainEventEmitter.emitPrisonerReleaseEvent(
           offenderNo = movementChange.offenderNo,
           reason = movementChange.reason,
           prisonId = movementChange.prisonId,
+          red,
         )
-      }
     }
   }
 

@@ -71,6 +71,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = PrisonerReceiveReason.TRANSFERRED,
         prisonId = "WWI",
+        red = false,
       )
     }
   }
@@ -89,6 +90,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = RETURN_FROM_COURT,
         prisonId = "WWI",
+        red = false,
       )
     }
 
@@ -102,6 +104,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = PrisonerReceiveReason.TRANSFERRED,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -115,6 +118,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = RELEASED,
         prisonId = "WWI",
+        red = false,
       )
     }
   }
@@ -133,6 +137,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = TEMPORARY_ABSENCE_RETURN,
         prisonId = "WWI",
+        red = false,
       )
     }
 
@@ -146,6 +151,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = PrisonerReceiveReason.TRANSFERRED,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -159,6 +165,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = RELEASED,
         prisonId = "WWI",
+        red = false,
       )
     }
   }
@@ -177,6 +184,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = NEW_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
   }
@@ -195,6 +203,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = NEW_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
   }
@@ -213,6 +222,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = NEW_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -226,6 +236,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = READMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -239,6 +250,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = READMISSION_SWITCH_BOOKING,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -274,6 +286,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = READMISSION_SWITCH_BOOKING,
         prisonId = "BXI",
+        red = false,
       )
     }
   }
@@ -310,6 +323,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = POST_MERGE_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -341,6 +355,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = NEW_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -376,6 +391,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = NEW_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -407,6 +423,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = POST_MERGE_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -420,6 +437,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = NEW_ADMISSION,
         prisonId = "BXI",
+        red = false,
       )
     }
   }
@@ -438,6 +456,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = TRANSFERRED,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -451,6 +470,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = SENT_TO_COURT,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -464,6 +484,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = TEMPORARY_ABSENCE_RELEASE,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -477,6 +498,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = RELEASED,
         prisonId = "BXI",
+        red = false,
       )
     }
 
@@ -490,6 +512,7 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
         offenderNo = OFFENDER_NO,
         reason = RELEASED_TO_HOSPITAL,
         prisonId = "BXI",
+        red = false,
       )
     }
   }

@@ -48,6 +48,7 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       bookingId = BOOKING_ID,
       alertsAdded = setOf("XA"),
       alertsRemoved = setOf(),
+      red = false,
     )
   }
 
@@ -65,6 +66,7 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       bookingId = BOOKING_ID,
       alertsAdded = setOf(),
       alertsRemoved = setOf("XA"),
+      red = false,
     )
   }
 
@@ -92,6 +94,7 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       bookingId = BOOKING_ID,
       alertsAdded = setOf("XK", "BB"),
       alertsRemoved = setOf("XT", "AA"),
+      red = false,
     )
   }
 
