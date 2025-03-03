@@ -94,11 +94,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_PRISONER_DIFFERENCE_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to prisonerUpdatedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + prisonerUpdatedEvent.asMap(),
       )
     } else {
       event.publish {
@@ -114,11 +110,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_PRISONER_CREATED_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to prisonerCreatedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + prisonerCreatedEvent.asMap(),
       )
     } else {
       event.publish {
@@ -134,11 +126,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_PRISONER_REMOVED_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to prisonerRemovedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + prisonerRemovedEvent.asMap(),
       )
     } else {
       event.publish {
@@ -164,11 +152,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_MOVEMENT_RECEIVE_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to prisonerReceivedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + prisonerReceivedEvent.asMap(),
       )
     } else {
       event.publish()
@@ -190,11 +174,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_CONVICTED_STATUS_CHANGED_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to convictedStatusChangedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + convictedStatusChangedEvent.asMap(),
       )
     } else {
       event.publish()
@@ -230,11 +210,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_MOVEMENT_RELEASE_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to prisonerReleasedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + prisonerReleasedEvent.asMap(),
       )
     } else {
       event.publish()
@@ -257,11 +233,7 @@ class HmppsDomainEventEmitter(
     if (red) {
       telemetryClient.trackEvent(
         TelemetryEvents.RED_SIMULATE_ALERT_EVENT,
-        mapOf(
-          "prisonerNumber" to offenderNo,
-          "event" to prisonerAlertsUpdatedEvent.toString(),
-          "eventType" to event.eventType,
-        ),
+        mapOf("prisonerNumber" to offenderNo, "eventType" to event.eventType) + prisonerAlertsUpdatedEvent.asMap(),
       )
     } else {
       event.publish()
