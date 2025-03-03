@@ -11,19 +11,20 @@ import kotlin.math.abs
 
 AppEvents
 | where  AppRoleName == 'hmpps-prisoner-search-indexer'
-  and TimeGenerated between (todatetime('2025-02-26T00:00:00.0Z')..12h)
+  // and TimeGenerated between (todatetime('2025-02-27T12:00:00.0Z')..12h)
   and (Name startswith_cs "RED_SIMULATE" or Name startswith "prisoner-offender-search.")
+   // and Properties contains "A2560EC"
 | project TimeGenerated,Name,Properties,OperationId, OperationName
-| extend eventType = case (
- Name == 'RED_SIMULATE_PRISONER_DIFFERENCE_EVENT','prisoner-offender-search.prisoner.updated', //Properties.eventType
- Name =='RED_SIMULATE_PRISONER_CREATED_EVENT', 'prisoner-offender-search.prisoner.created',
- Name =='RED_SIMULATE_PRISONER_REMOVED_EVENT', 'prisoner-offender-search.prisoner.removed',
- Name =='RED_SIMULATE_MOVEMENT_RECEIVE_EVENT', 'prisoner-offender-search.prisoner.received',
- Name =='RED_SIMULATE_CONVICTED_STATUS_CHANGED_EVENT', 'prisoner-offender-search.prisoner.convicted-status-changed',
- Name =='RED_SIMULATE_MOVEMENT_RELEASE_EVENT', 'prisoner-offender-search.prisoner.released',
- Name =='RED_SIMULATE_ALERT_EVENT', 'prisoner-offender-search.prisoner.alerts-updated',
- Name), prisonerNumber = coalesce( Properties.prisonerNumber,Properties.prisoner, Properties.["additionalInformation.nomsNumber"])
-| project TimeGenerated,Name,categoriesChanged=coalesce(Properties.categoriesChanged,Properties.["additionalInformation.categoriesChanged"]),OperationId, OperationName, eventType, prisonerNumber
+| extend
+  eventType=Properties.["eventType"],
+  prisonerNumber = coalesce( Properties.prisonerNumber, Properties.["additionalInformation.nomsNumber"]),
+  categoriesChanged=Properties.["additionalInformation.categoriesChanged"],
+  reason=Properties.["additionalInformation.reason"],
+  convictedStatus=Properties.["additionalInformation.convictedStatus"],
+  prisonId=Properties.["additionalInformation.prisonId"],
+  alertsAdded=Properties.["additionalInformation.alertsAdded"],
+  alertsRemoved=Properties.["additionalInformation.alertsRemoved"]
+| project TimeGenerated,Name,categoriesChanged,prisonId,reason,convictedStatus,alertsAdded,alertsRemoved,OperationId, OperationName, eventType, prisonerNumber
 | order by TimeGenerated asc
  */
 
@@ -36,11 +37,16 @@ data class Event(
   val operationName: String,
   val eventType: String,
   val prisonerNumber: String,
+  val prisonId: String,
+  val reason: String,
+  val convictedStatus: String,
+  val alertsAdded: String,
+  val alertsRemoved: String,
 )
 
 fun main() {
   // Path to the CSV file
-  val csvFilePath = "/Users/steve.rendell/git/hmpps-prisoner-search/hmpps-prisoner-search-indexer/events-feb27am.csv"
+  val csvFilePath = "/Users/steve.rendell/git/hmpps-prisoner-search/hmpps-prisoner-search-indexer/events-mar4am.csv"
 
   // Read the CSV file and map each row to a Person object
   val map = csvReader()
@@ -49,11 +55,16 @@ fun main() {
       Event(
         timeGenerated = row["TimeGenerated [Local Time]"]!!,
         name = row["Name"]!!,
-        categoriesChanged = row["categoriesChanged"]!!.trim('[',']'). split(",").map { it.trim() }, // .replace (Regex( """"occurredAt":"[^"]+""""), ""), // ignore occurredAt field which could differ for duplicate events
+        categoriesChanged = row["categoriesChanged"]!!.trim('[',']'). split(",").map { it.trim() },
         operationId = row["OperationId"]!!,
         operationName = row["OperationName"]!!,
         eventType = row["eventType"]!!,
         prisonerNumber = row["prisonerNumber"]!!,
+        prisonId = row["prisonId"]!!,
+        reason = row["reason"]!!,
+        convictedStatus = row["convictedStatus"]!!,
+        alertsAdded = row["alertsAdded"]!!,
+        alertsRemoved = row["alertsRemoved"]!!,
       )
     }
   val events: MutableList<Event> = map
@@ -66,7 +77,7 @@ fun main() {
     println("Loop start, event count ${events.size}")
     val toBeRemoved = mutableListOf<Event>()
     events.groupBy { it.prisonerNumber + it.eventType }
-      .forEach { (prisonerNumberAndEventType, eventsForGroup) ->
+      .forEach { (_prisonerNumberAndEventType, eventsForGroup) ->
         eventsForGroup
           .find { it.name.startsWith("prisoner-") }
           ?.let { domainEvent ->
@@ -114,12 +125,31 @@ fun main() {
 
             if (specialCasesDidNotApply) {
               val red = eventsForGroup.find { it.name.startsWith("RED") && closeInTime(it, domainEvent) }
-              if (red != null
-                // && red.categoriesChanged == domainEvent.categoriesChanged
-              ) {
-                if (!equalInAnyOrder(red.categoriesChanged, domainEvent.categoriesChanged)) {
-                  println("Found match BUT categoriesChanged differ (${red.categoriesChanged})(${domainEvent.categoriesChanged}):\n$domainEvent\n$red")
+              if (red != null &&
+                !when {
+                  red.name == "RED_SIMULATE_PRISONER_DIFFERENCE_EVENT" ->
+                    (!equalInAnyOrder(red.categoriesChanged, domainEvent.categoriesChanged)).also { if (it) println("Found match BUT categoriesChanged differ (${red.categoriesChanged})(${domainEvent.categoriesChanged}):\n$domainEvent\n$red") }
+
+                  red.name == "RED_SIMULATE_MOVEMENT_RECEIVE_EVENT" ->
+                    (red.reason != domainEvent.reason || red.prisonId != domainEvent.prisonId).also { if (it) println("Found match BUT movement receive reason or prisonId differs:\n$domainEvent\n$red") }
+
+                  red.name == "RED_SIMULATE_MOVEMENT_RELEASE_EVENT" ->
+                    (red.reason != domainEvent.reason || red.prisonId != domainEvent.prisonId).also { if (it) println("Found match BUT movement release reason or prisonId differs:\n$domainEvent\n$red") }
+
+                  red.name == "RED_SIMULATE_CONVICTED_STATUS_CHANGED_EVENT" ->
+                    (red.convictedStatus != domainEvent.convictedStatus).also { if (it) println("Found match BUT prisoner created reason or prisonId differs:\n$domainEvent\n$red") }
+
+                  red.name == "RED_SIMULATE_ALERT_EVENT" ->
+                    (red.alertsAdded != domainEvent.alertsAdded || red.alertsRemoved != domainEvent.alertsRemoved).also { if (it) println("Found match BUT alert numbers differ:\n$domainEvent\n$red") }
+
+                  red.name == "RED_SIMULATE_PRISONER_CREATED_EVENT" || red.name == "RED_SIMULATE_PRISONER_REMOVED_EVENT" -> false
+
+                  else -> {
+                    println("Unrecognised code: ${red.name}")
+                    true
+                  }
                 }
+              ) {
                 toBeRemoved.add(domainEvent)
                 toBeRemoved.add(red)
               }
@@ -129,7 +159,7 @@ fun main() {
     println("Removing ${toBeRemoved.size} events")
     events.removeAll(toBeRemoved)
   }
-  while (toBeRemoved.size > 0)
+  while (toBeRemoved.isNotEmpty())
   println("\nEvents remaining unmatched:")
   events.forEach { println(it) }
 }
