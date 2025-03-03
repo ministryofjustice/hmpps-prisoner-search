@@ -20,8 +20,8 @@ import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.PERSONAL_DETAILS
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.PERSONAL_DETAILS
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.Difference
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION
