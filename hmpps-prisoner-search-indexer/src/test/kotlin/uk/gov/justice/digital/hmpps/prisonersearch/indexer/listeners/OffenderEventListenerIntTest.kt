@@ -116,8 +116,9 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         "RED_SIMULATE_PRISONER_DIFFERENCE_EVENT",
         mapOf(
           "prisonerNumber" to prisonerNumber,
-          "event" to "PrisonerUpdatedEvent(nomsNumber=O7089FD, categoriesChanged=[IDENTIFIERS, PERSONAL_DETAILS, ALERTS, STATUS, LOCATION])",
           "eventType" to "prisoner-offender-search.prisoner.updated",
+          "additionalInformation.nomsNumber" to prisonerNumber,
+          "additionalInformation.categoriesChanged" to "[IDENTIFIERS, PERSONAL_DETAILS, ALERTS, STATUS, LOCATION]",
         ),
         null,
       )
