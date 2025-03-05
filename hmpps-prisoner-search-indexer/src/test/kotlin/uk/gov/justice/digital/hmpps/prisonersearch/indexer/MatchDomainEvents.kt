@@ -69,7 +69,10 @@ fun main() {
     }
   val events: MutableList<Event> = map
     .distinctBy {
-      it.prisonerNumber + it.name + it.categoriesChanged + it.eventType + it.timeGenerated.substring(0, 20) // truncate millis, eg: '26/02/2025, 11:58:34.221'
+      it.prisonerNumber + it.name + it.categoriesChanged + it.eventType + it.prisonId + it.reason + it.convictedStatus + it.alertsAdded + it.alertsRemoved + it.timeGenerated.substring(
+        0,
+        20,
+      ) // truncate millis, eg: '26/02/2025, 11:58:34.221'
     }
     .toMutableList()
 
@@ -107,7 +110,7 @@ fun main() {
               val red1 = eventsForGroup.find { it.name == ("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT") && it.categoriesChanged.contains("RESTRICTED_PATIENT") && closeInTime(it, domainEvent) }
               val red2 = eventsForGroup.find {
                 it.name == ("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT") &&
-                !it.categoriesChanged.contains("RESTRICTED_PATIENT") && // && it.timeGenerated != red1?.timeGenerated
+                !it.categoriesChanged.contains("RESTRICTED_PATIENT") &&
                 closeInTime(it, domainEvent)
               }
               if (red1 != null && red2 != null && closeInTime(red2, domainEvent)) {
