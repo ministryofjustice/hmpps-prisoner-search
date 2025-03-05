@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -18,9 +17,8 @@ private const val OFFENDER_NO = "A9460DY"
 @JsonTest
 internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper: ObjectMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
-  private val telemetryClient = mock<TelemetryClient>()
 
-  private val alertsUpdatedEventService = AlertsUpdatedEventService(domainEventsEmitter, telemetryClient)
+  private val alertsUpdatedEventService = AlertsUpdatedEventService(domainEventsEmitter)
 
   @Test
   internal fun `will not emit anything if changes are not related to alerts`() {
