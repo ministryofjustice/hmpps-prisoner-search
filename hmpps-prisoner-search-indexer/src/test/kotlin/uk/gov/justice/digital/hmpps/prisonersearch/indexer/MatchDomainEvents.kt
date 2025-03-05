@@ -55,7 +55,7 @@ fun main() {
       Event(
         timeGenerated = row["TimeGenerated [Local Time]"]!!,
         name = row["Name"]!!,
-        categoriesChanged = row["categoriesChanged"]!!.trim('[',']'). split(",").map { it.trim() },
+        categoriesChanged = row["categoriesChanged"]!!.trim('[', ']').split(",").map { it.trim() },
         operationId = row["OperationId"]!!,
         operationName = row["OperationName"]!!,
         eventType = row["eventType"]!!,
@@ -110,8 +110,8 @@ fun main() {
               val red1 = eventsForGroup.find { it.name == ("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT") && it.categoriesChanged.contains("RESTRICTED_PATIENT") && closeInTime(it, domainEvent) }
               val red2 = eventsForGroup.find {
                 it.name == ("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT") &&
-                !it.categoriesChanged.contains("RESTRICTED_PATIENT") &&
-                closeInTime(it, domainEvent)
+                  !it.categoriesChanged.contains("RESTRICTED_PATIENT") &&
+                  closeInTime(it, domainEvent)
               }
               if (red1 != null && red2 != null && closeInTime(red2, domainEvent)) {
                 println("Found RP match:\n$domainEvent\n$red1\n$red2")
