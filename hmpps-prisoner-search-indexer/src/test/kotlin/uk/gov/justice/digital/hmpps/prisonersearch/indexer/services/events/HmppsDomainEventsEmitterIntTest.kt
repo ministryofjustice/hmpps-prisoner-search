@@ -586,6 +586,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
 
     // create the prisoner in ES
+    // 1 call for all indexes
     await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/$prisonerNumber") } matches { it == 1 }
 
     // delete create events

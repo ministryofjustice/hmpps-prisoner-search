@@ -103,10 +103,10 @@ internal class PrisonerSynchroniserServiceTest {
           eq("event"),
         ),
       ).thenReturn(true)
-      service.reindex(booking, listOf(GREEN), "event")
+      service.reindex(booking, listOf(RED), "event")
 
-      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(false))
-      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(false))
+      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(true))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(true))
     }
 
     @Test

@@ -112,16 +112,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         ),
         null,
       )
-      verify(telemetryClient).trackEvent(
-        "RED_SIMULATE_PRISONER_DIFFERENCE_EVENT",
-        mapOf(
-          "prisonerNumber" to prisonerNumber,
-          "eventType" to "prisoner-offender-search.prisoner.updated",
-          "additionalInformation.nomsNumber" to prisonerNumber,
-          "additionalInformation.categoriesChanged" to "[IDENTIFIERS, PERSONAL_DETAILS, ALERTS, STATUS, LOCATION]",
-        ),
-        null,
-      )
     }
   }
 
@@ -152,7 +142,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       verify(prisonerSpyBeanRepository, times(2)).save(any(), eq(SyncIndex.GREEN))
       verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
-      verify(telemetryClient).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
@@ -206,7 +195,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       verify(prisonerSpyBeanRepository, times(2)).save(any(), eq(SyncIndex.GREEN))
       verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
-      verify(telemetryClient).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
@@ -229,7 +217,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       verify(telemetryClient).trackEvent(eq("PRISONER_DATABASE_NO_CHANGE"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
-      verify(telemetryClient, never()).trackEvent(eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"), any(), isNull())
     }
   }
 

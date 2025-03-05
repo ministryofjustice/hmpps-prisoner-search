@@ -230,15 +230,9 @@ class CompareIndexService(
 
   fun comparePrisoner(prisonerNumber: String) = nomisService.getOffender(prisonerNumber)?.let { ob ->
     val calculated = prisonerSynchroniserService.translate(ob)
-    val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
+    val existing = prisonerRepository.get(ob.offenderNo, listOf(SyncIndex.RED))
 
     prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
-  }
-
-  fun comparePrisonerRed(prisonerNumber: String) = prisonerRepository.get(prisonerNumber, listOf(indexStatusService.getIndexStatus().currentIndex))?.let { existing ->
-    prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.let { new ->
-      prisonerDifferenceService.reportDifferencesDetails(existing, new)
-    }
   }
 
   private fun setupIndexSearch(

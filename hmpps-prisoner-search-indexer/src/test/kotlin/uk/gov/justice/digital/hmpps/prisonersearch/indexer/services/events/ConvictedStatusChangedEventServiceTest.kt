@@ -28,7 +28,7 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       this.firstName = "BOBBY"
     }
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verifyNoInteractions(domainEventsEmitter)
   }
@@ -38,13 +38,13 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
     val previousPrisonerSnapshot = prisoner().apply { convictedStatus = null }
     val prisoner = prisoner()
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitConvictedStatusChangedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = "Convicted",
-      red = false,
+      red = true,
     )
   }
 
@@ -55,13 +55,13 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       this.convictedStatus = null
     }
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitConvictedStatusChangedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = null,
-      red = false,
+      red = true,
     )
   }
 
@@ -73,13 +73,13 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       this.convictedStatus = "Remand"
     }
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitConvictedStatusChangedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = "Remand",
-      red = false,
+      red = true,
     )
   }
 

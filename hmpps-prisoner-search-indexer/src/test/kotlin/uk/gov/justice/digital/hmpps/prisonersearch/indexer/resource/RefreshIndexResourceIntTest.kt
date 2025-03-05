@@ -92,18 +92,19 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     val startOfTest = Instant.now()
 
     // Modify index record A9999AA a little
-    prisonerRepository.get("A9999AA", listOf(SyncIndex.GREEN))!!.apply {
+    prisonerRepository.get("A9999AA", listOf(SyncIndex.RED))!!.apply {
       releaseDate = LocalDate.parse("2023-01-02")
     }.also {
-      prisonerRepository.save(it, SyncIndex.GREEN)
+      prisonerRepository.save(it, SyncIndex.RED)
     }
 
     // Modify index record A7089EY a lot
     Prisoner().apply {
       prisonerNumber = "A7089EY"
       status = "ACTIVE IN"
+      prisonId = "MDI"
     }.also {
-      prisonerRepository.save(it, SyncIndex.GREEN)
+      prisonerRepository.save(it, SyncIndex.RED)
     }
 
     val detailsForA9999AA = webTestClient.get().uri("/compare-index/prisoner/A9999AA")

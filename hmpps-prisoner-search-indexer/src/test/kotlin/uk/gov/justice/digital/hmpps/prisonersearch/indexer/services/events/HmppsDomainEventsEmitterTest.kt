@@ -80,7 +80,7 @@ class HmppsDomainEventsEmitterTest {
         ),
       )
 
-      hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", diffs, red = false)
+      hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", diffs, red = true)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.updated"),
@@ -96,35 +96,11 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should also log simulated event for RED index`() {
-      val diffs = mapOf(
-        LOCATION to listOf(
-          Difference("some_property", LOCATION, "old_value", "new_value"),
-        ),
-        PERSONAL_DETAILS to listOf(
-          Difference("some_other_property", PERSONAL_DETAILS, "old_value", "new_value"),
-        ),
-      )
-
-      hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", diffs, red = true)
-
-      verify(telemetryClient).trackEvent(
-        eq("RED_SIMULATE_PRISONER_DIFFERENCE_EVENT"),
-        check {
-          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.updated")
-          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.categoriesChanged"]).isEqualTo("[PERSONAL_DETAILS, LOCATION]")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should not swallow exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()), red = false)
+        hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()), red = true)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }
@@ -133,7 +109,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerCreatedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = false)
+      hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.created"),
@@ -148,26 +124,11 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should also log simulated event for RED index`() {
-      hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
-
-      verify(telemetryClient).trackEvent(
-        eq("RED_SIMULATE_PRISONER_CREATED_EVENT"),
-        check {
-          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.created")
-          assertThat(it["prisonerNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should not swallow exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = false)
+        hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }
@@ -176,7 +137,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerRemovedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = false)
+      hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.removed"),
@@ -191,26 +152,11 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should also log simulated event for RED index`() {
-      hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
-
-      verify(telemetryClient).trackEvent(
-        eq("RED_SIMULATE_PRISONER_REMOVED_EVENT"),
-        check {
-          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.removed")
-          assertThat(it["prisonerNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should not swallow exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = false)
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }
@@ -219,7 +165,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerReceivedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = false)
+      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = true)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.received"),
@@ -236,27 +182,10 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should also log simulated event for RED index`() {
-      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = true)
-
-      verify(telemetryClient).trackEvent(
-        eq("RED_SIMULATE_MOVEMENT_RECEIVE_EVENT"),
-        check {
-          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.received")
-          assertThat(it["prisonerNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.reason"]).isEqualTo("READMISSION")
-          assertThat(it["additionalInformation.prisonId"]).isEqualTo("MDI")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should swallow exceptions and indicate a manual fix is required`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = false)
+      hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = true)
       verify(telemetryClient).trackEvent(
         eq("EVENTS_SEND_FAILURE"),
         check {
@@ -274,7 +203,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerAlertsUpdatedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA", "XT"), setOf("ZZ"), red = false)
+      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA", "XT"), setOf("ZZ"), red = true)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.alerts-updated"),
@@ -292,27 +221,10 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should also log simulated event for RED index`() {
-      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA", "XT"), setOf("ZZ"), red = true)
-
-      verify(telemetryClient).trackEvent(
-        eq("RED_SIMULATE_ALERT_EVENT"),
-        check {
-          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.alerts-updated")
-          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.bookingId"]).isEqualTo("1234567")
-          assertThat(it["additionalInformation.alertsAdded"]).isEqualTo("[XA, XT]")
-          assertThat(it["additionalInformation.alertsRemoved"]).isEqualTo("[ZZ]")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should swallow exceptions and indicate a manual fix is required`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf(), red = false)
+      hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf(), red = true)
 
       verify(telemetryClient).trackEvent(
         eq("EVENTS_SEND_FAILURE"),
@@ -332,7 +244,7 @@ class HmppsDomainEventsEmitterTest {
   inner class PrisonerConvictedStatusChangedEvent {
     @Test
     fun `should also log event`() {
-      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = false)
+      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = true)
 
       verify(telemetryClient).trackEvent(
         eq("test.prisoner-offender-search.prisoner.convicted-status-changed"),
@@ -349,27 +261,10 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should also log simulated event for RED index`() {
-      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = true)
-
-      verify(telemetryClient).trackEvent(
-        eq("RED_SIMULATE_CONVICTED_STATUS_CHANGED_EVENT"),
-        check {
-          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.convicted-status-changed")
-          assertThat(it["prisonerNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
-          assertThat(it["additionalInformation.bookingId"]).isEqualTo("1234567")
-          assertThat(it["additionalInformation.convictedStatus"]).isEqualTo("Convicted")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
     fun `should swallow exceptions and indicate a manual fix is required`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = false)
+      hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = true)
 
       verify(telemetryClient).trackEvent(
         eq("EVENTS_SEND_FAILURE"),
