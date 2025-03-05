@@ -63,6 +63,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.0")
   testImplementation("com.google.code.gson:gson:2.12.1")
+  testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 }
 
 kotlin {
