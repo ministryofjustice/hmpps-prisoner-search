@@ -61,8 +61,8 @@ class PrisonerDifferencesResource(private val prisonerDifferencesService: Prison
   @GetMapping
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   fun prisonerDifferences(
-    @Parameter(description = "Select whether to get green/blue or red index differences. Possible values are GREEN_BLUE (default) or RED")
-    @RequestParam(value = "label", required = false, defaultValue = "GREEN_BLUE")
+    @Parameter(description = "Select whether to get green/blue or red index differences. Possible values are GREEN_BLUE or RED (default)")
+    @RequestParam(value = "label", required = false, defaultValue = "RED")
     label: PrisonerDifferencesLabel,
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     @Parameter(description = "Report on differences that have been generated. Defaults to the last one day", example = "2023-01-02T02:23:45Z")

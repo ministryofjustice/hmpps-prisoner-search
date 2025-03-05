@@ -41,7 +41,7 @@ class PrisonerMovementsEventService(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
     offenderBooking: OffenderBooking,
-    red: Boolean = false,
+    red: Boolean,
   ) {
     when (val movementChange = calculateMovementChange(previousPrisonerSnapshot, prisoner, offenderBooking)) {
       PossibleMovementChange.None -> {}

@@ -1,10 +1,13 @@
 # Index Maintenance
 
 ## Index rebuilds
-This service maintains two indexes `prisoner-search-green` and `prisoner-search-blue` known in the code
-as `GREEN` and `BLUE`.
+This service maintains 3 indexes: `prisoner-search-green`, `prisoner-search-blue` and `prisoner-search` known in the code
+as `GREEN`, `BLUE` and `RED` respectively.
 
-In normal running one of these indexes will be "active" while the other is dormant and not in use.
+During parallel running the new RED index is in use but the soon-to-be-obsolete GREEN and BLUE indexes are still maintained,
+in case a backout is needed due to some problem with the new RED index.
+
+In normal running, for now, one of the old indexes will retain the concept of being "active" while the other is dormant and not in use, exactly as before the RED index existed
 
 When we are ready to rebuild the index the "other" non-active index is transitioned into a `BUILDING` state of `true`.
 

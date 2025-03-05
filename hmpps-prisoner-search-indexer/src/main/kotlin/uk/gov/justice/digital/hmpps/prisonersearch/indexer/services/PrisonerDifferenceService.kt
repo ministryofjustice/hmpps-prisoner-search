@@ -180,7 +180,7 @@ class PrisonerDifferenceService(
     previousSnapshot: T?,
     prisonerNumber: String,
     current: T,
-    red: Boolean = false,
+    red: Boolean,
   ) {
     if (!diffProperties.events) return
     previousSnapshot?.also {

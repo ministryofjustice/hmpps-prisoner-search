@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -17,9 +16,8 @@ private const val OFFENDER_NO = "A9460DY"
 @JsonTest
 internal class ConvictedStatusChangedEventServiceTest(@Autowired private val objectMapper: ObjectMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
-  private val telemetryClient = mock<TelemetryClient>()
 
-  private val convictedStatusEventService = ConvictedStatusEventService(domainEventsEmitter, telemetryClient)
+  private val convictedStatusEventService = ConvictedStatusEventService(domainEventsEmitter)
 
   @Test
   internal fun `will not emit anything if changes are not related to convictedStatus`() {
@@ -28,7 +26,7 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       this.firstName = "BOBBY"
     }
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verifyNoInteractions(domainEventsEmitter)
   }
@@ -38,13 +36,13 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
     val previousPrisonerSnapshot = prisoner().apply { convictedStatus = null }
     val prisoner = prisoner()
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitConvictedStatusChangedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = "Convicted",
-      red = false,
+      red = true,
     )
   }
 
@@ -55,13 +53,13 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       this.convictedStatus = null
     }
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitConvictedStatusChangedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = null,
-      red = false,
+      red = true,
     )
   }
 
@@ -73,13 +71,13 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
       this.convictedStatus = "Remand"
     }
 
-    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    convictedStatusEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitConvictedStatusChangedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       convictedStatus = "Remand",
-      red = false,
+      red = true,
     )
   }
 

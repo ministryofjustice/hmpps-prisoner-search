@@ -50,7 +50,7 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
       repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = GREEN_BLUE))
       repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = GREEN_BLUE))
 
-      webTestClient.get().uri("/prisoner-differences")
+      webTestClient.get().uri("/prisoner-differences?label=GREEN_BLUE")
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .header("Content-Type", "application/json")
         .exchange()
@@ -67,7 +67,7 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
       repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = RED))
       repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", label = RED))
 
-      webTestClient.get().uri("/prisoner-differences")
+      webTestClient.get().uri("/prisoner-differences?label=GREEN_BLUE")
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
         .expectStatus().isOk

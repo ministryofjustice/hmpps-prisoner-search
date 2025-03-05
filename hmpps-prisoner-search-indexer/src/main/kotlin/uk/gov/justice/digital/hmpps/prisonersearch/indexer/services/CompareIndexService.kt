@@ -44,19 +44,21 @@ class CompareIndexService(
   fun doIndexSizeCheck(): SizeCheck {
     val start = System.currentTimeMillis()
     val totalIndexNumber = prisonerRepository.count(indexStatusService.getIndexStatus().currentIndex)
+    val totalRedNumber = prisonerRepository.count(SyncIndex.RED)
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
-    return SizeCheck(timeMs = end - start, totalNomis = totalNomisNumber, totalIndex = totalIndexNumber).also {
+    return SizeCheck(timeMs = end - start, totalNomisNumber, totalIndexNumber, totalRedNumber).also {
       telemetryClient.trackEvent(TelemetryEvents.COMPARE_INDEX_SIZE, it.toMap())
     }
   }
 
-  data class SizeCheck(val timeMs: Long, val totalNomis: Long, val totalIndex: Long) {
+  data class SizeCheck(val timeMs: Long, val totalNomis: Long, val totalIndex: Long, val totalRed: Long) {
     fun toMap() = mapOf(
       "timeMs" to timeMs.toString(),
       "totalNomis" to totalNomis.toString(),
       "totalIndex" to totalIndex.toString(),
+      "totalRed" to totalRed.toString(),
     )
   }
 
@@ -228,15 +230,9 @@ class CompareIndexService(
 
   fun comparePrisoner(prisonerNumber: String) = nomisService.getOffender(prisonerNumber)?.let { ob ->
     val calculated = prisonerSynchroniserService.translate(ob)
-    val existing = prisonerRepository.get(ob.offenderNo, listOf(indexStatusService.getIndexStatus().currentIndex))
+    val existing = prisonerRepository.get(ob.offenderNo, listOf(SyncIndex.RED))
 
     prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
-  }
-
-  fun comparePrisonerRed(prisonerNumber: String) = prisonerRepository.get(prisonerNumber, listOf(indexStatusService.getIndexStatus().currentIndex))?.let { existing ->
-    prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.let { new ->
-      prisonerDifferenceService.reportDifferencesDetails(existing, new)
-    }
   }
 
   private fun setupIndexSearch(

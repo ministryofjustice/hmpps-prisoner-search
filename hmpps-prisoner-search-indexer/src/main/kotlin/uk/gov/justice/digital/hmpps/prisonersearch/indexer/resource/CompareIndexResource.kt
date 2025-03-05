@@ -83,27 +83,4 @@ class CompareIndexResource(private val compareIndexService: CompareIndexService)
   ): String = // deliberately return a string here as need to call toString on org.apache.commons.lang3.builder.Diff
     // so that we get a proper representation of each difference
     compareIndexService.comparePrisoner(prisonerNumber).toString()
-
-  @GetMapping("/prisoner/red/{prisonerNumber}")
-  @Operation(
-    summary = "Compare a prisoner's existing and new/red index",
-    description = "Existing green/blue index is compared in detail with the red index for a specific prisoner, requires ROLE_PRISONER_INDEX.",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "401", description = "Unauthorised, requires a valid Oauth2 token"),
-      ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
-      ApiResponse(responseCode = "404", description = "Not Found, the offender could not be found"),
-    ],
-  )
-  @PreAuthorize("hasRole('PRISONER_INDEX')")
-  fun comparePrisonerRed(
-    @Parameter(required = true, example = "A1234AA")
-    @NotNull
-    @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
-    @PathVariable("prisonerNumber")
-    prisonerNumber: String,
-  ): String = // deliberately return a string here as need to call toString on org.apache.commons.lang3.builder.Diff
-    // so that we get a proper representation of each difference
-    compareIndexService.comparePrisonerRed(prisonerNumber).toString()
 }

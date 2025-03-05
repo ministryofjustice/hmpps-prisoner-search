@@ -31,7 +31,7 @@ event.
 ## Prisoner differences
 The cronjob
 [hmpps-prisoner-search-indexer-full-index-refresh](./helm_deploy/hmpps-prisoner-search-indexer/templates/full-index-refresh-cronjob.yaml)
-runs 3 times a week in production to compare the index with NOMIS for each prisoner.
+runs each night in production to compare the index with NOMIS for each prisoner.
 Any differences are output to `customEvent` called `DIFFERENCE_MISSING` and `DIFFERENCE_REPORTED`.
 The [prisoner differences check](https://github.com/ministryofjustice/nomis-api-terraform-application-insights/blob/main/modules/hmpps-prisoner-search-indexer/prisoner-differences-check.tf)
 application insights alert fires if any differences are found.  See [Prisoner Differences](./PrisonerDifferences.md)

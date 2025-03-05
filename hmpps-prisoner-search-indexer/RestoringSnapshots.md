@@ -57,8 +57,8 @@ Finally scale the indexer back up - `4` for production and `2` normally for dev 
 kubectl scale --replicas=4 deployment hmpps-prisoner-search-indexer
 ```
 
-Note that the restoring from backup will not include any recent prisoner changes.  It would then be necessary to either
-run a full re-index or alternatively run an index refresh to ensure that the newly restrored index contains all the 
+Note that the restoring from backup will not include any recent prisoner changes (there will also be a delay to generated domain events).  It would then be necessary to either
+run a full re-index or alternatively run an index refresh to ensure that the newly restored index contains all the 
 same data as NOMIS. See [Index Maintenance](./IndexMaintenance.md) and [Prisoner Differences](./PrisonerDifferences.md).
 
 ## Snapshot cronjobs

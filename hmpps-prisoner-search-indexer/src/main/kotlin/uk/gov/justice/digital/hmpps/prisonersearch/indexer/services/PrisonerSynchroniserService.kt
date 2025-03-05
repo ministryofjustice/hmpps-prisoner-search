@@ -55,7 +55,7 @@ class PrisonerSynchroniserService(
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       indices.map { index -> prisonerRepository.save(prisoner, index) }
       if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)) {
-        generateAnyEvents(existingPrisoner, prisoner, ob)
+        generateAnyEvents(existingPrisoner, prisoner, ob, red = false)
       }
     } else {
       telemetryClient.trackPrisonerEvent(
@@ -227,7 +227,7 @@ class PrisonerSynchroniserService(
       indices.map { prisonerRepository.save(prisoner, it) }
       if (label == PrisonerDifferencesLabel.GREEN_BLUE) {
         if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")) {
-          generateAnyEvents(existingPrisoner, prisoner, ob)
+          generateAnyEvents(existingPrisoner, prisoner, ob, red = false)
         }
       } else {
         generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
@@ -235,7 +235,7 @@ class PrisonerSynchroniserService(
     }
   }
 
-  internal fun generateAnyEvents(existingPrisoner: Prisoner?, prisoner: Prisoner, ob: OffenderBooking, red: Boolean = false) {
+  internal fun generateAnyEvents(existingPrisoner: Prisoner?, prisoner: Prisoner, ob: OffenderBooking, red: Boolean) {
     prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob, red)
     alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner, red)
     convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner, red)

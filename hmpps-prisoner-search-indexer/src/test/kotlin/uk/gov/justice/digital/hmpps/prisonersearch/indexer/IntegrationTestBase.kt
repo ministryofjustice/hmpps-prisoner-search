@@ -412,7 +412,7 @@ data class PrisonerBuilder(
   fun toIncentiveLevel(): String = Gson().toJson(
     this.currentIncentive?.let {
       IncentiveLevel(
-        iepCode = it.level.code ?: "",
+        iepCode = it.level.code,
         iepLevel = it.level.description,
         iepTime = it.dateTime,
         nextReviewDate = it.nextReviewDate,

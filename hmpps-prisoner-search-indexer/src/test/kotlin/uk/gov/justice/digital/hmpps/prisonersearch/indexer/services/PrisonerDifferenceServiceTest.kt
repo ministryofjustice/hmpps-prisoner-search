@@ -724,14 +724,14 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2, red = true)
 
       verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
         eq("someOffenderNo"),
         check {
           assertThat(it.keys).containsExactly(DiffCategory.IDENTIFIERS)
         },
-        eq(false),
+        eq(true),
       )
     }
 
@@ -746,14 +746,14 @@ class PrisonerDifferenceServiceTest {
         croNumber = "someCro"
       }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2, red = true)
 
       verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
         eq("someOffenderNo"),
         check {
           assertThat(it.keys).containsExactly(DiffCategory.IDENTIFIERS)
         },
-        eq(false),
+        eq(true),
       )
     }
 
@@ -770,14 +770,14 @@ class PrisonerDifferenceServiceTest {
         firstName = "someFirstName2"
       }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2, red = true)
 
       verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
         eq("someOffenderNo"),
         check {
           assertThat(it.keys).containsExactlyInAnyOrder(DiffCategory.IDENTIFIERS, DiffCategory.PERSONAL_DETAILS)
         },
-        eq(false),
+        eq(true),
       )
     }
 
@@ -789,9 +789,9 @@ class PrisonerDifferenceServiceTest {
         firstName = "someFirstName2"
       }
 
-      prisonerDifferenceService.generateDiffEvent(null, booking.offenderNo, prisoner2)
+      prisonerDifferenceService.generateDiffEvent(null, booking.offenderNo, prisoner2, red = true)
 
-      verify(domainEventsEmitter).emitPrisonerCreatedEvent("someOffenderNo", red = false)
+      verify(domainEventsEmitter).emitPrisonerCreatedEvent("someOffenderNo", red = true)
     }
 
     @Test
@@ -801,9 +801,9 @@ class PrisonerDifferenceServiceTest {
       val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
-      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
+      prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2, red = true)
 
-      verify(domainEventsEmitter, never()).emitPrisonerDifferenceEvent(anyString(), any(), eq(false))
+      verify(domainEventsEmitter, never()).emitPrisonerDifferenceEvent(anyString(), any(), eq(true))
     }
 
     @Test
@@ -812,7 +812,7 @@ class PrisonerDifferenceServiceTest {
         domainEventsEmitter.emitPrisonerDifferenceEvent(
           anyString(),
           any(),
-          eq(false),
+          eq(true),
         ),
       ).thenThrow(RuntimeException::class.java)
 
@@ -820,7 +820,7 @@ class PrisonerDifferenceServiceTest {
       val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
 
       assertThatThrownBy {
-        prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
+        prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2, red = true)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }

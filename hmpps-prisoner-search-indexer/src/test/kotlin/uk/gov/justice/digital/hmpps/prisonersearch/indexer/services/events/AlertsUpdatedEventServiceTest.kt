@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -18,9 +17,8 @@ private const val OFFENDER_NO = "A9460DY"
 @JsonTest
 internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper: ObjectMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
-  private val telemetryClient = mock<TelemetryClient>()
 
-  private val alertsUpdatedEventService = AlertsUpdatedEventService(domainEventsEmitter, telemetryClient)
+  private val alertsUpdatedEventService = AlertsUpdatedEventService(domainEventsEmitter)
 
   @Test
   internal fun `will not emit anything if changes are not related to alerts`() {
@@ -29,7 +27,7 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       this.firstName = "BOBBY"
     }
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verifyNoInteractions(domainEventsEmitter)
   }
@@ -41,14 +39,14 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       this.alerts = listOf(PrisonerAlert(alertType = "X", alertCode = "XA", active = true, expired = false))
     }
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitPrisonerAlertsUpdatedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       alertsAdded = setOf("XA"),
       alertsRemoved = setOf(),
-      red = false,
+      red = true,
     )
   }
 
@@ -59,14 +57,14 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
     }
     val prisoner = prisoner()
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitPrisonerAlertsUpdatedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       alertsAdded = setOf(),
       alertsRemoved = setOf("XA"),
-      red = false,
+      red = true,
     )
   }
 
@@ -87,14 +85,14 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       )
     }
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
 
     verify(domainEventsEmitter).emitPrisonerAlertsUpdatedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       alertsAdded = setOf("XK", "BB"),
       alertsRemoved = setOf("XT", "AA"),
-      red = false,
+      red = true,
     )
   }
 

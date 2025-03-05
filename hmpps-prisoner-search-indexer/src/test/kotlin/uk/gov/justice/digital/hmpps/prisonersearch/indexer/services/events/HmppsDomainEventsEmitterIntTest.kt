@@ -102,7 +102,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     hmppsDomainEventEmitter.emitPrisonerDifferenceEvent(
       "some_offender",
       mapOf(IDENTIFIERS to listOf(), LOCATION to listOf()),
-      red = false,
+      red = true,
     )
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it!! > 0 }
@@ -130,7 +130,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `sends prisoner created events to the domain topic`() {
-    hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = false)
+    hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
@@ -149,7 +149,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `sends prisoner removed events to the domain topic`() {
-    hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = false)
+    hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
@@ -172,7 +172,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
       "some_offender",
       HmppsDomainEventEmitter.PrisonerReceiveReason.TRANSFERRED,
       "MDI",
-      red = false,
+      red = true,
     )
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
@@ -199,7 +199,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
       "some_offender",
       HmppsDomainEventEmitter.PrisonerReleaseReason.TRANSFERRED,
       "MDI",
-      red = false,
+      red = true,
     )
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
@@ -586,6 +586,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
 
     // create the prisoner in ES
+    // 1 call for all indexes
     await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/$prisonerNumber") } matches { it == 1 }
 
     // delete create events
