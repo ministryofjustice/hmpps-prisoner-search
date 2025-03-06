@@ -30,10 +30,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_DATABASE_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -43,7 +41,6 @@ class PrisonerDifferenceServiceTest {
   private val telemetryClient = mock<TelemetryClient>()
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
   private val diffProperties = mock<DiffProperties>()
-  private val prisonerHashRepository = mock<PrisonerHashRepository>()
   private val objectMapper = mock<ObjectMapper>()
   private val prisonerDifferencesRepository = mock<PrisonerDifferencesRepository>()
 
@@ -51,62 +48,9 @@ class PrisonerDifferenceServiceTest {
     telemetryClient,
     domainEventsEmitter,
     diffProperties,
-    prisonerHashRepository,
     objectMapper,
     prisonerDifferencesRepository,
   )
-
-  @Nested
-  inner class HandleDifferences {
-    @BeforeEach
-    fun setUp() {
-      whenever(diffProperties.events).thenReturn(true)
-    }
-
-    @Test
-    fun `should send event if prisoner hash has changed`() {
-      whenever(
-        prisonerHashRepository.upsertIfChanged(
-          anyString(),
-          anyString(),
-          any(),
-        ),
-      ).thenReturn(1)
-      whenever(objectMapper.writeValueAsString(any()))
-        .thenReturn("hash1")
-        .thenReturn("hash2")
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
-
-      prisonerDifferenceService.handleDifferences(prisoner1, someOffenderBooking(), prisoner2, "eventType")
-
-      verify(prisonerHashRepository).upsertIfChanged(eq("someOffenderNo"), anyString(), any())
-      verify(domainEventsEmitter).emitPrisonerDifferenceEvent(eq("someOffenderNo"), anyMap(), eq(false))
-    }
-
-    @Test
-    fun `should raise no-change telemetry if there are no changes using database`() {
-      whenever(
-        prisonerHashRepository.upsertIfChanged(anyString(), anyString(), any()),
-      ).thenReturn(0)
-      whenever(objectMapper.writeValueAsString(any())).thenReturn("a_string").thenReturn("b_string")
-      val prisoner = Prisoner().apply { pncNumber = "somePnc1" }
-
-      prisonerDifferenceService.handleDifferences(prisoner, someOffenderBooking(), prisoner, "eventType")
-
-      verify(telemetryClient).trackEvent(
-        eq(PRISONER_DATABASE_NO_CHANGE.name),
-        check {
-          assertThat(it).containsOnly(
-            entry("prisonerNumber", "someOffenderNo"),
-            entry("bookingId", "not set"),
-            entry("event", "eventType"),
-          )
-        },
-        isNull(),
-      )
-    }
-  }
 
   @Nested
   inner class GetDiff {

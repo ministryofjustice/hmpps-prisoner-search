@@ -26,7 +26,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -160,8 +159,8 @@ abstract class IntegrationTestBase {
 
   fun deinitialiseIndexStatus() = indexStatusRepository.deleteAll()
 
-  fun buildAndSwitchIndex(index: SyncIndex, expectedCount: Long) {
-    buildIndex(index, expectedCount)
+  fun buildAndSwitchIndex(expectedCount: Long) {
+    buildIndex(expectedCount)
 
     webTestClient.put()
       .uri("/maintain-index/mark-complete")
@@ -170,10 +169,10 @@ abstract class IntegrationTestBase {
       .exchange()
       .expectStatus().isOk
 
-    await untilCallTo { getIndexCount(PRISONER_INDEX) } matches { it == expectedCount }
+    await untilCallTo { getIndexCount(SyncIndex.RED) } matches { it == expectedCount }
   }
 
-  fun buildIndex(index: SyncIndex, expectedCount: Long) {
+  fun buildIndex(expectedCount: Long) {
     webTestClient.put()
       .uri("/maintain-index/build")
       .accept(MediaType.APPLICATION_JSON)
@@ -182,7 +181,7 @@ abstract class IntegrationTestBase {
       .expectStatus().isOk
 
     await untilCallTo { indexQueueService.getIndexQueueStatus().active } matches { it == false }
-    await untilCallTo { getIndexCount(index) } matches { it == expectedCount }
+    await untilCallTo { getIndexCount(SyncIndex.RED) } matches { it == expectedCount }
   }
 
   fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName)

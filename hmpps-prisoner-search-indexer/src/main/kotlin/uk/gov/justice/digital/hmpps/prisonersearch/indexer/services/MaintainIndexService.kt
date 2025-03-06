@@ -184,13 +184,13 @@ class MaintainIndexService(
 
   private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>): Prisoner {
     val offenderBooking = nomisService.getOffender(prisonerNumber)
-    return offenderBooking?.let { ob ->
-      prisonerSynchroniserService.reindex(ob, activeIndices, "MAINTAIN")
-    }
+    return offenderBooking
       ?.also {
-        prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")
         prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, "MAINTAIN")
         prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, SyncIndex.RED, "MAINTAIN")
+      }
+      ?.let {
+        prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")
       }
       ?: prisonerRepository.get(prisonerNumber, activeIndices)
         ?.apply {

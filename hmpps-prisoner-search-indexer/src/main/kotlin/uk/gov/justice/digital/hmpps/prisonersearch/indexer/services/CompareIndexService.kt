@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
-import org.apache.commons.lang3.builder.EqualsBuilder
 import org.opensearch.action.search.ClearScrollRequest
 import org.opensearch.action.search.SearchRequest
 import org.opensearch.action.search.SearchResponse
@@ -17,12 +15,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
-import java.util.Objects
 
 @Service
 class CompareIndexService(
@@ -33,7 +29,6 @@ class CompareIndexService(
   private val prisonerRepository: PrisonerRepository,
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
-  private val objectMapper: ObjectMapper,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -43,12 +38,11 @@ class CompareIndexService(
 
   fun doIndexSizeCheck(): SizeCheck {
     val start = System.currentTimeMillis()
-    val totalIndexNumber = prisonerRepository.count(indexStatusService.getIndexStatus().currentIndex)
     val totalRedNumber = prisonerRepository.count(SyncIndex.RED)
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
-    return SizeCheck(timeMs = end - start, totalNomisNumber, totalIndexNumber, totalRedNumber).also {
+    return SizeCheck(timeMs = end - start, totalNomisNumber, totalNomisNumber, totalRedNumber).also {
       telemetryClient.trackEvent(TelemetryEvents.COMPARE_INDEX_SIZE, it.toMap())
     }
   }
@@ -85,8 +79,7 @@ class CompareIndexService(
   fun compareIndex(): Pair<List<String>, List<String>> {
     val allNomis = nomisService.getPrisonerNumbers(0, 10000000).sorted()
 
-    val currentIndex = indexStatusService.getIndexStatus().currentIndex
-    val searchResponse = setupIndexSearch(currentIndex)
+    val searchResponse = setupIndexSearch(SyncIndex.RED)
 
     var scrollId = searchResponse.scrollId
     var searchHits = searchResponse.hits.hits
@@ -112,121 +105,6 @@ class CompareIndexService(
 
     return Pair(onlyInIndex, onlyInNomis)
   }
-
-  @Async
-  fun compareOldAndNewIndex() {
-    val start = System.currentTimeMillis()
-    val currentIndex = indexStatusService.getIndexStatus().currentIndex
-    val currentCount = prisonerRepository.count(currentIndex)
-    val redCount = prisonerRepository.count(SyncIndex.RED)
-    telemetryClient.trackEvent(
-      TelemetryEvents.RED_COMPARE_INDEX_SIZE,
-      mapOf("currentCount" to currentCount.toString(), "redCount" to redCount.toString()),
-    )
-
-    val searchResponse = setupIndexSearch(currentIndex, FetchSourceContext.FETCH_SOURCE)
-
-    var scrollId = searchResponse.scrollId
-    var searchHits = searchResponse.hits.hits
-    var total = 0
-
-    while (!searchHits.isNullOrEmpty()) {
-      searchHits.forEach { hit ->
-        val prisonerRed = prisonerRepository.getRaw(hit.id, SyncIndex.RED)
-        if (!prisonerRed.isExists) {
-          telemetryClient.trackEvent(
-            TelemetryEvents.RED_DIFFERENCE_MISSING,
-            mapOf("prisonerNumber" to hit.id),
-          )
-        } else if (!deepEquals(prisonerRed.source, hit.sourceAsMap)) {
-          val diffs = prisonerDifferenceService.getDifferencesByCategory(
-            objectMapper.convertValue(hit.sourceAsMap, Prisoner::class.java),
-            objectMapper.convertValue(prisonerRed.sourceAsMap, Prisoner::class.java),
-          )
-          telemetryClient.trackEvent(
-            TelemetryEvents.RED_DIFFERENCE_REPORTED,
-            mapOf(
-              "prisonerNumber" to hit.id,
-              "categoriesChanged" to diffs.keys.map { it.name }.toList().sorted().toString(),
-            ),
-          )
-        }
-      }
-      total += searchHits.size
-      log.debug("Done $total documents")
-
-      val scrollRequest = SearchScrollRequest(scrollId).apply { scroll(scroll) }
-      val scrollResponse = openSearchClient.scroll(scrollRequest, RequestOptions.DEFAULT)
-
-      scrollId = scrollResponse.scrollId
-      searchHits = scrollResponse.hits.hits
-    }
-    clearIndexSearch(scrollId)
-    val end = System.currentTimeMillis()
-    log.info("compareOldAndNewIndex() took ${end - start}ms")
-  }
-
-  internal fun deepEquals(red: Map<String, Any?>, other: Map<String, Any?>): Boolean {
-    val p1 = objectMapper.convertValue(red, Prisoner::class.java)
-    val p2 = objectMapper.convertValue(other, Prisoner::class.java)
-    return EqualsBuilder.reflectionEquals(p1, p2)
-  }
-
-  private fun deepEqualsAlt(map: Map<String, Any>, other: Map<String, Any>): Boolean = map.entries
-    .stream()
-    .allMatch { e: Map.Entry<String, Any> ->
-      val mapValue = e.value
-      val otherValue = other[e.key]
-      if (mapValue is Map<*, *> && otherValue is Map<*, *>) {
-        @Suppress("UNCHECKED_CAST")
-        deepEqualsAlt(mapValue as Map<String, Any>, otherValue as Map<String, Any>)
-      } else {
-        other.containsKey(e.key) &&
-          Objects.deepEquals(
-            mapValue,
-            otherValue,
-          )
-      }
-    }
-
-  internal fun equalsIgnoringNulls(mapWithNulls: Map<String, Any?>, other: Map<String, Any?>): Boolean = mapWithNulls
-    .entries
-    .stream()
-    .allMatch { e: Map.Entry<String, Any?> ->
-      val mapWithNullsValue = e.value
-      (isDeeplyNull(mapWithNullsValue) && !other.containsKey(e.key)) ||
-        run {
-          val otherValue: Any? = other[e.key]
-          if (mapWithNullsValue is List<*> && otherValue is List<*>) {
-            var i = 0
-            mapWithNullsValue.all { item ->
-              val otherItem = otherValue[i++]
-              if (item is Map<*, *> && otherItem is Map<*, *>) {
-                @Suppress("UNCHECKED_CAST")
-                equalsIgnoringNulls(item as Map<String, Any>, otherItem as Map<String, Any>)
-              } else {
-                Objects.deepEquals(item, otherItem)
-              }
-            }
-          } else if (mapWithNullsValue is Map<*, *> && otherValue is Map<*, *>) {
-            @Suppress("UNCHECKED_CAST")
-            equalsIgnoringNulls(mapWithNullsValue as Map<String, Any>, otherValue as Map<String, Any>)
-          } else {
-            Objects.deepEquals(mapWithNullsValue, otherValue)
-          }
-        }
-    }
-
-  private fun isDeeplyNull(value: Any?): Boolean = value == null ||
-    (
-      value is Map<*, *> &&
-        @Suppress("UNCHECKED_CAST")
-        (value as Map<String, Any>)
-          .entries
-          .stream()
-          .allMatch { isDeeplyNull(it.value) }
-      ) ||
-    (value is List<*> && value.all { isDeeplyNull(it) })
 
   fun comparePrisoner(prisonerNumber: String) = nomisService.getOffender(prisonerNumber)?.let { ob ->
     val calculated = prisonerSynchroniserService.translate(ob)

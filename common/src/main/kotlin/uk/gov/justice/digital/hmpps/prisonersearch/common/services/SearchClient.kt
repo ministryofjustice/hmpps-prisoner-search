@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 @Service
 class SearchClient(
   private val elasticsearchClient: RestHighLevelClient,
-  @Value("\${search.regime}") private val regime: String = "GREEN_BLUE",
+  @Value("\${search.regime}") private val regime: String = "RED",
 ) {
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)

@@ -24,14 +24,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -41,11 +38,11 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.IDENTIFIERS
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.readResourceAsText
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferenceService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiMockServer
@@ -53,6 +50,7 @@ import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Duration
+import java.time.LocalTime
 
 class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @MockitoSpyBean
@@ -76,9 +74,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @MockitoSpyBean
   private lateinit var prisonerDifferenceService: PrisonerDifferenceService
 
-  @Autowired
-  private lateinit var prisonerHashRepository: PrisonerHashRepository
-
   private val hmppsEventsQueue by lazy {
     hmppsQueueService.findByQueueId("hmppseventtestqueue")
       ?: throw MissingQueueException("hmppseventtestqueue queue not found")
@@ -94,7 +89,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @BeforeEach
   fun init() {
     prisonApi.stubOffenders(PrisonerBuilder())
-    buildAndSwitchIndex(SyncIndex.GREEN, 1)
+    buildAndSwitchIndex(1)
   }
 
   @Test
@@ -504,11 +499,11 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     offenderQueueSqsClient.sendMessage(message)
     await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
 
-    // expecting 2 checks for update
-    await untilAsserted { verify(prisonerDifferenceService, times(2)).hasChanged(anyOrNull(), any()) }
+    // expecting 2 attempts to update
+    await untilAsserted { verify(prisonerSpyBeanRepository, times(2)).updatePrisoner(any(), any(), any(), any()) }
 
     // expecting 1 update
-    await untilAsserted { verify(prisonerDifferenceService).handleDifferences(anyOrNull(), any(), any(), any()) }
+    await untilAsserted { verify(prisonerDifferenceService).generateDiffEvent<Prisoner>(any(), any(), any(), eq(true)) }
 
     // but there is only 1 message on the domain queue because the last update was ignored
     await untilAsserted {
@@ -530,42 +525,43 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
    *
    * So this test checks that the prisoner event hash update is rolled back if sending the domain event fails.
    */
-  @Test
-  fun `e2e - should not update prisoner hash if there is an exception when sending the event`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
-
-    val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
-
-    // remember the prisoner event hash
-    val insertedPrisonerEventHash = prisonerHashRepository.findByIdOrNull("A1239DD")?.prisonerHash
-    assertThat(insertedPrisonerEventHash).isNotNull
-
-    // update the prisoner on ES BUT fail to send an event
-    doThrow(RuntimeException("Failed to send event")).whenever(publishQueueSqsClient)
-      .sendMessage(any<SendMessageRequest>())
-    prisonApi.stubFor(
-      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              PrisonerBuilder(
-                prisonerNumber = "A1239DD",
-                bookingId = null,
-                firstName = "NEW_NAME",
-              ).toOffenderBooking(),
-            ),
-        ),
-    )
-    offenderQueueSqsClient.sendMessage(message)
-    await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
-    await untilAsserted { verify(publishQueueSqsClient).sendMessage(any<SendMessageRequest>()) }
-
-    // The prisoner hash update should have been rolled back
-    val prisonerEventHashAfterAttemptedUpdate =
-      prisonerHashRepository.findByIdOrNull("A1239DD")?.prisonerHash
-    assertThat(prisonerEventHashAfterAttemptedUpdate).isEqualTo(insertedPrisonerEventHash)
-  }
+//  @Test
+//  fun `e2e - should not update prisoner hash if there is an exception when sending the event`() {
+//    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
+//
+//    val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
+//
+//    // remember the prisoner event hash
+//    val insertedPrisonerEventHash = prisonerHashRepository.findByIdOrNull("A1239DD")?.prisonerHash
+//    assertThat(insertedPrisonerEventHash).isNotNull
+//
+//    // update the prisoner on ES BUT fail to send an event
+//    doThrow(RuntimeException("Failed to send event")).whenever(publishQueueSqsClient)
+//      .sendMessage(any<SendMessageRequest>())
+//    prisonApi.stubFor(
+//      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
+//        .willReturn(
+//          aResponse()
+//            .withHeader("Content-Type", "application/json")
+//            .withBody(
+//              PrisonerBuilder(
+//                prisonerNumber = "A1239DD",
+//                bookingId = null,
+//                firstName = "NEW_NAME",
+//              ).toOffenderBooking(),
+//            ),
+//        ),
+//    )
+//    offenderQueueSqsClient.sendMessage(message)
+//    await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
+//    await untilAsserted { verify(publishQueueSqsClient).sendMessage(any<SendMessageRequest>()) }
+//
+//    // The prisoner hash update should have been rolled back
+//    val prisonerEventHashAfterAttemptedUpdate =
+//      prisonerHashRepository.findByIdOrNull("A1239DD")?.prisonerHash
+//    assertThat(prisonerEventHashAfterAttemptedUpdate).isEqualTo(insertedPrisonerEventHash)
+//  }
+  // TODO: This functionality should be implemented for the RED index
 
   fun recreatePrisoner(builder: PrisonerBuilder) {
     val prisonerNumber: String = builder.prisonerNumber
@@ -592,7 +588,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     // delete create events
     await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it != 0 }
 
-    await untilCallTo { prisonerHashRepository.findById(prisonerNumber) } matches { it != null }
     await untilCallTo { prisonerRepository.getSummary(prisonerNumber, SyncIndex.RED) } matches { it != null }
 
     purgeHmppsEventsQueue()

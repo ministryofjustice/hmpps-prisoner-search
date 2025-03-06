@@ -54,16 +54,10 @@ class RefreshIndexService(
     }
 
   fun refreshPrisoner(prisonerNumber: String) {
-    indexStatusService.getIndexStatus()
-      // no point refreshing index if we're already building the other one
-      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-      .run {
-        nomisService.getOffender(prisonerNumber)?.let { ob ->
-          val (incentiveLevelData, restrictedPatientData) = prisonerSynchroniserService.getDomainData(ob)
-          prisonerSynchroniserService.compareAndMaybeIndex(ob, incentiveLevelData, restrictedPatientData, activeIndexes(), PrisonerDifferencesLabel.GREEN_BLUE)
-          prisonerSynchroniserService.compareAndMaybeIndex(ob, incentiveLevelData, restrictedPatientData, listOf(SyncIndex.RED), PrisonerDifferencesLabel.RED)
-        }
-      }
+    nomisService.getOffender(prisonerNumber)?.let { ob ->
+      val (incentiveLevelData, restrictedPatientData) = prisonerSynchroniserService.getDomainData(ob)
+      prisonerSynchroniserService.compareAndMaybeIndex(ob, incentiveLevelData, restrictedPatientData, listOf(SyncIndex.RED), PrisonerDifferencesLabel.RED)
+    }
   }
 
   private companion object {

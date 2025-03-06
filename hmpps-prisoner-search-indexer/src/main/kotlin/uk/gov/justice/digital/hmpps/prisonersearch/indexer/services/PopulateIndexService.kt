@@ -89,7 +89,7 @@ class PopulateIndexService(
     .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
     .run {
       nomisService.getOffender(prisonerNumber)?.let { ob ->
-        prisonerSynchroniserService.index(ob, this.currentIndex.otherIndex())
+        prisonerSynchroniserService.index(ob)
       } ?: run {
         // can happen if a prisoner is deleted or merged once indexing has started
         telemetryClient.trackPrisonerEvent(BUILD_PRISONER_NOT_FOUND, prisonerNumber)

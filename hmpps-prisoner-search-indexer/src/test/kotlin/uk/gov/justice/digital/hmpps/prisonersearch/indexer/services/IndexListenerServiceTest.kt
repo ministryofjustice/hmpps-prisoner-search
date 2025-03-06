@@ -11,15 +11,11 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangeAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
@@ -30,7 +26,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 
 internal class IndexListenerServiceTest {
 
-  private val indexStatusService = mock<IndexStatusService>()
   private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val nomisService = mock<NomisService>()
   private val prisonerLocationService = mock<PrisonerLocationService>()
@@ -38,7 +33,6 @@ internal class IndexListenerServiceTest {
   private val hmppsDomainEventEmitter = mock<HmppsDomainEventEmitter>()
   private val indexListenerService =
     IndexListenerService(
-      indexStatusService,
       prisonerSynchroniserService,
       nomisService,
       prisonerLocationService,
@@ -50,12 +44,9 @@ internal class IndexListenerServiceTest {
   inner class incentiveChange {
     @Test
     fun `will reindex on incentive change`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A1234AA", id = 12345),
@@ -65,13 +56,6 @@ internal class IndexListenerServiceTest {
         "some.iep.update",
       )
 
-      verify(prisonerSynchroniserService).reindex(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
-        eq(listOf(GREEN)),
-        eq("some.iep.update"),
-      )
       verify(prisonerSynchroniserService).reindexIncentive(
         check {
           assertThat(it).isEqualTo("A1234AA")
@@ -83,9 +67,6 @@ internal class IndexListenerServiceTest {
 
     @Test
     fun `will not do an overall reindex if prisoner not found`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       indexListenerService.incentiveChange(
         IncentiveChangedMessage(
           additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
@@ -94,29 +75,6 @@ internal class IndexListenerServiceTest {
         ),
         "some.iep.update",
       )
-
-      verify(prisonerSynchroniserService, never()).reindex(any(), any(), any())
-    }
-
-    @Test
-    fun `will do nothing if no active indices`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(
-          currentIndex = GREEN,
-          currentIndexState = IndexState.CANCELLED,
-          otherIndexState = IndexState.ABSENT,
-        ),
-      )
-      indexListenerService.incentiveChange(
-        IncentiveChangedMessage(
-          additionalInformation = IncentiveChangeAdditionalInformation(nomsNumber = "A7089FD", id = 12345),
-          eventType = "some.iep.update",
-          description = "some desc",
-        ),
-        "some.iep.update",
-      )
-
-      verifyNoInteractions(prisonerSynchroniserService)
     }
   }
 
@@ -124,12 +82,8 @@ internal class IndexListenerServiceTest {
   inner class RestrictedPatientChange {
     @Test
     fun `will reindex on restricted patient change`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.restrictedPatientChange(
         RestrictedPatientMessage(
           additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
@@ -137,45 +91,11 @@ internal class IndexListenerServiceTest {
           description = "some desc",
         ),
         "some.iep.update",
-      )
-
-      verify(prisonerSynchroniserService).reindex(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
-        eq(listOf(GREEN)),
-        eq("some.iep.update"),
       )
     }
 
     @Test
     fun `will do nothing if prisoner not found`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
-      indexListenerService.restrictedPatientChange(
-        RestrictedPatientMessage(
-          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
-          eventType = "some.iep.update",
-          description = "some desc",
-        ),
-        "some.iep.update",
-      )
-
-      verifyNoInteractions(prisonerSynchroniserService)
-    }
-
-    @Test
-    fun `will do nothing if no active indices`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(
-          currentIndex = GREEN,
-          currentIndexState = IndexState.CANCELLED,
-          otherIndexState = IndexState.ABSENT,
-        ),
-      )
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
       indexListenerService.restrictedPatientChange(
         RestrictedPatientMessage(
           additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
@@ -193,20 +113,18 @@ internal class IndexListenerServiceTest {
   inner class externalMovement {
     @Test
     fun `will reindex on external movement`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
+//      whenever(indexStatusService.getIndexStatus()).thenReturn(
+//        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
+//      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
       indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("EXTERNAL_MOVEMENT"),
       )
     }
@@ -214,25 +132,6 @@ internal class IndexListenerServiceTest {
     @Test
     fun `will do nothing if prisoner not found`() {
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn(null)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
-      indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
-
-      verifyNoInteractions(prisonerSynchroniserService)
-    }
-
-    @Test
-    fun `will do nothing if no active indices`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(
-          currentIndex = GREEN,
-          currentIndexState = IndexState.CANCELLED,
-          otherIndexState = IndexState.ABSENT,
-        ),
-      )
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
       indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
 
       verifyNoInteractions(prisonerSynchroniserService)
@@ -245,45 +144,22 @@ internal class IndexListenerServiceTest {
   inner class offenderBookingChange {
     @Test
     fun `will reindex on offender booking change`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("BOOKING_CHANGE"),
       )
     }
 
     @Test
     fun `will do nothing if prisoner not found`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
-      indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
-
-      verifyNoInteractions(prisonerSynchroniserService)
-    }
-
-    @Test
-    fun `will do nothing if no active indices`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(
-          currentIndex = GREEN,
-          currentIndexState = IndexState.CANCELLED,
-          otherIndexState = IndexState.ABSENT,
-        ),
-      )
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
       indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
       verifyNoInteractions(prisonerSynchroniserService)
@@ -298,30 +174,23 @@ internal class IndexListenerServiceTest {
   inner class offenderBookNumberChange {
     @Test
     fun `will reindex on book number change`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
       whenever(nomisService.getMergedIdentifiersByBookingId(any())).thenReturn(null)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.offenderBookNumberChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("BOOKING_CHANGE"),
       )
     }
 
     @Test
     fun `will delete all merged identifiers`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       whenever(nomisService.getMergedIdentifiersByBookingId(any())).thenReturn(
         listOf(
           BookingIdentifier("type", "MERGE1"),
@@ -355,20 +224,16 @@ internal class IndexListenerServiceTest {
 
     @Test
     fun `will reindex on offender change`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.offenderChange(anOffenderChanged("A1234BC"), "OFFENDER_CHANGE")
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("OFFENDER_CHANGE"),
       )
     }
@@ -396,19 +261,15 @@ internal class IndexListenerServiceTest {
 
     @Test
     fun `will reindex on OFFENDER-DELETED event if alias deletion`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("OFFENDER-DELETED"),
       )
     }
@@ -428,22 +289,6 @@ internal class IndexListenerServiceTest {
 
       verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC", false)
       verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC", true)
-    }
-
-    @Test
-    fun `will do nothing if no active indices`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(
-          currentIndex = GREEN,
-          currentIndexState = IndexState.CANCELLED,
-          otherIndexState = IndexState.ABSENT,
-        ),
-      )
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
-      indexListenerService.maybeDeleteOffender(anOffenderChanged("A1234BC"), "OFFENDER-CHANGED")
-
-      verifyNoInteractions(prisonerSynchroniserService)
     }
 
     private fun anOffenderChanged(prisonerNumber: String?) = OffenderChangedMessage(
@@ -495,13 +340,10 @@ internal class IndexListenerServiceTest {
 
     @Test
     fun `will reindex on offender booking reassignment`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.offenderBookingReassigned(
         anOffenderBookingReassignment(
           prisonerNumber = "A1234BC",
@@ -510,11 +352,10 @@ internal class IndexListenerServiceTest {
         "OFFENDER_BOOKING-REASSIGNED",
       )
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
       verify(prisonerSynchroniserService).reindexUpdate(
@@ -529,14 +370,11 @@ internal class IndexListenerServiceTest {
 
     @Test
     fun `will reindex on offender booking reassignment with different previous prison number`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       val previousBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = "A2345CD")
       whenever(nomisService.getOffender("A1234BC")).thenReturn(booking)
       whenever(nomisService.getOffender("A2345CD")).thenReturn(previousBooking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       indexListenerService.offenderBookingReassigned(
         anOffenderBookingReassignment(
           prisonerNumber = "A1234BC",
@@ -545,19 +383,17 @@ internal class IndexListenerServiceTest {
         "OFFENDER_BOOKING-REASSIGNED",
       )
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(previousBooking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
     }
@@ -575,12 +411,9 @@ internal class IndexListenerServiceTest {
   inner class prisonerLocationChange {
     @Test
     fun `will reindex on prisoner location change`() {
-      whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindex(any(), any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
       whenever(prisonerLocationService.findPrisoners(any(), any())).thenReturn(listOf("A124BC"))
 
       indexListenerService.prisonerLocationChange(
@@ -588,11 +421,10 @@ internal class IndexListenerServiceTest {
         "AGENCY_INTERNAL_LOCATIONS-UPDATED",
       )
 
-      verify(prisonerSynchroniserService).reindex(
+      verify(prisonerSynchroniserService).reindexUpdate(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq(listOf(GREEN)),
         eq("AGENCY_INTERNAL_LOCATIONS-UPDATED"),
       )
       verify(prisonerSynchroniserService).reindexUpdate(

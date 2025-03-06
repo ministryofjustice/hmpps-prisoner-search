@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 
 @Service
 class IndexListenerService(
-  private val indexStatusService: IndexStatusService,
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   private val nomisService: NomisService,
   private val prisonerLocationService: PrisonerLocationService,
@@ -29,7 +28,6 @@ class IndexListenerService(
       message.additionalInformation.nomsNumber,
       message.additionalInformation.id,
     )
-    syncGreenBlue(message.additionalInformation.nomsNumber, eventType)
     reindexIncentive(message.additionalInformation.nomsNumber, eventType)
   }
 
@@ -39,7 +37,6 @@ class IndexListenerService(
       message.description,
       message.additionalInformation.prisonerNumber,
     )
-    syncGreenBlue(message.additionalInformation.prisonerNumber, eventType)
     reindexRestrictedPatient(message.additionalInformation.prisonerNumber, eventType)
   }
 
@@ -103,60 +100,18 @@ class IndexListenerService(
     }
   }
 
-  private fun reindexPrisonerBoth(ob: OffenderBooking, eventType: String): Prisoner? = indexStatusService.getIndexStatus()
-    .run {
-      if (activeIndexesEmpty()) {
-        log.info("Ignoring update of prisoner {} as no indexes were active", ob.offenderNo)
-        null
-      } else {
-        prisonerSynchroniserService.reindexUpdate(ob, eventType)
-        prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
-      }
-    }
+  private fun reindexPrisonerBoth(ob: OffenderBooking, eventType: String): Prisoner? = prisonerSynchroniserService.reindexUpdate(ob, eventType)
 
-  private fun reindexPrisonerGreenBlue(ob: OffenderBooking, eventType: String): Prisoner? = indexStatusService.getIndexStatus()
-    .run {
-      if (activeIndexesEmpty()) {
-        log.info("Ignoring update (old) of prisoner {} as no indexes were active", ob.offenderNo)
-        null
-      } else {
-        prisonerSynchroniserService.reindex(ob, activeIndexes(), eventType)
-      }
-    }
-
-  private fun reindexPrisonerRed(ob: OffenderBooking, eventType: String) = indexStatusService.getIndexStatus()
-    .run {
-      if (activeIndexesEmpty()) {
-        log.info("Ignoring update of (new) prisoner {} as no indexes were active", ob.offenderNo)
-      } else {
-        prisonerSynchroniserService.reindexUpdate(ob, eventType)
-      }
-    }
+  private fun reindexPrisonerRed(ob: OffenderBooking, eventType: String) = prisonerSynchroniserService.reindexUpdate(ob, eventType)
 
   private fun reindexIncentive(prisonerNumber: String, eventType: String) {
-    indexStatusService.getIndexStatus()
-      .run {
-        if (activeIndexesEmpty()) {
-          log.info("Ignoring update of incentive for {} as no indexes were active", prisonerNumber)
-          null
-        } else {
-          prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, eventType)
-        }
-      }
+    prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, eventType)
   }
 
   private fun reindexRestrictedPatient(prisonerNumber: String, eventType: String) {
-    indexStatusService.getIndexStatus()
-      .run {
-        if (activeIndexesEmpty()) {
-          log.info("Ignoring update of RestrictedPatient for {} as no indexes were active", prisonerNumber)
-          null
-        } else {
-          nomisService.getOffender(prisonerNumber)?.let { ob ->
-            prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, SyncIndex.RED, eventType)
-          }
-        }
-      }
+    nomisService.getOffender(prisonerNumber)?.let { ob ->
+      prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, SyncIndex.RED, eventType)
+    }
   }
 
   /**
@@ -164,12 +119,7 @@ class IndexListenerService(
    */
   private fun syncBoth(prisonerNumber: String, eventType: String): Prisoner? = nomisService.getOffender(prisonerNumber)?.run {
     reindexPrisonerRed(ob = this, eventType)
-    reindexPrisonerGreenBlue(ob = this, eventType)
   } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
-
-  private fun syncGreenBlue(prisonerNumber: String, eventType: String): Prisoner? = nomisService.getOffender(prisonerNumber)?.run {
-    reindexPrisonerGreenBlue(ob = this, eventType)
-  } ?: null.also { log.warn("Sync (old) requested for prisoner {} not found", prisonerNumber) }
 
   private fun syncBoth(bookingId: Long, eventType: String): Prisoner? = nomisService.getNomsNumberForBooking(bookingId)?.run {
     syncBoth(prisonerNumber = this, eventType)

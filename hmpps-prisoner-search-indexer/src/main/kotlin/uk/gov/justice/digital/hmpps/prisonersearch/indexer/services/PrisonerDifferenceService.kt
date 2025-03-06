@@ -10,29 +10,21 @@ import org.apache.commons.lang3.builder.ToStringStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.DigestUtils
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffableProperty
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_MISSING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_CREATED
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_DATABASE_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED_NO_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerHashRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
-import java.time.Instant
-import kotlin.collections.isNotEmpty
-import kotlin.collections.map
-import kotlin.collections.mapValues
 import kotlin.reflect.full.findAnnotations
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences as PrisonerDiffs
 
@@ -41,7 +33,6 @@ class PrisonerDifferenceService(
   private val telemetryClient: TelemetryClient,
   private val domainEventEmitter: HmppsDomainEventEmitter,
   private val diffProperties: DiffProperties,
-  private val prisonerHashRepository: PrisonerHashRepository,
   private val objectMapper: ObjectMapper,
   private val prisonerDifferencesRepository: PrisonerDifferencesRepository,
 ) {
@@ -61,34 +52,6 @@ class PrisonerDifferenceService(
       .filter { property -> property.findAnnotations<DiffableProperty>().isNotEmpty() }
       .associate { property -> property.name to property.findAnnotations<DiffableProperty>().first().type }
 
-  @Transactional
-  fun handleDifferences(
-    previousPrisonerSnapshot: Prisoner?,
-    offenderBooking: OffenderBooking,
-    prisoner: Prisoner,
-    eventType: String,
-  ): Boolean = hash(prisoner)!!.run {
-    takeIf { updateDbHash(offenderBooking.offenderNo, it) }?.run {
-      generateDiffEvent(previousPrisonerSnapshot, offenderBooking.offenderNo, prisoner, false)
-      generateDiffTelemetry(
-        previousPrisonerSnapshot,
-        offenderBooking.offenderNo,
-        offenderBooking.bookingId,
-        prisoner,
-        eventType,
-      )
-      return@run true
-    } ?: run {
-      telemetryClient.trackPrisonerEvent(
-        PRISONER_DATABASE_NO_CHANGE,
-        prisonerNumber = offenderBooking.offenderNo,
-        bookingId = offenderBooking.bookingId,
-        eventType = eventType,
-      )
-      return@run false
-    }
-  }
-
   fun reportDifferencesDetails(previousPrisonerSnapshot: Prisoner?, prisoner: Prisoner) = if (hasChanged(previousPrisonerSnapshot, prisoner)) {
     reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner)
   } else {
@@ -96,9 +59,6 @@ class PrisonerDifferenceService(
   }
 
   fun hasChanged(previousSnapshot: Any?, current: Any): Boolean = hash(previousSnapshot) != hash(current)
-
-  fun updateDbHash(nomsNumber: String, hash: String) = // upsertIfChanged returns the number of records altered, so > 0 means that we have changed something
-    prisonerHashRepository.upsertIfChanged(nomsNumber, hash, Instant.now()) > 0
 
   fun hash(value: Any?) = value?.run {
     objectMapper.writeValueAsString(this)

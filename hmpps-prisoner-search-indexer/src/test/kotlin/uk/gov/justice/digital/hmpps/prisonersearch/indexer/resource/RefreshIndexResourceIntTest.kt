@@ -44,12 +44,12 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       PrisonerBuilder("A9999AA"),
       PrisonerBuilder("A7089EY", released = true, alertCodes = listOf("P" to "PL1"), heightCentimetres = 200),
     )
-    buildAndSwitchIndex(SyncIndex.GREEN, 2)
+    buildAndSwitchIndex(2)
   }
 
   @Test
   fun `Refresh index - no differences`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
+    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
 
     reset(telemetryClient)
 

@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
@@ -43,7 +42,7 @@ class IndexInfoIntTest : IntegrationTestBase() {
     @BeforeEach
     fun init() {
       PrisonApiExtension.prisonApi.stubOffenders(PrisonerBuilder())
-      buildAndSwitchIndex(SyncIndex.GREEN, 1)
+      buildAndSwitchIndex(1)
     }
 
     @Test
@@ -60,8 +59,7 @@ class IndexInfoIntTest : IntegrationTestBase() {
         .jsonPath("index-status.otherIndex").isEqualTo("BLUE")
         .jsonPath("index-status.otherIndexStartBuildTime").doesNotExist()
         .jsonPath("index-status.otherIndexEndBuildTime").doesNotExist()
-        .jsonPath("index-size.GREEN").isEqualTo(1)
-        .jsonPath("index-size.BLUE").isEqualTo(0)
+        .jsonPath("index-size.RED").isEqualTo(1)
         .jsonPath("prisoner-alias").isEqualTo("prisoner-search-green")
         .jsonPath("index-queue-backlog").isEqualTo("0")
     }

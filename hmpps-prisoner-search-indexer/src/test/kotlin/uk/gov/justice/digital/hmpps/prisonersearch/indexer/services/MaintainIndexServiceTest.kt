@@ -464,7 +464,7 @@ class MaintainIndexServiceTest {
     @Test
     fun `will delegate to synchronisation service if prisoner found in NOMIS`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(prisonerSynchroniserService.reindex(any(), any(), any()))
+      whenever(prisonerSynchroniserService.reindexUpdate(any(), any()))
         .thenReturn(
           Prisoner().apply {
             prisonerNumber = booking.offenderNo
@@ -476,7 +476,6 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.indexPrisoner(booking.offenderNo)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN), "MAINTAIN")
       verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
       verify(prisonerSynchroniserService).reindexIncentive(booking.offenderNo, SyncIndex.RED, "MAINTAIN")
       verify(prisonerSynchroniserService).reindexRestrictedPatient(booking.offenderNo, booking, SyncIndex.RED, "MAINTAIN")
@@ -544,7 +543,7 @@ class MaintainIndexServiceTest {
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.currentIndex), "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
     }
 
     @Test
@@ -557,7 +556,7 @@ class MaintainIndexServiceTest {
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(indexStatus.otherIndex), "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
     }
 
     @Test
@@ -570,7 +569,7 @@ class MaintainIndexServiceTest {
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)
 
-      verify(prisonerSynchroniserService).reindex(booking, listOf(GREEN, BLUE), "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
     }
   }
 }
