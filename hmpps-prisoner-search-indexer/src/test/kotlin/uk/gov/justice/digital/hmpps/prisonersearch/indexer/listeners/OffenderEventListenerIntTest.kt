@@ -70,7 +70,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will update index for a prisoner which exists when offender event message received`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.RED, currentIndexState = COMPLETED))
     val prisonerNumber = "O7089FD"
     val bookingId = 12345L
     val prisoner = Prisoner().apply {
@@ -123,7 +122,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       this.status = "ACTIVE IN"
     }
     prisonerRepository.save(prisoner, SyncIndex.RED)
-    // prisonerHashRepository.save(PrisonerHash(prisonerNumber, prisonerHash = "123456"))
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
@@ -138,7 +136,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
       verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
-      // Note: By some quirk we would get a "PRISONER_DATABASE_NO_CHANGE" event if no hash were stored in the db
     }
     reset(prisonerSpyBeanRepository) // zero the call count
     reset(telemetryClient) // zero the call count
@@ -189,7 +186,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     reset(prisonerSpyBeanRepository) // zero the call counts
     reset(telemetryClient)
 
-    println("MOCKS RESET")
     // Now we change a non-diffable index field and send the same message again, which should not create an event
 
     val prisoner2 = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!
@@ -205,7 +201,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
     await untilAsserted {
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
-      println("RED_PRISONER_UPDATED verified")
     }
     // No domain event should be raised
     assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(0)
