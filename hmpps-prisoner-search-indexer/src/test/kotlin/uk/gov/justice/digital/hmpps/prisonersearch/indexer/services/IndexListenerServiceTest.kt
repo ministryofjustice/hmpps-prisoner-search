@@ -113,9 +113,6 @@ internal class IndexListenerServiceTest {
   inner class externalMovement {
     @Test
     fun `will reindex on external movement`() {
-//      whenever(indexStatusService.getIndexStatus()).thenReturn(
-//        IndexStatus(currentIndex = GREEN, currentIndexState = IndexState.COMPLETED),
-//      )
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any())).thenReturn(booking)

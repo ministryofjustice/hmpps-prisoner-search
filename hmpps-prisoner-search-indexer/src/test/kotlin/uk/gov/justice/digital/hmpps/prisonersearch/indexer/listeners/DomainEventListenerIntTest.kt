@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPa
 class DomainEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will index a prisoner's RP data when RP message received`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FD"
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber
@@ -58,7 +57,6 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will index incentive when iep message received`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FF"
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber

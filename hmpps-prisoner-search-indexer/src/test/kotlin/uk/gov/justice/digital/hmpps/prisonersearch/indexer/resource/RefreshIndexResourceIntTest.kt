@@ -58,8 +58,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Test
   fun `Refresh index - no differences`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
-
     reset(telemetryClient)
 
     webTestClient.put().uri("/refresh-index")
@@ -75,8 +73,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Test
   fun `Refresh index - unauthorised if not correct role`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
-
     webTestClient.put().uri("/refresh-index")
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_VIEW")))
       .exchange()
@@ -85,8 +81,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Test
   fun `Automated reconciliation - endpoint unprotected`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = IndexState.COMPLETED))
-
     webTestClient.put().uri("/refresh-index/automated")
       .exchange()
       .expectStatus().isAccepted

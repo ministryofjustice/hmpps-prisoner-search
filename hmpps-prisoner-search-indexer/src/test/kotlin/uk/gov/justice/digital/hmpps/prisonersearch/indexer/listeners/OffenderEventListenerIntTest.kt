@@ -43,7 +43,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will create index document for a prisoner which does not yet exist when offender event message received`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val bookingId = 12345L
     val prisonerNumber = "O7089FD"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
@@ -110,7 +109,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `when nothing has changed, will report as such`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "O7089FD"
     val bookingId = 12345L
     val prisoner = Prisoner().apply {
@@ -159,7 +157,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `when only a non-diffable change occurred, no event is generated`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "O7089FD"
     val bookingId = 12345L
     val prisoner = Prisoner().apply {
@@ -212,7 +209,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will search for all affected prisoners when location update message received`() {
     val prisonerNumber = "O7089FD"
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
     prisonerRepository.save(
       Prisoner().apply {
@@ -268,7 +264,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will republish an ASSESSMENT_UPDATED event and then process`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val bookingId = 12349L
     val prisonerNumber = "O7189FD"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
@@ -289,7 +284,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will delete merge records and insert new prisoner record on booking number change`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val oldPrisonerNumber = "O7089FE" // record to be removed
     prisonerRepository.save(Prisoner().also { it.prisonerNumber = oldPrisonerNumber }, SyncIndex.RED)
     await untilCallTo { prisonerRepository.count(SyncIndex.RED) } matches { it == 1L }
@@ -312,7 +306,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
   @Test
   fun `will update all indexes when rebuilding index`() {
-    // indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING))
     val bookingId = 12346L
     val prisonerNumber = "O7089FE"
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
