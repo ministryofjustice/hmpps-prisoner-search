@@ -566,7 +566,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   fun recreatePrisoner(builder: PrisonerBuilder) {
     val prisonerNumber: String = builder.prisonerNumber
 
-    prisonerRepository.delete(prisonerNumber)
     prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
 
     prisonApi.stubFor(

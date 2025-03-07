@@ -2,6 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
+import kotlinx.coroutines.test.runTest
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Instant
 import java.time.LocalDate
@@ -45,6 +47,13 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       PrisonerBuilder("A7089EY", released = true, alertCodes = listOf("P" to "PL1"), heightCentimetres = 200),
     )
     buildAndSwitchIndex(2)
+  }
+
+  @BeforeEach
+  fun purgeHmppsEventsQueue() = runTest {
+    with(hmppsEventsQueue) {
+      hmppsQueueService.purgeQueue(PurgeQueueRequest(queueName, sqsClient, queueUrl))
+    }
   }
 
   @Test
