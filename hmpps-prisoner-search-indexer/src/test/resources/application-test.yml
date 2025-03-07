@@ -84,4 +84,4 @@ publish:
   delayInSeconds: 1
 
 search:
-  regime: GREEN_BLUE
+  regime: RED

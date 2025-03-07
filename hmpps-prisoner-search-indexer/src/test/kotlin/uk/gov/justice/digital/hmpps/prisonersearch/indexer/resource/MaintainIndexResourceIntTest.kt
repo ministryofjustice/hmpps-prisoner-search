@@ -252,7 +252,10 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
     @Test
     fun `Request to index prisoner is successful and calls service`() {
       prisonApi.stubOffenders(PrisonerBuilder("A1234BC"))
-      buildAndSwitchIndex(GREEN, 1)
+      buildAndSwitchIndex(1)
+
+      // wait for the index to be built
+      await untilCallTo { indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue() } matches { it!! == 0 }
 
       webTestClient.put()
         .uri("/maintain-index/index-prisoner/A1234BC")

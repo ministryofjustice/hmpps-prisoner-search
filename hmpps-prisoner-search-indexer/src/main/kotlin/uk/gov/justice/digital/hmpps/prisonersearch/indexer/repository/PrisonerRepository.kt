@@ -21,7 +21,6 @@ import org.springframework.data.elasticsearch.core.document.Document
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQuery
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
-import org.springframework.data.elasticsearch.core.query.ScriptType
 import org.springframework.data.elasticsearch.core.query.UpdateQuery
 import org.springframework.data.elasticsearch.core.query.UpdateResponse
 import org.springframework.stereotype.Repository
@@ -41,7 +40,7 @@ class PrisonerRepository(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  val objectMapperWithNulls = objectMapper.copy().apply {
+  val objectMapperWithNulls: ObjectMapper = objectMapper.copy().apply {
     setSerializationInclusion(JsonInclude.Include.ALWAYS)
   }
 
@@ -185,12 +184,6 @@ class PrisonerRepository(
     }
   }
 
-  fun delete(prisonerNumber: String) {
-    listOf(SyncIndex.GREEN, SyncIndex.BLUE).forEach {
-      openSearchRestTemplate.delete(prisonerNumber, it.toIndexCoordinates())
-    }
-  }
-
   fun delete(prisonerNumber: String, index: SyncIndex) {
     openSearchRestTemplate.delete(prisonerNumber, index.toIndexCoordinates())
   }
@@ -198,8 +191,6 @@ class PrisonerRepository(
   fun get(prisonerNumber: String, indices: List<SyncIndex>): Prisoner? = indices.firstNotNullOfOrNull {
     openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, it.toIndexCoordinates())
   }
-
-  fun getRaw(prisonerNumber: String, index: SyncIndex): GetResponse = client.get(GetRequest(index.indexName, prisonerNumber), RequestOptions.DEFAULT)
 
   fun createIndex(index: SyncIndex) {
     log.info("creating index {}", index.indexName)
@@ -245,203 +236,6 @@ class PrisonerRepository(
   fun prisonerAliasIsPointingAt(): Set<String> {
     val alias = client.indices().getAlias(GetAliasesRequest().aliases(PRISONER_INDEX), RequestOptions.DEFAULT)
     return alias.aliases.keys
-  }
-
-  fun updatePrisonerScript(
-    prisonerNumber: String,
-    prisoner: Prisoner,
-    index: SyncIndex,
-    summary: PrisonerDocumentSummary,
-  ) {
-    val prisonerMap = objectMapper.convertValue<Map<String, *>>(prisoner)
-    openSearchRestTemplate.update(
-      UpdateQuery.builder(prisonerNumber)
-        .withScriptType(ScriptType.INLINE)
-        .withScript(
-          """
-            |ctx._source.pncNumber = params.pncNumber;
-            |ctx._source.pncNumberCanonicalShort = params.pncNumberCanonicalShort;
-            |ctx._source.pncNumberCanonicalLong = params.pncNumberCanonicalLong;
-            |ctx._source.prisonerNumber = params.prisonerNumber;
-            |ctx._source.pncNumber = params.pncNumber;
-            |ctx._source.pncNumberCanonicalShort = params.pncNumberCanonicalShort;
-            |ctx._source.pncNumberCanonicalLong = params.pncNumberCanonicalLong;
-            |ctx._source.croNumber = params.croNumber;
-            |ctx._source.bookingId = params.bookingId;
-            |ctx._source.bookNumber = params.bookNumber;
-            |ctx._source.title = params.title;
-            |ctx._source.firstName = params.firstName;
-            |ctx._source.middleNames = params.middleNames;
-            |ctx._source.lastName = params.lastName;
-            |ctx._source.dateOfBirth = params.dateOfBirth;
-            |ctx._source.gender = params.gender;
-            |ctx._source.ethnicity = params.ethnicity;
-            |ctx._source.raceCode = params.raceCode;
-            |ctx._source.youthOffender = params.youthOffender;
-            |ctx._source.maritalStatus = params.maritalStatus;
-            |ctx._source.religion = params.religion;
-            |ctx._source.nationality = params.nationality;
-            |ctx._source.status = params.status;
-            |ctx._source.lastMovementTypeCode = params.lastMovementTypeCode;
-            |ctx._source.lastMovementReasonCode = params.lastMovementReasonCode;
-            |ctx._source.inOutStatus = params.inOutStatus;
-            |ctx._source.prisonId = params.prisonId;
-            |ctx._source.lastPrisonId = params.lastPrisonId;
-            |ctx._source.prisonName = params.prisonName;
-            |ctx._source.cellLocation = params.cellLocation;
-            |ctx._source.aliases = params.aliases;
-            |ctx._source.alerts = params.alerts;
-            |ctx._source.csra = params.csra;
-            |ctx._source.category = params.category;
-            |ctx._source.legalStatus = params.legalStatus;
-            |ctx._source.imprisonmentStatus = params.imprisonmentStatus;
-            |ctx._source.imprisonmentStatusDescription = params.imprisonmentStatusDescription;
-            |ctx._source.convictedStatus = params.convictedStatus;
-            |ctx._source.mostSeriousOffence = params.mostSeriousOffence;
-            |ctx._source.recall = params.recall;
-            |ctx._source.indeterminateSentence = params.indeterminateSentence;
-            |ctx._source.sentenceStartDate = params.sentenceStartDate;
-            |ctx._source.releaseDate = params.releaseDate;
-            |ctx._source.confirmedReleaseDate = params.confirmedReleaseDate;
-            |ctx._source.sentenceExpiryDate = params.sentenceExpiryDate;
-            |ctx._source.licenceExpiryDate = params.licenceExpiryDate;
-            |ctx._source.homeDetentionCurfewEligibilityDate = params.homeDetentionCurfewEligibilityDate;
-            |ctx._source.homeDetentionCurfewActualDate = params.homeDetentionCurfewActualDate;
-            |ctx._source.homeDetentionCurfewEndDate = params.homeDetentionCurfewEndDate;
-            |ctx._source.topupSupervisionStartDate = params.topupSupervisionStartDate;
-            |ctx._source.topupSupervisionExpiryDate = params.topupSupervisionExpiryDate;
-            |ctx._source.additionalDaysAwarded = params.additionalDaysAwarded;
-            |ctx._source.nonDtoReleaseDate = params.nonDtoReleaseDate;
-            |ctx._source.nonDtoReleaseDateType = params.nonDtoReleaseDateType;
-            |ctx._source.receptionDate = params.receptionDate;
-            |ctx._source.paroleEligibilityDate = params.paroleEligibilityDate;
-            |ctx._source.automaticReleaseDate = params.automaticReleaseDate;
-            |ctx._source.postRecallReleaseDate = params.postRecallReleaseDate;
-            |ctx._source.conditionalReleaseDate = params.conditionalReleaseDate;
-            |ctx._source.actualParoleDate = params.actualParoleDate;
-            |ctx._source.tariffDate = params.tariffDate;
-            |ctx._source.releaseOnTemporaryLicenceDate = params.releaseOnTemporaryLicenceDate;
-            |ctx._source.locationDescription = params.locationDescription;
-            |ctx._source.restrictedPatient = params.restrictedPatient;
-            |ctx._source.supportingPrisonId = params.supportingPrisonId;
-            |ctx._source.dischargedHospitalId = params.dischargedHospitalId;
-            |ctx._source.dischargedHospitalDescription = params.dischargedHospitalDescription;
-            |ctx._source.dischargeDate = params.dischargeDate;
-            |ctx._source.dischargeDetails = params.dischargeDetails;
-            |ctx._source.currentIncentive = params.currentIncentive;
-            |ctx._source.heightCentimetres = params.heightCentimetres;
-            |ctx._source.weightKilograms = params.weightKilograms;
-            |ctx._source.hairColour = params.hairColour;
-            |ctx._source.rightEyeColour = params.rightEyeColour;
-            |ctx._source.leftEyeColour = params.leftEyeColour;
-            |ctx._source.facialHair = params.facialHair;
-            |ctx._source.shapeOfFace = params.shapeOfFace;
-            |ctx._source.build = params.build;
-            |ctx._source.shoeSize = params.shoeSize;
-            |ctx._source.tattoos = params.tattoos;
-            |ctx._source.scars = params.scars;
-            |ctx._source.marks = params.marks;
-            |ctx._source.addresses = params.addresses;
-            |ctx._source.emailAddresses = params.emailAddresses;
-            |ctx._source.phoneNumbers = params.phoneNumbers;
-            |ctx._source.identifiers = params.identifiers;
-            |ctx._source.allConvictedOffences = params.allConvictedOffences
-          """.trimMargin(),
-        )
-        .withParams(
-          mapOf(
-            "prisonerNumber" to prisonerMap["prisonerNumber"],
-            "pncNumber" to prisonerMap["pncNumber"],
-            "pncNumberCanonicalShort" to prisonerMap["pncNumberCanonicalShort"],
-            "pncNumberCanonicalLong" to prisonerMap["pncNumberCanonicalLong"],
-            "croNumber" to prisonerMap["croNumber"],
-            "bookingId" to prisonerMap["bookingId"],
-            "bookNumber" to prisonerMap["bookNumber"],
-            "title" to prisonerMap["title"],
-            "firstName" to prisonerMap["firstName"],
-            "middleNames" to prisonerMap["middleNames"],
-            "lastName" to prisonerMap["lastName"],
-            "dateOfBirth" to prisonerMap["dateOfBirth"],
-            "gender" to prisonerMap["gender"],
-            "ethnicity" to prisonerMap["ethnicity"],
-            "raceCode" to prisonerMap["raceCode"],
-            "youthOffender" to prisonerMap["youthOffender"],
-            "maritalStatus" to prisonerMap["maritalStatus"],
-            "religion" to prisonerMap["religion"],
-            "nationality" to prisonerMap["nationality"],
-            "status" to prisonerMap["status"],
-            "lastMovementTypeCode" to prisonerMap["lastMovementTypeCode"],
-            "lastMovementReasonCode" to prisonerMap["lastMovementReasonCode"],
-            "inOutStatus" to prisonerMap["inOutStatus"],
-            "prisonId" to prisonerMap["prisonId"],
-            "lastPrisonId" to prisonerMap["lastPrisonId"],
-            "prisonName" to prisonerMap["prisonName"],
-            "cellLocation" to prisonerMap["cellLocation"],
-            "aliases" to prisonerMap["aliases"],
-            "alerts" to prisonerMap["alerts"],
-            "csra" to prisonerMap["csra"],
-            "category" to prisonerMap["category"],
-            "legalStatus" to prisonerMap["legalStatus"],
-            "imprisonmentStatus" to prisonerMap["imprisonmentStatus"],
-            "imprisonmentStatusDescription" to prisonerMap["imprisonmentStatusDescription"],
-            "convictedStatus" to prisonerMap["convictedStatus"],
-            "mostSeriousOffence" to prisonerMap["mostSeriousOffence"],
-            "recall" to prisonerMap["recall"],
-            "indeterminateSentence" to prisonerMap["indeterminateSentence"],
-            "sentenceStartDate" to prisonerMap["sentenceStartDate"],
-            "releaseDate" to prisonerMap["releaseDate"],
-            "confirmedReleaseDate" to prisonerMap["confirmedReleaseDate"],
-            "sentenceExpiryDate" to prisonerMap["sentenceExpiryDate"],
-            "licenceExpiryDate" to prisonerMap["licenceExpiryDate"],
-            "homeDetentionCurfewEligibilityDate" to prisonerMap["homeDetentionCurfewEligibilityDate"],
-            "homeDetentionCurfewActualDate" to prisonerMap["homeDetentionCurfewActualDate"],
-            "homeDetentionCurfewEndDate" to prisonerMap["homeDetentionCurfewEndDate"],
-            "topupSupervisionStartDate" to prisonerMap["topupSupervisionStartDate"],
-            "topupSupervisionExpiryDate" to prisonerMap["topupSupervisionExpiryDate"],
-            "additionalDaysAwarded" to prisonerMap["additionalDaysAwarded"],
-            "nonDtoReleaseDate" to prisonerMap["nonDtoReleaseDate"],
-            "nonDtoReleaseDateType" to prisonerMap["nonDtoReleaseDateType"],
-            "receptionDate" to prisonerMap["receptionDate"],
-            "paroleEligibilityDate" to prisonerMap["paroleEligibilityDate"],
-            "automaticReleaseDate" to prisonerMap["automaticReleaseDate"],
-            "postRecallReleaseDate" to prisonerMap["postRecallReleaseDate"],
-            "conditionalReleaseDate" to prisonerMap["conditionalReleaseDate"],
-            "actualParoleDate" to prisonerMap["actualParoleDate"],
-            "tariffDate" to prisonerMap["tariffDate"],
-            "releaseOnTemporaryLicenceDate" to prisonerMap["releaseOnTemporaryLicenceDate"],
-            "locationDescription" to prisonerMap["locationDescription"],
-            "restrictedPatient" to prisonerMap["restrictedPatient"],
-            "supportingPrisonId" to prisonerMap["supportingPrisonId"],
-            "dischargedHospitalId" to prisonerMap["dischargedHospitalId"],
-            "dischargedHospitalDescription" to prisonerMap["dischargedHospitalDescription"],
-            "dischargeDate" to prisonerMap["dischargeDate"],
-            "dischargeDetails" to prisonerMap["dischargeDetails"],
-            "currentIncentive" to prisonerMap["currentIncentive"],
-            "heightCentimetres" to prisonerMap["heightCentimetres"],
-            "weightKilograms" to prisonerMap["weightKilograms"],
-            "hairColour" to prisonerMap["hairColour"],
-            "rightEyeColour" to prisonerMap["rightEyeColour"],
-            "leftEyeColour" to prisonerMap["leftEyeColour"],
-            "facialHair" to prisonerMap["facialHair"],
-            "shapeOfFace" to prisonerMap["shapeOfFace"],
-            "build" to prisonerMap["build"],
-            "shoeSize" to prisonerMap["shoeSize"],
-            "tattoos" to prisonerMap["tattoos"],
-            "scars" to prisonerMap["scars"],
-            "marks" to prisonerMap["marks"],
-            "addresses" to prisonerMap["addresses"],
-            "emailAddresses" to prisonerMap["emailAddresses"],
-            "phoneNumbers" to prisonerMap["phoneNumbers"],
-            "identifiers" to prisonerMap["identifiers"],
-            "allConvictedOffences" to prisonerMap["allConvictedOffences"],
-          ),
-        )
-        .withLang("painless")
-        .withIfSeqNo(summary.sequenceNumber)
-        .withIfPrimaryTerm(summary.primaryTerm)
-        .build(),
-      index.toIndexCoordinates(),
-    )
   }
 
   fun copyPrisoner(prisoner: Prisoner): Prisoner = objectMapper.readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)

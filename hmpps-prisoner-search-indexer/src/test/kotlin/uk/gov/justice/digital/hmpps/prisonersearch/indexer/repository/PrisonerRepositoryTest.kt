@@ -614,23 +614,16 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `will delete prisoner`() {
-      prisonerRepository.save(
-        Prisoner().apply { prisonerNumber = "X12345" },
-        BLUE,
-      )
-      prisonerRepository.save(
-        Prisoner().apply { prisonerNumber = "X12345" },
-        GREEN,
-      )
-      assertThat(highLevelClient.get(GetRequest(BLUE.indexName).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()
+      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" }, RED)
+      assertThat(highLevelClient.get(GetRequest(RED.indexName).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()
 
-      prisonerRepository.delete(prisonerNumber = "X12345")
+      prisonerRepository.delete(prisonerNumber = "X12345", RED)
 
       assertThat(
-        highLevelClient.get(GetRequest(BLUE.indexName).id("X12345"), RequestOptions.DEFAULT).isExists,
-      ).isFalse()
-      assertThat(
-        highLevelClient.get(GetRequest(GREEN.indexName).id("X12345"), RequestOptions.DEFAULT).isExists,
+        highLevelClient.get(
+          GetRequest(RED.indexName).id("X12345"),
+          RequestOptions.DEFAULT,
+        ).isExists,
       ).isFalse()
     }
   }

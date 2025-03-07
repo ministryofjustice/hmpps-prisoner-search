@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncenti
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
@@ -38,40 +37,7 @@ class PrisonerSynchroniserService(
     private val log = org.slf4j.LoggerFactory.getLogger(this::class.java)
   }
 
-  // called when prisoner updated or manual prisoner index required
-  internal fun reindex(ob: OffenderBooking, indices: List<SyncIndex>, eventType: String): Prisoner {
-    val incentiveLevel = runCatching { getIncentive(ob) }
-    val restrictedPatient = runCatching { getRestrictedPatient(ob) }
-
-    val existingPrisoner = prisonerRepository.get(ob.offenderNo, indices)
-
-    val prisoner = Prisoner().translate(
-      existingPrisoner = existingPrisoner,
-      ob = ob,
-      incentiveLevel = incentiveLevel,
-      restrictedPatientData = restrictedPatient,
-    )
-    // only save to open search if we encounter any differences
-    if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
-      indices.map { index -> prisonerRepository.save(prisoner, index) }
-      if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, eventType)) {
-        generateAnyEvents(existingPrisoner, prisoner, ob, red = false)
-      }
-    } else {
-      telemetryClient.trackPrisonerEvent(
-        PRISONER_OPENSEARCH_NO_CHANGE,
-        prisonerNumber = ob.offenderNo,
-        bookingId = ob.bookingId,
-        eventType = eventType,
-      )
-    }
-
-    incentiveLevel.onFailure { throw it }
-    restrictedPatient.onFailure { throw it }
-    return prisoner
-  }
-
-  internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Boolean {
+  internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Prisoner {
     val summary = prisonerRepository.getSummary(ob.offenderNo, SyncIndex.RED)
     val isChanged = summary?.run {
       val prisoner = Prisoner().translate(
@@ -110,7 +76,7 @@ class PrisonerSynchroniserService(
           eventType = eventType,
         )
       }
-      isUpdated
+      prisoner
     } ?: run {
       // Need to create, which means calling all domain data too.
       // NOTE if multiple messages are received for the same prisoner at the same time
@@ -127,7 +93,7 @@ class PrisonerSynchroniserService(
 
       domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo, true)
       generateAnyEvents(null, prisoner, ob, red = true)
-      true
+      prisoner
     }
 
     return isChanged
@@ -199,10 +165,7 @@ class PrisonerSynchroniserService(
         }
     }
 
-  // called when index being built from scratch.  In this scenario we fail early since the index isn't in use anyway
-  // we don't need to write what we have so far for the prisoner to it.
-  internal fun index(ob: OffenderBooking, vararg indexes: SyncIndex): Prisoner = translate(ob).also {
-    indexes.map { index -> prisonerRepository.save(it, index) }
+  internal fun index(ob: OffenderBooking): Prisoner = translate(ob).also {
     prisonerRepository.save(it, SyncIndex.RED)
   }
 
@@ -225,13 +188,7 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner, label)
 
       indices.map { prisonerRepository.save(prisoner, it) }
-      if (label == PrisonerDifferencesLabel.GREEN_BLUE) {
-        if (prisonerDifferenceService.handleDifferences(existingPrisoner, ob, prisoner, "REFRESH")) {
-          generateAnyEvents(existingPrisoner, prisoner, ob, red = false)
-        }
-      } else {
-        generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
-      }
+      generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
     }
   }
 
@@ -249,7 +206,7 @@ class PrisonerSynchroniserService(
     restrictedPatientData = Result.success(getRestrictedPatient(ob)),
   )
 
-  fun delete(prisonerNumber: String) = prisonerRepository.delete(prisonerNumber).also {
+  fun delete(prisonerNumber: String) {
     prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
     telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
   }

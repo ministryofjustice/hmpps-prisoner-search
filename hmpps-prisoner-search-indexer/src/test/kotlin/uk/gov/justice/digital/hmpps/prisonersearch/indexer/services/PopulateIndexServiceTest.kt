@@ -230,7 +230,7 @@ class PopulateIndexServiceTest {
 
     @BeforeEach
     internal fun setUp() {
-      whenever(prisonerSynchroniserService.index(any(), any())).thenReturn(prisoner)
+      whenever(prisonerSynchroniserService.index(any())).thenReturn(prisoner)
     }
 
     @Test
@@ -263,7 +263,7 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndexWithPrisoner("ABC123D")
 
-      verify(prisonerSynchroniserService).index(booking, BLUE)
+      verify(prisonerSynchroniserService).index(booking)
       verify(nomisService).getOffender("ABC123D")
     }
 

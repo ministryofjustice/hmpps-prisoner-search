@@ -12,9 +12,6 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
@@ -26,13 +23,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPa
 class DomainEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will index a prisoner's RP data when RP message received`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FD"
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber
       bookingId = "1234"
     }
-    prisonerRepository.save(prisoner, SyncIndex.GREEN)
     prisonerRepository.save(prisoner, SyncIndex.RED)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, agencyId = "OUT"))
     restrictedPatientsApi.stubGetRestrictedPatient(prisonerNumber)
@@ -45,17 +40,12 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))!!.apply {
-        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-        assertThat(supportingPrisonId).isEqualTo("LEI")
-      }
       prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+        assertThat(supportingPrisonId).isEqualTo("LEI")
         assertThat(dischargedHospitalId).isEqualTo("HOS1")
       }
     }
-    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
-    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, times(1)).updateRestrictedPatient(
       eq(prisonerNumber),
@@ -66,42 +56,12 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `will update old indexes when rebuilding index`() {
-    indexStatusRepository.save(
-      IndexStatus(
-        currentIndex = SyncIndex.GREEN,
-        currentIndexState = COMPLETED,
-        otherIndexState = BUILDING,
-      ),
-    )
-    val prisonerNumber = "A7089FE"
-    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
-
-    hmppsDomainSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
-        .messageBody(validRPMessage(prisonerNumber, "restricted-patients.patient.added")).build(),
-    )
-
-    await untilAsserted {
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))?.prisonerNumber).isEqualTo(
-        prisonerNumber,
-      )
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.BLUE))?.prisonerNumber).isEqualTo(
-        prisonerNumber,
-      )
-      // RED index cannot be updated when the prisoner not in the index
-    }
-  }
-
-  @Test
   fun `will index incentive when iep message received`() {
-    indexStatusRepository.save(IndexStatus(currentIndex = SyncIndex.GREEN, currentIndexState = COMPLETED))
     val prisonerNumber = "A7089FF"
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber
       bookingId = "1234"
     }
-    prisonerRepository.save(prisoner, SyncIndex.GREEN)
     prisonerRepository.save(prisoner, SyncIndex.RED)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
     incentivesApi.stubCurrentIncentive()
@@ -114,17 +74,11 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.GREEN))!!.apply {
-        assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-        assertThat(currentIncentive?.level?.code).isEqualTo("STD")
-      }
       prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
       }
     }
-    verify(prisonerSpyBeanRepository, times(1)).save(any(), eq(SyncIndex.GREEN))
-    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.BLUE))
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
     verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
