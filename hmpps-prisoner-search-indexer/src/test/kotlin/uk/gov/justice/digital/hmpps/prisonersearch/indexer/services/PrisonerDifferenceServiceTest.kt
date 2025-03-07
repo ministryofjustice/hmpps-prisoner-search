@@ -4,13 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.assertj.core.api.Assertions.entry
 import org.assertj.core.groups.Tuple
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
@@ -367,147 +364,6 @@ class PrisonerDifferenceServiceTest {
       active: Boolean = true,
       expired: Boolean = false,
     ) = PrisonerAlert(alertType, alertCode, active, expired)
-  }
-
-  @Nested
-  inner class GenerateDifferencesTelemetry {
-    val booking = someOffenderBooking()
-
-    @Test
-    fun `should report identifiers`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
-
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
-
-      verify(telemetryClient).trackEvent(
-        eq("PRISONER_UPDATED"),
-        check<Map<String, String>> {
-          assertThat(it["prisonerNumber"]).isEqualTo("someOffenderNo")
-          assertThat(it["bookingId"]).isEqualTo("not set")
-          assertThat(it["event"]).isEqualTo("eventType")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should report a single difference`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
-
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
-
-      verify(telemetryClient).trackEvent(
-        eq("PRISONER_UPDATED"),
-        check<Map<String, String>> {
-          assertThat(it["categoriesChanged"]).isEqualTo("[IDENTIFIERS]")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should report null differences`() {
-      val prisoner1 = Prisoner().apply {
-        pncNumber = "somePnc"
-        croNumber = null
-      }
-      val prisoner2 = Prisoner().apply {
-        pncNumber = null
-        croNumber = "someCro"
-      }
-
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
-
-      verify(telemetryClient).trackEvent(
-        eq("PRISONER_UPDATED"),
-        check<Map<String, String>> {
-          assertThat(it["categoriesChanged"]).isEqualTo("[IDENTIFIERS]")
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should report multiple differences of multiple types`() {
-      val prisoner1 = Prisoner().apply {
-        pncNumber = "somePnc1"
-        croNumber = "someCro1"
-        firstName = "someFirstName1"
-      }
-      val prisoner2 = Prisoner().apply {
-        pncNumber = "somePnc2"
-        croNumber = "someCro2"
-        firstName = "someFirstName2"
-      }
-
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
-
-      verify(telemetryClient)
-        .trackEvent(
-          eq("PRISONER_UPDATED"),
-          check<Map<String, String>> {
-            assertThat(it["categoriesChanged"]).isEqualTo("[IDENTIFIERS, PERSONAL_DETAILS]")
-          },
-          isNull(),
-        )
-    }
-
-    @Test
-    fun `should send telemetry created event`() {
-      val prisoner2 = Prisoner().apply {
-        pncNumber = "somePnc2"
-        croNumber = "someCro2"
-        firstName = "someFirstName2"
-      }
-
-      prisonerDifferenceService.generateDiffTelemetry(null, booking.offenderNo, 12345, prisoner2, "eventType")
-
-      verify(telemetryClient).trackEvent(
-        eq("PRISONER_CREATED"),
-        check {
-          assertThat(it).containsOnly(
-            entry("prisonerNumber", "someOffenderNo"),
-            entry("bookingId", "12345"),
-            entry("event", "eventType"),
-          )
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should raise no-change found telemetry if there are no changes`() {
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc1" }
-
-      prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
-
-      verify(telemetryClient).trackEvent(
-        eq("PRISONER_UPDATED_NO_DIFFERENCES"),
-        check {
-          assertThat(it).containsOnly(
-            entry("prisonerNumber", "someOffenderNo"),
-            entry("bookingId", "not set"),
-            entry("event", "eventType"),
-          )
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `should swallow exceptions when raising telemetry`() {
-      whenever(telemetryClient.trackEvent(anyString(), anyMap(), isNull())).thenThrow(RuntimeException::class.java)
-
-      val prisoner1 = Prisoner().apply { pncNumber = "somePnc1" }
-      val prisoner2 = Prisoner().apply { pncNumber = "somePnc2" }
-
-      assertDoesNotThrow {
-        prisonerDifferenceService.generateDiffTelemetry(prisoner1, booking.offenderNo, booking.bookingId, prisoner2, "eventType")
-      }
-    }
   }
 
   @Nested

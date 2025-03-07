@@ -39,11 +39,9 @@ class IndexListenerService(
     reindexRestrictedPatient(message.additionalInformation.prisonerNumber, eventType)
   }
 
-  fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) =
-    sync(message.bookingId, eventType)
+  fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)
 
-  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String): Prisoner? =
-    sync(message.bookingId, eventType)
+  fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String): Prisoner? = sync(message.bookingId, eventType)
 
   fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) = message.bookingId.run {
     log.debug("Check for merged booking for ID {}", this)
@@ -108,12 +106,12 @@ class IndexListenerService(
   }
 
   private fun sync(prisonerNumber: String, eventType: String): Prisoner? = nomisService.getOffender(prisonerNumber)?.run {
-      prisonerSynchroniserService.reindexUpdate(ob = this, eventType = eventType)
-    } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
+    prisonerSynchroniserService.reindexUpdate(ob = this, eventType = eventType)
+  } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
 
   private fun sync(bookingId: Long, eventType: String): Prisoner? = nomisService.getNomsNumberForBooking(bookingId)?.run {
-      sync(prisonerNumber = this, eventType)
-    } ?: null.also { log.warn("Sync requested for prisoner (by booking id) {} not found", bookingId) }
+    sync(prisonerNumber = this, eventType)
+  } ?: null.also { log.warn("Sync requested for prisoner (by booking id) {} not found", bookingId) }
 
   private fun customEventForMissingOffenderIdDisplay(
     eventType: String,

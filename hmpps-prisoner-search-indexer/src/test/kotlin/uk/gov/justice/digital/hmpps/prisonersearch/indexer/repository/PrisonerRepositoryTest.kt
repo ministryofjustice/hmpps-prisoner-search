@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
@@ -618,7 +617,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" }, RED)
       assertThat(highLevelClient.get(GetRequest(RED.indexName).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()
 
-      prisonerRepository.delete(prisonerNumber = "X12345", SyncIndex.RED)
+      prisonerRepository.delete(prisonerNumber = "X12345", RED)
 
       assertThat(
         highLevelClient.get(

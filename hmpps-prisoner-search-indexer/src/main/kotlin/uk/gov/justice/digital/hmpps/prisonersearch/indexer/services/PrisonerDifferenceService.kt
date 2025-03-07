@@ -7,8 +7,6 @@ import org.apache.commons.lang3.builder.Diff
 import org.apache.commons.lang3.builder.DiffBuilder
 import org.apache.commons.lang3.builder.Diffable
 import org.apache.commons.lang3.builder.ToStringStyle
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.util.DigestUtils
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
@@ -17,9 +15,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_MISSING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_CREATED
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_UPDATED_NO_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
@@ -37,7 +32,6 @@ class PrisonerDifferenceService(
   private val prisonerDifferencesRepository: PrisonerDifferencesRepository,
 ) {
   private companion object {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private val exemptedMethods = listOf("diff", "equals", "toString", "hashCode")
   }
 
@@ -66,25 +60,6 @@ class PrisonerDifferenceService(
       .let {
         Base64.encodeBase64String(DigestUtils.md5Digest(it))
       }
-  }
-
-  internal fun <T : Diffable<T>> generateDiffTelemetry(
-    previousSnapshot: T?,
-    prisonerNumber: String,
-    bookingId: Long?,
-    current: T,
-    eventType: String,
-  ) {
-    runCatching {
-      previousSnapshot?.also {
-        getDifferencesByCategory(it, current).run {
-          // TODO: this is used by domains too: customise the telemetry event name?
-          raiseDifferencesTelemetry(prisonerNumber, bookingId, eventType, this)
-        }
-      } ?: telemetryClient.trackPrisonerEvent(PRISONER_CREATED, prisonerNumber, bookingId, eventType)
-    }.onFailure {
-      log.error("Prisoner difference telemetry failed with error", it)
-    }
   }
 
   fun reportDiffTelemetry(
@@ -158,31 +133,6 @@ class PrisonerDifferenceService(
         .map { diff -> Difference(diff.fieldName, properties.key, diff.left, diff.right) }
     }
   }.filter { differencesByCategory -> differencesByCategory.value.isNotEmpty() }
-
-  private fun raiseDifferencesTelemetry(
-    offenderNo: String,
-    bookingId: Long?,
-    eventType: String,
-    differences: PrisonerDifferences,
-  ) = if (differences.isEmpty()) {
-    // we've detected a change in the hash for the prisoner, but no differences are recorded
-    telemetryClient.trackPrisonerEvent(
-      PRISONER_UPDATED_NO_DIFFERENCES,
-      prisonerNumber = offenderNo,
-      bookingId = bookingId,
-      eventType = eventType,
-    )
-  } else {
-    telemetryClient.trackEvent(
-      PRISONER_UPDATED,
-      mapOf(
-        "prisonerNumber" to offenderNo,
-        "bookingId" to (bookingId?.toString() ?: "not set"),
-        "event" to eventType,
-        "categoriesChanged" to differences.keys.map { it.name }.toList().sorted().toString(),
-      ),
-    )
-  }
 }
 
 data class Difference(val property: String, val categoryChanged: DiffCategory, val oldValue: Any?, val newValue: Any?)
