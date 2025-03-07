@@ -50,7 +50,6 @@ import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Duration
-import java.time.LocalTime
 
 class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @MockitoSpyBean
@@ -117,9 +116,9 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int? = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
+  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
 
-  private fun getNumberOfMessagesCurrentlyOnEventQueue(): Int? = offenderQueueSqsClient.countAllMessagesOnQueue(
+  private fun getNumberOfMessagesCurrentlyOnEventQueue(): Int = offenderQueueSqsClient.countAllMessagesOnQueue(
     offenderQueueUrl,
   ).get()
 
