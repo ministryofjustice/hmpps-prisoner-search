@@ -8,7 +8,6 @@ import org.opensearch.search.fetch.subphase.FetchSourceContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 
 @Service
@@ -19,7 +18,7 @@ class PrisonerLocationService(private val searchClient: SearchClient) {
         .must(QueryBuilders.termQuery("prisonId", prisonId))
         .must(QueryBuilders.termQuery("cellLocation.keyword", cellLocation)),
     ).fetchSource(FetchSourceContext.DO_NOT_FETCH_SOURCE)
-    val searchRequest = SearchRequest(arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX), searchSourceBuilder)
+    val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
     return getSearchResult(searchClient.search(searchRequest)).also {
       log.debug("Search found {} hits for {} and {}", it.size, prisonId, cellLocation)
     }
