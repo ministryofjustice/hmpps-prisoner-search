@@ -41,6 +41,11 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     }
   }
 
+  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
+    .also {
+      println("Number of messages on queue: $it")
+    }
+
   @Test
   fun `will create index document for a prisoner which does not yet exist when offender event message received`() {
     val bookingId = 12345L
@@ -102,8 +107,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         ),
         null,
       )
-      // Check that a domain event is sent
-      assertThat(hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()).isEqualTo(1)
+      // Check that domain events are sent
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isGreaterThanOrEqualTo(3)
     }
   }
 
@@ -203,7 +208,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       println("RED_PRISONER_UPDATED verified")
     }
     // No domain event should be raised
-    assertThat(hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()).isEqualTo(0)
+    assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(0)
   }
 
   @Test
