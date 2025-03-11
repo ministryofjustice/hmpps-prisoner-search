@@ -2,7 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -11,7 +10,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.atLeast
@@ -27,14 +25,10 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
-import software.amazon.awssdk.services.sqs.model.Message
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.IDENTIFIERS
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
@@ -46,17 +40,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferenceService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiMockServer
-import uk.gov.justice.hmpps.sqs.MissingQueueException
-import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Duration
 
 class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @MockitoSpyBean
   private lateinit var hmppsDomainEventEmitter: HmppsDomainEventEmitter
-
-  @Autowired
-  private lateinit var objectMapper: ObjectMapper
 
   @MockitoSpyBean
   @Qualifier("offenderqueue-sqs-client")
@@ -73,20 +62,9 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @MockitoSpyBean
   private lateinit var prisonerDifferenceService: PrisonerDifferenceService
 
-  private val hmppsEventsQueue by lazy {
-    hmppsQueueService.findByQueueId("hmppseventtestqueue")
-      ?: throw MissingQueueException("hmppseventtestqueue queue not found")
-  }
-
-  @BeforeEach
-  fun purgeHmppsEventsQueue() = runTest {
-    with(hmppsEventsQueue) {
-      hmppsQueueService.purgeQueue(PurgeQueueRequest(queueName, sqsClient, queueUrl))
-    }
-  }
-
   @BeforeEach
   fun init() {
+    purgeDomainEventsQueue()
     prisonApi.stubOffenders(PrisonerBuilder())
     buildAndSwitchIndex(1)
   }
@@ -588,21 +566,11 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     await untilCallTo { prisonerRepository.getSummary(prisonerNumber, SyncIndex.RED) } matches { it != null }
 
-    purgeHmppsEventsQueue()
+    purgeDomainEventsQueue()
 
     Mockito.reset(hmppsEventTopicSnsClient)
     Mockito.reset(publishQueueSqsClient)
     Mockito.reset(prisonerDifferenceService)
-  }
-
-  private fun readNextDomainEventMessage(): String {
-    val updateResult = hmppsEventsQueue.sqsClient.receiveFirstMessage()
-    hmppsEventsQueue.sqsClient.deleteLastMessage(updateResult)
-    return objectMapper.readValue<MsgBody>(updateResult.body()).Message
-  }
-  private fun readEventFromNextDomainEventMessage(): String {
-    val message = readNextDomainEventMessage()
-    return objectMapper.readValue<EventMessage>(message).eventType
   }
 
   private fun PrisonApiMockServer.stubOffenderNoFromBookingId(prisonerNumber: String) {
@@ -615,14 +583,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
         ),
     )
   }
-
-  private fun SqsAsyncClient.receiveFirstMessage(): Message = receiveMessage(
-    ReceiveMessageRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).build(),
-  ).get().messages().first()
-
-  private fun SqsAsyncClient.deleteLastMessage(result: Message) = deleteMessage(
-    DeleteMessageRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).receiptHandle(result.receiptHandle()).build(),
-  ).get()
 
   private fun SqsAsyncClient.sendMessage(body: String) = sendMessage(
     SendMessageRequest.builder().queueUrl(

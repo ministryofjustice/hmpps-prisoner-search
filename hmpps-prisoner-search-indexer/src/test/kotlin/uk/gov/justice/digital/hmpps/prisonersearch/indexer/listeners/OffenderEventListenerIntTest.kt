@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -21,30 +20,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
-import uk.gov.justice.hmpps.sqs.MissingQueueException
-import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
-import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
 
-  private val hmppsEventsQueue by lazy {
-    hmppsQueueService.findByQueueId("hmppseventtestqueue")
-      ?: throw MissingQueueException("hmppseventtestqueue queue not found")
-  }
-
   @BeforeEach
-  fun purgeHmppsEventsQueue() = purgeDomainQueue()
-
-  private fun purgeDomainQueue() = runTest {
-    with(hmppsEventsQueue) {
-      hmppsQueueService.purgeQueue(PurgeQueueRequest(queueName, sqsClient, queueUrl))
-    }
-  }
-
-  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
-    .also {
-      println("Number of messages on queue: $it")
-    }
+  fun purgeHmppsEventsQueue() = purgeDomainEventsQueue()
 
   @Test
   fun `will create index document for a prisoner which does not yet exist when offender event message received`() {
@@ -127,7 +107,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
 
-    // First we update the prisoner to a known state
+    // First we update the prisoner to a known "Different" state
 
     offenderSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(offenderQueueUrl)
@@ -198,7 +178,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     prisoner2.pncNumberCanonicalShort = "different"
     prisonerRepository.save(prisoner2, SyncIndex.RED)
 
-    purgeDomainQueue()
+    purgeDomainEventsQueue()
 
     offenderSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(offenderQueueUrl)

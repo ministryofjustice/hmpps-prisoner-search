@@ -188,6 +188,8 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner, label)
 
       indices.map { prisonerRepository.save(prisoner, it) }
+
+      prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner, true)
       generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
     }
   }

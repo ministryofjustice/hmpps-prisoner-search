@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.test.runTest
 import org.apache.commons.lang3.RandomStringUtils
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -25,7 +28,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
+import software.amazon.awssdk.services.sqs.model.DeleteMessageResponse
+import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
@@ -46,6 +53,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatu
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.EventMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.MsgBody
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
@@ -56,6 +65,7 @@ import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
 import uk.gov.justice.hmpps.sqs.HmppsTopicFactory
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.MissingTopicException
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.time.Clock
 import java.time.Instant
@@ -110,10 +120,14 @@ abstract class IntegrationTestBase {
   @MockitoSpyBean
   lateinit var clock: Clock
 
+  @Autowired
+  protected lateinit var objectMapper: ObjectMapper
+
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
   protected val hmppsDomainQueue by lazy { hmppsQueueService.findByQueueId("hmppsdomainqueue") ?: throw MissingQueueException("HmppsQueue hmppsdomainqueue not found") }
   protected val offenderQueue by lazy { hmppsQueueService.findByQueueId("offenderqueue") ?: throw MissingQueueException("HmppsQueue offenderqueue not found") }
   protected val hmppsEventTopic by lazy { hmppsQueueService.findByTopicId("hmppseventtopic") ?: throw MissingQueueException("HmppsTopic hmpps event topic not found") }
+  protected val hmppsEventsQueue by lazy { hmppsQueueService.findByQueueId("hmppseventtestqueue") ?: throw MissingQueueException("hmppseventtestqueue not found") }
 
   internal val indexSqsClient by lazy { indexQueue.sqsClient }
   internal val indexQueueUrl by lazy { indexQueue.queueUrl }
@@ -130,6 +144,9 @@ abstract class IntegrationTestBase {
   internal val offenderQueueName by lazy { offenderQueue.queueName }
   internal val offenderDlqName by lazy { offenderQueue.dlqName as String }
 
+//  internal val hmppsEventsQueueClient by lazy { hmppsEventsQueue.sqsClient }
+//  internal val hmppsEventsQueueUrl by lazy { hmppsEventsQueue.queueUrl }
+
   @BeforeEach
   fun cleanOpenSearch() {
     deletePrisonerIndices()
@@ -144,6 +161,12 @@ abstract class IntegrationTestBase {
     val fixedClock = Clock.fixed(Instant.parse("2022-09-16T10:40:34Z"), ZoneId.of("UTC"))
     whenever(clock.instant()).thenReturn(fixedClock.instant())
     whenever(clock.zone).thenReturn(fixedClock.zone)
+  }
+
+  protected fun purgeDomainEventsQueue() = runTest {
+    with(hmppsEventsQueue) {
+      hmppsQueueService.purgeQueue(uk.gov.justice.hmpps.sqs.PurgeQueueRequest(queueName, sqsClient, queueUrl))
+    }
   }
 
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
@@ -186,6 +209,30 @@ abstract class IntegrationTestBase {
 
   fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName)
   fun getIndexCount(index: String): Long = openSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
+
+  protected fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
+    .also {
+      println("Number of messages on queue: $it")
+    }
+
+  protected fun SqsAsyncClient.receiveFirstMessage(): Message = receiveMessage(
+    ReceiveMessageRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).build(),
+  ).get().messages().first()
+
+  protected fun SqsAsyncClient.deleteLastMessage(result: Message): DeleteMessageResponse = deleteMessage(
+    DeleteMessageRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).receiptHandle(result.receiptHandle()).build(),
+  ).get()
+
+  protected fun readNextDomainEventMessage(): String {
+    val updateResult = hmppsEventsQueue.sqsClient.receiveFirstMessage()
+    hmppsEventsQueue.sqsClient.deleteLastMessage(updateResult)
+    return objectMapper.readValue<MsgBody>(updateResult.body()).Message
+  }
+
+  protected fun readEventFromNextDomainEventMessage(): String {
+    val message = readNextDomainEventMessage()
+    return objectMapper.readValue<EventMessage>(message).eventType
+  }
 
   internal fun setAuthorisation(
     user: String = "prisoner-offender-search-indexer-client",
