@@ -84,7 +84,7 @@ class DomainEventPublisherListenerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `can publish a message by retying even if publish returns a failed promise once`() {
+  fun `can publish a message by retrying even if publish returns a failed promise once`() {
     doReturn(
       CompletableFuture.failedFuture<PublishResponse>(
         RuntimeException("Oh no!"),
