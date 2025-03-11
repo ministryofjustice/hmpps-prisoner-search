@@ -157,7 +157,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
           "bookingId" to bookingId.toString(),
           "event" to "OFFENDER_BOOKING-CHANGED",
         ),
-        null
+        null,
       )
     }
   }
