@@ -94,8 +94,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
-
   private fun getNumberOfMessagesCurrentlyOnEventQueue(): Int = offenderQueueSqsClient.countAllMessagesOnQueue(
     offenderQueueUrl,
   ).get()

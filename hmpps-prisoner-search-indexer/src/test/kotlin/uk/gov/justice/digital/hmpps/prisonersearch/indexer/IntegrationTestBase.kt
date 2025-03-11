@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.test.runTest
 import org.apache.commons.lang3.RandomStringUtils
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -144,8 +143,8 @@ abstract class IntegrationTestBase {
   internal val offenderQueueName by lazy { offenderQueue.queueName }
   internal val offenderDlqName by lazy { offenderQueue.dlqName as String }
 
-//  internal val hmppsEventsQueueClient by lazy { hmppsEventsQueue.sqsClient }
-//  internal val hmppsEventsQueueUrl by lazy { hmppsEventsQueue.queueUrl }
+  internal val hmppsEventsQueueClient by lazy { hmppsEventsQueue.sqsClient }
+  internal val hmppsEventsQueueUrl by lazy { hmppsEventsQueue.queueUrl }
 
   @BeforeEach
   fun cleanOpenSearch() {
@@ -163,10 +162,8 @@ abstract class IntegrationTestBase {
     whenever(clock.zone).thenReturn(fixedClock.zone)
   }
 
-  protected fun purgeDomainEventsQueue() = runTest {
-    with(hmppsEventsQueue) {
-      hmppsQueueService.purgeQueue(uk.gov.justice.hmpps.sqs.PurgeQueueRequest(queueName, sqsClient, queueUrl))
-    }
+  protected fun purgeDomainEventsQueue() {
+    hmppsEventsQueueClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsEventsQueueUrl).build()).get()
   }
 
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
@@ -211,9 +208,6 @@ abstract class IntegrationTestBase {
   fun getIndexCount(index: String): Long = openSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
 
   protected fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
-    .also {
-      println("Number of messages on queue: $it")
-    }
 
   protected fun SqsAsyncClient.receiveFirstMessage(): Message = receiveMessage(
     ReceiveMessageRequest.builder().queueUrl(hmppsEventsQueue.queueUrl).build(),
