@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.Companion.UPDATED_EVENT_TYPE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PersonReference.Companion.withNomsNumber
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
@@ -46,8 +47,21 @@ class HmppsDomainEventEmitter(
   private val publishSqsClient by lazy { publishQueue.sqsClient }
   private val publishQueueUrl by lazy { publishQueue.queueUrl }
 
+  private fun <T : PrisonerAdditionalInformation> defaultFailureHandler(
+    event: PrisonerDomainEvent<T>,
+    exception: Throwable,
+    differences: PrisonerDifferences? = null,
+  ) {
+    val diffs = differences?.let { ", differences=$differences" } ?: ""
+    log.error(
+      "Failed to send event ${event.eventType} for offenderNo=${event.additionalInformation.nomsNumber}$diffs. Event must be manually created",
+      exception,
+    )
+    telemetryClient.trackEvent(EVENTS_SEND_FAILURE, event.asMap())
+  }
+
   fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.publish(
-    onFailure: (error: Throwable) -> Unit,
+    onFailure: (error: Throwable) -> Unit = { defaultFailureHandler(this, it) },
   ) {
     val event = PrisonerDomainEvent(
       additionalInformation = this.additionalInformation,
@@ -80,7 +94,7 @@ class HmppsDomainEventEmitter(
     val prisonerUpdatedEvent = PrisonerUpdatedEvent(offenderNo, differences.keys.toList().sorted())
     val event = PrisonerUpdatedDomainEvent(prisonerUpdatedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
-      event.publish { logError(event, it, differences) }
+      event.publish { defaultFailureHandler(event, it, differences) }
     }
   }
 
@@ -88,7 +102,7 @@ class HmppsDomainEventEmitter(
     val prisonerCreatedEvent = PrisonerCreatedEvent(offenderNo)
     val event = PrisonerCreatedDomainEvent(prisonerCreatedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
-      event.publish { logError(event, it) }
+      event.publish()
     }
   }
 
@@ -96,7 +110,7 @@ class HmppsDomainEventEmitter(
     val prisonerRemovedEvent = PrisonerRemovedEvent(offenderNo)
     val event = PrisonerRemovedDomainEvent(prisonerRemovedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
-      event.publish { logError(event, it) }
+      event.publish()
     }
   }
 
@@ -110,7 +124,7 @@ class HmppsDomainEventEmitter(
     val prisonerReceivedEvent = PrisonerReceivedEvent(offenderNo, reason, prisonId)
     val event = PrisonerReceivedDomainEvent(prisonerReceivedEvent, occurredAt ?: Instant.now(clock), diffProperties.host)
     if (red) {
-      event.publish { logError(event, it) }
+      event.publish()
     }
   }
 
@@ -127,7 +141,7 @@ class HmppsDomainEventEmitter(
       diffProperties.host,
     )
     if (red) {
-      event.publish { logError(event, it) }
+      event.publish()
     }
   }
 
@@ -158,7 +172,7 @@ class HmppsDomainEventEmitter(
     val prisonerReleasedEvent = PrisonerReleasedEvent(offenderNo, reason, prisonId)
     val event = PrisonerReleasedDomainEvent(prisonerReleasedEvent, Instant.now(clock), diffProperties.host)
     if (red) {
-      event.publish { logError(event, it) }
+      event.publish()
     }
   }
 
@@ -176,21 +190,8 @@ class HmppsDomainEventEmitter(
       diffProperties.host,
     )
     if (red) {
-      event.publish { logError(event, it) }
+      event.publish()
     }
-  }
-
-  private fun <T : PrisonerAdditionalInformation> logError(
-    event: PrisonerDomainEvent<T>,
-    throwable: Throwable,
-    differences: PrisonerDifferences? = null,
-  ) {
-    val diffs = differences?.let { ", differences=$differences" } ?: ""
-    log.error(
-      "Failed to send event ${event.eventType} for offenderNo=${event.additionalInformation.nomsNumber}$diffs. Event must be manually created",
-      throwable,
-    )
-    telemetryClient.trackEvent(EVENTS_SEND_FAILURE, event.asMap())
   }
 
   companion object {
@@ -216,6 +217,9 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
   val version: Int,
   val description: String,
   val detailUrl: String,
+  // personReference is needed to construct the domain event
+  @Suppress("unused")
+  val personReference: PersonReference = withNomsNumber(additionalInformation.nomsNumber),
 ) {
   constructor(
     additionalInformation: T,
@@ -233,6 +237,15 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
       detailUrl = ServletUriComponentsBuilder.fromUriString(host).path("/prisoner/{offenderNo}")
         .buildAndExpand(additionalInformation.nomsNumber).toUri().toString(),
     )
+}
+
+data class PersonReference(val identifiers: List<Identifier>) {
+  companion object {
+    private const val NOMS_NUMBER_TYPE = "NOMS"
+    fun withNomsNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
+  }
+
+  data class Identifier(val type: String, val value: String)
 }
 
 data class PrisonerUpdatedEvent(
