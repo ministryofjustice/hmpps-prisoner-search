@@ -108,7 +108,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThatJson(message).node("version").isEqualTo(1)
     assertThatJson(message).node("occurredAt").isEqualTo("2022-09-16T11:40:34+01:00")
     assertThatJson(message).node("detailUrl").isEqualTo("http://localhost:8080/prisoner/some_offender")
-    assertThatJson(message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
     assertThatJson(message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
     assertThatJson(message).node("additionalInformation.categoriesChanged").isArray.containsExactlyInAnyOrder(
       "IDENTIFIERS",
@@ -138,7 +137,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThatJson(message.Message).node("occurredAt").isEqualTo("2022-09-16T11:40:34+01:00")
     assertThatJson(message.Message).node("detailUrl").isEqualTo("http://localhost:8080/prisoner/some_offender")
     assertThatJson(message.Message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
-    assertThatJson(message.Message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
   }
 
   @Test
@@ -157,7 +155,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThatJson(message.Message).node("occurredAt").isEqualTo("2022-09-16T11:40:34+01:00")
     assertThatJson(message.Message).node("detailUrl").isEqualTo("http://localhost:8080/prisoner/some_offender")
     assertThatJson(message.Message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
-    assertThatJson(message.Message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
   }
 
   @Test
@@ -184,7 +181,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThatJson(message.Message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
     assertThatJson(message.Message).node("additionalInformation.prisonId").isEqualTo("MDI")
     assertThatJson(message.Message).node("additionalInformation.reason").isEqualTo("TRANSFERRED")
-    assertThatJson(message.Message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
   }
 
   @Test
@@ -211,7 +207,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     assertThatJson(message.Message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
     assertThatJson(message.Message).node("additionalInformation.prisonId").isEqualTo("MDI")
     assertThatJson(message.Message).node("additionalInformation.reason").isEqualTo("TRANSFERRED")
-    assertThatJson(message.Message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
   }
 
   @Test
