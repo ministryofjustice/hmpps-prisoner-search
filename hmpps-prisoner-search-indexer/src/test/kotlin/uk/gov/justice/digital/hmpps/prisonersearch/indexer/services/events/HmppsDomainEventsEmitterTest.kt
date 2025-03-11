@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -96,12 +95,22 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should not swallow exceptions`() {
+    fun `should log exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()), red = true)
-      }.isInstanceOf(RuntimeException::class.java)
+      hmppsDomainEventEmitter.emitPrisonerDifferenceEvent("some_offender", mapOf(LOCATION to listOf()), red = true)
+
+      verify(telemetryClient).trackEvent(
+        eq("EVENTS_SEND_FAILURE"),
+        check {
+          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.updated")
+          assertThat(it["version"]).isEqualTo("1")
+          assertThat(it["description"]).isEqualTo("A prisoner record has been updated")
+          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
+          assertThat(it["additionalInformation.categoriesChanged"]).isEqualTo("[LOCATION]")
+        },
+        isNull(),
+      )
     }
   }
 
@@ -124,12 +133,21 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should not swallow exceptions`() {
+    fun `should log exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
-      }.isInstanceOf(RuntimeException::class.java)
+      hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
+
+      verify(telemetryClient).trackEvent(
+        eq("EVENTS_SEND_FAILURE"),
+        check {
+          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.created")
+          assertThat(it["version"]).isEqualTo("1")
+          assertThat(it["description"]).isEqualTo("A prisoner record has been created")
+          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
+        },
+        isNull(),
+      )
     }
   }
 
@@ -152,12 +170,21 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should not swallow exceptions`() {
+    fun `should log exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
-      assertThatThrownBy {
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
-      }.isInstanceOf(RuntimeException::class.java)
+      hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
+
+      verify(telemetryClient).trackEvent(
+        eq("EVENTS_SEND_FAILURE"),
+        check {
+          assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.removed")
+          assertThat(it["version"]).isEqualTo("1")
+          assertThat(it["description"]).isEqualTo("A prisoner record has been removed")
+          assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
+        },
+        isNull(),
+      )
     }
   }
 
@@ -182,7 +209,7 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should swallow exceptions and indicate a manual fix is required`() {
+    fun `should log exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       hmppsDomainEventEmitter.emitPrisonerReceiveEvent("some_offender", READMISSION, "MDI", red = true)
@@ -190,6 +217,8 @@ class HmppsDomainEventsEmitterTest {
         eq("EVENTS_SEND_FAILURE"),
         check {
           assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.received")
+          assertThat(it["version"]).isEqualTo("1")
+          assertThat(it["description"]).isEqualTo("A prisoner has been received into a prison with reason: re-admission on an existing booking")
           assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
           assertThat(it["additionalInformation.reason"]).isEqualTo("READMISSION")
           assertThat(it["additionalInformation.prisonId"]).isEqualTo("MDI")
@@ -221,7 +250,7 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should swallow exceptions and indicate a manual fix is required`() {
+    fun `should log exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       hmppsDomainEventEmitter.emitPrisonerAlertsUpdatedEvent("some_offender", "1234567", setOf("XA"), setOf(), red = true)
@@ -261,7 +290,7 @@ class HmppsDomainEventsEmitterTest {
     }
 
     @Test
-    fun `should swallow exceptions and indicate a manual fix is required`() {
+    fun `should log exceptions`() {
       whenever(publishSqsClient.sendMessage(any<SendMessageRequest>())).thenThrow(RuntimeException::class.java)
 
       hmppsDomainEventEmitter.emitConvictedStatusChangedEvent("some_offender", "1234567", "Convicted", red = true)
@@ -270,6 +299,8 @@ class HmppsDomainEventsEmitterTest {
         eq("EVENTS_SEND_FAILURE"),
         check {
           assertThat(it["eventType"]).isEqualTo("prisoner-offender-search.prisoner.convicted-status-changed")
+          assertThat(it["version"]).isEqualTo("1")
+          assertThat(it["description"]).isEqualTo("A prisoner had their convicted status changed to Convicted")
           assertThat(it["additionalInformation.nomsNumber"]).isEqualTo("some_offender")
           assertThat(it["additionalInformation.bookingId"]).isEqualTo("1234567")
           assertThat(it["additionalInformation.convictedStatus"]).isEqualTo("Convicted")

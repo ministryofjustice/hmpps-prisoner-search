@@ -62,6 +62,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     await untilAsserted {
       val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))
       assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
     }
 
     verify(prisonerSpyBeanRepository, times(1)).createPrisoner(any(), eq(SyncIndex.RED))
@@ -106,8 +107,9 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         ),
         null,
       )
+      verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
       // Check that domain events are sent
-      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isGreaterThanOrEqualTo(3)
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
   }
 
@@ -182,6 +184,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
       verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
       verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
     reset(prisonerSpyBeanRepository) // zero the call counts
     reset(telemetryClient)
@@ -204,6 +207,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     }
     // No domain event should be raised
     assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(0)
+    verify(telemetryClient, never()).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
   }
 
   @Test
@@ -319,6 +323,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.prisonerNumber).isEqualTo(prisonerNumber)
     }
   }
+
   private fun validOffenderBookingChangedMessage(bookingId: Long, eventType: String) = validMessage(
     eventType = eventType,
     message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-03-25T11:24:32.935401\",\"bookingId\":\"$bookingId\",\"nomisEventType\":\"S1_RESULT\"}""",
