@@ -27,10 +27,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.NONE
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
@@ -111,6 +111,7 @@ class MaintainIndexServiceTest {
       maintainIndexService.prepareIndexForRebuild()
 
       verify(prisonerRepository).createIndex(GREEN)
+      verify(prisonerRepository, never()).createIndex(RED)
     }
 
     @Test
@@ -120,10 +121,12 @@ class MaintainIndexServiceTest {
 
       whenever(prisonerRepository.doesIndexExist(GREEN)).thenReturn(true)
       whenever(prisonerRepository.doesIndexExist(BLUE)).thenReturn(true).thenReturn(false)
+      whenever(prisonerRepository.doesIndexExist(RED)).thenReturn(true)
 
       maintainIndexService.prepareIndexForRebuild()
 
       verify(prisonerRepository).deleteIndex(BLUE)
+      verify(prisonerRepository, never()).deleteIndex(RED)
     }
 
     @Test
@@ -477,8 +480,8 @@ class MaintainIndexServiceTest {
       maintainIndexService.indexPrisoner(booking.offenderNo)
 
       verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
-      verify(prisonerSynchroniserService).reindexIncentive(booking.offenderNo, SyncIndex.RED, "MAINTAIN")
-      verify(prisonerSynchroniserService).reindexRestrictedPatient(booking.offenderNo, booking, SyncIndex.RED, "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexIncentive(booking.offenderNo, RED, "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexRestrictedPatient(booking.offenderNo, booking, RED, "MAINTAIN")
     }
 
     @Test

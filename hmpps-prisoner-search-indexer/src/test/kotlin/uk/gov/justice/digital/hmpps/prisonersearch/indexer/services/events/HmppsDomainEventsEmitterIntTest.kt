@@ -486,58 +486,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     }
   }
 
-  /*
-   * This is to test what happens if we fail to send a domain event.
-   * In real life:
-   * 1. We receive a prison event indicating "something" happened to the prisoner
-   * 2. The prisoner is updated in Open Search
-   * 3. We update the prisoner event hash to reflect the changes to the prisoner
-   * 4. We try to send a domain event BUT IT FAILS
-   * 5. The prison event is rejected and is sent to the DLQ
-   * 6. The prison event is automatically retried
-   * 7. We attempt to update the prisoner event hash again and if successful then send a domain event
-   * 8. If the previous update of the prisoner event hash persisted then we can't update it so a domain event would not be sent
-   *
-   * So this test checks that the prisoner event hash update is rolled back if sending the domain event fails.
-   */
-//  @Test
-//  fun `e2e - should not update prisoner hash if there is an exception when sending the event`() {
-//    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = null))
-//
-//    val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
-//
-//    // remember the prisoner event hash
-//    val insertedPrisonerEventHash = prisonerHashRepository.findByIdOrNull("A1239DD")?.prisonerHash
-//    assertThat(insertedPrisonerEventHash).isNotNull
-//
-//    // update the prisoner on ES BUT fail to send an event
-//    doThrow(RuntimeException("Failed to send event")).whenever(publishQueueSqsClient)
-//      .sendMessage(any<SendMessageRequest>())
-//    prisonApi.stubFor(
-//      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
-//        .willReturn(
-//          aResponse()
-//            .withHeader("Content-Type", "application/json")
-//            .withBody(
-//              PrisonerBuilder(
-//                prisonerNumber = "A1239DD",
-//                bookingId = null,
-//                firstName = "NEW_NAME",
-//              ).toOffenderBooking(),
-//            ),
-//        ),
-//    )
-//    offenderQueueSqsClient.sendMessage(message)
-//    await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
-//    await untilAsserted { verify(publishQueueSqsClient).sendMessage(any<SendMessageRequest>()) }
-//
-//    // The prisoner hash update should have been rolled back
-//    val prisonerEventHashAfterAttemptedUpdate =
-//      prisonerHashRepository.findByIdOrNull("A1239DD")?.prisonerHash
-//    assertThat(prisonerEventHashAfterAttemptedUpdate).isEqualTo(insertedPrisonerEventHash)
-//  }
-  // TODO: This functionality should be implemented for the RED index
-
   fun recreatePrisoner(builder: PrisonerBuilder) {
     val prisonerNumber: String = builder.prisonerNumber
 
