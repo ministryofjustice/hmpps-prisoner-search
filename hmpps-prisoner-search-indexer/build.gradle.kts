@@ -73,6 +73,10 @@ kotlin {
   }
 }
 
+configure<com.gorylenko.GitPropertiesPluginExtension> {
+  dotGitDirectory.set(File("${project.rootDir}/.git"))
+}
+
 tasks {
   withType<KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
