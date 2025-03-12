@@ -559,8 +559,12 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     // 1 call for all indexes
     await untilCallTo { prisonApi.countFor("/api/prisoner-search/offenders/$prisonerNumber") } matches { it == 1 }
 
-    // delete create events
-    await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it != 0 }
+    // Wait for create and received events (and possibly others), then delete them
+    var numberToExpect = 1 // created
+    if (!builder.released) numberToExpect++ // received
+    if (builder.alertCodes.isNotEmpty()) numberToExpect++ // alert-updated
+    if (builder.convictedStatus != null) numberToExpect++ // convicted status changed
+    await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == numberToExpect }
 
     await untilCallTo { prisonerRepository.getSummary(prisonerNumber, SyncIndex.RED) } matches { it != null }
 
