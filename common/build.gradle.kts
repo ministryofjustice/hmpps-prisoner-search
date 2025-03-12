@@ -18,6 +18,13 @@ dependencies {
 
 kotlin {
   jvmToolchain(21)
+  compilerOptions {
+    freeCompilerArgs.add("-Xwhen-guards")
+  }
+}
+
+configure<com.gorylenko.GitPropertiesPluginExtension> {
+  dotGitDirectory.set(File("${project.rootDir}/.git"))
 }
 
 tasks {
