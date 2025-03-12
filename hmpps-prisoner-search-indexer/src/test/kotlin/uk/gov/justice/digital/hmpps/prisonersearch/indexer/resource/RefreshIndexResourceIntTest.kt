@@ -2,7 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
-import kotlinx.coroutines.test.runTest
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -23,20 +22,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
-import uk.gov.justice.hmpps.sqs.MissingQueueException
-import uk.gov.justice.hmpps.sqs.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Instant
 import java.time.LocalDate
 
 class RefreshIndexResourceIntTest : IntegrationTestBase() {
-
-  private val hmppsEventsQueue by lazy {
-    hmppsQueueService.findByQueueId("hmppseventtestqueue")
-      ?: throw MissingQueueException("hmppseventtestqueue not found")
-  }
-  internal val hmppsEventsQueueClient by lazy { hmppsEventsQueue.sqsClient }
-  internal val hmppsEventsQueueUrl by lazy { hmppsEventsQueue.queueUrl }
 
   @BeforeEach
   fun setUp() {
@@ -45,13 +35,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       PrisonerBuilder("A7089EY", released = true, alertCodes = listOf("P" to "PL1"), heightCentimetres = 200),
     )
     buildAndSwitchIndex(2)
-  }
-
-  @BeforeEach
-  fun purgeHmppsEventsQueue() = runTest {
-    with(hmppsEventsQueue) {
-      hmppsQueueService.purgeQueue(PurgeQueueRequest(queueName, sqsClient, queueUrl))
-    }
+    purgeDomainEventsQueue()
   }
 
   @Test
@@ -167,6 +151,20 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
         )
       }
 
-    await untilCallTo { hmppsEventsQueueClient.countAllMessagesOnQueue(hmppsEventsQueueUrl).get() } matches { it == 2 }
+    await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 4 }
+
+    assertThat(
+      listOf(
+        readEventFromNextDomainEventMessage(),
+        readEventFromNextDomainEventMessage(),
+        readEventFromNextDomainEventMessage(),
+        readEventFromNextDomainEventMessage(),
+      ),
+    ).containsExactlyInAnyOrder(
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.updated",
+      "test.prisoner-offender-search.prisoner.released",
+      "test.prisoner-offender-search.prisoner.alerts-updated",
+    )
   }
 }
