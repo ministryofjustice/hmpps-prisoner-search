@@ -45,6 +45,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
         assertThat(supportingPrisonId).isEqualTo("LEI")
         assertThat(dischargedHospitalId).isEqualTo("HOS1")
       }
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, times(1)).updateRestrictedPatient(
@@ -78,6 +79,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
       }
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
     verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
     verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
