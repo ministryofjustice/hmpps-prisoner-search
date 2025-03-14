@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
 import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.Table
@@ -17,7 +15,7 @@ import java.util.UUID
 @Repository
 interface PrisonerDifferencesRepository : JpaRepository<PrisonerDifferences, UUID> {
   fun findByNomsNumber(nomsNumber: String): List<PrisonerDifferences>
-  fun findByLabelAndDateTimeBetween(label: PrisonerDifferencesLabel, from: Instant, to: Instant): List<PrisonerDifferences>
+  fun findByDateTimeBetween(from: Instant, to: Instant): List<PrisonerDifferences>
 
   // This query needs to be native to avoid JPA doing a lot of unnecessary extra work
   // and running out of memory when there is a lot of rows to delete
@@ -38,9 +36,6 @@ class PrisonerDifferences(
 
   val differences: String,
 
-  @Enumerated(EnumType.STRING)
-  val label: PrisonerDifferencesLabel,
-
   val dateTime: Instant = Instant.now(),
 ) {
   override fun equals(other: Any?): Boolean {
@@ -53,5 +48,3 @@ class PrisonerDifferences(
 
   override fun toString(): String = "PrisonerDifferences(prisonerDifferencesId=$prisonerDifferencesId, nomsNumber='$nomsNumber', differences='$differences', dateTime=$dateTime)"
 }
-
-enum class PrisonerDifferencesLabel { GREEN_BLUE, RED }

@@ -4,7 +4,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -18,7 +17,7 @@ class PrisonerDifferencesService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun retrieveDifferences(label: PrisonerDifferencesLabel, from: Instant, to: Instant): List<PrisonerDifferences> = prisonerDifferencesRepository.findByLabelAndDateTimeBetween(label, from, to)
+  fun retrieveDifferences(from: Instant, to: Instant): List<PrisonerDifferences> = prisonerDifferencesRepository.findByDateTimeBetween(from, to)
 
   @Transactional
   fun deleteOldData(): Int {

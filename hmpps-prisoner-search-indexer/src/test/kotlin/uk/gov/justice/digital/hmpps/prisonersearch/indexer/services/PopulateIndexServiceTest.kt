@@ -20,8 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILD
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
@@ -38,7 +36,7 @@ class PopulateIndexServiceTest {
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val nomisService = mock<NomisService>()
   private val telemetryClient = mock<TelemetryClient>()
-  private val indexBuildProperties = IndexBuildProperties(10, 10)
+  private val indexBuildProperties = IndexBuildProperties(10)
 
   private val populateIndexService = PopulateIndexService(
     indexStatusService,
@@ -77,8 +75,7 @@ class PopulateIndexServiceTest {
 
   @Nested
   inner class PopulateIndex {
-    private val indexStatus =
-      IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+    private val indexStatus = IndexStatus(currentIndexState = BUILDING)
 
     @BeforeEach
     internal fun beforeEach() {
@@ -87,32 +84,26 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will return an error if indexing is not in progress`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, otherIndexState = COMPLETED)
+      val indexStatus = IndexStatus(currentIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      assertThatThrownBy { populateIndexService.populateIndex(GREEN) }
+      assertThatThrownBy { populateIndexService.populateIndex() }
         .isInstanceOf(BuildNotInProgressException::class.java)
-        .hasMessageContaining("The index BLUE is in state COMPLETED")
-    }
-
-    @Test
-    internal fun `will return an error if indexing request is for the wrong index`() {
-      assertThatThrownBy { populateIndexService.populateIndex(GREEN) }
-        .isInstanceOf(WrongIndexRequestedException::class.java)
+        .hasMessageContaining("The index is in state COMPLETED")
     }
 
     @Test
     internal fun `will return the number of chunks sent for processing`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
 
-      assertThat(populateIndexService.populateIndex(BLUE)).isEqualTo(3)
+      assertThat(populateIndexService.populateIndex()).isEqualTo(3)
     }
 
     @Test
     internal fun `For each chunk should send a process chunk message`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
 
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
@@ -123,7 +114,7 @@ class PopulateIndexServiceTest {
     internal fun `will split total list by our page size`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(30)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
 
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
@@ -134,7 +125,7 @@ class PopulateIndexServiceTest {
     internal fun `will round up last page to page size when over`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(31)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
 
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
@@ -147,7 +138,7 @@ class PopulateIndexServiceTest {
     internal fun `will round up last page to page size when under`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(29)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10))
@@ -158,7 +149,7 @@ class PopulateIndexServiceTest {
     internal fun `will create a large number of pages for a large number of prisoners`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(20001)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
       verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any())
     }
 
@@ -166,7 +157,7 @@ class PopulateIndexServiceTest {
     internal fun `will create a single pages for a tiny number of prisoners`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
       verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
       verifyNoMoreInteractions(indexQueueService)
     }
@@ -175,7 +166,7 @@ class PopulateIndexServiceTest {
     internal fun `will create no pages for no prisoners`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(0)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
       verifyNoMoreInteractions(indexQueueService)
     }
 
@@ -183,7 +174,7 @@ class PopulateIndexServiceTest {
     internal fun `Should create a telemetry event`() {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
 
-      populateIndexService.populateIndex(BLUE)
+      populateIndexService.populateIndex()
 
       verify(telemetryClient).trackEvent(
         TelemetryEvents.POPULATE_PRISONER_PAGES.name,
@@ -198,11 +189,7 @@ class PopulateIndexServiceTest {
     @BeforeEach
     internal fun setUp() {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
-        IndexStatus(
-          currentIndex = GREEN,
-          currentIndexState = COMPLETED,
-          otherIndexState = BUILDING,
-        ),
+        IndexStatus(currentIndexState = BUILDING),
       )
       whenever(nomisService.getPrisonerNumbers(any(), any()))
         .thenReturn(listOf("ABC123D", "A12345"))
@@ -235,17 +222,17 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will return error if other index is not building`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = COMPLETED)
+      val indexStatus = IndexStatus(currentIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
         .isInstanceOf(BuildNotInProgressException::class.java)
-        .hasMessageContaining("The index BLUE is in state COMPLETED")
+        .hasMessageContaining("The index is in state COMPLETED")
     }
 
     @Test
     internal fun `will return offender just indexed`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
@@ -256,7 +243,7 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will synchronise offender to current building index`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
@@ -269,7 +256,7 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will return not found if prisoner not in NOMIS`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }
@@ -281,7 +268,7 @@ class PopulateIndexServiceTest {
 
     @Test
     internal fun `will raise the not found event if prisoner not in NOMIS`() {
-      val indexStatus = IndexStatus(currentIndex = GREEN, currentIndexState = COMPLETED, otherIndexState = BUILDING)
+      val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
       assertThatThrownBy { populateIndexService.populateIndexWithPrisoner("ABC123D") }

@@ -89,29 +89,22 @@ class HmppsDomainEventEmitter(
   fun emitPrisonerDifferenceEvent(
     offenderNo: String,
     differences: PrisonerDifferences,
-    red: Boolean,
   ) {
     val prisonerUpdatedEvent = PrisonerUpdatedEvent(offenderNo, differences.keys.toList().sorted())
     val event = PrisonerUpdatedDomainEvent(prisonerUpdatedEvent, Instant.now(clock), diffProperties.host)
-    if (red) {
-      event.publish { defaultFailureHandler(event, it, differences) }
-    }
+    event.publish { defaultFailureHandler(event, it, differences) }
   }
 
-  fun emitPrisonerCreatedEvent(offenderNo: String, red: Boolean) {
+  fun emitPrisonerCreatedEvent(offenderNo: String) {
     val prisonerCreatedEvent = PrisonerCreatedEvent(offenderNo)
     val event = PrisonerCreatedDomainEvent(prisonerCreatedEvent, Instant.now(clock), diffProperties.host)
-    if (red) {
-      event.publish()
-    }
+    event.publish()
   }
 
-  fun emitPrisonerRemovedEvent(offenderNo: String, red: Boolean) {
+  fun emitPrisonerRemovedEvent(offenderNo: String) {
     val prisonerRemovedEvent = PrisonerRemovedEvent(offenderNo)
     val event = PrisonerRemovedDomainEvent(prisonerRemovedEvent, Instant.now(clock), diffProperties.host)
-    if (red) {
-      event.publish()
-    }
+    event.publish()
   }
 
   fun emitPrisonerReceiveEvent(
@@ -119,20 +112,17 @@ class HmppsDomainEventEmitter(
     reason: PrisonerReceiveReason,
     prisonId: String,
     occurredAt: Instant? = null,
-    red: Boolean,
   ) {
     val prisonerReceivedEvent = PrisonerReceivedEvent(offenderNo, reason, prisonId)
-    val event = PrisonerReceivedDomainEvent(prisonerReceivedEvent, occurredAt ?: Instant.now(clock), diffProperties.host)
-    if (red) {
-      event.publish()
-    }
+    val event =
+      PrisonerReceivedDomainEvent(prisonerReceivedEvent, occurredAt ?: Instant.now(clock), diffProperties.host)
+    event.publish()
   }
 
   fun emitConvictedStatusChangedEvent(
     offenderNo: String,
     bookingId: String?,
     convictedStatus: String?,
-    red: Boolean,
   ) {
     val convictedStatusChangedEvent = ConvictedStatusChangedEvent(offenderNo, bookingId, convictedStatus)
     val event = ConvictedStatusChangedDomainEvent(
@@ -140,9 +130,7 @@ class HmppsDomainEventEmitter(
       Instant.now(clock),
       diffProperties.host,
     )
-    if (red) {
-      event.publish()
-    }
+    event.publish()
   }
 
   enum class PrisonerReceiveReason(val description: String) {
@@ -167,13 +155,10 @@ class HmppsDomainEventEmitter(
     offenderNo: String,
     reason: PrisonerReleaseReason,
     prisonId: String,
-    red: Boolean,
   ) {
     val prisonerReleasedEvent = PrisonerReleasedEvent(offenderNo, reason, prisonId)
     val event = PrisonerReleasedDomainEvent(prisonerReleasedEvent, Instant.now(clock), diffProperties.host)
-    if (red) {
-      event.publish()
-    }
+    event.publish()
   }
 
   fun emitPrisonerAlertsUpdatedEvent(
@@ -181,7 +166,6 @@ class HmppsDomainEventEmitter(
     bookingId: String?,
     alertsAdded: Set<String>,
     alertsRemoved: Set<String>,
-    red: Boolean,
   ) {
     val prisonerAlertsUpdatedEvent = PrisonerAlertsUpdatedEvent(offenderNo, bookingId, alertsAdded, alertsRemoved)
     val event = PrisonerAlertsUpdatedDomainEvent(
@@ -189,9 +173,7 @@ class HmppsDomainEventEmitter(
       Instant.now(clock),
       diffProperties.host,
     )
-    if (red) {
-      event.publish()
-    }
+    event.publish()
   }
 
   companion object {
@@ -318,14 +300,17 @@ data class ConvictedStatusChangedEvent(
   val convictedStatus: String?,
 ) : PrisonerAdditionalInformation
 
-class ConvictedStatusChangedDomainEvent(additionalInformation: ConvictedStatusChangedEvent, occurredAt: Instant, host: String) :
-  PrisonerDomainEvent<ConvictedStatusChangedEvent>(
-    additionalInformation = additionalInformation,
-    occurredAt = occurredAt,
-    host = host,
-    description = "A prisoner had their convicted status changed to ${additionalInformation.convictedStatus}",
-    eventType = CONVICTED_STATUS_CHANGED_EVENT_TYPE,
-  )
+class ConvictedStatusChangedDomainEvent(
+  additionalInformation: ConvictedStatusChangedEvent,
+  occurredAt: Instant,
+  host: String,
+) : PrisonerDomainEvent<ConvictedStatusChangedEvent>(
+  additionalInformation = additionalInformation,
+  occurredAt = occurredAt,
+  host = host,
+  description = "A prisoner had their convicted status changed to ${additionalInformation.convictedStatus}",
+  eventType = CONVICTED_STATUS_CHANGED_EVENT_TYPE,
+)
 
 data class PrisonerAlertsUpdatedEvent(
   override val nomsNumber: String,

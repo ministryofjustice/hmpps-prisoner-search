@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
@@ -38,14 +37,14 @@ class IndexQueueService(
   private val indexQueueUrl by lazy { indexQueue.queueUrl }
   private val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
 
-  fun sendPopulateIndexMessage(index: SyncIndex) {
-    sendMessage(IndexMessageRequest(type = POPULATE_INDEX, index = index)).also {
+  fun sendPopulateIndexMessage() {
+    sendMessage(IndexMessageRequest(type = POPULATE_INDEX)).also {
       log.info("Sent populate index message request {}", it.messageId())
     }
   }
 
-  fun sendRefreshIndexMessage(index: SyncIndex) {
-    sendMessage(IndexMessageRequest(type = REFRESH_INDEX, index = index)).also {
+  fun sendRefreshIndexMessage() {
+    sendMessage(IndexMessageRequest(type = REFRESH_INDEX)).also {
       log.info("Sent refresh index message request {}", it.messageId())
     }
   }

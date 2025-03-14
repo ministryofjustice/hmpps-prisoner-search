@@ -15,14 +15,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 
 @Service
 class CompareIndexService(
-  private val indexStatusService: IndexStatusService,
   private val openSearchClient: RestHighLevelClient,
   private val telemetryClient: TelemetryClient,
   private val nomisService: NomisService,
@@ -38,7 +37,7 @@ class CompareIndexService(
 
   fun doIndexSizeCheck(): SizeCheck {
     val start = System.currentTimeMillis()
-    val totalRedNumber = prisonerRepository.count(SyncIndex.RED)
+    val totalRedNumber = prisonerRepository.count()
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
@@ -79,7 +78,7 @@ class CompareIndexService(
   fun compareIndex(): Pair<List<String>, List<String>> {
     val allNomis = nomisService.getPrisonerNumbers(0, 10000000).sorted()
 
-    val searchResponse = setupIndexSearch(SyncIndex.RED)
+    val searchResponse = setupIndexSearch()
 
     var scrollId = searchResponse.scrollId
     var searchHits = searchResponse.hits.hits
@@ -108,13 +107,12 @@ class CompareIndexService(
 
   fun comparePrisoner(prisonerNumber: String) = nomisService.getOffender(prisonerNumber)?.let { ob ->
     val calculated = prisonerSynchroniserService.translate(ob)
-    val existing = prisonerRepository.get(ob.offenderNo, listOf(SyncIndex.RED))
+    val existing = prisonerRepository.get(ob.offenderNo)
 
     prisonerDifferenceService.reportDifferencesDetails(existing, calculated)
   }
 
   private fun setupIndexSearch(
-    index: SyncIndex,
     fetchSource: FetchSourceContext = FetchSourceContext.DO_NOT_FETCH_SOURCE,
   ): SearchResponse {
     val searchSourceBuilder = SearchSourceBuilder().apply {
@@ -122,7 +120,7 @@ class CompareIndexService(
       size(2000)
     }
     val searchRequest = SearchRequest(
-      arrayOf(index.indexName),
+      arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX),
       searchSourceBuilder,
     ).apply {
       scroll(scroll)

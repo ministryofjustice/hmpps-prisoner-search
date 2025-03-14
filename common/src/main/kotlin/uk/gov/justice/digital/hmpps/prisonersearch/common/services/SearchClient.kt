@@ -10,15 +10,12 @@ import org.opensearch.client.core.CountRequest
 import org.opensearch.client.core.CountResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 
 @Service
 class SearchClient(
   private val elasticsearchClient: RestHighLevelClient,
-  @Value("\${search.regime}") private val regime: String = "RED",
 ) {
   companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -54,11 +51,5 @@ class SearchClient(
     return cause.response.statusLine.statusCode == 502
   }
 
-  fun getAlias(): Array<String> = arrayOf(
-    if (regime == "RED") {
-      SyncIndex.RED.indexName
-    } else {
-      OpenSearchIndexConfiguration.PRISONER_INDEX
-    },
-  )
+  fun getAlias(): Array<String> = arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX)
 }

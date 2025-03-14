@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import java.time.Instant
 
 @DataJpaTest
@@ -28,7 +27,7 @@ class PrisonerDifferencesRepositoryTest {
   @Test
   @Transactional
   fun `should save a new prisoner differences record`() {
-    val prisonerDifferences = repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[]", label = GREEN_BLUE))
+    val prisonerDifferences = repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[]"))
     assertThat(prisonerDifferences.nomsNumber).isEqualTo("A1111AA")
 
     val saved = repository.findByIdOrNull(prisonerDifferences.prisonerDifferencesId)
@@ -38,8 +37,8 @@ class PrisonerDifferencesRepositoryTest {
   @Test
   @Transactional
   fun `should find differences by noms number`() {
-    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", label = GREEN_BLUE))
-    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[second]", label = GREEN_BLUE))
+    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]"))
+    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[second]"))
 
     val saved = repository.findByNomsNumber("A1111AA")
     assertThat(saved)
@@ -52,10 +51,10 @@ class PrisonerDifferencesRepositoryTest {
   @Transactional
   fun `should find differences by label and date time`() {
     val now = Instant.now()
-    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = now.minusSeconds(60), label = GREEN_BLUE))
-    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[second]", dateTime = now, label = GREEN_BLUE))
+    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = now.minusSeconds(60)))
+    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[second]", dateTime = now))
 
-    val saved = repository.findByLabelAndDateTimeBetween(GREEN_BLUE, now.minusSeconds(1), now)
+    val saved = repository.findByDateTimeBetween(now.minusSeconds(1), now)
     assertThat(saved)
       .hasSize(1)
       .extracting(PrisonerDifferences::differences)
@@ -66,8 +65,8 @@ class PrisonerDifferencesRepositoryTest {
   @Transactional
   fun `should delete all records before given date`() {
     val now = Instant.now()
-    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = now.minusSeconds(60), label = GREEN_BLUE))
-    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[second]", dateTime = now, label = GREEN_BLUE))
+    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[first]", dateTime = now.minusSeconds(60)))
+    repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[second]", dateTime = now))
 
     val deleted = repository.deleteByDateTimeBefore(now.minusSeconds(1))
     assertThat(deleted).isEqualTo(1)

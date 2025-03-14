@@ -6,13 +6,11 @@ A partial build of index - see Index rebuilds section of [Index Maintenance](./I
 The rebuild does not need to be completed but expect the info to show something like this:
 ```json
 "index-status": {
-  "currentIndex": "GREEN",
   "currentIndexStartBuildTime": "2020-09-23T10:08:33",
   "currentIndexState": "BUILDING",
 },
 "index-size": {
-  "INDEX_A": 579543,
-  "INDEX_B": 521
+  "count": 579543
 },
 "index-queue-backlog": "578975"
 ```

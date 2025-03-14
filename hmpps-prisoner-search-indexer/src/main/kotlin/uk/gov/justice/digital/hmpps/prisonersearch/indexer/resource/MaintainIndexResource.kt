@@ -13,7 +13,6 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
@@ -59,7 +58,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @Operation(
     summary = "Mark the current index build as complete",
-    description = """Completes the index build if it is currently building and has reached the required threshold.
+    description = """Completes the index build if it is currently building.
       If the index isn't currently building then no action will be taken.
       Requires PRISONER_INDEX role.  Returns the new status of the index.""",
   )
@@ -70,25 +69,7 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       ApiResponse(responseCode = "409", description = "Conflict, the index was not currently building"),
     ],
   )
-  fun markComplete(@RequestParam(name = "ignoreThreshold", required = false) ignoreThreshold: Boolean = false) = maintainIndexService.markIndexingComplete(ignoreThreshold)
-
-  @PutMapping("/switch")
-  @PreAuthorize("hasRole('PRISONER_INDEX')")
-  @Operation(
-    summary = "Switch index without rebuilding",
-    description = """Current index will be switched. Both indexes have to be complete, requires PRISONER_INDEX role.""",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "401", description = "Unauthorised, requires a valid Oauth2 token"),
-      ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
-      ApiResponse(
-        responseCode = "409",
-        description = "Conflict, the index was not able to be swapped as other index not complete",
-      ),
-    ],
-  )
-  fun switchIndex(@RequestParam(name = "force", required = false) force: Boolean = false) = maintainIndexService.switchIndex(force)
+  fun markComplete() = maintainIndexService.markIndexingComplete()
 
   @PutMapping("/index-prisoner/{prisonerNumber}")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
@@ -123,5 +104,5 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
       `check-indexing-complete`
       """,
   )
-  fun checkIfComplete() = maintainIndexService.markIndexingComplete(ignoreThreshold = false)
+  fun checkIfComplete() = maintainIndexService.markIndexingComplete()
 }

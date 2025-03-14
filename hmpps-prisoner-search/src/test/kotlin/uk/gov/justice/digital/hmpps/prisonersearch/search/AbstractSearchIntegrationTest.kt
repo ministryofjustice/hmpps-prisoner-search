@@ -15,7 +15,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
@@ -32,8 +31,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
 
-  val testIndex = SyncIndex.RED
-
   @BeforeAll
   fun setup() {
     log.info("Initialising search data")
@@ -43,14 +40,13 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     loadPrisonerData()
   }
 
-  fun createPrisonerIndex() = prisonerRepository.createIndex(testIndex)
+  fun createPrisonerIndex() = prisonerRepository.createIndex()
 
-  fun deletePrisonerIndex() = prisonerRepository.deleteIndex(testIndex)
+  fun deletePrisonerIndex() = prisonerRepository.deleteIndex()
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus(currentIndex = testIndex))
-    prisonerRepository.switchAliasIndex(testIndex)
+    indexStatusRepository.save(IndexStatus())
   }
 
   fun loadPrisonerData() {
@@ -62,7 +58,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     prisoners.forEach {
       val sourceAsString = "/prisoners/prisoner$it.json".readResourceAsText()
       val prisoner = gson.fromJson(sourceAsString, Prisoner::class.java)
-      prisonerRepository.save(prisoner, testIndex)
+      prisonerRepository.save(prisoner)
     }
     waitForPrisonerLoading(prisoners.size)
   }
@@ -71,14 +67,14 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
 
   fun loadPrisoners(prisoners: List<Prisoner>) {
     prisoners.forEach { prisoner ->
-      prisonerRepository.save(prisoner, testIndex)
+      prisonerRepository.save(prisoner)
     }
     waitForPrisonerLoading(prisoners.size)
   }
 
   protected fun waitForPrisonerLoading(expectedCount: Int) {
     await untilCallTo {
-      prisonerRepository.count(testIndex)
+      prisonerRepository.count()
     } matches { it == expectedCount.toLong() }
   }
 

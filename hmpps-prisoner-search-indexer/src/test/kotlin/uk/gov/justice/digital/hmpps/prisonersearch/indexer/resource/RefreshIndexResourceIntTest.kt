@@ -18,7 +18,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
@@ -77,10 +76,10 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     val startOfTest = Instant.now()
 
     // Modify index record A9999AA a little
-    prisonerRepository.get("A9999AA", listOf(SyncIndex.RED))!!.apply {
+    prisonerRepository.get("A9999AA")!!.apply {
       releaseDate = LocalDate.parse("2023-01-02")
     }.also {
-      prisonerRepository.save(it, SyncIndex.RED)
+      prisonerRepository.save(it)
     }
 
     // Modify index record A7089EY a lot
@@ -89,7 +88,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       status = "ACTIVE IN"
       prisonId = "MDI"
     }.also {
-      prisonerRepository.save(it, SyncIndex.RED)
+      prisonerRepository.save(it)
     }
 
     val detailsForA9999AA = webTestClient.get().uri("/compare-index/prisoner/A9999AA")

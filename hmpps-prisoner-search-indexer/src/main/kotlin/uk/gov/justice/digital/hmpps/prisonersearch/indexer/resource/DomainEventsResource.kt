@@ -49,14 +49,6 @@ class DomainEventsResource(private val domainEventEmitter: HmppsDomainEventEmitt
       details.reason,
       details.prisonId,
       occurredAt = occurredAtTime,
-      red = false,
-    )
-    domainEventEmitter.emitPrisonerReceiveEvent(
-      prisonerNumber,
-      details.reason,
-      details.prisonId,
-      occurredAt = occurredAtTime,
-      red = true,
     )
   }
 }

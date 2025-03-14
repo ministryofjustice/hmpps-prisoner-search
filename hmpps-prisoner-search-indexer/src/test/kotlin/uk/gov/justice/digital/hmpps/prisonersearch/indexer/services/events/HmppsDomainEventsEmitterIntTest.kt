@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Qualifier
@@ -33,7 +32,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.IDENTIFIERS
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.readResourceAsText
@@ -74,7 +72,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     hmppsDomainEventEmitter.emitPrisonerDifferenceEvent(
       "some_offender",
       mapOf(IDENTIFIERS to listOf(), LOCATION to listOf()),
-      red = true,
     )
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it!! > 0 }
@@ -100,7 +97,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `sends prisoner created events to the domain topic`() {
-    hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender", red = true)
+    hmppsDomainEventEmitter.emitPrisonerCreatedEvent("some_offender")
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
@@ -119,7 +116,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `sends prisoner removed events to the domain topic`() {
-    hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender", red = true)
+    hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender")
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
@@ -142,7 +139,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
       "some_offender",
       HmppsDomainEventEmitter.PrisonerReceiveReason.TRANSFERRED,
       "MDI",
-      red = true,
     )
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
@@ -169,7 +165,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
       "some_offender",
       HmppsDomainEventEmitter.PrisonerReleaseReason.TRANSFERRED,
       "MDI",
-      red = true,
     )
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
@@ -475,10 +470,10 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
 
     // expecting 2 attempts to update
-    await untilAsserted { verify(prisonerSpyBeanRepository, times(2)).updatePrisoner(any(), any(), any(), any()) }
+    await untilAsserted { verify(prisonerSpyBeanRepository, times(2)).updatePrisoner(any(), any(), any()) }
 
     // expecting 1 update
-    await untilAsserted { verify(prisonerDifferenceService).generateDiffEvent<Prisoner>(any(), any(), any(), eq(true)) }
+    await untilAsserted { verify(prisonerDifferenceService).generateDiffEvent<Prisoner>(any(), any(), any()) }
 
     // but there is only 1 message on the domain queue because the last update was ignored
     await untilAsserted {
@@ -489,7 +484,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   fun recreatePrisoner(builder: PrisonerBuilder) {
     val prisonerNumber: String = builder.prisonerNumber
 
-    prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
+    prisonerRepository.delete(prisonerNumber)
 
     prisonApi.stubFor(
       get(urlEqualTo("/api/prisoner-search/offenders/$prisonerNumber"))
@@ -514,7 +509,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     if (builder.convictedStatus != null) numberToExpect++ // convicted status changed
     await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == numberToExpect }
 
-    await untilCallTo { prisonerRepository.getSummary(prisonerNumber, SyncIndex.RED) } matches { it != null }
+    await untilCallTo { prisonerRepository.getSummary(prisonerNumber) } matches { it != null }
 
     purgeDomainEventsQueue()
 

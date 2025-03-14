@@ -5,7 +5,6 @@ import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
@@ -34,7 +33,7 @@ class PopulateIndexListener(
     }
     try {
       when (indexRequest.type) {
-        POPULATE_INDEX -> populateIndexService.populateIndex(indexRequest.index!!)
+        POPULATE_INDEX -> populateIndexService.populateIndex()
         POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
         REFRESH_INDEX -> refreshIndexService.refreshIndex()
@@ -60,7 +59,6 @@ class PopulateIndexListener(
 
 data class IndexMessageRequest(
   val type: IndexRequestType?,
-  val index: SyncIndex? = null,
   val prisonerPage: PrisonerPage? = null,
   val prisonerNumber: String? = null,
 )

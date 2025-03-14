@@ -16,7 +16,6 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangeAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientAdditionalInformation
@@ -60,7 +59,6 @@ internal class IndexListenerServiceTest {
         check {
           assertThat(it).isEqualTo("A1234AA")
         },
-        eq(RED),
         eq("some.iep.update"),
       )
     }
@@ -284,8 +282,7 @@ internal class IndexListenerServiceTest {
       whenever(nomisService.getOffender(any())).thenReturn(null)
       indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
-      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC", false)
-      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC", true)
+      verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC")
     }
 
     private fun anOffenderChanged(prisonerNumber: String?) = OffenderChangedMessage(

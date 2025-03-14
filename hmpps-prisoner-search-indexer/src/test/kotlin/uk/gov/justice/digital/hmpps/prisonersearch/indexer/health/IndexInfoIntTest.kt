@@ -27,11 +27,7 @@ class IndexInfoIntTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .jsonPath("index-status").value<String> { assertThat(it).contains("No status exists yet") }
-        .jsonPath("index-status.currentIndex").doesNotExist()
-        .jsonPath("index-status.otherIndex").doesNotExist()
-        .jsonPath("index-size.GREEN").isEqualTo(-1)
-        .jsonPath("index-size.BLUE").isEqualTo(-1)
-        .jsonPath("prisoner-alias").isEqualTo("")
+        .jsonPath("index-size.count").isEqualTo(-1)
         .jsonPath("index-queue-backlog").isEqualTo("0")
     }
   }
@@ -53,14 +49,9 @@ class IndexInfoIntTest : IntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .jsonPath("index-status.currentIndex").isEqualTo("GREEN")
         .jsonPath("index-status.currentIndexStartBuildTime").value<String> { assertThat(it).isNotNull() }
         .jsonPath("index-status.currentIndexEndBuildTime").value<String> { assertThat(it).isNotNull() }
-        .jsonPath("index-status.otherIndex").isEqualTo("BLUE")
-        .jsonPath("index-status.otherIndexStartBuildTime").doesNotExist()
-        .jsonPath("index-status.otherIndexEndBuildTime").doesNotExist()
-        .jsonPath("index-size.RED").isEqualTo(1)
-        .jsonPath("prisoner-alias").isEqualTo("prisoner-search-green")
+        .jsonPath("index-size.count").isEqualTo(1)
         .jsonPath("index-queue-backlog").isEqualTo("0")
     }
   }

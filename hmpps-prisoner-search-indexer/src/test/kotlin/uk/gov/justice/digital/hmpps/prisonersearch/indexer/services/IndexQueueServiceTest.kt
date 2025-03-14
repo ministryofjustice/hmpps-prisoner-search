@@ -26,7 +26,6 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
@@ -56,13 +55,12 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send populate message`() {
-      indexQueueService.sendPopulateIndexMessage(GREEN)
+      indexQueueService.sendPopulateIndexMessage()
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "POPULATE_INDEX",
-          "index": "GREEN"
+          "type": "POPULATE_INDEX"
           }
             """.trimIndent(),
           )
@@ -72,7 +70,7 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendPopulateIndexMessage(GREEN)
+      indexQueueService.sendPopulateIndexMessage()
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
@@ -90,13 +88,12 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send refresh message`() {
-      indexQueueService.sendRefreshIndexMessage(GREEN)
+      indexQueueService.sendRefreshIndexMessage()
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "REFRESH_INDEX",
-          "index": "GREEN"
+          "type": "REFRESH_INDEX"
           }
             """.trimIndent(),
           )
@@ -106,7 +103,7 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendRefreshIndexMessage(GREEN)
+      indexQueueService.sendRefreshIndexMessage()
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")

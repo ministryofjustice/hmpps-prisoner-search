@@ -10,14 +10,12 @@ class ConvictedStatusEventService(
   fun generateAnyEvents(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
-    red: Boolean,
   ) {
     if (prisoner.convictionStatusChanged(previousPrisonerSnapshot)) {
       domainEventEmitter.emitConvictedStatusChangedEvent(
         offenderNo = prisoner.prisonerNumber!!,
         bookingId = prisoner.bookingId,
         convictedStatus = prisoner.convictedStatus,
-        red,
       )
     }
   }
