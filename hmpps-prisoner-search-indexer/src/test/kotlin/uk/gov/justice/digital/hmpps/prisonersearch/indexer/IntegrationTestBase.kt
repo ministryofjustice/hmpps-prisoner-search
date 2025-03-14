@@ -32,10 +32,10 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageResponse
 import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
@@ -168,13 +168,13 @@ abstract class IntegrationTestBase {
 
   val hmppsEventTopicName by lazy { hmppsEventTopic.arn }
 
-  fun createPrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.createIndex(it) }
+  fun createPrisonerIndices() = prisonerRepository.createIndex()
 
-  fun deletePrisonerIndices() = SyncIndex.entries.forEach { prisonerRepository.deleteIndex(it) }
+  fun deletePrisonerIndices() = prisonerRepository.deleteIndex()
 
   fun initialiseIndexStatus() {
     indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus.newIndex())
+    indexStatusRepository.save(IndexStatus())
   }
 
   fun deinitialiseIndexStatus() = indexStatusRepository.deleteAll()
@@ -189,7 +189,7 @@ abstract class IntegrationTestBase {
       .exchange()
       .expectStatus().isOk
 
-    await untilCallTo { getIndexCount(SyncIndex.RED) } matches { it == expectedCount }
+    await untilCallTo { getIndexCount() } matches { it == expectedCount }
   }
 
   fun buildIndex(expectedCount: Long) {
@@ -201,11 +201,10 @@ abstract class IntegrationTestBase {
       .expectStatus().isOk
 
     await untilCallTo { indexQueueService.getIndexQueueStatus().active } matches { it == false }
-    await untilCallTo { getIndexCount(SyncIndex.RED) } matches { it == expectedCount }
+    await untilCallTo { getIndexCount() } matches { it == expectedCount }
   }
 
-  fun getIndexCount(index: SyncIndex) = getIndexCount(index.indexName)
-  fun getIndexCount(index: String): Long = openSearchClient.count(CountRequest(index), RequestOptions.DEFAULT).count
+  fun getIndexCount(): Long = openSearchClient.count(CountRequest(OpenSearchIndexConfiguration.PRISONER_INDEX), RequestOptions.DEFAULT).count
 
   protected fun getNumberOfMessagesCurrentlyOnDomainQueue(): Int = hmppsEventsQueue.sqsClient.countAllMessagesOnQueue(hmppsEventsQueue.queueUrl).get()
 

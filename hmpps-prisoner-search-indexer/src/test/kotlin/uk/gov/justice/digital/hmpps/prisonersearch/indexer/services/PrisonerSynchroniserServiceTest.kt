@@ -26,13 +26,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel.GREEN_BLUE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
@@ -41,8 +38,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-private val LABEL = GREEN_BLUE
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
@@ -81,52 +76,50 @@ internal class PrisonerSynchroniserServiceTest {
       )
 
     @Test
-    fun `will update prisoner to RED index`() {
-      whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(prisonerDocumentSummary)
+    fun `will update prisoner to index`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       service.reindexUpdate(booking, "event")
 
       verify(prisonerRepository, times(1)).updatePrisoner(
         eq(booking.offenderNo),
         isA(),
-        eq(RED),
         eq(prisonerDocumentSummary),
       )
     }
 
     @Test
     fun `will create prisoner if not present`() {
-      whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(null)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
       service.reindexUpdate(booking, "event")
 
-      verify(prisonerRepository, times(1)).createPrisoner(isA(), eq(RED))
-      verify(alertsUpdatedEventService).generateAnyEvents(isNull(), any(), eq(true))
-      verify(prisonerMovementsEventService).generateAnyEvents(isNull(), any(), eq(booking), eq(true))
+      verify(prisonerRepository, times(1)).createPrisoner(isA())
+      verify(alertsUpdatedEventService).generateAnyEvents(isNull(), any())
+      verify(prisonerMovementsEventService).generateAnyEvents(isNull(), any(), eq(booking))
     }
 
     @Test
     fun `will generate domain events`() {
-      whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(prisonerDocumentSummary)
-      whenever(prisonerRepository.updatePrisoner(any(), any(), eq(RED), isA())).thenReturn(true)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.updatePrisoner(any(), any(), isA())).thenReturn(true)
       service.reindexUpdate(booking, "event")
 
       verify(alertsUpdatedEventService).generateAnyEvents(
         eq(existingPrisoner),
         any(),
-        eq(true),
       ) // null for previous prisoner
-      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(true))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
     }
 
     @Test
     fun `will not save prisoner if no changes`() {
-      whenever(prisonerRepository.getSummary(any(), eq(RED))).thenReturn(prisonerDocumentSummary)
-      whenever(prisonerRepository.updatePrisoner(any(), any(), eq(RED), isA())).thenReturn(false)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.updatePrisoner(any(), any(), isA())).thenReturn(false)
       service.reindexUpdate(booking, "event")
 
-      verify(prisonerRepository).updatePrisoner(any(), any(), eq(RED), eq(prisonerDocumentSummary))
+      verify(prisonerRepository).updatePrisoner(any(), any(), eq(prisonerDocumentSummary))
       verify(prisonerDifferenceService, never()).getDifferencesByCategory<Prisoner>(any(), any())
       verify(telemetryClient).trackEvent(
-        eq(TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE.name),
+        eq(TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE.name),
         check {
           assertThat(it).containsOnly(
             entry("prisonerNumber", "A1234AA"),
@@ -150,13 +143,12 @@ internal class PrisonerSynchroniserServiceTest {
         primaryTerm = 0,
       )
 
-      whenever(prisonerRepository.getSummary(any(), eq(RED)))
+      whenever(prisonerRepository.getSummary(any()))
         .thenReturn(prisonerDocumentSummary, prisonerDocumentSummaryAfterUpdate)
       whenever(
         prisonerRepository.updatePrisoner(
           eq(prisonerNumber),
           any(),
-          eq(RED),
           eq(prisonerDocumentSummary),
         ),
       )
@@ -168,7 +160,6 @@ internal class PrisonerSynchroniserServiceTest {
       verify(prisonerRepository, times(1)).updateIncentive(
         eq(prisonerNumber),
         eq(newIncentive.toCurrentIncentive()),
-        eq(RED),
         eq(prisonerDocumentSummaryAfterUpdate),
       )
     }
@@ -195,24 +186,23 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will save incentive to current index`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
+      service.reindexIncentive(prisonerNumber, "event")
 
       verify(prisonerRepository).updateIncentive(
         eq(prisonerNumber),
         isA(),
-        check { assertThat(it).isEqualTo(GREEN) },
         eq(prisonerDocumentSummary),
       )
     }
 
     @Test
     fun `will create telemetry`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
-      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any(), any())).thenReturn(true)
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
+      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexIncentive(prisonerNumber, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.INCENTIVE_UPDATED.name),
@@ -229,20 +219,20 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will generate domain events`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
-      whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any(), any())).thenReturn(true)
-      service.reindexIncentive(prisonerNumber, RED, "event")
+      whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any())).thenReturn(true)
+      service.reindexIncentive(prisonerNumber, "event")
 
-      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner), eq(true))
+      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner))
     }
 
     @Test
     fun `will not save prisoner if no changes`() {
-      whenever(prisonerRepository.getSummary(eq(prisonerNumber), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
-      whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any(), any())).thenReturn(false)
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
+      whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any())).thenReturn(false)
+      service.reindexIncentive(prisonerNumber, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.INCENTIVE_OPENSEARCH_NO_CHANGE.name),
@@ -259,36 +249,35 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will do nothing if prisoner not found`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(null)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
 
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
+      service.reindexIncentive(prisonerNumber, "event")
 
       verifyNoInteractions(incentivesService)
-      verify(prisonerRepository, never()).updateIncentive(any(), any(), any(), any())
+      verify(prisonerRepository, never()).updateIncentive(any(), any(), any())
     }
 
     @Test
     fun `Updates ok when no incentive data`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(null)
 
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
+      service.reindexIncentive(prisonerNumber, "event")
 
-      verify(prisonerRepository).updateIncentive(eq("A1234AA"), isNull(), eq(GREEN), eq(prisonerDocumentSummary))
+      verify(prisonerRepository).updateIncentive(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
     }
 
     @Test
     fun `will NOT call prisoner difference to handle differences`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
-      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any(), any())).thenReturn(true)
-      service.reindexIncentive(prisonerNumber, GREEN, "event")
+      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexIncentive(prisonerNumber, "event")
 
       verify(prisonerDifferenceService).generateDiffEvent(
         eq(prisonerDocumentSummary.prisoner),
         eq(prisonerDocumentSummary.prisonerNumber!!),
         eq(prisonerDocumentSummary.prisoner!!),
-        eq(true),
       )
       verifyNoMoreInteractions(prisonerDifferenceService)
     }
@@ -326,7 +315,7 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will call restricted patients and save RP to current index if prisoner is outside`() {
-      whenever(prisonerRepository.getSummary(prisonerNumber, RED)).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(prisonerNumber)).thenReturn(prisonerDocumentSummary)
       whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
 
       whenever(
@@ -340,10 +329,9 @@ internal class PrisonerSynchroniserServiceTest {
           any(),
           any(),
           any(),
-          any(),
         ),
       ).thenReturn(true)
-      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, RED, "event")
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, "event")
 
       verify(restrictedPatientService).getRestrictedPatient(prisonerNumber)
       verify(prisonerRepository).updateRestrictedPatient(
@@ -355,14 +343,13 @@ internal class PrisonerSynchroniserServiceTest {
         isA(),
         isNull(),
         any(),
-        eq(RED),
         eq(prisonerDocumentSummary),
       )
     }
 
     @Test
     fun `will generate domain events`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
       whenever(
         prisonerRepository.updateRestrictedPatient(
@@ -375,17 +362,16 @@ internal class PrisonerSynchroniserServiceTest {
           isNull(),
           any(),
           any(),
-          any(),
         ),
       ).thenReturn(true)
-      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, RED, "event")
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, "event")
 
-      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner), eq(true))
+      verify(prisonerDifferenceService).generateDiffEvent(eq(prisoner), eq(prisonerNumber), eq(prisoner))
     }
 
     @Test
     fun `will create telemetry`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
       whenever(
         prisonerRepository.updateRestrictedPatient(
@@ -398,10 +384,9 @@ internal class PrisonerSynchroniserServiceTest {
           isNull(),
           any(),
           any(),
-          any(),
         ),
       ).thenReturn(true)
-      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.RESTRICTED_PATIENT_UPDATED.name),
@@ -418,7 +403,7 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will not save prisoner if no changes`() {
-      whenever(prisonerRepository.getSummary(eq(prisonerNumber), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
       whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
       whenever(
         prisonerRepository.updateRestrictedPatient(
@@ -431,10 +416,9 @@ internal class PrisonerSynchroniserServiceTest {
           isA(),
           any(),
           any(),
-          any(),
         ),
       ).thenReturn(false)
-      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.RESTRICTED_PATIENT_OPENSEARCH_NO_CHANGE.name),
@@ -451,27 +435,27 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will do nothing if prisoner not found`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(null)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
 
-      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, "event")
 
       verifyNoInteractions(incentivesService)
-      verify(prisonerRepository, never()).updateIncentive(any(), any(), any(), any())
+      verify(prisonerRepository, never()).updateIncentive(any(), any(), any())
     }
 
     @Test
     fun `will NOT call prisoner difference to handle differences`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       whenever(restrictedPatientService.getRestrictedPatient(prisonerNumber)).thenReturn(newRestrictedPatient)
-      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any(), any())).thenReturn(true)
-      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, GREEN, "event")
+      whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexRestrictedPatient(prisonerNumber, outsidePrisoner, "event")
 
       verifyNoInteractions(prisonerDifferenceService)
     }
 
     @Test
     fun `will not call restricted patients if prisoner in a prison`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       val prisonBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = prisonerNumber).copy(
         assignedLivingUnit = AssignedLivingUnit(
           agencyId = "MDI",
@@ -481,19 +465,19 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.reindexRestrictedPatient(prisonerNumber, prisonBooking, GREEN, "event")
+      service.reindexRestrictedPatient(prisonerNumber, prisonBooking, "event")
 
       verifyNoInteractions(restrictedPatientService)
     }
 
     @Test
     fun `will not call restricted patients if assigned living unit not set`() {
-      whenever(prisonerRepository.getSummary(any(), any())).thenReturn(prisonerDocumentSummary)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
       val noLivingUnitBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = prisonerNumber).copy(
         assignedLivingUnit = null,
       )
 
-      service.reindexRestrictedPatient(noLivingUnitBooking.offenderNo, noLivingUnitBooking, GREEN, "event")
+      service.reindexRestrictedPatient(noLivingUnitBooking.offenderNo, noLivingUnitBooking, "event")
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -507,7 +491,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will save prisoner to current index`() {
       service.index(booking)
 
-      verify(prisonerRepository).save(isA(), eq(RED))
+      verify(prisonerRepository).save(isA())
     }
 
     @Test
@@ -615,17 +599,17 @@ internal class PrisonerSynchroniserServiceTest {
 
     @BeforeEach
     fun setUp() {
-      whenever(prisonerRepository.save(any(), any())).thenAnswer { it.arguments[0] }
+      whenever(prisonerRepository.save(any())).thenAnswer { it.arguments[0] }
     }
 
     @Test
     fun `will do nothing if no differences found`() {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
-      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), listOf(GREEN), LABEL)
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
 
-      verify(prisonerRepository, never()).save(any(), any())
+      verify(prisonerRepository, never()).save(any())
       verify(prisonerDifferenceService).hasChanged(any(), any())
       verifyNoMoreInteractions(prisonerDifferenceService)
     }
@@ -633,25 +617,25 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will report differences if found`() {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
-      whenever(prisonerRepository.get(any(), any())).thenReturn(Prisoner())
+      whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), listOf(GREEN), LABEL)
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
 
-      verify(prisonerDifferenceService).reportDiffTelemetry(any(), any(), eq(LABEL))
-      verify(prisonerRepository).save(any(), eq(GREEN))
+      verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
+      verify(prisonerRepository).save(any())
     }
 
     @Test
     fun `will generate events if differences found`() {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
       val existingPrisoner = Prisoner()
-      whenever(prisonerRepository.get(any(), any())).thenReturn(existingPrisoner)
+      whenever(prisonerRepository.get(any())).thenReturn(existingPrisoner)
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), listOf(RED), LABEL)
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
 
-      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking), eq(true))
-      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(true))
-      verify(convictedStatusEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(true))
+      verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
+      verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any())
+      verify(convictedStatusEventService).generateAnyEvents(eq(existingPrisoner), any())
     }
   }
 
@@ -734,7 +718,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will call prisoner repository to delete the prisoner`() {
       service.delete("ABC123D")
 
-      verify(prisonerRepository).delete("ABC123D", RED)
+      verify(prisonerRepository).delete("ABC123D")
     }
   }
 }

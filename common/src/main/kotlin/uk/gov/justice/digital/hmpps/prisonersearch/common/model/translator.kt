@@ -124,19 +124,12 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
   this.convictedStatus = ob.convictedStatus
   this.indeterminateSentence = ob.indeterminateSentence
 
-  // setting of locationDescription in RED index:
+  // setting of locationDescription:
   //                                         |       RP event                        | normal event (failure forced)        |
   //  RP call success and prisoner is RP     |    construct *                        |      does not happen                 |
   //  RP call success and prisoner is not RP |    use previous                       |      does not happen                 |
   //  RP call failure and prisoner is RP     |    use previous        (gets retried) |        use previous    (not retried) |
   //  RP call failure and prisoner is not RP | ob.locationDescription (gets retried) | ob.locationDescription (not retried) |
-
-  // setting of locationDescription in GREEN/BLUE index:
-  //                                         |     any event                 |
-  //  RP call success and prisoner is RP     |   construct *                 |
-  //  RP call success and prisoner is not RP | ob.locationDescription        |
-  //  RP call failure and prisoner is RP     |   use previous (gets retried) |
-  //  RP call failure and prisoner is not RP |   use previous (gets retried) |
 
   // * construct means set it to "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}"
 

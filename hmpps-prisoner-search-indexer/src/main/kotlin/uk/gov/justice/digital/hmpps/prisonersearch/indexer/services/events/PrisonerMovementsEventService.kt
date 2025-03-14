@@ -41,7 +41,6 @@ class PrisonerMovementsEventService(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
     offenderBooking: OffenderBooking,
-    red: Boolean,
   ) {
     when (val movementChange = calculateMovementChange(previousPrisonerSnapshot, prisoner, offenderBooking)) {
       PossibleMovementChange.None -> {}
@@ -50,7 +49,6 @@ class PrisonerMovementsEventService(
           offenderNo = movementChange.offenderNo,
           reason = movementChange.reason,
           prisonId = movementChange.prisonId,
-          red = red,
         )
 
       is PossibleMovementChange.MovementOutChange ->
@@ -58,7 +56,6 @@ class PrisonerMovementsEventService(
           offenderNo = movementChange.offenderNo,
           reason = movementChange.reason,
           prisonId = movementChange.prisonId,
-          red,
         )
     }
   }

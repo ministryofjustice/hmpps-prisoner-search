@@ -27,7 +27,7 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       this.firstName = "BOBBY"
     }
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
 
     verifyNoInteractions(domainEventsEmitter)
   }
@@ -39,14 +39,13 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       this.alerts = listOf(PrisonerAlert(alertType = "X", alertCode = "XA", active = true, expired = false))
     }
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
 
     verify(domainEventsEmitter).emitPrisonerAlertsUpdatedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       alertsAdded = setOf("XA"),
       alertsRemoved = setOf(),
-      red = true,
     )
   }
 
@@ -57,14 +56,13 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
     }
     val prisoner = prisoner()
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
 
     verify(domainEventsEmitter).emitPrisonerAlertsUpdatedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       alertsAdded = setOf(),
       alertsRemoved = setOf("XA"),
-      red = true,
     )
   }
 
@@ -85,14 +83,13 @@ internal class AlertsUpdatedEventServiceTest(@Autowired private val objectMapper
       )
     }
 
-    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, red = true)
+    alertsUpdatedEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner)
 
     verify(domainEventsEmitter).emitPrisonerAlertsUpdatedEvent(
       offenderNo = OFFENDER_NO,
       bookingId = BOOKING_ID,
       alertsAdded = setOf("XK", "BB"),
       alertsRemoved = setOf("XT", "AA"),
-      red = true,
     )
   }
 

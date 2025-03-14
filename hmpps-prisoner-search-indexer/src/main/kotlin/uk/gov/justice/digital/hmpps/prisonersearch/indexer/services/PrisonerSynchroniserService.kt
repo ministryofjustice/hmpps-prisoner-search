@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setLocationDescription
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setRestrictedPatientFields
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
@@ -14,7 +13,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.ConvictedStatusEventService
@@ -38,7 +36,7 @@ class PrisonerSynchroniserService(
   }
 
   internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Prisoner {
-    val summary = prisonerRepository.getSummary(ob.offenderNo, SyncIndex.RED)
+    val summary = prisonerRepository.getSummary(ob.offenderNo)
     val isChanged = summary?.run {
       val prisoner = Prisoner().translate(
         existingPrisoner = summary.prisoner,
@@ -47,30 +45,30 @@ class PrisonerSynchroniserService(
         restrictedPatientData = Result.failure(Exception()),
       )
       // opensearch reports if there are any differences
-      val isUpdated = prisonerRepository.updatePrisoner(ob.offenderNo, prisoner, SyncIndex.RED, summary)
+      val isUpdated = prisonerRepository.updatePrisoner(ob.offenderNo, prisoner, summary)
       if (isUpdated) {
         if (summary.prisoner == null) {
           // cannot happen hopefully!
-          log.warn("Prisoner not found in RED index for {}", ob.offenderNo)
+          log.warn("Prisoner not found in index for {}", ob.offenderNo)
           throw PrisonerNotFoundException(ob.offenderNo)
         }
-        prisonerDifferenceService.generateDiffEvent(summary.prisoner, ob.offenderNo, prisoner, true)
+        prisonerDifferenceService.generateDiffEvent(summary.prisoner, ob.offenderNo, prisoner)
 
         telemetryClient.trackPrisonerEvent(
-          TelemetryEvents.RED_PRISONER_UPDATED,
+          TelemetryEvents.PRISONER_UPDATED,
           prisonerNumber = ob.offenderNo,
           bookingId = ob.bookingId,
           eventType = eventType,
         )
         // If the current booking id changed, some domain data needs updating too, retrieving using the new booking id
         if (summary.prisoner.bookingId?.toLong() != ob.bookingId) {
-          reindexIncentive(ob.offenderNo, SyncIndex.RED, eventType)
-          reindexRestrictedPatient(ob.offenderNo, ob, SyncIndex.RED, eventType)
+          reindexIncentive(ob.offenderNo, eventType)
+          reindexRestrictedPatient(ob.offenderNo, ob, eventType)
         }
-        generateAnyEvents(summary.prisoner, prisoner, ob, red = true)
+        generateAnyEvents(summary.prisoner, prisoner, ob)
       } else {
         telemetryClient.trackPrisonerEvent(
-          TelemetryEvents.RED_PRISONER_OPENSEARCH_NO_CHANGE,
+          TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE,
           prisonerNumber = ob.offenderNo,
           bookingId = ob.bookingId,
           eventType = eventType,
@@ -88,24 +86,24 @@ class PrisonerSynchroniserService(
         incentiveLevel = runCatching { getIncentive(ob) },
         restrictedPatientData = runCatching { getRestrictedPatient(ob) },
       )
-      prisonerRepository.createPrisoner(prisoner, SyncIndex.RED)
+      prisonerRepository.createPrisoner(prisoner)
       // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
 
-      domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo, true)
-      generateAnyEvents(null, prisoner, ob, red = true)
+      domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo)
+      generateAnyEvents(null, prisoner, ob)
       prisoner
     }
 
     return isChanged
   }
 
-  internal fun reindexIncentive(prisonerNo: String, index: SyncIndex, eventType: String) = prisonerRepository.getSummary(prisonerNo, index)
+  internal fun reindexIncentive(prisonerNo: String, eventType: String) = prisonerRepository.getSummary(prisonerNo)
     ?.run {
       val bookingId = this.prisoner?.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
       val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
       val newLevel: CurrentIncentive? = incentiveLevel.toCurrentIncentive()
 
-      prisonerRepository.updateIncentive(prisonerNo, newLevel, index, this)
+      prisonerRepository.updateIncentive(prisonerNo, newLevel, this)
         .also { updated ->
           telemetryClient.trackPrisonerEvent(
             if (updated) {
@@ -120,15 +118,15 @@ class PrisonerSynchroniserService(
           if (updated) {
             val newPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
             newPrisoner.currentIncentive = newLevel
-            prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner, true)
+            prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner)
           }
         }
     }
 
-  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, index: SyncIndex, eventType: String) = prisonerRepository.getSummary(prisonerNo, index)
+  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, eventType: String) = prisonerRepository.getSummary(prisonerNo)
     ?.run {
       if (this.prisoner == null) {
-        log.warn("Prisoner not found in RED index for {}", prisonerNo)
+        log.warn("Prisoner not found in index for {}", prisonerNo)
         throw PrisonerNotFoundException(ob.offenderNo)
       }
       val existingPrisoner = prisonerRepository.copyPrisoner(this.prisoner)
@@ -145,7 +143,6 @@ class PrisonerSynchroniserService(
         this.prisoner.dischargeDate,
         this.prisoner.dischargeDetails,
         this.prisoner.locationDescription,
-        index,
         this,
       )
         .also { updated ->
@@ -160,23 +157,21 @@ class PrisonerSynchroniserService(
             eventType = eventType,
           )
           if (updated) {
-            prisonerDifferenceService.generateDiffEvent(existingPrisoner, prisonerNo, this.prisoner, true)
+            prisonerDifferenceService.generateDiffEvent(existingPrisoner, prisonerNo, this.prisoner)
           }
         }
     }
 
   internal fun index(ob: OffenderBooking): Prisoner = translate(ob).also {
-    prisonerRepository.save(it, SyncIndex.RED)
+    prisonerRepository.save(it)
   }
 
   internal fun compareAndMaybeIndex(
     ob: OffenderBooking,
     incentiveLevelData: Result<IncentiveLevel?>,
     restrictedPatientData: Result<RestrictedPatient?>,
-    indices: List<SyncIndex>,
-    label: PrisonerDifferencesLabel,
   ) {
-    val existingPrisoner = prisonerRepository.get(ob.offenderNo, indices)
+    val existingPrisoner = prisonerRepository.get(ob.offenderNo)
 
     val prisoner = Prisoner().translate(
       existingPrisoner = existingPrisoner,
@@ -185,19 +180,19 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatientData,
     )
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
-      prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner, label)
+      prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
-      indices.map { prisonerRepository.save(prisoner, it) }
+      prisonerRepository.save(prisoner)
 
-      prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner, true)
-      generateAnyEvents(existingPrisoner, prisoner, ob, red = true)
+      prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
+      generateAnyEvents(existingPrisoner, prisoner, ob)
     }
   }
 
-  internal fun generateAnyEvents(existingPrisoner: Prisoner?, prisoner: Prisoner, ob: OffenderBooking, red: Boolean) {
-    prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob, red)
-    alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner, red)
-    convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner, red)
+  internal fun generateAnyEvents(existingPrisoner: Prisoner?, prisoner: Prisoner, ob: OffenderBooking) {
+    prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
+    alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
+    convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner)
   }
 
   internal fun getDomainData(ob: OffenderBooking): Pair<Result<IncentiveLevel?>, Result<RestrictedPatient?>> = Pair(Result.success(getIncentive(ob)), Result.success(getRestrictedPatient(ob)))
@@ -209,7 +204,7 @@ class PrisonerSynchroniserService(
   )
 
   fun delete(prisonerNumber: String) {
-    prisonerRepository.delete(prisonerNumber, SyncIndex.RED)
+    prisonerRepository.delete(prisonerNumber)
     telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
   }
 

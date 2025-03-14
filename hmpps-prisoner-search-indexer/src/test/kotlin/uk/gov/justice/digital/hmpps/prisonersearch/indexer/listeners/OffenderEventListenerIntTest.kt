@@ -16,7 +16,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
@@ -40,13 +39,13 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))
+      val prisoner = prisonerRepository.get(prisonerNumber)
       assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
     }
 
-    verify(prisonerSpyBeanRepository, times(1)).createPrisoner(any(), eq(SyncIndex.RED))
-    verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+    verify(prisonerSpyBeanRepository, times(1)).createPrisoner(any())
+    verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), any())
   }
 
   @Test
@@ -59,7 +58,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       this.inOutStatus = "IN"
       this.status = "ACTIVE IN"
     }
-    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerRepository.save(prisoner)
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
@@ -72,14 +71,14 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      verify(prisonerSpyBeanRepository, never()).createPrisoner(any(), eq(SyncIndex.RED))
-      verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
-      verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(prisonerSpyBeanRepository, never()).createPrisoner(any())
+      verify(prisonerSpyBeanRepository, never()).updateIncentive(eq(prisonerNumber), any(), any())
+      verify(prisonerSpyBeanRepository, times(1)).updatePrisoner(eq(prisonerNumber), any(), any())
     }
 
     await untilAsserted {
       verify(telemetryClient).trackEvent(
-        "RED_PRISONER_UPDATED",
+        "PRISONER_UPDATED",
         mapOf(
           "prisonerNumber" to prisonerNumber,
           "bookingId" to bookingId.toString(),
@@ -102,7 +101,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       this.bookingId = bookingId.toString()
       this.lastName = "Different"
     }
-    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerRepository.save(prisoner)
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
@@ -115,9 +114,9 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
     await untilAsserted {
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
-      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), any())
       verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
-      verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
     }
     reset(prisonerSpyBeanRepository) // zero the call count
     reset(telemetryClient) // zero the call count
@@ -131,7 +130,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
     await untilAsserted {
       verify(telemetryClient).trackEvent(
-        "RED_PRISONER_OPENSEARCH_NO_CHANGE",
+        "PRISONER_OPENSEARCH_NO_CHANGE",
         mapOf(
           "prisonerNumber" to prisonerNumber,
           "bookingId" to bookingId.toString(),
@@ -152,7 +151,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       this.inOutStatus = "IN"
       this.status = "ACTIVE IN"
     }
-    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerRepository.save(prisoner)
 
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = bookingId))
@@ -164,9 +163,9 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         .messageBody(validOffenderBookingChangedMessage(bookingId, "OFFENDER_BOOKING-CHANGED")).build(),
     )
     await untilAsserted {
-      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
+      verify(prisonerSpyBeanRepository).updatePrisoner(eq(prisonerNumber), any(), any())
       verify(telemetryClient).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
-      verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
     reset(prisonerSpyBeanRepository) // zero the call counts
@@ -174,9 +173,9 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
     // Now we change a non-diffable index field and send the same message again, which should not create an event
 
-    val prisoner2 = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!
+    val prisoner2 = prisonerRepository.get(prisonerNumber)!!
     prisoner2.pncNumberCanonicalShort = "different"
-    prisonerRepository.save(prisoner2, SyncIndex.RED)
+    prisonerRepository.save(prisoner2)
 
     purgeDomainEventsQueue()
 
@@ -186,7 +185,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      verify(telemetryClient).trackEvent(eq("RED_PRISONER_UPDATED"), any(), isNull())
+      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
     }
     // No domain event should be raised
     assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(0)
@@ -196,14 +195,12 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will search for all affected prisoners when location update message received`() {
     val prisonerNumber = "O7089FD"
-    prisonerRepository.switchAliasIndex(SyncIndex.GREEN)
     prisonerRepository.save(
       Prisoner().apply {
         this.prisonerNumber = prisonerNumber
         this.prisonId = "EWI"
         this.cellLocation = "RES1-2-014"
       },
-      SyncIndex.RED,
     )
     prisonerRepository.save(
       Prisoner().apply {
@@ -211,7 +208,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonId = "EWI"
         this.cellLocation = "RES1-2-014"
       },
-      SyncIndex.RED,
     )
     prisonerRepository.save(
       Prisoner().apply {
@@ -219,7 +215,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonId = "EWI"
         this.cellLocation = "RES1-1-014" // wrong cell
       },
-      SyncIndex.RED,
     )
     prisonerRepository.save(
       Prisoner().apply {
@@ -227,9 +222,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonId = "MDI" // wrong prison
         this.cellLocation = "RES1-2-014"
       },
-      SyncIndex.RED,
     )
-    await untilCallTo { prisonerRepository.count(SyncIndex.RED) } matches { it == 4L }
+    await untilCallTo { prisonerRepository.count() } matches { it == 4L }
 
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
 
@@ -238,7 +232,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))
+      val prisoner = prisonerRepository.get(prisonerNumber)
       assertThat(prisoner?.cellLocation).isEqualTo("A-1-1")
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
     }
@@ -265,7 +259,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      val prisoner = prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))
+      val prisoner = prisonerRepository.get(prisonerNumber)
       assertThat(prisoner?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
     }
@@ -274,8 +268,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will delete merge records and insert new prisoner record on booking number change`() {
     val oldPrisonerNumber = "O7089FE" // record to be removed
-    prisonerRepository.save(Prisoner().also { it.prisonerNumber = oldPrisonerNumber }, SyncIndex.RED)
-    await untilCallTo { prisonerRepository.count(SyncIndex.RED) } matches { it == 1L }
+    prisonerRepository.save(Prisoner().also { it.prisonerNumber = oldPrisonerNumber })
+    await untilCallTo { prisonerRepository.count() } matches { it == 1L }
 
     val bookingId = 12345L
     val prisonerNumber = "O7089FF" // record to be inserted / updated
@@ -288,8 +282,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      assertThat(prisonerRepository.get(oldPrisonerNumber, listOf(SyncIndex.RED))).isNull()
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(prisonerRepository.get(oldPrisonerNumber)).isNull()
+      assertThat(prisonerRepository.get(prisonerNumber)?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
     }
   }
@@ -306,7 +300,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      assertThat(prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))?.prisonerNumber).isEqualTo(prisonerNumber)
+      assertThat(prisonerRepository.get(prisonerNumber)?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2) // created and received events
     }
   }

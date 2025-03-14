@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
@@ -35,29 +34,27 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
   inner class PopulateIndex {
     @Test
     internal fun `will call service with index name`() {
-      whenever(populateIndexService.populateIndex(GREEN)).thenReturn(1)
+      whenever(populateIndexService.populateIndex()).thenReturn(1)
 
       listener.processIndexRequest(
         """
       {
-        "type": "POPULATE_INDEX",
-        "index": "GREEN"
+        "type": "POPULATE_INDEX"
       }
         """.trimIndent(),
       )
 
-      verify(populateIndexService).populateIndex(GREEN)
+      verify(populateIndexService).populateIndex()
     }
 
     @Test
     internal fun `failed request`() {
-      whenever(populateIndexService.populateIndex(GREEN)).thenThrow(BuildNotInProgressException(IndexStatus.newIndex()))
+      whenever(populateIndexService.populateIndex()).thenThrow(BuildNotInProgressException(IndexStatus()))
 
       listener.processIndexRequest(
         """
       {
-        "type": "POPULATE_INDEX",
-        "index": "GREEN"
+        "type": "POPULATE_INDEX"
       }
         """.trimIndent(),
       )
@@ -73,8 +70,7 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
       listener.processIndexRequest(
         """
       {
-        "type": "REFRESH_INDEX",
-        "index": "GREEN"
+        "type": "REFRESH_INDEX"
       }
         """.trimIndent(),
       )

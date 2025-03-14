@@ -13,7 +13,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
@@ -28,7 +27,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       this.prisonerNumber = prisonerNumber
       bookingId = "1234"
     }
-    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerRepository.save(prisoner)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, agencyId = "OUT"))
     restrictedPatientsApi.stubGetRestrictedPatient(prisonerNumber)
 
@@ -40,20 +39,20 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
+      prisonerRepository.get(prisonerNumber)!!.apply {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
         assertThat(supportingPrisonId).isEqualTo("LEI")
         assertThat(dischargedHospitalId).isEqualTo("HOS1")
       }
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
-    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
+    verify(prisonerSpyBeanRepository, never()).save(any())
     verify(prisonerSpyBeanRepository, times(1)).updateRestrictedPatient(
       eq(prisonerNumber),
-      eq(true), eq("LEI"), eq("HOS1"), isNull(), any(), isNull(), any(), eq(SyncIndex.RED), any(),
+      eq(true), eq("LEI"), eq("HOS1"), isNull(), any(), isNull(), any(), any(),
     )
-    verify(prisonerSpyBeanRepository, never()).updateIncentive(any(), any(), any(), any())
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
+    verify(prisonerSpyBeanRepository, never()).updateIncentive(any(), any(), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any())
   }
 
   @Test
@@ -63,7 +62,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       this.prisonerNumber = prisonerNumber
       bookingId = "1234"
     }
-    prisonerRepository.save(prisoner, SyncIndex.RED)
+    prisonerRepository.save(prisoner)
     prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
     incentivesApi.stubCurrentIncentive()
 
@@ -75,18 +74,18 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
     )
 
     await untilAsserted {
-      prisonerRepository.get(prisonerNumber, listOf(SyncIndex.RED))!!.apply {
+      prisonerRepository.get(prisonerNumber)!!.apply {
         assertThat(prisonerNumber).isEqualTo(prisonerNumber)
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
       }
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
-    verify(prisonerSpyBeanRepository, never()).save(any(), eq(SyncIndex.RED))
-    verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), eq(SyncIndex.RED), any())
-    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any(), any())
+    verify(prisonerSpyBeanRepository, never()).save(any())
+    verify(prisonerSpyBeanRepository, times(1)).updateIncentive(eq(prisonerNumber), any(), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any())
     verify(prisonerSpyBeanRepository, never()).updateRestrictedPatient(
       any(), any(), any(), any(), any(),
-      any(), any(), any(), any(), any(),
+      any(), any(), any(), any(),
     )
   }
 }

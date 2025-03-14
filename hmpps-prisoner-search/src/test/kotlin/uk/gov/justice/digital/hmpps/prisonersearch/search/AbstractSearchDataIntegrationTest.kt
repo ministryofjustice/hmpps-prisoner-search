@@ -36,7 +36,7 @@ abstract class AbstractSearchDataIntegrationTest : AbstractSearchIntegrationTest
     prisoners.forEach {
       val sourceAsString = "/prisoners/prisoner$it.json".readResourceAsText()
       val prisoner = gson.fromJson(sourceAsString, Prisoner::class.java)
-      prisonerRepository.save(prisoner, testIndex)
+      prisonerRepository.save(prisoner)
     }
     waitForPrisonerLoading(prisoners.size)
   }

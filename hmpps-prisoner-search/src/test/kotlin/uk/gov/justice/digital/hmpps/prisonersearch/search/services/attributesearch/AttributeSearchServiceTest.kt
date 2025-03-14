@@ -17,8 +17,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.opensearch.action.search.SearchResponse
 import org.opensearch.search.SearchHits
+import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
@@ -46,7 +46,7 @@ class AttributeSearchServiceTest {
   fun setUp() {
     val searchResponse = mock<SearchResponse>()
     whenever(elasticsearchClient.search(any())).thenReturn(searchResponse)
-    whenever(elasticsearchClient.getAlias()).thenReturn(arrayOf(SyncIndex.RED.indexName))
+    whenever(elasticsearchClient.getAlias()).thenReturn(arrayOf(OpenSearchIndexConfiguration.PRISONER_INDEX))
     whenever(searchResponse.hits).thenReturn(SearchHits.empty())
   }
 

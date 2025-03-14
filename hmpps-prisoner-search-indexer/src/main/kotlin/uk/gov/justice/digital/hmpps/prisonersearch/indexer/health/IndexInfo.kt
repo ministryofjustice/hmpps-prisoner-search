@@ -3,9 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 import org.springframework.boot.actuate.info.Info
 import org.springframework.boot.actuate.info.InfoContributor
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.BLUE
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.GREEN
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex.RED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexStatusService
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -32,16 +29,9 @@ class IndexInfo(
     builder.withDetail(
       "index-size",
       mapOf(
-        GREEN to prisonerRepository.count(GREEN),
-        BLUE to prisonerRepository.count(BLUE),
-        RED to prisonerRepository.count(RED),
+        "count" to prisonerRepository.count(),
       ),
     )
-    try {
-      builder.withDetail("prisoner-alias", prisonerRepository.prisonerAliasIsPointingAt().joinToString())
-    } catch (e: Exception) {
-      builder.withDetail("prisoner-alias", "OpenSearch is not available yet")
-    }
     builder.withDetail("index-queue-backlog", safeQueueCount())
   }
 

@@ -10,7 +10,6 @@ generic-service:
     API_BASE_URL_INCENTIVES: "https://incentives-api.hmpps.service.justice.gov.uk"
     DIFF_HOST: "https://prisoner-search.prison.service.justice.gov.uk"
     DIFF_PREFIX: ""
-    SEARCH_REGIME: RED
 
 generic-prometheus-alerts:
   rdsAlertsDatabases:

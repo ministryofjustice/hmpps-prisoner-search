@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import kotlin.reflect.full.findAnnotations
@@ -65,7 +64,6 @@ class PrisonerDifferenceService(
   fun reportDiffTelemetry(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
-    label: PrisonerDifferencesLabel,
   ) {
     previousPrisonerSnapshot?.also { _ ->
       getDifferencesByCategory(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
@@ -75,14 +73,13 @@ class PrisonerDifferenceService(
           mapOf(
             "prisonerNumber" to previousPrisonerSnapshot.prisonerNumber!!,
             "categoriesChanged" to it.keys.map { it.name }.toList().sorted().toString(),
-            "label" to label.toString(),
           ),
         )
       }
       // and the sensitive full differences in our postgres database
       reportDiffTelemetryDetails(previousPrisonerSnapshot, prisoner).takeIf { it.isNotEmpty() }?.also {
         prisonerDifferencesRepository.save(
-          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString(), label = label),
+          PrisonerDiffs(nomsNumber = prisoner.prisonerNumber!!, differences = it.toString()),
         )
       }
     }
@@ -115,14 +112,13 @@ class PrisonerDifferenceService(
     previousSnapshot: T?,
     prisonerNumber: String,
     current: T,
-    red: Boolean,
   ) {
     if (!diffProperties.events) return
     previousSnapshot?.also {
       getDifferencesByCategory(it, current)
         .takeIf { it.isNotEmpty() }
-        ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(prisonerNumber, it, red) }
-    } ?: domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber, red)
+        ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(prisonerNumber, it) }
+    } ?: domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber)
   }
 
   @Suppress("UNCHECKED_CAST")

@@ -5,7 +5,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
@@ -27,7 +26,7 @@ class IndexListenerService(
       message.additionalInformation.nomsNumber,
       message.additionalInformation.id,
     )
-    prisonerSynchroniserService.reindexIncentive(message.additionalInformation.nomsNumber, SyncIndex.RED, eventType)
+    prisonerSynchroniserService.reindexIncentive(message.additionalInformation.nomsNumber, eventType)
   }
 
   fun restrictedPatientChange(message: RestrictedPatientMessage, eventType: String) {
@@ -65,8 +64,7 @@ class IndexListenerService(
       if (offender == null) {
         log.debug("Delete check: offender ID {} no longer exists, deleting", this)
         prisonerSynchroniserService.delete(prisonerNumber = this)
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this, red = false)
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this, red = true)
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this)
       } else {
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
         prisonerSynchroniserService.reindexUpdate(offender, eventType)
@@ -101,7 +99,7 @@ class IndexListenerService(
 
   private fun reindexRestrictedPatient(prisonerNumber: String, eventType: String) {
     nomisService.getOffender(prisonerNumber)?.let { ob ->
-      prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, SyncIndex.RED, eventType)
+      prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, eventType)
     }
   }
 

@@ -4,9 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesLabel
 
 @Service
 class RefreshIndexService(
@@ -23,20 +21,18 @@ class RefreshIndexService(
     return indexStatusService.getIndexStatus()
       // no point refreshing index if we're already building the other one
       .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-      // no point if there is no data in the active index
-      .failIf(IndexStatus::activeIndexesEmpty) { BuildAbsentException(it) }
       // don't want to run two refreshes at the same time
       .failIf({ indexQueueStatus.active }) {
-        ActiveMessagesExistException(it.currentIndex, indexQueueStatus, "build index")
+        ActiveMessagesExistException(indexQueueStatus, "build index")
       }
       .run {
         log.info("Sending index refresh request")
-        indexQueueService.sendRefreshIndexMessage(currentIndex)
+        indexQueueService.sendRefreshIndexMessage()
       }
   }
 
   fun refreshIndex(): Int = indexStatusService.getIndexStatus()
-    // no point refreshing index if we're already building the other one
+    // no point refreshing index if we're already building
     .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
     .run { doRefreshIndex() }
 
@@ -56,7 +52,7 @@ class RefreshIndexService(
   fun refreshPrisoner(prisonerNumber: String) {
     nomisService.getOffender(prisonerNumber)?.let { ob ->
       val (incentiveLevelData, restrictedPatientData) = prisonerSynchroniserService.getDomainData(ob)
-      prisonerSynchroniserService.compareAndMaybeIndex(ob, incentiveLevelData, restrictedPatientData, listOf(SyncIndex.RED), PrisonerDifferencesLabel.RED)
+      prisonerSynchroniserService.compareAndMaybeIndex(ob, incentiveLevelData, restrictedPatientData)
     }
   }
 

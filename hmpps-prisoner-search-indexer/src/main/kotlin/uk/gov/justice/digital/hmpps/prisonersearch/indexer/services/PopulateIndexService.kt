@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILD_PRISONER_NOT_FOUND
@@ -25,11 +24,10 @@ class PopulateIndexService(
 ) {
   private val pageSize = indexBuildProperties.pageSize
 
-  fun populateIndex(index: SyncIndex): Int = executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
+  fun populateIndex(): Int = executeAndTrackTimeMillis(TelemetryEvents.BUILD_INDEX_MSG) {
     indexStatusService.getIndexStatus()
       .also { maintainIndexService.logIndexStatuses(it) }
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
-      .failIf({ it.currentIndex.otherIndex() != index }) { WrongIndexRequestedException(it) }
       .run { doPopulateIndex() }
   }
 

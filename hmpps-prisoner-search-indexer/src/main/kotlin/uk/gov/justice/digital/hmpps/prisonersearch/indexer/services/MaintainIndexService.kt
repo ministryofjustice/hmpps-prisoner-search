@@ -2,16 +2,11 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.runBlocking
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.SyncIndex
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.PRISONER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
@@ -30,126 +25,64 @@ class MaintainIndexService(
   private val hmppsQueueService: HmppsQueueService,
   private val nomisService: NomisService,
   private val telemetryClient: TelemetryClient,
-  private val indexBuildProperties: IndexBuildProperties,
 ) {
   private val indexQueue by lazy { hmppsQueueService.findByQueueId("index") as HmppsQueue }
 
   fun prepareIndexForRebuild(): IndexStatus {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
-    return indexStatusService.initialiseIndexWhenRequired().getIndexStatus()
-      .also { logIndexStatuses(it) }
-      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-      .failIf({ indexQueueStatus.active }) { ActiveMessagesExistException(it.otherIndex, indexQueueStatus, "build index") }
-      .run { doPrepareIndexForRebuild(this) }
-  }
-
-  private fun doPrepareIndexForRebuild(indexStatus: IndexStatus): IndexStatus {
-    indexStatusService.markBuildAbsent()
-    createIfDoesntExist(indexStatus.currentIndex)
-    resetAndCreate(indexStatus.otherIndex)
-    indexStatusService.markBuildInProgress()
-    indexQueueService.sendPopulateIndexMessage(indexStatus.otherIndex)
     return indexStatusService.getIndexStatus()
       .also { logIndexStatuses(it) }
-      .also {
+      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
+      .failIf({ indexQueueStatus.active }) { ActiveMessagesExistException(indexQueueStatus, "build index") }
+      .run { doPrepareIndexForRebuild() }
+  }
+
+  private fun doPrepareIndexForRebuild(): IndexStatus {
+    indexStatusService.markBuildInProgress()
+    indexQueueService.sendPopulateIndexMessage()
+    return indexStatusService.getIndexStatus()
+      .also { indexStatus ->
+        logIndexStatuses(indexStatus)
         telemetryClient.trackEvent(
           TelemetryEvents.BUILDING_INDEX,
-          mapOf("index" to indexStatus.otherIndex.name),
+          mapOf("index-state" to indexStatus.currentIndexState.name),
         )
       }
   }
 
-  private fun createIfDoesntExist(index: SyncIndex) {
-    if (!prisonerRepository.doesIndexExist(index)) {
-      prisonerRepository.createIndex(index)
-    }
-  }
-
-  private fun resetAndCreate(index: SyncIndex) {
-    if (prisonerRepository.doesIndexExist(index)) {
-      prisonerRepository.deleteIndex(index)
-      await untilCallTo { prisonerRepository.doesIndexExist(index) } matches { it == false }
-    }
-    prisonerRepository.createIndex(index)
-  }
-
   fun logIndexStatuses(indexStatus: IndexStatus) {
     log.info(
-      "Current index status is {}.  Index counts {}={}, {}={}, RED={}.  Queue counts: Queue={} and DLQ={}",
+      "Current index status is {}.  Index count={}.  Queue counts: Queue={} and DLQ={}",
       indexStatus,
-      indexStatus.currentIndex,
-      prisonerRepository.count(indexStatus.currentIndex),
-      indexStatus.otherIndex,
-      prisonerRepository.count(indexStatus.otherIndex),
-      prisonerRepository.count(SyncIndex.RED),
+      prisonerRepository.count(),
       indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue(),
       indexQueueService.getNumberOfMessagesCurrentlyOnIndexDLQ(),
     )
   }
 
-  fun markIndexingComplete(ignoreThreshold: Boolean): IndexStatus {
+  fun markIndexingComplete(): IndexStatus {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
     val indexStatus = indexStatusService.getIndexStatus()
     return indexStatus
       .failIf(IndexStatus::isNotBuilding) { BuildNotInProgressException(it) }
       .failIf({ indexQueueStatus.active }) {
         ActiveMessagesExistException(
-          it.otherIndex,
           indexQueueStatus,
           "mark complete",
-        )
-      }
-      .failIf({ ignoreThreshold.not() && indexSizeNotReachedThreshold(it) }) {
-        ThresholdNotReachedException(
-          it.otherIndex,
-          indexBuildProperties.completeThreshold,
         )
       }
       .also { logIndexStatuses(indexStatus) }
       .run { doMarkIndexingComplete() }
   }
 
-  private fun indexSizeNotReachedThreshold(indexStatus: IndexStatus): Boolean = prisonerRepository.count(indexStatus.currentIndex.otherIndex()) < indexBuildProperties.completeThreshold
-
-  private fun doMarkIndexingComplete(): IndexStatus = indexStatusService.markBuildCompleteAndSwitchIndex()
+  private fun doMarkIndexingComplete(): IndexStatus = indexStatusService.markBuildComplete()
     .let { newStatus ->
-      prisonerRepository.switchAliasIndex(newStatus.currentIndex)
       return indexStatusService.getIndexStatus()
         .also { latestStatus -> logIndexStatuses(latestStatus) }
         .also {
           telemetryClient.trackEvent(
             TelemetryEvents.COMPLETED_BUILDING_INDEX,
-            mapOf("index" to it.currentIndex.name),
-          )
-        }
-    }
-
-  fun switchIndex(force: Boolean): IndexStatus {
-    val indexStatus = indexStatusService.getIndexStatus()
-    return when {
-      force ->
-        indexStatus
-          .failIf(IndexStatus::isAbsent) { BuildAbsentException(it) }
-
-      else ->
-        indexStatus
-          .failIf(IndexStatus::isAbsent) { BuildAbsentException(it) }
-          .failIf(IndexStatus::isBuilding) { BuildInProgressException(it) }
-          .failIf(IndexStatus::isCancelled) { BuildCancelledException(it) }
-    }
-      .also { logIndexStatuses(indexStatus) }
-      .run { doSwitchIndex() }
-  }
-
-  private fun doSwitchIndex(): IndexStatus = indexStatusService.switchIndex()
-    .let { newStatus ->
-      prisonerRepository.switchAliasIndex(newStatus.currentIndex)
-      return indexStatusService.getIndexStatus()
-        .also { latestStatus -> logIndexStatuses(latestStatus) }
-        .also {
-          telemetryClient.trackEvent(
-            TelemetryEvents.SWITCH_INDEX,
-            mapOf("index" to it.currentIndex.name),
+            mapOf("index-state" to newStatus.toString()),
           )
         }
     }
@@ -169,36 +102,29 @@ class MaintainIndexService(
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.CANCELLED_BUILDING_INDEX,
-          mapOf("index" to it.otherIndex.name),
+          mapOf("index-state" to it.currentIndexState.name),
         )
       }
   }
 
-  fun indexPrisoner(prisonerNumber: String): Prisoner = indexStatusService.getIndexStatus()
-    .failIf(IndexStatus::activeIndexesEmpty) {
-      log.info("Ignoring update of prisoner {} as no indexes were active", prisonerNumber)
-      NoActiveIndexesException(it)
-    }
-    .run { sync(prisonerNumber, this.activeIndexes()) }
-
-  private fun sync(prisonerNumber: String, activeIndices: List<SyncIndex>): Prisoner {
+  fun indexPrisoner(prisonerNumber: String): Prisoner {
     val offenderBooking = nomisService.getOffender(prisonerNumber)
     return offenderBooking
       ?.also {
-        prisonerSynchroniserService.reindexIncentive(prisonerNumber, SyncIndex.RED, "MAINTAIN")
-        prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, SyncIndex.RED, "MAINTAIN")
+        prisonerSynchroniserService.reindexIncentive(prisonerNumber, "MAINTAIN")
+        prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, "MAINTAIN")
       }
       ?.let {
         prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")
       }
-      ?: prisonerRepository.get(prisonerNumber, activeIndices)
+      ?: prisonerRepository.get(prisonerNumber)
         ?.apply {
           // Prisoner not in NOMIS, but found in indexes so remove
-          prisonerSynchroniserService.delete(prisonerNumber)
+          this@MaintainIndexService.prisonerSynchroniserService.delete(prisonerNumber)
         }
       ?: run {
         // not found in either NOMIS or index, so log and throw
-        telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
+        this@MaintainIndexService.telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
         throw PrisonerNotFoundException(prisonerNumber)
       }
   }

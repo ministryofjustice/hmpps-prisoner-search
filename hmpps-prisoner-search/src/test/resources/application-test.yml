@@ -16,5 +16,3 @@ search:
   location:
     scroll-timeout-minutes: 1
     scroll-results: 10
-
-  regime: RED

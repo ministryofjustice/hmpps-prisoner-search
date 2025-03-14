@@ -10,7 +10,6 @@ class AlertsUpdatedEventService(
   fun generateAnyEvents(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
-    red: Boolean,
   ) {
     val previousAlerts = previousPrisonerSnapshot?.alerts?.map { it.alertCode }?.toSet() ?: emptySet()
     val alerts = prisoner.alerts?.map { it.alertCode }?.toSet() ?: emptySet()
@@ -23,7 +22,6 @@ class AlertsUpdatedEventService(
         prisoner.bookingId,
         alertsAdded,
         alertsRemoved,
-        red,
       )
     }
   }
