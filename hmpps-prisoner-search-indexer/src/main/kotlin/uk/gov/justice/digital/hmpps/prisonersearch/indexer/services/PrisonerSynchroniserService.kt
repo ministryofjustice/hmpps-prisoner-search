@@ -171,7 +171,7 @@ class PrisonerSynchroniserService(
     incentiveLevelData: Result<IncentiveLevel?>,
     restrictedPatientData: Result<RestrictedPatient?>,
   ) {
-    val existingPrisoner = prisonerRepository.get(ob.offenderNo, indices)
+    val existingPrisoner = prisonerRepository.get(ob.offenderNo)
 
     val prisoner = Prisoner().translate(
       existingPrisoner = existingPrisoner,
