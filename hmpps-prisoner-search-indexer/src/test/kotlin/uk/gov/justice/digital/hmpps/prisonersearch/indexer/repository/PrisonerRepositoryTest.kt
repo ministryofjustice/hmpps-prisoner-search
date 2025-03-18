@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
-import co.elastic.clients.elasticsearch.watcher.EmailAttachmentBuilders.data
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.fail
 import org.opensearch.action.get.GetRequest
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
-import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.GetIndexRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.OptimisticLockingFailureException
@@ -489,9 +487,14 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `will update prisoner with new data`() {
-      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" })
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          firstName = "steve"
+        },
+      )
 
-      prisonerRepository.updateAlerts(
+      val updated = prisonerRepository.updateAlerts(
         "X12345",
         listOf(
           PrisonerAlert(
@@ -503,11 +506,17 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         ),
         prisonerRepository.getSummary("X12345")!!,
       )
-      val data = prisonerRepository.get("X12345")?.alerts?.first()!!
+      assertThat(updated).isTrue()
+      val prisoner = prisonerRepository.get("X12345")
+      val data = prisoner?.alerts?.first()!!
       assertThat(data.alertType).isEqualTo("A")
       assertThat(data.alertCode).isEqualTo("ABC")
       assertThat(data.active).isTrue()
       assertThat(data.expired).isFalse()
+
+      // Ensure other data is not affected
+      assertThat(prisoner.prisonerNumber).isEqualTo("X12345")
+      assertThat(prisoner.firstName).isEqualTo("steve")
     }
 
     @Test
@@ -530,8 +539,8 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         "X12345",
         listOf(
           PrisonerAlert(
-            alertType = "A",
-            alertCode = "ABC",
+            alertType = "A2",
+            alertCode = "ABC2",
             active = true,
             expired = false,
           ),
@@ -546,8 +555,8 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       )
       val alerts = prisonerRepository.get("X12345")?.alerts!!
       with(alerts.get(0)) {
-        assertThat(alertType).isEqualTo("A")
-        assertThat(alertCode).isEqualTo("ABC")
+        assertThat(alertType).isEqualTo("A2")
+        assertThat(alertCode).isEqualTo("ABC2")
         assertThat(active).isTrue()
         assertThat(expired).isFalse()
       }
@@ -606,6 +615,38 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         prisonerRepository.getSummary("X12345")!!,
       )
       assertThat(prisonerRepository.get("X12345")!!.alerts).isEmpty()
+    }
+
+    @Test
+    fun `will not update prisoner when data is unchanged`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      val updated = prisonerRepository.updateAlerts(
+        "X12345",
+        listOf(
+          PrisonerAlert(
+            alertType = "A",
+            alertCode = "ABC",
+            active = true,
+            expired = false,
+          ),
+        ),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+
+      assertThat(updated).isFalse()
     }
   }
 
@@ -698,12 +739,6 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       assertThat(prisonerRepository.copyPrisoner(prisoner)).isNotSameAs(prisoner)
       assertThat(prisonerRepository.copyPrisoner(prisoner).currentIncentive!!.level).isNotSameAs(prisoner.currentIncentive!!.level)
     }
-  }
-}
-
-fun RestHighLevelClient.safeIndexCreate(name: String) {
-  if (this.indices().exists(GetIndexRequest(name), RequestOptions.DEFAULT).not()) {
-    this.indices().create(CreateIndexRequest(name), RequestOptions.DEFAULT)
   }
 }
 

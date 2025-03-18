@@ -21,7 +21,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.UpdateQuery
 import org.springframework.data.elasticsearch.core.query.UpdateResponse
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -43,7 +42,7 @@ class PrisonerRepository(
   }
 
   fun count() = try {
-    client.count(CountRequest(OpenSearchIndexConfiguration.PRISONER_INDEX), RequestOptions.DEFAULT).count
+    client.count(CountRequest(PRISONER_INDEX), RequestOptions.DEFAULT).count
   } catch (e: OpenSearchStatusException) {
     // if the index doesn't exist yet then we will get an exception, so catch and move on
     -1
@@ -54,7 +53,7 @@ class PrisonerRepository(
   }
 
   fun getSummary(prisonerNumber: String): PrisonerDocumentSummary? = client
-    .get(GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX, prisonerNumber), RequestOptions.DEFAULT)
+    .get(GetRequest(PRISONER_INDEX, prisonerNumber), RequestOptions.DEFAULT)
     .toPrisonerDocumentSummary(prisonerNumber)
 
   fun createPrisoner(prisoner: Prisoner) {
@@ -132,16 +131,13 @@ class PrisonerRepository(
     prisonerNumber: String,
     alerts: List<PrisonerAlert>?,
     summary: PrisonerDocumentSummary,
-  ): Boolean {
-    val map = alerts?.let {
-      val m = objectMapperWithNulls.convertValue<Map<String, *>>(
-        Prisoner().apply { this.alerts = alerts },
-      )
-      mapOf("alerts" to m["alerts"])
-    } ?: mapOf("alerts" to null)
-
-    return doUpdate(prisonerNumber, map, summary)
-  }
+  ): Boolean = doUpdate(
+    prisonerNumber,
+    alerts?.let {
+      mapOf("alerts" to objectMapperWithNulls.convertValue(alerts))
+    } ?: mapOf("alerts" to null),
+    summary,
+  )
 
   private fun doUpdate(
     prisonerNumber: String,
