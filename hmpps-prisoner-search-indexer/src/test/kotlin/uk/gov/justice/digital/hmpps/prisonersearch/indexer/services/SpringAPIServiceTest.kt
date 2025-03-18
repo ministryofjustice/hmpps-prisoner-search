@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.BootstrapWith
 import org.springframework.web.reactive.config.EnableWebFlux
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
@@ -32,6 +33,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
 @ExtendWith(
   IncentivesApiExtension::class,
   RestrictedPatientsApiExtension::class,
+  AlertsApiExtension::class,
   HmppsAuthApiExtension::class,
 )
 @ActiveProfiles("test")

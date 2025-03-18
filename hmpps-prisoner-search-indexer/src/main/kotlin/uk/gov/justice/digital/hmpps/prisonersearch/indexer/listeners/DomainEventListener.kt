@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PersonReference
 
 @Service
 class DomainEventListener(
@@ -32,6 +33,13 @@ class DomainEventListener(
       "restricted-patients.patient.removed",
       "restricted-patients.patient.supporting-prison-changed",
     )
+    private val alertEvent = setOf(
+      "person.alert.created",
+      "person.alert.updated",
+      "person.alert.deleted",
+      // "person.alert.inactive", this event is not handled as it only occurs alongside a "person.alert.updated" event
+      // "person.alerts.changed", this event is not handled as it only occurs alongside another alert event
+    )
   }
 
   @SqsListener("hmppsdomainqueue", factory = "hmppsQueueContainerFactoryProxy")
@@ -44,6 +52,7 @@ class DomainEventListener(
       when (eventType) {
         in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message), eventType)
         in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message), eventType)
+        in alertEvent -> indexListenerService.alertChange(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
@@ -75,6 +84,85 @@ data class RestrictedPatientMessage(
 data class RestrictedPatientAdditionalInformation(
   val prisonerNumber: String,
 )
+
+data class AlertEvent(
+  val description: String?,
+  val eventType: String,
+  val additionalInformation: AlertAdditionalInformation,
+  val personReference: PersonReference,
+)
+
+data class AlertAdditionalInformation(
+  val alertUuid: String,
+  val alertCode: String,
+  val source: AlertSource,
+)
+
+/*
+abstract class AlertBaseDomainEvent<T : AlertBaseAdditionalInformation> : DomainEvent {
+  abstract override val eventType: String
+  abstract override val additionalInformation: T
+  abstract override val version: Int
+  abstract override val description: String
+  abstract override val occurredAt: ZonedDateTime
+  override val detailUrl: String? = null
+  override val personReference: PersonReference? = null
+}
+
+data class AlertDomainEvent<T : AlertBaseAdditionalInformation>(
+  override val eventType: String,
+  override val additionalInformation: T,
+  override val version: Int = 1,
+  override val description: String,
+  override val occurredAt: ZonedDateTime,
+  override val detailUrl: String? = null,
+  override val personReference: PersonReference? = null,
+) : AlertBaseDomainEvent<T>()
+
+
+sealed interface DomainEventable {
+  val type: DomainEventType
+  fun detailPath(): String
+  fun toDomainEvent(baseUrl: String): DomainEvent
+}
+
+sealed interface AlertEvent : DomainEventable {
+  val alertUuid: UUID
+  val prisonNumber: String
+  val alertCode: String
+  val occurredAt: LocalDateTime
+  val source: Source
+  override fun detailPath(): String = "/alerts/$alertUuid"
+  override fun toDomainEvent(baseUrl: String): AlertDomainEvent<AlertAdditionalInformation> = AlertDomainEvent(
+    eventType = type.eventType,
+    additionalInformation = AlertAdditionalInformation(
+      alertUuid = alertUuid,
+      alertCode = alertCode,
+      source = source,
+    ),
+    description = type.description,
+    occurredAt = occurredAt.toZoneDateTime(),
+    detailUrl = "$baseUrl${detailPath()}",
+    personReference = PersonReference.withNomsNumber(prisonNumber),
+  )
+}
+
+data class AlertCreatedEvent(
+  override val alertUuid: UUID,
+  override val prisonNumber: String,
+  override val alertCode: String,
+  override val occurredAt: LocalDateTime,
+  override val source: Source,
+  val createdBy: String,
+) : AlertEvent {
+  override val type: DomainEventType = ALERT_CREATED
+}
+*/
+
+enum class AlertSource {
+  DPS,
+  NOMIS,
+}
 
 data class EventType(@JsonProperty("Value") val Value: String)
 data class MessageAttributes(val eventType: EventType)

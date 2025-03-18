@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import java.time.LocalDate
 
 @Repository
@@ -52,7 +53,8 @@ class PrisonerRepository(
     openSearchRestTemplate.index(IndexQueryBuilder().withObject(prisoner).build(), IndexCoordinates.of(PRISONER_INDEX))
   }
 
-  fun getSummary(prisonerNumber: String): PrisonerDocumentSummary? = client.get(GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX, prisonerNumber), RequestOptions.DEFAULT)
+  fun getSummary(prisonerNumber: String): PrisonerDocumentSummary? = client
+    .get(GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX, prisonerNumber), RequestOptions.DEFAULT)
     .toPrisonerDocumentSummary(prisonerNumber)
 
   fun createPrisoner(prisoner: Prisoner) {
@@ -87,25 +89,9 @@ class PrisonerRepository(
       prisonerMap.remove("locationDescription")
     }
 
-    val response = openSearchRestTemplate.update(
-      UpdateQuery.builder(prisonerNumber)
-        .withDocument(Document.from(prisonerMap))
-        .withIfSeqNo(summary.sequenceNumber)
-        .withIfPrimaryTerm(summary.primaryTerm)
-        .build(),
-      IndexCoordinates.of(PRISONER_INDEX),
-    )
+    prisonerMap.remove("alerts")
 
-    return when (response.result) {
-      UpdateResponse.Result.NOOP -> false
-      UpdateResponse.Result.UPDATED -> true
-
-      UpdateResponse.Result.CREATED,
-      UpdateResponse.Result.DELETED,
-      UpdateResponse.Result.NOT_FOUND,
-      null,
-      -> throw IllegalStateException("Unexpected result ${response.result} from update of $prisonerNumber")
-    }
+    return doUpdate(prisonerNumber, prisonerMap, summary)
   }
 
   fun updateIncentive(
@@ -116,25 +102,7 @@ class PrisonerRepository(
     val incentiveMap = mapOf(
       "currentIncentive" to (incentive?.let { objectMapperWithNulls.convertValue<Map<String, *>>(incentive) }),
     )
-    val response = openSearchRestTemplate.update(
-      UpdateQuery.builder(prisonerNumber)
-        .withDocument(Document.from(incentiveMap))
-        .withIfSeqNo(summary.sequenceNumber)
-        .withIfPrimaryTerm(summary.primaryTerm)
-        .build(),
-      IndexCoordinates.of(PRISONER_INDEX),
-    )
-
-    return when (response.result) {
-      UpdateResponse.Result.NOOP -> false
-      UpdateResponse.Result.UPDATED -> true
-
-      UpdateResponse.Result.CREATED,
-      UpdateResponse.Result.DELETED,
-      UpdateResponse.Result.NOT_FOUND,
-      null,
-      -> throw IllegalStateException("Unexpected result ${response.result} from incentive update of $prisonerNumber")
-    }
+    return doUpdate(prisonerNumber, incentiveMap, summary)
   }
 
   fun updateRestrictedPatient(
@@ -157,9 +125,32 @@ class PrisonerRepository(
       "dischargeDetails" to dischargeDetails,
       "locationDescription" to locationDescription,
     )
+    return doUpdate(prisonerNumber, map, summary)
+  }
+
+  fun updateAlerts(
+    prisonerNumber: String,
+    alerts: List<PrisonerAlert>?,
+    summary: PrisonerDocumentSummary,
+  ): Boolean {
+    val map = alerts?.let {
+      val m = objectMapperWithNulls.convertValue<Map<String, *>>(
+        Prisoner().apply { this.alerts = alerts },
+      )
+      mapOf("alerts" to m["alerts"])
+    } ?: mapOf("alerts" to null)
+
+    return doUpdate(prisonerNumber, map, summary)
+  }
+
+  private fun doUpdate(
+    prisonerNumber: String,
+    prisonerMap: Map<String, Any?>,
+    summary: PrisonerDocumentSummary,
+  ): Boolean {
     val response = openSearchRestTemplate.update(
       UpdateQuery.builder(prisonerNumber)
-        .withDocument(Document.from(map))
+        .withDocument(Document.from(prisonerMap))
         .withIfSeqNo(summary.sequenceNumber)
         .withIfPrimaryTerm(summary.primaryTerm)
         .build(),
@@ -174,7 +165,7 @@ class PrisonerRepository(
       UpdateResponse.Result.DELETED,
       UpdateResponse.Result.NOT_FOUND,
       null,
-      -> throw IllegalStateException("Unexpected result ${response.result} from restricted patient update of $prisonerNumber")
+      -> throw IllegalStateException("Unexpected result ${response.result} from update of $prisonerNumber")
     }
   }
 
@@ -182,7 +173,8 @@ class PrisonerRepository(
     openSearchRestTemplate.delete(prisonerNumber, IndexCoordinates.of(PRISONER_INDEX))
   }
 
-  fun get(prisonerNumber: String): Prisoner? = openSearchRestTemplate.get(prisonerNumber, Prisoner::class.java, IndexCoordinates.of(PRISONER_INDEX))
+  fun get(prisonerNumber: String): Prisoner? = openSearchRestTemplate
+    .get(prisonerNumber, Prisoner::class.java, IndexCoordinates.of(PRISONER_INDEX))
 
   fun createIndex() {
     log.info("creating index")
@@ -208,7 +200,8 @@ class PrisonerRepository(
 
   fun doesIndexExist(): Boolean = client.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)
 
-  fun copyPrisoner(prisoner: Prisoner): Prisoner = objectMapper.readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)
+  fun copyPrisoner(prisoner: Prisoner): Prisoner = objectMapper
+    .readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)
 
   private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? = source?.let {
     PrisonerDocumentSummary(

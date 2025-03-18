@@ -60,8 +60,4 @@ data class IndexStatus(
 
   @JsonIgnore
   fun isNotBuilding() = isBuilding().not()
-
-//  companion object {
-//    // fun newIndex() = IndexStatus(currentIndex = SyncIndex.NONE)
-//  }
 }

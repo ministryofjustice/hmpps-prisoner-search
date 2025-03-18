@@ -44,6 +44,7 @@ services:
       - API_BASE_URL_PRISON_API=http://prison-api:8080
       - API_BASE_URL_RESTRICTED_PATIENTS=http://restricted-patients-api:8080
       - API_BASE_URL_INCENTIVES=http://hmpps-incentives-api:8080
+      - API_BASE_URL_ALERTS=http://alerts-api:8080
       - SQS_ENDPOINT_URL=http://localstack-psi:4566
       - PRISON_API_CLIENT_ID=prisoner-offender-search-client
       - PRISON_API_CLIENT_SECRET=clientsecret
@@ -51,6 +52,8 @@ services:
       - RESTRICTED_PATIENTS_CLIENT_SECRET=clientsecret
       - INCENTIVES_CLIENT_ID=prisoner-offender-search-client
       - INCENTIVES_CLIENT_SECRET=clientsecret
+      - ALERTS_CLIENT_ID=prisoner-offender-search-client
+      - ALERTS_CLIENT_SECRET=clientsecret
       - OPENSEARCH_URIS=http://localstack-psi:4566
       - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
       - OPENSEARCH_PATHPREFIX=/opensearch/eu-west-2/os01
@@ -136,6 +139,32 @@ services:
       - SPRING_FLYWAY_PASSWORD=incentives
       - SPRING_R2DBC_USERNAME=incentives
       - SPRING_R2DBC_PASSWORD=incentives
+
+  alerts-api:
+    image: quay.io/hmpps/hmpps-alerts-api:latest
+    networks:
+      - hmpps
+    container_name: hmpps-alerts-api
+    depends_on:
+      - hmpps-auth
+    ports:
+      - "8097:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=localstack
+      - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_PRISON=http://prison-api:8080
+      - API_BASE_URL_OFFENDER_SEARCH=http://hmpps-prisoner-search:8080
+      - SPRING_FLYWAY_URL=jdbc:postgresql://incentives-db:5432/incentives?sslmode=prefer
+      - SPRING_R2DBC_URL=r2dbc:postgresql://incentives-db:5432/incentives?sslmode=disable
+      - SPRING_FLYWAY_USER=incentives
+      - SPRING_FLYWAY_PASSWORD=incentives
+      - SPRING_R2DBC_USERNAME=incentives
+      - SPRING_R2DBC_PASSWORD=incentives
+      - ?????
 
   localstack:
     image: localstack/localstack:3

@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setLocationDescription
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.setRestrictedPatientFields
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.ConvictedStatusEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
+import java.time.LocalDate
 
 @Service
 class PrisonerSynchroniserService(
@@ -25,6 +27,7 @@ class PrisonerSynchroniserService(
   private val telemetryClient: TelemetryClient,
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
+  private val alertsService: AlertsService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
   private val prisonerMovementsEventService: PrisonerMovementsEventService,
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
@@ -162,6 +165,43 @@ class PrisonerSynchroniserService(
         }
     }
 
+  internal fun reindexAlerts(prisonerNo: String, eventType: String) = prisonerRepository.getSummary(prisonerNo)
+    ?.run {
+      if (this.prisoner == null) {
+        log.warn("Prisoner not found in index for {}", prisonerNo)
+        throw PrisonerNotFoundException(prisonerNo)
+      }
+      val bookingId = this.prisoner.bookingId?.toLong()
+      val now = LocalDate.now()
+      val alerts = getAlerts(prisonerNo)?.map {
+        PrisonerAlert(
+          alertCode = it.alertCode.code,
+          alertType = it.alertCode.alertTypeCode,
+          // expired mapping is the same as for sync to Nomis:
+          expired = it.activeTo != null && !it.activeTo.isAfter(now),
+          active = it.isActive,
+        )
+      }
+
+      prisonerRepository.updateAlerts(prisonerNo, alerts, this)
+        .also { updated ->
+          telemetryClient.trackPrisonerEvent(
+            if (updated) {
+              TelemetryEvents.ALERTS_UPDATED
+            } else {
+              TelemetryEvents.ALERTS_OPENSEARCH_NO_CHANGE
+            },
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+          if (updated) {
+            prisonerDifferenceService.generateAlertDiffEvent(this.prisoner.alerts, prisonerNo, alerts)
+            alertsUpdatedEventService.generateAnyEvents(this.prisoner.alerts, alerts, prisoner)
+          }
+        }
+    }
+
   internal fun index(ob: OffenderBooking): Prisoner = translate(ob).also {
     prisonerRepository.save(it)
   }
@@ -213,4 +253,6 @@ class PrisonerSynchroniserService(
   }
 
   private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }
+
+  private fun getAlerts(prisonerNumber: String) = alertsService.getActiveAlertsForPrisoner(prisonerNumber)
 }

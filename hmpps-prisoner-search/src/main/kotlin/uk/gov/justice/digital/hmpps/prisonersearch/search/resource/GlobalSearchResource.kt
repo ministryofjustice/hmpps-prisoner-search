@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchS
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.NotFoundException
+import kotlin.collections.firstOrNull
 
 @RestController
 @Validated

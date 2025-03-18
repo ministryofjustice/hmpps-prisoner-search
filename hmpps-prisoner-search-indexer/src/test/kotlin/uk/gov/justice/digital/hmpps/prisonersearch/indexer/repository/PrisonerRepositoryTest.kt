@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
+import co.elastic.clients.elasticsearch.watcher.EmailAttachmentBuilders.data
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.assertj.core.api.Assertions.assertThat
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import java.time.LocalDate
@@ -479,6 +481,131 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
           prisonerRepository.getSummary("X12345")!!,
         ),
       ).isFalse()
+    }
+  }
+
+  @Nested
+  inner class UpdateAlerts {
+
+    @Test
+    fun `will update prisoner with new data`() {
+      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" })
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        listOf(
+          PrisonerAlert(
+            alertType = "A",
+            alertCode = "ABC",
+            active = true,
+            expired = false,
+          ),
+        ),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      val data = prisonerRepository.get("X12345")?.alerts?.first()!!
+      assertThat(data.alertType).isEqualTo("A")
+      assertThat(data.alertCode).isEqualTo("ABC")
+      assertThat(data.active).isTrue()
+      assertThat(data.expired).isFalse()
+    }
+
+    @Test
+    fun `will update prisoner with existing data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        listOf(
+          PrisonerAlert(
+            alertType = "A",
+            alertCode = "ABC",
+            active = true,
+            expired = false,
+          ),
+          PrisonerAlert(
+            alertType = "B",
+            alertCode = "BCD",
+            active = false,
+            expired = true,
+          ),
+        ),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      val alerts = prisonerRepository.get("X12345")?.alerts!!
+      with(alerts.get(0)) {
+        assertThat(alertType).isEqualTo("A")
+        assertThat(alertCode).isEqualTo("ABC")
+        assertThat(active).isTrue()
+        assertThat(expired).isFalse()
+      }
+      with(alerts.get(1)) {
+        assertThat(alertType).isEqualTo("B")
+        assertThat(alertCode).isEqualTo("BCD")
+        assertThat(active).isFalse()
+        assertThat(expired).isTrue()
+      }
+      assertThat(alerts).hasSize(2)
+    }
+
+    @Test
+    fun `will update prisoner with no data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        null,
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      assertThat(prisonerRepository.get("X12345")!!.alerts).isNull()
+    }
+
+    @Test
+    fun `will update prisoner with empty data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        emptyList(),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      assertThat(prisonerRepository.get("X12345")!!.alerts).isEmpty()
     }
   }
 

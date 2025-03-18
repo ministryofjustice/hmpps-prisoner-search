@@ -23,8 +23,6 @@ class OffenderEventListener(
 
     private val movementEvent = setOf("EXTERNAL_MOVEMENT_RECORD-INSERTED", "EXTERNAL_MOVEMENT-CHANGED")
     private val bookingEvent = setOf(
-      "ALERT-INSERTED",
-      "ALERT-UPDATED",
       "ASSESSMENT-CHANGED",
       "BED_ASSIGNMENT_HISTORY-INSERTED",
       "CONFIRMED_RELEASE_DATE-CHANGED",

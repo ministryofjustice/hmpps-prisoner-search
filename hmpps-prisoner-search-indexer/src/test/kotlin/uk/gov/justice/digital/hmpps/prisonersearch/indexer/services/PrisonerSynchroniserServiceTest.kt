@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
@@ -38,10 +39,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
   private val restrictedPatientService = mock<RestrictedPatientService>()
+  private val alertsService = mock<AlertsService>()
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
@@ -55,6 +58,7 @@ internal class PrisonerSynchroniserServiceTest {
     telemetryClient,
     restrictedPatientService,
     incentivesService,
+    alertsService,
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
@@ -480,6 +484,151 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindexRestrictedPatient(noLivingUnitBooking.offenderNo, noLivingUnitBooking, "event")
 
       verifyNoInteractions(restrictedPatientService)
+    }
+  }
+
+  @Nested
+  inner class ReindexAlerts {
+    private val prisonerNumber = "A1234AA"
+    private val bookingId = 2L
+    private val oldAlerts = listOf(
+      PrisonerAlert(
+        alertType = "TYPE",
+        alertCode = "OLD",
+        active = true,
+        expired = false,
+      ),
+    )
+    private val newApiAlerts =
+      listOf(
+        Alert(
+          alertUuid = UUID.fromString("00001111-2222-3333-4444-000000000001"),
+          prisonNumber = "A1234AA",
+          alertCode = AlertCodeSummary(
+            alertTypeCode = "TYPE",
+            alertTypeDescription = "Alert type description",
+            code = "NEW",
+            description = "Alert code description",
+          ),
+          description = "Alert description",
+          authorisedBy = "A. Nurse, An Agency",
+          activeFrom = LocalDate.parse("2021-09-27"),
+          activeTo = LocalDate.parse("2022-07-15"),
+          isActive = true,
+          createdAt = LocalDateTime.parse("2021-09-27T14:19:25"),
+          createdBy = "USER1234",
+          createdByDisplayName = "Firstname Lastname",
+          lastModifiedAt = LocalDateTime.parse("2022-07-15T15:24:56"),
+          lastModifiedBy = "USER1234",
+          lastModifiedByDisplayName = "Firstname Lastname",
+          activeToLastSetAt = LocalDateTime.parse("2022-07-15T15:24:56"),
+          activeToLastSetBy = "USER123",
+          activeToLastSetByDisplayName = "Firstname Lastname",
+        ),
+      )
+    val prisoner = Prisoner().apply {
+      bookingId = this@ReindexAlerts.bookingId.toString()
+      alerts = oldAlerts
+    }
+    private val prisonerDocumentSummary =
+      PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
+
+    @BeforeEach
+    fun setup() {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer { it.getArgument(0) }
+    }
+
+    @Test
+    fun `will save alert to index`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateAlerts(
+        eq(prisonerNumber),
+        eq(
+          newApiAlerts.map {
+            PrisonerAlert(
+              alertType = "TYPE",
+              alertCode = "NEW",
+              active = true,
+              expired = true,
+            )
+          },
+        ),
+        eq(prisonerDocumentSummary),
+      )
+    }
+
+    @Test
+    fun `will create telemetry`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      whenever(prisonerRepository.updateAlerts(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.ALERTS_UPDATED.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "2"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      whenever(prisonerRepository.updateAlerts(eq(prisonerNumber), any(), any())).thenReturn(true)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerDifferenceService).generateAlertDiffEvent(any(), eq(prisonerNumber), any())
+      verify(alertsUpdatedEventService).generateAnyEvents(any(), any(), eq(prisoner))
+    }
+
+    @Test
+    fun `will not save alerts if no changes`() {
+      whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      whenever(prisonerRepository.updateAlerts(eq(prisonerNumber), any(), any())).thenReturn(false)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.ALERTS_OPENSEARCH_NO_CHANGE.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "2"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will do nothing if prisoner not found`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
+
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verifyNoInteractions(alertsService)
+      verify(prisonerRepository, never()).updateAlerts(any(), any(), any())
+    }
+
+    @Test
+    fun `Updates ok when no alerts data`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(null)
+
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateAlerts(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
     }
   }
 

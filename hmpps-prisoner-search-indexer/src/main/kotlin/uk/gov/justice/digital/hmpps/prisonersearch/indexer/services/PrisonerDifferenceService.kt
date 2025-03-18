@@ -12,6 +12,7 @@ import org.springframework.util.DigestUtils
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffableProperty
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_MISSING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.DIFFERENCE_REPORTED
@@ -119,6 +120,27 @@ class PrisonerDifferenceService(
         .takeIf { it.isNotEmpty() }
         ?.also { domainEventEmitter.emitPrisonerDifferenceEvent(prisonerNumber, it) }
     } ?: domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber)
+  }
+
+  internal fun generateAlertDiffEvent(
+    previousAlerts: List<PrisonerAlert>?,
+    prisonerNumber: String,
+    current: List<PrisonerAlert>?,
+  ) {
+    if (!diffProperties.events) return
+    domainEventEmitter.emitPrisonerDifferenceEvent(
+      prisonerNumber,
+      mapOf(
+        DiffCategory.ALERTS to listOf(
+          Difference(
+            property = "alerts",
+            categoryChanged = DiffCategory.ALERTS,
+            oldValue = previousAlerts,
+            newValue = current,
+          ),
+        ),
+      ),
+    )
   }
 
   @Suppress("UNCHECKED_CAST")
