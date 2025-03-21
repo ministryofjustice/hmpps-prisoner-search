@@ -37,14 +37,6 @@ class PrisonApiMockServer : WireMockServer(8093) {
 
     prisoners.forEach {
       stubGetOffender(it)
-      stubFor(
-        WireMock.get(WireMock.urlPathEqualTo("/incentive-reviews/booking/${it.bookingId}"))
-          .willReturn(
-            WireMock.aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withBody(it.toIncentiveLevel()),
-          ),
-      )
     }
   }
 

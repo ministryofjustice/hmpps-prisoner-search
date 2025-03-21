@@ -17,6 +17,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class CompareIndexResourceIntTest : IntegrationTestBase() {
@@ -158,12 +159,11 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
       prisonApi.stubGetOffender(
         PrisonerBuilder(
           "A9999AA",
-          alertCodes = listOf("P" to "PL1"),
-          aliases = listOf(
-            AliasBuilder(gender = "F"),
-          ),
+          aliases = listOf(AliasBuilder(gender = "F")),
         ),
       )
+
+      alertsApi.stubSuccess("A9999AA", listOf("P" to "PL1"))
 
       val details = webTestClient.get().uri("/compare-index/prisoner/A9999AA")
         .header("Content-Type", "application/json")
@@ -174,7 +174,7 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       assertThat(details).contains(
-        "[alerts: [], [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=false)]",
+        "[alerts: null, [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=true)]",
         "[aliases: [], [PrisonerAlias(title=Mr, firstName=LUCAS, middleNames=null, lastName=MORALES, dateOfBirth=1965-07-19, gender=F, ethnicity=null, raceCode=null)]]",
       )
     }

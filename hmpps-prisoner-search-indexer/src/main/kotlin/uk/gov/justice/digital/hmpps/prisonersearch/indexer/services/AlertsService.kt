@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.core.ParameterizedTypeReference
@@ -12,9 +11,9 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.UUID
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
 
 @Service
 class AlertsService(
@@ -32,11 +31,12 @@ class AlertsService(
     }
     .retrieve()
     .bodyToMono(object : ParameterizedTypeReference<RestResponsePage<Alert>>() {})
+    .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
     .block()
-    .let { result ->
+    ?.let { result ->
       // since a person can not typically have multiple active alerts the page size needs to be as big as the number of different alert codes (213)
       // so give result a reasonable headroom for growth and in the unlikely event of exceeding the size than throw an error and we can increase size with a code change
-      val totalElements = result?.totalElements
+      val totalElements = result.totalElements
       val numberOfElements = result.numberOfElements
       if (totalElements != numberOfElements.toLong()) throw IllegalStateException("Page size of 1000 for /prisoners/{offenderNo}/alerts not big enough $totalElements not equal to $numberOfElements")
       result.content
@@ -64,35 +64,3 @@ class RestResponsePage<T> : PageImpl<T> {
 
   constructor() : super(ArrayList<T>()) {}
 }
-
-data class Alert(
-  val alertUuid: UUID,
-  val prisonNumber: String,
-  val alertCode: AlertCodeSummary,
-  val description: String?,
-  val authorisedBy: String?,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val activeFrom: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val activeTo: LocalDate?,
-  val isActive: Boolean,
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val createdAt: LocalDateTime,
-  val createdBy: String,
-  val createdByDisplayName: String,
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val lastModifiedAt: LocalDateTime?,
-  val lastModifiedBy: String?,
-  val lastModifiedByDisplayName: String?,
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val activeToLastSetAt: LocalDateTime?,
-  val activeToLastSetBy: String?,
-  val activeToLastSetByDisplayName: String?,
-)
-
-data class AlertCodeSummary(
-  val alertTypeCode: String,
-  val alertTypeDescription: String,
-  val code: String,
-  val description: String,
-)

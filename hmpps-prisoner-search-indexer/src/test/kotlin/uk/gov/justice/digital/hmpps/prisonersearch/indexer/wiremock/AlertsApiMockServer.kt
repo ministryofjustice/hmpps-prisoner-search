@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import java.util.UUID
 
 class AlertsApiMockServer : WireMockServer(8097) {
   fun stubHealthPing(status: Int) {
@@ -22,88 +23,75 @@ class AlertsApiMockServer : WireMockServer(8097) {
     )
   }
 
-  fun stubSuccess() {
+  fun stubSuccess(
+    prisonerNumber: String = "A1234AA",
+    alertCodes: List<Pair<String, String>> = listOf("A" to "ABC"),
+  ) {
+    val alerts = alertCodes.joinToString(",") { (type, code) ->
+      """{
+      "alertUuid": "${UUID.randomUUID()}",
+      "prisonNumber": "$prisonerNumber",
+      "alertCode": {
+        "alertTypeCode": "$type",
+        "alertTypeDescription": "Type Description for $type",
+        "code": "$code",
+        "description": "Code description for $code"
+      },
+      "description": "Alert description",
+      "authorisedBy": "A. Nurse, An Agency",
+      "activeFrom": "2021-09-27",
+      "activeTo": "2022-07-15",
+      "isActive": true,
+      "createdAt": "2021-09-27T14:19:25",
+      "createdBy": "USER1234",
+      "createdByDisplayName": "Firstname Lastname",
+      "lastModifiedAt": "2022-07-15T15:24:56",
+      "lastModifiedBy": "USER1234",
+      "lastModifiedByDisplayName": "Firstname Lastname",
+      "activeToLastSetAt": "2022-07-15T15:24:56",
+      "activeToLastSetBy": "USER1234",
+      "activeToLastSetByDisplayName": "Firstname Lastname",
+      "prisonCodeWhenCreated": "LEI"
+    }"""
+    }
+
     stubFor(
-      get(urlPathMatching("/prisoners/.+/alerts"))
+      get(urlPathMatching("/prisoners/$prisonerNumber/alerts"))
         .willReturn(
           okJson(
             """
             {
               "totalPages": 1,
-              "totalElements": 1,
+              "totalElements": ${alertCodes.size},
               "first": true,
               "last": true,
-              "size": 1,
-              "content": [
-                {
-                  "alertUuid": "8cdadcf3-b003-4116-9956-c99bd8df6a00",
-                  "prisonNumber": "A1234AA",
-                  "alertCode": {
-                    "alertTypeCode": "A",
-                    "alertTypeDescription": "Alert type description",
-                    "code": "ABC",
-                    "description": "Alert code description"
-                  },
-                  "description": "Alert description",
-                  "authorisedBy": "A. Nurse, An Agency",
-                  "activeFrom": "2021-09-27",
-                  "activeTo": "2022-07-15",
-                  "isActive": true,
-                  "createdAt": "2021-09-27T14:19:25",
-                  "createdBy": "USER1234",
-                  "createdByDisplayName": "Firstname Lastname",
-                  "lastModifiedAt": "2022-07-15T15:24:56",
-                  "lastModifiedBy": "USER1234",
-                  "lastModifiedByDisplayName": "Firstname Lastname",
-                  "activeToLastSetAt": "2022-07-15T15:24:56",
-                  "activeToLastSetBy": "USER1234",
-                  "activeToLastSetByDisplayName": "Firstname Lastname",
-                  "prisonCodeWhenCreated": "LEI"
-                }
-              ],
+              "size": ${alertCodes.size},
+              "content": [ $alerts ],
               "number": 0,
               "sort": {
                 "empty": true,
                 "sorted": true,
                 "unsorted": true
               },
-              "numberOfElements": 1,
+              "numberOfElements": ${alertCodes.size},
               "pageable": {
-                "offset": 9007199254740991,
+                "offset": 0,
                 "sort": {
-                  "empty": true,
-                  "sorted": true,
+                  "empty": false,
+                  "sorted": false,
                   "unsorted": true
                 },
-                "unpaged": true,
-                "pageSize": 1073741824,
+                "unpaged": false,
+                "pageSize": 1000,
                 "paged": true,
-                "pageNumber": 1073741824
+                "pageNumber": 0
               },
-              "empty": true
+              "empty": false
             }
             """.trimIndent(),
           ),
         ),
     )
-  }
-
-  fun stubNotFound() {
-    stubFor(
-      get(urlPathMatching("/prisoners/.+/alerts"))
-        .willReturn(
-          aResponse()
-            .withStatus(404),
-        ),
-    )
-  }
-
-  fun stubErrorFollowedByNotFound() {
-    // Stub error followed by not found
-  }
-
-  fun stubError() {
-    // Stub error
   }
 }
 

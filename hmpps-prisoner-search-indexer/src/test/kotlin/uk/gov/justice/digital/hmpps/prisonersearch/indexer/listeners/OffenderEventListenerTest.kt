@@ -52,7 +52,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         "OFFENDER_BOOKING-CHANGED", "IMPRISONMENT_STATUS-CHANGED",
         "BED_ASSIGNMENT_HISTORY-INSERTED", "SENTENCE_DATES-CHANGED", "CONFIRMED_RELEASE_DATE-CHANGED",
         "ASSESSMENT-CHANGED", "OFFENDER_PROFILE_DETAILS-INSERTED", "OFFENDER_PROFILE_DETAILS-UPDATED",
-        "SENTENCING-CHANGED", "ALERT-INSERTED", "ALERT-UPDATED",
+        "SENTENCING-CHANGED",
       ],
     )
     fun `will call service for booking change`(eventType: String) {

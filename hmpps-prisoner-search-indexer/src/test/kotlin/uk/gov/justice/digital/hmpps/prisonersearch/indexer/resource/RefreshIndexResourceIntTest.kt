@@ -20,6 +20,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Instant
@@ -31,8 +32,9 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
   fun setUp() {
     prisonApi.stubOffenders(
       PrisonerBuilder("A9999AA"),
-      PrisonerBuilder("A7089EY", released = true, alertCodes = listOf("P" to "PL1"), heightCentimetres = 200),
+      PrisonerBuilder("A7089EY", released = true, heightCentimetres = 200),
     )
+    alertsApi.stubSuccess("A1239DD", listOf("P" to "PL1"))
     buildAndSwitchIndex(2)
     purgeDomainEventsQueue()
   }
@@ -100,6 +102,8 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
     assertThat(detailsForA9999AA).isEqualTo("""[[releaseDate: 2023-01-02, null]]""")
 
+    alertsApi.stubSuccess("A9999AA")
+
     val detailsForA7089EY = webTestClient.get().uri("/compare-index/prisoner/A7089EY")
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
       .exchange()
@@ -110,7 +114,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     assertThat(detailsForA7089EY).contains(
       "[active: true, false]",
       "[bookNumber: null, V61587]",
-      "[alerts: null, [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=false)",
+      "[croNumber: null, 29906/12L]",
       "[dateOfBirth: null, 1965-07-19]",
     )
 
@@ -130,22 +134,26 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
     val differences = eventCaptor.allValues.associate { it["prisonerNumber"] to it["categoriesChanged"] }
     assertThat(differences.keys).containsExactlyInAnyOrder("A9999AA", "A7089EY")
-    assertThat(differences["A9999AA"]).isEqualTo("[SENTENCE]")
-    assertThat(differences["A7089EY"]).isEqualTo("[ALERTS, IDENTIFIERS, LOCATION, PERSONAL_DETAILS, PHYSICAL_DETAILS, STATUS]")
+    assertThat(differences["A9999AA"]).isEqualTo("[ALERTS, SENTENCE]")
+    assertThat(differences["A7089EY"]).isEqualTo("[IDENTIFIERS, LOCATION, PERSONAL_DETAILS, PHYSICAL_DETAILS, STATUS]")
 
     webTestClient.get().uri("/prisoner-differences?from=$startOfTest")
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .jsonPath("$.[?(@.nomsNumber=='A9999AA')].differences")
-      .isEqualTo("[[releaseDate: 2023-01-02, null]]")
+      .jsonPath("$.[?(@.nomsNumber=='A9999AA')].differences").value<JSONArray> {
+        assertThat(it.toList()).hasSize(1)
+        assertThat(it.toList()[0].toString()).contains(
+          "[releaseDate: 2023-01-02, null]",
+          "[alerts: null, [PrisonerAlert(alertType=A, alertCode=ABC, active=true, expired=true)]]",
+        )
+      }
       .jsonPath("$.[?(@.nomsNumber=='A7089EY')].differences").value<JSONArray> {
         assertThat(it.toList()).hasSize(1)
         assertThat(it.toList()[0].toString()).contains(
           "[active: true, false]",
           "[bookNumber: null, V61587]",
-          "[alerts: null, [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=false)",
           "[dateOfBirth: null, 1965-07-19]",
         )
       }

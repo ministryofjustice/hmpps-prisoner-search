@@ -98,67 +98,6 @@ data class AlertAdditionalInformation(
   val source: AlertSource,
 )
 
-/*
-abstract class AlertBaseDomainEvent<T : AlertBaseAdditionalInformation> : DomainEvent {
-  abstract override val eventType: String
-  abstract override val additionalInformation: T
-  abstract override val version: Int
-  abstract override val description: String
-  abstract override val occurredAt: ZonedDateTime
-  override val detailUrl: String? = null
-  override val personReference: PersonReference? = null
-}
-
-data class AlertDomainEvent<T : AlertBaseAdditionalInformation>(
-  override val eventType: String,
-  override val additionalInformation: T,
-  override val version: Int = 1,
-  override val description: String,
-  override val occurredAt: ZonedDateTime,
-  override val detailUrl: String? = null,
-  override val personReference: PersonReference? = null,
-) : AlertBaseDomainEvent<T>()
-
-
-sealed interface DomainEventable {
-  val type: DomainEventType
-  fun detailPath(): String
-  fun toDomainEvent(baseUrl: String): DomainEvent
-}
-
-sealed interface AlertEvent : DomainEventable {
-  val alertUuid: UUID
-  val prisonNumber: String
-  val alertCode: String
-  val occurredAt: LocalDateTime
-  val source: Source
-  override fun detailPath(): String = "/alerts/$alertUuid"
-  override fun toDomainEvent(baseUrl: String): AlertDomainEvent<AlertAdditionalInformation> = AlertDomainEvent(
-    eventType = type.eventType,
-    additionalInformation = AlertAdditionalInformation(
-      alertUuid = alertUuid,
-      alertCode = alertCode,
-      source = source,
-    ),
-    description = type.description,
-    occurredAt = occurredAt.toZoneDateTime(),
-    detailUrl = "$baseUrl${detailPath()}",
-    personReference = PersonReference.withNomsNumber(prisonNumber),
-  )
-}
-
-data class AlertCreatedEvent(
-  override val alertUuid: UUID,
-  override val prisonNumber: String,
-  override val alertCode: String,
-  override val occurredAt: LocalDateTime,
-  override val source: Source,
-  val createdBy: String,
-) : AlertEvent {
-  override val type: DomainEventType = ALERT_CREATED
-}
-*/
-
 enum class AlertSource {
   DPS,
   NOMIS,

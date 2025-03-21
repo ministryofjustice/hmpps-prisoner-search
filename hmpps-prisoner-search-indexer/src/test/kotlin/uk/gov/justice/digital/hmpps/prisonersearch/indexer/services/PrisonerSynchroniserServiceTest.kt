@@ -22,6 +22,8 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
@@ -97,8 +99,8 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindexUpdate(booking, "event")
 
       verify(prisonerRepository, times(1)).createPrisoner(isA())
-      verify(alertsUpdatedEventService).generateAnyEvents(isNull(), any())
       verify(prisonerMovementsEventService).generateAnyEvents(isNull(), any(), eq(booking))
+      verify(convictedStatusEventService).generateAnyEvents(isNull(), any())
     }
 
     @Test
@@ -107,11 +109,8 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.updatePrisoner(any(), any(), isA())).thenReturn(true)
       service.reindexUpdate(booking, "event")
 
-      verify(alertsUpdatedEventService).generateAnyEvents(
-        eq(existingPrisoner),
-        any(),
-      ) // null for previous prisoner
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
+      verify(convictedStatusEventService).generateAnyEvents(eq(existingPrisoner), any())
     }
 
     @Test
@@ -756,7 +755,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerRepository, never()).save(any())
       verify(prisonerDifferenceService).hasChanged(any(), any())
@@ -768,7 +767,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
       verify(prisonerRepository).save(any())
@@ -780,7 +779,7 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any())).thenReturn(existingPrisoner)
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
       verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any())
@@ -789,19 +788,19 @@ internal class PrisonerSynchroniserServiceTest {
   }
 
   @Nested
-  inner class GetDomainData {
+  inner class Refresh {
     private val booking = OffenderBookingBuilder().anOffenderBooking()
 
     @Test
     fun `will get incentive level if booking present`() {
-      service.getDomainData(booking)
+      service.refresh(booking)
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
 
     @Test
     fun `will not get incentive if there is no booking`() {
-      service.getDomainData(OffenderBookingBuilder().anOffenderBooking(null))
+      service.refresh(OffenderBookingBuilder().anOffenderBooking(null))
 
       verifyNoInteractions(incentivesService)
     }
@@ -817,7 +816,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.getDomainData(prisonBooking)
+      service.refresh(prisonBooking)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -828,7 +827,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.getDomainData(noLivingUnitBooking)
+      service.refresh(noLivingUnitBooking)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -844,7 +843,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.getDomainData(outsidePrisoner)
+      service.refresh(outsidePrisoner)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
     }

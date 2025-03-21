@@ -20,7 +20,6 @@ data class OffenderBooking(
   var lastMovementReasonCode: String? = null,
   var lastMovementTime: LocalDateTime? = null,
   val religion: String? = null,
-  val alerts: List<Alert>? = null,
   val assignedLivingUnit: AssignedLivingUnit? = null,
   val physicalAttributes: PhysicalAttributes? = null,
   val physicalCharacteristics: List<PhysicalCharacteristic>? = null,

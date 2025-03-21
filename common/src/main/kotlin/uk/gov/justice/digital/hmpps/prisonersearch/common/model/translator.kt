@@ -2,15 +2,23 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
+import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
-fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, incentiveLevel: Result<IncentiveLevel?>, restrictedPatientData: Result<RestrictedPatient?>): Prisoner {
+fun Prisoner.translate(
+  existingPrisoner: Prisoner? = null,
+  ob: OffenderBooking,
+  incentiveLevel: Result<IncentiveLevel?>,
+  restrictedPatientData: Result<RestrictedPatient?>,
+  alerts: Result<List<Alert>?>,
+): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
   this.bookingId = ob.bookingId?.toString()
@@ -50,8 +58,18 @@ fun Prisoner.translate(existingPrisoner: Prisoner? = null, ob: OffenderBooking, 
         raceCode = a.raceCode,
       )
     }
-  this.alerts =
-    ob.alerts?.filter { a -> a.active }?.map { a -> PrisonerAlert(a.alertType, a.alertCode, a.active, a.expired) }
+  this.alerts = alerts.map { list ->
+    val now = LocalDate.now()
+
+    list?.map {
+      PrisonerAlert(
+        alertCode = it.alertCode.code,
+        alertType = it.alertCode.alertTypeCode,
+        expired = it.isExpired(now),
+        active = it.isActive,
+      )
+    }
+  }.getOrElse { existingPrisoner?.alerts }
 
   this.gender = ob.physicalAttributes?.gender
   this.ethnicity = ob.physicalAttributes?.ethnicity
@@ -280,3 +298,6 @@ private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List
     primarySentence = it.primarySentence,
   )
 }
+
+// expired mapping logic is the same as for sync to Nomis:
+fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo.isAfter(now)

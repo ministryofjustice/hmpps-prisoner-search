@@ -7,9 +7,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 class TranslatorTest {
@@ -40,6 +42,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.prisonerNumber).isEqualTo("A1234AA")
@@ -64,6 +67,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.topupSupervisionExpiryDate).isEqualTo(tseDate)
   }
@@ -82,6 +86,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.topupSupervisionStartDate).isEqualTo(tssDate)
   }
@@ -100,6 +105,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.homeDetentionCurfewEndDate).isEqualTo(hdcend)
   }
@@ -128,6 +134,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseOverrideDate)
     assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseOverrideDate)
@@ -154,6 +161,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
     assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseDate)
@@ -175,39 +183,11 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.imprisonmentStatus).isEqualTo("LIFE")
     assertThat(prisoner.imprisonmentStatusDescription).isEqualTo("Serving Life Imprisonment")
     assertThat(prisoner.convictedStatus).isEqualTo("Remand")
-  }
-
-  @Test
-  fun `maps alerts correctly`() {
-    val prisoner = Prisoner().translate(
-      ob = OffenderBooking(
-        offenderNo = "A1234AA",
-        offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
-        alerts = listOf(
-          Alert(
-            alertId = 1,
-            active = true,
-            expired = false,
-            alertCode = "x-code",
-            alertType = "x-type",
-            dateCreated = LocalDate.now(),
-          ),
-        ),
-      ),
-      incentiveLevel = Result.success(null),
-      restrictedPatientData = Result.success(null),
-    )
-
-    assertThat(prisoner.alerts?.first())
-      .extracting("alertType", "alertCode", "active", "expired")
-      .contains("x-type", "x-code", true, false)
   }
 
   @Test
@@ -223,6 +203,7 @@ class TranslatorTest {
         ),
       ),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.currentIncentive).isNotNull
@@ -247,6 +228,7 @@ class TranslatorTest {
         ),
       ),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.currentIncentive).isNotNull
@@ -275,6 +257,7 @@ class TranslatorTest {
           dischargeDetails = "Getting worse",
         ),
       ),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.restrictedPatient).isTrue
@@ -292,6 +275,7 @@ class TranslatorTest {
       ob = aBooking().copy(locationDescription = "OUT"),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.restrictedPatient).isFalse
@@ -304,11 +288,103 @@ class TranslatorTest {
   }
 
   @Test
+  internal fun `alerts data is mapped`() {
+    fun alert(code: String, activeTo: LocalDate?): Alert {
+      val alert = Alert(
+        alertUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
+        prisonNumber = "A1234AA",
+        alertCode = AlertCodeSummary("x-type", "type-description", code, "x-description"),
+        description = null,
+        authorisedBy = null,
+        activeFrom = LocalDate.parse("2021-09-27"),
+        activeTo = activeTo,
+        isActive = false,
+        createdAt = LocalDateTime.parse("2021-09-27T14:19:25"),
+        createdBy = "USER1234",
+        createdByDisplayName = "Firstname Lastname",
+        lastModifiedAt = null,
+        lastModifiedBy = null,
+        lastModifiedByDisplayName = null,
+        activeToLastSetAt = null,
+        activeToLastSetBy = null,
+        activeToLastSetByDisplayName = null,
+      )
+      return alert
+    }
+
+    val prisoner = Prisoner().translate(
+      ob = aBooking(),
+      alerts = Result.success(
+        listOf(
+          alert("X0", LocalDate.now()),
+          alert("X1", activeTo = LocalDate.now().plusDays(1)),
+          alert("X2", activeTo = null),
+        ),
+      ),
+      restrictedPatientData = Result.success(null),
+      incentiveLevel = Result.success(null),
+    )
+
+    assertThat(prisoner.alerts).isNotNull
+    assertThat(prisoner.alerts).hasSize(3)
+    assertThat(prisoner.alerts?.get(0)).isEqualTo(
+      PrisonerAlert(
+        alertCode = "X0",
+        alertType = "x-type",
+        expired = true,
+        active = false,
+      ),
+    )
+    assertThat(prisoner.alerts?.get(1)).isEqualTo(
+      PrisonerAlert(
+        alertCode = "X1",
+        alertType = "x-type",
+        expired = false,
+        active = false,
+      ),
+    )
+    assertThat(prisoner.alerts?.get(2)).isEqualTo(
+      PrisonerAlert(
+        alertCode = "X2",
+        alertType = "x-type",
+        expired = false,
+        active = false,
+      ),
+    )
+  }
+
+  @Test
+  fun `alerts data is unchanged on failure`() {
+    val alerts = listOf(
+      PrisonerAlert(
+        alertCode = "X0",
+        alertType = "x-type",
+        expired = true,
+        active = false,
+      ),
+    )
+    val existingPrisoner = Prisoner()
+      .apply {
+        this.alerts = alerts
+      }
+    val newPrisoner = Prisoner()
+      .translate(
+        existingPrisoner,
+        ob = aBooking(),
+        alerts = Result.failure(RuntimeException("It has gone badly wrong")),
+        restrictedPatientData = Result.success(null),
+        incentiveLevel = Result.success(null),
+      )
+    assertThat(newPrisoner.alerts).isSameAs(alerts)
+  }
+
+  @Test
   fun `should map last prison ID`() {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(latestLocationId = "LEI"),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.lastPrisonId).isEqualTo("LEI")
@@ -329,6 +405,7 @@ class TranslatorTest {
           ),
         ),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
@@ -336,6 +413,7 @@ class TranslatorTest {
         aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.currentIncentive).isNotNull
@@ -353,6 +431,7 @@ class TranslatorTest {
         ob = aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.currentIncentive).isNull()
@@ -364,6 +443,7 @@ class TranslatorTest {
         ob = aBooking().copy(locationDescription = "OUT"),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
@@ -371,6 +451,7 @@ class TranslatorTest {
         aBooking(),
         Result.failure(RuntimeException("It has gone badly wrong")),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.currentIncentive).isNull()
@@ -397,6 +478,7 @@ class TranslatorTest {
             dischargeDetails = "Getting worse",
           ),
         ),
+        alerts = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
@@ -404,6 +486,7 @@ class TranslatorTest {
         aBooking(),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.locationDescription).isEqualTo("OUT - discharged to Hazelwood Hospital")
@@ -421,6 +504,7 @@ class TranslatorTest {
         ob = aBooking(),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.failure(Exception()),
+        alerts = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
@@ -428,6 +512,7 @@ class TranslatorTest {
         aBooking().copy(locationDescription = "OUT"),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.locationDescription).isEqualTo("OUT")
@@ -440,6 +525,7 @@ class TranslatorTest {
         ob = aBooking().copy(locationDescription = "previous location"),
         Result.failure(RuntimeException("It has gone badly wrong")),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.restrictedPatient).isFalse()
@@ -453,6 +539,7 @@ class TranslatorTest {
         ob = aBooking().copy(locationDescription = "OUT"),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       val prisoner = Prisoner().translate(
@@ -460,6 +547,7 @@ class TranslatorTest {
         aBooking(),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.failure(RuntimeException("It has gone badly wrong")),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.restrictedPatient).isFalse()
@@ -486,6 +574,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.gender).isEqualTo("M")
     assertThat(prisoner.ethnicity).isEqualTo("W")
@@ -509,6 +598,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.hairColour).isEqualTo("Red")
     assertThat(prisoner.rightEyeColour).isEqualTo("Green")
@@ -533,6 +623,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.tattoos)
       .containsExactly(BodyPartDetail("Elbow", "Comment here"), BodyPartDetail("Foot", null))
@@ -556,6 +647,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
     assertThat(prisoner.tattoos).containsExactlyInAnyOrder(
       BodyPartDetail("Elbow", "Comment here"),
@@ -583,6 +675,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.emailAddresses).extracting("email")
@@ -601,6 +694,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.phoneNumbers).extracting("type", "number")
@@ -635,6 +729,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -670,6 +765,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -719,6 +815,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -797,6 +894,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses!![0].fullAddress).startsWith("1 Main Street, locality, ")
@@ -828,6 +926,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -858,6 +957,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -888,6 +988,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -922,6 +1023,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses!![0].phoneNumbers).extracting("type", "number")
@@ -955,6 +1057,7 @@ class TranslatorTest {
         ),
         incentiveLevel = Result.success(null),
         restrictedPatientData = Result.success(null),
+        alerts = Result.success(null),
       )
 
       assertThat(prisoner.addresses).containsExactly(
@@ -1003,6 +1106,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.allConvictedOffences)
@@ -1027,6 +1131,7 @@ class TranslatorTest {
       ),
       incentiveLevel = Result.success(null),
       restrictedPatientData = Result.success(null),
+      alerts = Result.success(null),
     )
 
     assertThat(prisoner.identifiers?.first()?.value).isEqualTo(prisonerPnc)

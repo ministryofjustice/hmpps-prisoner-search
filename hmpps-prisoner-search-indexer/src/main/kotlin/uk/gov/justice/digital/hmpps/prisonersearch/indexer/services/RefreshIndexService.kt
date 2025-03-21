@@ -51,8 +51,7 @@ class RefreshIndexService(
 
   fun refreshPrisoner(prisonerNumber: String) {
     nomisService.getOffender(prisonerNumber)?.let { ob ->
-      val (incentiveLevelData, restrictedPatientData) = prisonerSynchroniserService.getDomainData(ob)
-      prisonerSynchroniserService.compareAndMaybeIndex(ob, incentiveLevelData, restrictedPatientData)
+      prisonerSynchroniserService.refresh(ob)
     }
   }
 

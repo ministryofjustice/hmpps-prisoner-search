@@ -16,3 +16,6 @@ class IncentivesApiHealth(@Qualifier("incentivesHealthWebClient") webClient: Web
 
 @Component("restrictedPatientsApi")
 class RestrictedPatientsApiHealth(@Qualifier("restrictedPatientsHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)
+
+@Component("alertsApi")
+class AlertsApiHealth(@Qualifier("alertsHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)

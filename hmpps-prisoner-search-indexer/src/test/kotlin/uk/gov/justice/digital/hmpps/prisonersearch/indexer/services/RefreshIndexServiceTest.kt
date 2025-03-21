@@ -205,13 +205,10 @@ class RefreshIndexServiceTest {
     internal fun `will synchronise offender to all active indices`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any())).thenReturn(booking)
-      whenever(prisonerSynchroniserService.getDomainData(booking)).thenReturn(
-        Result.success(null) to Result.success(null),
-      )
 
       refreshIndexService.refreshPrisoner("ABC123D")
 
-      verify(prisonerSynchroniserService).compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      verify(prisonerSynchroniserService).refresh(booking)
       verify(nomisService).getOffender("ABC123D")
     }
 

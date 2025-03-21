@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
 import org.apache.commons.lang3.RandomStringUtils
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
@@ -192,20 +192,6 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
       description = this.cellLocation,
       agencyName = "$agencyId (HMP)",
     ),
-    alerts = this.alertCodes.map { (type, code) ->
-      Alert(
-        alertId = Random.nextLong(),
-        offenderNo = this.prisonerNumber,
-        alertCode = code,
-        alertCodeDescription = "Code description for $code",
-        alertType = type,
-        alertTypeDescription = "Type Description for $type",
-        // In search all alerts are not expired and active
-        expired = false,
-        active = true,
-        dateCreated = LocalDate.now(),
-      )
-    },
     aliases = this.aliases.map { a ->
       Alias(
         gender = a.gender,
@@ -334,8 +320,21 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
   }
 }
 
-fun PrisonerBuilder.toPrisoner(): Prisoner = toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)
+fun PrisonerBuilder.toPrisoner(): Prisoner = toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null, null)
 
 private fun getOffenderBookingTemplate(): OffenderBooking = GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
 
-fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) = Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), Result.success(restrictedPatientData)) }
+fun toPrisoner(
+  ob: OffenderBooking,
+  incentiveLevel: IncentiveLevel?,
+  restrictedPatientData: RestrictedPatient?,
+  alerts: List<Alert>?,
+) = Prisoner().apply {
+  this.translate(
+    null,
+    ob,
+    Result.success(incentiveLevel),
+    Result.success(restrictedPatientData),
+    Result.success(alerts),
+  )
+}

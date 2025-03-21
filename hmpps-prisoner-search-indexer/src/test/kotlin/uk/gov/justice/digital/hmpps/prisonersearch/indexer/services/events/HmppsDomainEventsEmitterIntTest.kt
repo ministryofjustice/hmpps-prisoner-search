@@ -32,10 +32,13 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.IDENTIFIERS
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferenceService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.validAlertsMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiMockServer
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
@@ -48,6 +51,10 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   @MockitoSpyBean
   @Qualifier("offenderqueue-sqs-client")
   private lateinit var offenderQueueSqsClient: SqsAsyncClient
+
+  @MockitoSpyBean
+  @Qualifier("hmppsdomainqueue-sqs-client")
+  private lateinit var hmppsDomainQueueSqsClient: SqsAsyncClient
 
   @MockitoSpyBean
   @Qualifier("hmppseventtopic-sns-client")
@@ -206,7 +213,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
     val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
 
-    offenderQueueSqsClient.sendMessage(message)
+    offenderQueueSqsClient.sendOffenderMessage(message)
     await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
@@ -237,7 +244,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
     val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD")
 
-    offenderQueueSqsClient.sendMessage(message)
+    offenderQueueSqsClient.sendOffenderMessage(message)
     await atLeast Duration.ofSeconds(1) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
     val updateMsgBody = readNextDomainEventMessage()
@@ -263,7 +270,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             ),
         ),
     )
-    offenderQueueSqsClient.sendMessage(
+    offenderQueueSqsClient.sendOffenderMessage(
       "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"),
     )
     await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
@@ -294,7 +301,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             ),
         ),
     )
-    offenderQueueSqsClient.sendMessage(
+    offenderQueueSqsClient.sendOffenderMessage(
       "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"),
     )
     await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
@@ -309,27 +316,24 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will send prisoner alerts change event to the domain topic when an alert is added`() {
-    recreatePrisoner(PrisonerBuilder(prisonerNumber = "A1239DD", bookingId = 123456, alertCodes = listOf("X" to "XTACT")))
+    // Create the prisoner on ES
+    Prisoner()
+      .apply {
+        prisonerNumber = "A1239DD"
+        alerts = listOf(
+          PrisonerAlert(
+            alertCode = "XTACT",
+            alertType = "X",
+            active = true,
+            expired = false,
+          ),
+        )
+      }
+      .also { prisonerRepository.save(it) }
 
-    // update the prisoner on ES
-    prisonApi.stubOffenderNoFromBookingId("A1239DD")
-    prisonApi.stubFor(
-      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              PrisonerBuilder(
-                prisonerNumber = "A1239DD",
-                bookingId = 123456,
-                alertCodes = listOf("X" to "XTACT", "W" to "WO"),
-              ).toOffenderBooking(),
-            ),
-        ),
-    )
-    offenderQueueSqsClient.sendMessage(
-      "/messages/offenderAlertsChanged.json".readResourceAsText(),
-    )
+    alertsApi.stubSuccess("A1239DD", listOf("X" to "XTACT", "W" to "WO"))
+
+    hmppsDomainQueueSqsClient.sendDomainMessage(validAlertsMessage("A1239DD", "person.alert.created"))
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
     val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
@@ -360,7 +364,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             ),
         ),
     )
-    offenderQueueSqsClient.sendMessage(offenderPhysicalDetailsChanged("A1239DD"))
+    offenderQueueSqsClient.sendOffenderMessage(offenderPhysicalDetailsChanged("A1239DD"))
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
 
     assertThatJson(readNextDomainEventMessage()).node("eventType")
@@ -369,34 +373,31 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @Test
   fun `e2e - will send prisoner alerts change event to the domain topic when an alert is removed`() {
-    recreatePrisoner(
-      PrisonerBuilder(
-        prisonerNumber = "A1239DD",
-        bookingId = 123456,
-        alertCodes = listOf("X" to "XTACT", "W" to "WO"),
-      ),
-    )
+    // Create the prisoner on ES
+    Prisoner()
+      .apply {
+        prisonerNumber = "A1239DD"
+        alerts = listOf(
+          PrisonerAlert(
+            alertCode = "XTACT",
+            alertType = "X",
+            active = true,
+            expired = false,
+          ),
+          PrisonerAlert(
+            alertCode = "WO",
+            alertType = "W",
+            active = true,
+            expired = false,
+          ),
+        )
+      }
+      .also { prisonerRepository.save(it) }
 
-    // update the prisoner on ES
-    prisonApi.stubOffenderNoFromBookingId("A1239DD")
-    prisonApi.stubFor(
-      get(urlEqualTo("/api/prisoner-search/offenders/A1239DD"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              // technically the alert should be end dated but this will work equally well
-              PrisonerBuilder(
-                prisonerNumber = "A1239DD",
-                bookingId = 123456,
-                alertCodes = listOf("W" to "WO"),
-              ).toOffenderBooking(),
-            ),
-        ),
-    )
-    offenderQueueSqsClient.sendMessage(
-      "/messages/offenderAlertsChanged.json".readResourceAsText(),
-    )
+    alertsApi.stubSuccess("A1239DD", listOf("W" to "WO"))
+
+    hmppsDomainQueueSqsClient.sendDomainMessage(validAlertsMessage("A1239DD", "person.alert.updated"))
+
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
     val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
@@ -433,7 +434,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             ),
         ),
     )
-    offenderQueueSqsClient.sendMessage("/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"))
+    offenderQueueSqsClient.sendOffenderMessage("/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A1239DD"))
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
     val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
@@ -465,8 +466,8 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             ),
         ),
     )
-    offenderQueueSqsClient.sendMessage(message)
-    offenderQueueSqsClient.sendMessage(message)
+    offenderQueueSqsClient.sendOffenderMessage(message)
+    offenderQueueSqsClient.sendOffenderMessage(message)
     await untilCallTo { getNumberOfMessagesCurrentlyOnEventQueue() } matches { it == 0 }
 
     // expecting 2 attempts to update
@@ -494,7 +495,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
             .withBody(builder.toOffenderBooking()),
         ),
     )
-    offenderQueueSqsClient.sendMessage(
+    offenderQueueSqsClient.sendOffenderMessage(
       "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", prisonerNumber),
     )
 
@@ -505,7 +506,6 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     // Wait for create and received events (and possibly others), then delete them
     var numberToExpect = 1 // created
     if (!builder.released) numberToExpect++ // received
-    if (builder.alertCodes.isNotEmpty()) numberToExpect++ // alert-updated
     if (builder.convictedStatus != null) numberToExpect++ // convicted status changed
     await atMost Duration.ofSeconds(30) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == numberToExpect }
 
@@ -529,9 +529,15 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     )
   }
 
-  private fun SqsAsyncClient.sendMessage(body: String) = sendMessage(
+  private fun SqsAsyncClient.sendOffenderMessage(body: String) = sendMessage(
     SendMessageRequest.builder().queueUrl(
       offenderQueueUrl,
+    ).messageBody(body).build(),
+  ).get()
+
+  private fun SqsAsyncClient.sendDomainMessage(body: String) = sendMessage(
+    SendMessageRequest.builder().queueUrl(
+      hmppsDomainQueueUrl,
     ).messageBody(body).build(),
   ).get()
 
