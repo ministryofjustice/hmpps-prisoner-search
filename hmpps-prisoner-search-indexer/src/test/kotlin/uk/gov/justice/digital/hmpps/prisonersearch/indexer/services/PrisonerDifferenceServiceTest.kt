@@ -510,7 +510,7 @@ class PrisonerDifferenceServiceTest {
   }
 
   @Nested
-  inner class GenerateDifferencesEvent {
+  inner class GenerateDiffEvent {
     val booking = someOffenderBooking()
 
     @BeforeEach
@@ -529,6 +529,16 @@ class PrisonerDifferenceServiceTest {
         eq("someOffenderNo"),
         check {
           assertThat(it.keys).containsExactly(DiffCategory.IDENTIFIERS)
+          assertThat(it.values).containsExactly(
+            listOf(
+              Difference(
+                property = "pncNumber",
+                categoryChanged = DiffCategory.IDENTIFIERS,
+                oldValue = "somePnc1",
+                newValue = "somePnc2",
+              ),
+            ),
+          )
         },
       )
     }
@@ -616,6 +626,97 @@ class PrisonerDifferenceServiceTest {
 
       assertThatThrownBy {
         prisonerDifferenceService.generateDiffEvent(prisoner1, booking.offenderNo, prisoner2)
+      }.isInstanceOf(RuntimeException::class.java)
+    }
+  }
+
+  @Nested
+  inner class GenerateAlertDiffEvent {
+    @BeforeEach
+    fun setUp() {
+      whenever(diffProperties.events).thenReturn(true)
+    }
+
+    @Test
+    fun `should report alerts`() {
+      val alerts1 = listOf(
+        PrisonerAlert(alertType = "X", alertCode = "X1", expired = false, active = true),
+      )
+      val alerts2 = listOf(
+        PrisonerAlert(alertType = "Y", alertCode = "X1", expired = false, active = true),
+      )
+
+      prisonerDifferenceService.generateAlertDiffEvent(alerts1, "someOffenderNo", alerts2)
+
+      verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
+        eq("someOffenderNo"),
+        check {
+          assertThat(it.keys).containsExactly(DiffCategory.ALERTS)
+          assertThat(it.values).containsExactly(
+            listOf(
+              Difference(
+                property = "alerts",
+                categoryChanged = DiffCategory.ALERTS,
+                oldValue = alerts1,
+                newValue = alerts2,
+              ),
+            ),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `should report null differences`() {
+      val alerts1 = null
+      val alerts2 = listOf(
+        PrisonerAlert(alertType = "Y", alertCode = "X1", expired = false, active = true),
+      )
+
+      prisonerDifferenceService.generateAlertDiffEvent(alerts1, "someOffenderNo", alerts2)
+
+      verify(domainEventsEmitter).emitPrisonerDifferenceEvent(
+        eq("someOffenderNo"),
+        check {
+          assertThat(it.keys).containsExactly(DiffCategory.ALERTS)
+        },
+      )
+    }
+
+    @Test
+    fun `should not create events if feature switch is off`() {
+      whenever(diffProperties.events).thenReturn(false)
+
+      val alerts1 = listOf(
+        PrisonerAlert(alertType = "X", alertCode = "X1", expired = false, active = true),
+      )
+      val alerts2 = listOf(
+        PrisonerAlert(alertType = "Y", alertCode = "X1", expired = false, active = true),
+      )
+
+      prisonerDifferenceService.generateAlertDiffEvent(alerts1, "someOffenderNo", alerts2)
+
+      verify(domainEventsEmitter, never()).emitPrisonerDifferenceEvent(anyString(), any())
+    }
+
+    @Test
+    fun `should NOT swallow exceptions when sending domain events`() {
+      whenever(
+        domainEventsEmitter.emitPrisonerDifferenceEvent(
+          anyString(),
+          any(),
+        ),
+      ).thenThrow(RuntimeException::class.java)
+
+      val alerts1 = listOf(
+        PrisonerAlert(alertType = "X", alertCode = "X1", expired = false, active = true),
+      )
+      val alerts2 = listOf(
+        PrisonerAlert(alertType = "Y", alertCode = "X1", expired = false, active = true),
+      )
+
+      assertThatThrownBy {
+        prisonerDifferenceService.generateAlertDiffEvent(alerts1, "someOffenderNo", alerts2)
       }.isInstanceOf(RuntimeException::class.java)
     }
   }

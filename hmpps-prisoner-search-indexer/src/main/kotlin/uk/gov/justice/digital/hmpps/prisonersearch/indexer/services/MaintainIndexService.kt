@@ -113,6 +113,7 @@ class MaintainIndexService(
       ?.also {
         prisonerSynchroniserService.reindexIncentive(prisonerNumber, "MAINTAIN")
         prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, "MAINTAIN")
+        prisonerSynchroniserService.reindexAlerts(prisonerNumber, "MAINTAIN")
       }
       ?.let {
         prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")

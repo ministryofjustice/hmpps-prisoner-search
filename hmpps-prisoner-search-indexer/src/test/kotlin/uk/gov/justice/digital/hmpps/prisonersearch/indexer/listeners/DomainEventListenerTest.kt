@@ -106,7 +106,7 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
         "restricted-patients.patient.supporting-prison-changed",
       ],
     )
-    internal fun `will call service for restricted patint`(eventType: String) {
+    internal fun `will call service for restricted patient`(eventType: String) {
       listener.processDomainEvent(validRestrictedPatientDomainEvent(eventType))
 
       verify(indexListenerService).restrictedPatientChange(

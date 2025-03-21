@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.AlertEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
@@ -36,6 +37,18 @@ class IndexListenerService(
       message.additionalInformation.prisonerNumber,
     )
     reindexRestrictedPatient(message.additionalInformation.prisonerNumber, eventType)
+  }
+
+  fun alertChange(message: AlertEvent, eventType: String) {
+    message.personReference.findNomsNumber()?.also { prisonerNumber ->
+      log.info(
+        "Alert change: {} for prisoner {}",
+        message.description,
+        prisonerNumber,
+      )
+      prisonerSynchroniserService.reindexAlerts(prisonerNumber, eventType)
+    }
+      ?: throw IllegalStateException("Alert event found with no prisonerNumber: uuid = " + message.additionalInformation.alertUuid)
   }
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)

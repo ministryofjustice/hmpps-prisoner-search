@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
 import org.apache.commons.lang3.RandomStringUtils
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.random.Random
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
@@ -164,6 +166,33 @@ fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? = this.currentIncentive?
   )
 }
 
+fun PrisonerBuilder.toAlerts(): List<Alert>? = this.alertCodes.map {
+  Alert(
+    alertUuid = UUID.fromString("00001111-2222-3333-4444-000000000001"),
+    prisonNumber = this.prisonerNumber,
+    alertCode = AlertCodeSummary(
+      alertTypeCode = it.first,
+      alertTypeDescription = "Alert type description",
+      code = it.second,
+      description = "Alert code description",
+    ),
+    description = "Alert description",
+    authorisedBy = "A. Nurse, An Agency",
+    activeFrom = LocalDate.parse("2021-09-27"),
+    activeTo = LocalDate.parse("2022-07-15"),
+    isActive = true,
+    createdAt = LocalDateTime.parse("2021-09-27T14:19:25"),
+    createdBy = "USER1234",
+    createdByDisplayName = "Firstname Lastname",
+    lastModifiedAt = LocalDateTime.parse("2022-07-15T15:24:56"),
+    lastModifiedBy = "USER1234",
+    lastModifiedByDisplayName = "Firstname Lastname",
+    activeToLastSetAt = LocalDateTime.parse("2022-07-15T15:24:56"),
+    activeToLastSetBy = "USER123",
+    activeToLastSetByDisplayName = "Firstname Lastname",
+  )
+}
+
 fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
   val offenderId = Random.nextLong()
   return getOffenderBookingTemplate().copy(
@@ -192,20 +221,6 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
       description = this.cellLocation,
       agencyName = "$agencyId (HMP)",
     ),
-    alerts = this.alertCodes.map { (type, code) ->
-      Alert(
-        alertId = Random.nextLong(),
-        offenderNo = this.prisonerNumber,
-        alertCode = code,
-        alertCodeDescription = "Code description for $code",
-        alertType = type,
-        alertTypeDescription = "Type Description for $type",
-        // In search all alerts are not expired and active
-        expired = false,
-        active = true,
-        dateCreated = LocalDate.now(),
-      )
-    },
     aliases = this.aliases.map { a ->
       Alias(
         gender = a.gender,
@@ -334,8 +349,21 @@ fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
   }
 }
 
-fun PrisonerBuilder.toPrisoner(): Prisoner = toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null)
+fun PrisonerBuilder.toPrisoner(): Prisoner = toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null, alerts = toAlerts())
 
 private fun getOffenderBookingTemplate(): OffenderBooking = GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
 
-fun toPrisoner(ob: OffenderBooking, incentiveLevel: IncentiveLevel?, restrictedPatientData: RestrictedPatient?) = Prisoner().apply { this.translate(null, ob, Result.success(incentiveLevel), Result.success(restrictedPatientData)) }
+fun toPrisoner(
+  ob: OffenderBooking,
+  incentiveLevel: IncentiveLevel?,
+  restrictedPatientData: RestrictedPatient?,
+  alerts: List<Alert>?,
+) = Prisoner().apply {
+  this.translate(
+    null,
+    ob,
+    Result.success(incentiveLevel),
+    Result.success(restrictedPatientData),
+    Result.success(alerts),
+  )
+}

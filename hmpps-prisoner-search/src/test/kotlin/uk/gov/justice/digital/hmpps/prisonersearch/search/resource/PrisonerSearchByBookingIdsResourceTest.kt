@@ -15,7 +15,7 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
     val prisoners = ArrayList<Prisoner>()
     prisonerNumbers.forEachIndexed { bookingId: Int, prisonNumber: String ->
       val offenderBooking = getOffenderBooking(prisonNumber, bookingId.toLong())
-      val prisoner = toPrisoner(offenderBooking, null, null)
+      val prisoner = toPrisoner(offenderBooking, null, null, null)
       prisoners.add(prisoner)
     }
     loadPrisoners(prisoners)

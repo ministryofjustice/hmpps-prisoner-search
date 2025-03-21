@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PersonReference
 
 @Service
 class DomainEventListener(
@@ -32,6 +33,13 @@ class DomainEventListener(
       "restricted-patients.patient.removed",
       "restricted-patients.patient.supporting-prison-changed",
     )
+    private val alertEvent = setOf(
+      "person.alert.created",
+      "person.alert.updated",
+      "person.alert.deleted",
+      // "person.alert.inactive", this event is not handled as it only occurs alongside a "person.alert.updated" event
+      // "person.alerts.changed", this event is not handled as it only occurs alongside another alert event
+    )
   }
 
   @SqsListener("hmppsdomainqueue", factory = "hmppsQueueContainerFactoryProxy")
@@ -44,6 +52,7 @@ class DomainEventListener(
       when (eventType) {
         in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message), eventType)
         in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message), eventType)
+        in alertEvent -> indexListenerService.alertChange(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
@@ -75,6 +84,24 @@ data class RestrictedPatientMessage(
 data class RestrictedPatientAdditionalInformation(
   val prisonerNumber: String,
 )
+
+data class AlertEvent(
+  val description: String?,
+  val eventType: String,
+  val additionalInformation: AlertAdditionalInformation,
+  val personReference: PersonReference,
+)
+
+data class AlertAdditionalInformation(
+  val alertUuid: String,
+  val alertCode: String,
+  val source: AlertSource,
+)
+
+enum class AlertSource {
+  DPS,
+  NOMIS,
+}
 
 data class EventType(@JsonProperty("Value") val Value: String)
 data class MessageAttributes(val eventType: EventType)

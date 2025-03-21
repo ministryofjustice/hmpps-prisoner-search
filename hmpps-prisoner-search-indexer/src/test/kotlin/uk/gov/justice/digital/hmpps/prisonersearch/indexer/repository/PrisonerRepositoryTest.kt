@@ -14,7 +14,6 @@ import org.junit.jupiter.api.fail
 import org.opensearch.action.get.GetRequest
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
-import org.opensearch.client.indices.CreateIndexRequest
 import org.opensearch.client.indices.GetIndexRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.OptimisticLockingFailureException
@@ -24,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import java.time.LocalDate
@@ -483,6 +483,174 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class UpdateAlerts {
+
+    @Test
+    fun `will update prisoner with new data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          firstName = "steve"
+        },
+      )
+
+      val updated = prisonerRepository.updateAlerts(
+        "X12345",
+        listOf(
+          PrisonerAlert(
+            alertType = "A",
+            alertCode = "ABC",
+            active = true,
+            expired = false,
+          ),
+        ),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      assertThat(updated).isTrue()
+      val prisoner = prisonerRepository.get("X12345")
+      val data = prisoner?.alerts?.first()!!
+      assertThat(data.alertType).isEqualTo("A")
+      assertThat(data.alertCode).isEqualTo("ABC")
+      assertThat(data.active).isTrue()
+      assertThat(data.expired).isFalse()
+
+      // Ensure other data is not affected
+      assertThat(prisoner.prisonerNumber).isEqualTo("X12345")
+      assertThat(prisoner.firstName).isEqualTo("steve")
+    }
+
+    @Test
+    fun `will update prisoner with existing data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        listOf(
+          PrisonerAlert(
+            alertType = "A2",
+            alertCode = "ABC2",
+            active = true,
+            expired = false,
+          ),
+          PrisonerAlert(
+            alertType = "B",
+            alertCode = "BCD",
+            active = false,
+            expired = true,
+          ),
+        ),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      val alerts = prisonerRepository.get("X12345")?.alerts!!
+      with(alerts.get(0)) {
+        assertThat(alertType).isEqualTo("A2")
+        assertThat(alertCode).isEqualTo("ABC2")
+        assertThat(active).isTrue()
+        assertThat(expired).isFalse()
+      }
+      with(alerts.get(1)) {
+        assertThat(alertType).isEqualTo("B")
+        assertThat(alertCode).isEqualTo("BCD")
+        assertThat(active).isFalse()
+        assertThat(expired).isTrue()
+      }
+      assertThat(alerts).hasSize(2)
+    }
+
+    @Test
+    fun `will update prisoner with no data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        null,
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      assertThat(prisonerRepository.get("X12345")!!.alerts).isNull()
+    }
+
+    @Test
+    fun `will update prisoner with empty data`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      prisonerRepository.updateAlerts(
+        "X12345",
+        emptyList(),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      assertThat(prisonerRepository.get("X12345")!!.alerts).isEmpty()
+    }
+
+    @Test
+    fun `will not update prisoner when data is unchanged`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          alerts = listOf(
+            PrisonerAlert(
+              alertType = "A",
+              alertCode = "ABC",
+              active = true,
+              expired = false,
+            ),
+          )
+        },
+      )
+
+      val updated = prisonerRepository.updateAlerts(
+        "X12345",
+        listOf(
+          PrisonerAlert(
+            alertType = "A",
+            alertCode = "ABC",
+            active = true,
+            expired = false,
+          ),
+        ),
+        prisonerRepository.getSummary("X12345")!!,
+      )
+
+      assertThat(updated).isFalse()
+    }
+  }
+
+  @Nested
   inner class Delete {
 
     @Test
@@ -571,12 +739,6 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       assertThat(prisonerRepository.copyPrisoner(prisoner)).isNotSameAs(prisoner)
       assertThat(prisonerRepository.copyPrisoner(prisoner).currentIncentive!!.level).isNotSameAs(prisoner.currentIncentive!!.level)
     }
-  }
-}
-
-fun RestHighLevelClient.safeIndexCreate(name: String) {
-  if (this.indices().exists(GetIndexRequest(name), RequestOptions.DEFAULT).not()) {
-    this.indices().create(CreateIndexRequest(name), RequestOptions.DEFAULT)
   }
 }
 

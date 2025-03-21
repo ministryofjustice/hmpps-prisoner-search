@@ -15,6 +15,8 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.validAlertsMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
@@ -87,6 +89,39 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       any(), any(), any(), any(), any(),
       any(), any(), any(), any(),
     )
+  }
+
+  @Test
+  fun `will index alerts when alerts message received`() {
+    val prisonerNumber = "A7089FF"
+    val prisoner = Prisoner().apply {
+      this.prisonerNumber = prisonerNumber
+      bookingId = "1234"
+    }
+    prisonerRepository.save(prisoner)
+    alertsApi.stubSuccess(prisonerNumber)
+
+    reset(prisonerSpyBeanRepository) // zero the call count
+
+    hmppsDomainSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
+        .messageBody(validAlertsMessage(prisonerNumber, "person.alert.created")).build(),
+    )
+
+    await untilAsserted {
+      prisonerRepository.get(prisonerNumber)!!.apply {
+        assertThat(this.prisonerNumber).isEqualTo(prisonerNumber)
+        val alert = alerts?.first()
+        assertThat(alert?.alertCode).isEqualTo("ABC")
+        assertThat(alert?.alertType).isEqualTo("A")
+        assertThat(alert?.active).isTrue()
+        assertThat(alert?.expired).isTrue()
+      }
+      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
+    }
+    verify(prisonerSpyBeanRepository, never()).save(any())
+    verify(prisonerSpyBeanRepository, times(1)).updateAlerts(eq(prisonerNumber), any(), any())
+    verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any())
   }
 }
 

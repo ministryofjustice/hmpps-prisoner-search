@@ -22,10 +22,13 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
@@ -38,10 +41,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
   private val restrictedPatientService = mock<RestrictedPatientService>()
+  private val alertsService = mock<AlertsService>()
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
@@ -55,6 +60,7 @@ internal class PrisonerSynchroniserServiceTest {
     telemetryClient,
     restrictedPatientService,
     incentivesService,
+    alertsService,
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
@@ -93,8 +99,8 @@ internal class PrisonerSynchroniserServiceTest {
       service.reindexUpdate(booking, "event")
 
       verify(prisonerRepository, times(1)).createPrisoner(isA())
-      verify(alertsUpdatedEventService).generateAnyEvents(isNull(), any())
       verify(prisonerMovementsEventService).generateAnyEvents(isNull(), any(), eq(booking))
+      verify(convictedStatusEventService).generateAnyEvents(isNull(), any())
     }
 
     @Test
@@ -103,11 +109,8 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerRepository.updatePrisoner(any(), any(), isA())).thenReturn(true)
       service.reindexUpdate(booking, "event")
 
-      verify(alertsUpdatedEventService).generateAnyEvents(
-        eq(existingPrisoner),
-        any(),
-      ) // null for previous prisoner
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
+      verify(convictedStatusEventService).generateAnyEvents(eq(existingPrisoner), any())
     }
 
     @Test
@@ -484,6 +487,151 @@ internal class PrisonerSynchroniserServiceTest {
   }
 
   @Nested
+  inner class ReindexAlerts {
+    private val prisonerNumber = "A1234AA"
+    private val bookingId = 2L
+    private val oldAlerts = listOf(
+      PrisonerAlert(
+        alertType = "TYPE",
+        alertCode = "OLD",
+        active = true,
+        expired = false,
+      ),
+    )
+    private val newApiAlerts =
+      listOf(
+        Alert(
+          alertUuid = UUID.fromString("00001111-2222-3333-4444-000000000001"),
+          prisonNumber = "A1234AA",
+          alertCode = AlertCodeSummary(
+            alertTypeCode = "TYPE",
+            alertTypeDescription = "Alert type description",
+            code = "NEW",
+            description = "Alert code description",
+          ),
+          description = "Alert description",
+          authorisedBy = "A. Nurse, An Agency",
+          activeFrom = LocalDate.parse("2021-09-27"),
+          activeTo = LocalDate.parse("2022-07-15"),
+          isActive = true,
+          createdAt = LocalDateTime.parse("2021-09-27T14:19:25"),
+          createdBy = "USER1234",
+          createdByDisplayName = "Firstname Lastname",
+          lastModifiedAt = LocalDateTime.parse("2022-07-15T15:24:56"),
+          lastModifiedBy = "USER1234",
+          lastModifiedByDisplayName = "Firstname Lastname",
+          activeToLastSetAt = LocalDateTime.parse("2022-07-15T15:24:56"),
+          activeToLastSetBy = "USER123",
+          activeToLastSetByDisplayName = "Firstname Lastname",
+        ),
+      )
+    val prisoner = Prisoner().apply {
+      bookingId = this@ReindexAlerts.bookingId.toString()
+      alerts = oldAlerts
+    }
+    private val prisonerDocumentSummary =
+      PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
+
+    @BeforeEach
+    fun setup() {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer { it.getArgument(0) }
+    }
+
+    @Test
+    fun `will save alert to index`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateAlerts(
+        eq(prisonerNumber),
+        eq(
+          newApiAlerts.map {
+            PrisonerAlert(
+              alertType = "TYPE",
+              alertCode = "NEW",
+              active = true,
+              expired = true,
+            )
+          },
+        ),
+        eq(prisonerDocumentSummary),
+      )
+    }
+
+    @Test
+    fun `will create telemetry`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      whenever(prisonerRepository.updateAlerts(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.ALERTS_UPDATED.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "2"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will generate domain events`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      whenever(prisonerRepository.updateAlerts(eq(prisonerNumber), any(), any())).thenReturn(true)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerDifferenceService).generateAlertDiffEvent(any(), eq(prisonerNumber), any())
+      verify(alertsUpdatedEventService).generateAnyEvents(any(), any(), eq(prisoner))
+    }
+
+    @Test
+    fun `will not save alerts if no changes`() {
+      whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(newApiAlerts)
+      whenever(prisonerRepository.updateAlerts(eq(prisonerNumber), any(), any())).thenReturn(false)
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.ALERTS_OPENSEARCH_NO_CHANGE.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "2"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will do nothing if prisoner not found`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
+
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verifyNoInteractions(alertsService)
+      verify(prisonerRepository, never()).updateAlerts(any(), any(), any())
+    }
+
+    @Test
+    fun `Updates ok when no alerts data`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(null)
+
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateAlerts(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
+    }
+  }
+
+  @Nested
   inner class Index {
     private val booking = OffenderBookingBuilder().anOffenderBooking()
 
@@ -607,7 +755,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerRepository, never()).save(any())
       verify(prisonerDifferenceService).hasChanged(any(), any())
@@ -619,7 +767,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
       verify(prisonerRepository).save(any())
@@ -631,7 +779,7 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any())).thenReturn(existingPrisoner)
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
       verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any())
@@ -640,19 +788,19 @@ internal class PrisonerSynchroniserServiceTest {
   }
 
   @Nested
-  inner class GetDomainData {
+  inner class Refresh {
     private val booking = OffenderBookingBuilder().anOffenderBooking()
 
     @Test
     fun `will get incentive level if booking present`() {
-      service.getDomainData(booking)
+      service.refresh(booking)
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
 
     @Test
     fun `will not get incentive if there is no booking`() {
-      service.getDomainData(OffenderBookingBuilder().anOffenderBooking(null))
+      service.refresh(OffenderBookingBuilder().anOffenderBooking(null))
 
       verifyNoInteractions(incentivesService)
     }
@@ -668,7 +816,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.getDomainData(prisonBooking)
+      service.refresh(prisonBooking)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -679,7 +827,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.getDomainData(noLivingUnitBooking)
+      service.refresh(noLivingUnitBooking)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -695,7 +843,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.getDomainData(outsidePrisoner)
+      service.refresh(outsidePrisoner)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
     }

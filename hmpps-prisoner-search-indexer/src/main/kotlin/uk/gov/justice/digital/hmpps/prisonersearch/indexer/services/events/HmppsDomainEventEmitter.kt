@@ -221,7 +221,10 @@ open class PrisonerDomainEvent<T : PrisonerAdditionalInformation>(
     )
 }
 
-data class PersonReference(val identifiers: List<Identifier>) {
+data class PersonReference(val identifiers: List<Identifier> = listOf()) {
+  operator fun get(key: String) = identifiers.find { it.type == key }?.value
+  fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
+
   companion object {
     private const val NOMS_NUMBER_TYPE = "NOMS"
     fun withNomsNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
