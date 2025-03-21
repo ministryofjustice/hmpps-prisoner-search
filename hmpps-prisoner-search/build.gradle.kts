@@ -27,18 +27,18 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.2")
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.6.2")
   implementation("com.google.code.gson:gson:2.12.1")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.data:spring-data-elasticsearch:5.4.3")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.4.4")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
   // Leaving at version 2.9.0 to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L16
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.12.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.13.1")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
@@ -49,7 +49,7 @@ dependencies {
 
   implementation(project(":common"))
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.2")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.25") {
     exclude(group = "io.swagger.core.v3")
