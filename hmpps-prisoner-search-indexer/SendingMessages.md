@@ -1,3 +1,7 @@
+# Sending domain messages
+Occasionally it is necessary to manually send domain messages to the topic if this has failed and a EVENT_SEND_FAILURE event has been raised.
+Some endpoints have been provided to allow this to be done for the most important events, see https://prisoner-search-indexer-dev.prison.service.justice.gov.uk/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config#/Domain%20events%20recovery
+
 # Sending messages to the index queue
 This application uses a service account called `hmpps-prisoner-search-indexer` with privileges to send messages.
 This means that access keys and secrets are not required to send messages as the service account is bound to the

@@ -168,6 +168,128 @@ class DomainEventsResourceIntTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class Released {
+
+    @Test
+    fun `access forbidden when no authority`() {
+      webTestClient
+        .put()
+        .uri("/events/prisoner/released/A2483AA")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+          BodyInserters.fromValue(
+            """
+        {
+          "reason": "SENT_TO_COURT",
+          "prisonId": "WWI"
+        }
+      """,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient
+        .put()
+        .uri("/events/prisoner/released/A2483AA")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+          BodyInserters.fromValue(
+            """
+        {
+          "reason": "SENT_TO_COURT",
+          "prisonId": "WWI"
+        }
+      """,
+          ),
+        )
+        .headers(setAuthorisation())
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `reason code must be valid`() {
+      webTestClient
+        .put()
+        .uri("/events/prisoner/released/A2483AA")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+          BodyInserters.fromValue(
+            """
+        {
+          "reason": "BANANAS",
+          "prisonId": "WWI"
+        }
+      """,
+          ),
+        )
+        .headers(setAuthorisation(roles = listOf("ROLE_EVENTS_ADMIN")))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `prisonId must be present`() {
+      webTestClient
+        .put()
+        .uri("/events/prisoner/released/A2483AA")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+          BodyInserters.fromValue(
+            """
+        {
+          "reason": "SENT_TO_COURT"
+        }
+      """,
+          ),
+        )
+        .headers(setAuthorisation(roles = listOf("ROLE_EVENTS_ADMIN")))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `sends prisoner released event to the domain topic`() {
+      webTestClient
+        .put()
+        .uri("/events/prisoner/released/A2483AA")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+          BodyInserters.fromValue(
+            """
+        {
+          "reason": "TRANSFERRED",
+          "prisonId": "WWI"
+        }
+      """,
+          ),
+        )
+        .headers(setAuthorisation(roles = listOf("ROLE_EVENTS_ADMIN")))
+        .exchange()
+        .expectStatus()
+        .isAccepted
+
+      await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
+
+      val message = readNextDomainEventMessage()
+
+      assertThatJson(message).node("eventType").isEqualTo("test.prisoner-offender-search.prisoner.released")
+      assertThatJson(message).node("version").isEqualTo(1)
+      assertThatJson(message).node("additionalInformation.nomsNumber").isEqualTo("A2483AA")
+      assertThatJson(message).node("additionalInformation.reason").isEqualTo("TRANSFERRED")
+      assertThatJson(message).node("additionalInformation.prisonId").isEqualTo("WWI")
+    }
+  }
+
+  @Nested
   inner class Created {
     @Test
     fun `access forbidden when no authority`() {

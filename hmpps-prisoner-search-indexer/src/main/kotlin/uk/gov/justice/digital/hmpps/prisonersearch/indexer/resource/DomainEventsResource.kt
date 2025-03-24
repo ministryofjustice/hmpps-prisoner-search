@@ -52,6 +52,33 @@ class DomainEventsResource(private val domainEventEmitter: HmppsDomainEventEmitt
     )
   }
 
+  @PutMapping("/events/prisoner/released/{prisonerNumber}")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @Operation(
+    summary = "Fires a domain event 'prisoner-offender-search.prisoner.released'. This is to be used in a catastrophic failure scenario when the original event was not raised",
+    description = "Requires EVENTS_ADMIN role",
+  )
+  @PreAuthorize("hasRole('ROLE_EVENTS_ADMIN')")
+  fun raisePrisonerReleasedEvent(
+    @Parameter(
+      required = true,
+      example = "A1234AA",
+    )
+    @NotNull
+    @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
+    @PathVariable("prisonerNumber")
+    prisonerNumber: String,
+    @RequestBody
+    @Valid
+    details: PrisonerReleasedEventDetails,
+  ) {
+    domainEventEmitter.emitPrisonerReleaseEvent(
+      prisonerNumber,
+      details.reason,
+      details.prisonId,
+    )
+  }
+
   @PutMapping("/events/prisoner/created/{prisonerNumber}")
   @ResponseStatus(HttpStatus.ACCEPTED)
   @Operation(
@@ -100,4 +127,11 @@ data class PrisonerReceivedEventDetails(
   val prisonId: String,
   @Schema(description = "local date time movement happened", required = true, example = "2023-02-28T12:34:56")
   val occurredAt: LocalDateTime,
+)
+
+data class PrisonerReleasedEventDetails(
+  @Schema(description = "reason for release event", required = true, example = "SENT_TO_COURT")
+  val reason: HmppsDomainEventEmitter.PrisonerReleaseReason,
+  @Schema(description = "prison agency id of prison", required = true, example = "WWI")
+  val prisonId: String,
 )
