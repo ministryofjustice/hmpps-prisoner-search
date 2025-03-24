@@ -51,6 +51,46 @@ class DomainEventsResource(private val domainEventEmitter: HmppsDomainEventEmitt
       occurredAt = occurredAtTime,
     )
   }
+
+  @PutMapping("/events/prisoner/created/{prisonerNumber}")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @Operation(
+    summary = "Fires a domain event 'prisoner-offender-search.prisoner.created'. This is to be used in a catastrophic failure scenario when the original event was not raised",
+    description = "Requires EVENTS_ADMIN role",
+  )
+  @PreAuthorize("hasRole('ROLE_EVENTS_ADMIN')")
+  fun raisePrisonerCreatedEvent(
+    @Parameter(
+      required = true,
+      example = "A1234AA",
+    )
+    @NotNull
+    @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
+    @PathVariable("prisonerNumber")
+    prisonerNumber: String,
+  ) {
+    domainEventEmitter.emitPrisonerCreatedEvent(prisonerNumber)
+  }
+
+  @PutMapping("/events/prisoner/removed/{prisonerNumber}")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @Operation(
+    summary = "Fires a domain event 'prisoner-offender-search.prisoner.removed'. This is to be used in a catastrophic failure scenario when the original event was not raised",
+    description = "Requires EVENTS_ADMIN role",
+  )
+  @PreAuthorize("hasRole('ROLE_EVENTS_ADMIN')")
+  fun raisePrisonerRemovedEvent(
+    @Parameter(
+      required = true,
+      example = "A1234AA",
+    )
+    @NotNull
+    @Pattern(regexp = "[a-zA-Z][0-9]{4}[a-zA-Z]{2}")
+    @PathVariable("prisonerNumber")
+    prisonerNumber: String,
+  ) {
+    domainEventEmitter.emitPrisonerRemovedEvent(prisonerNumber)
+  }
 }
 
 data class PrisonerReceivedEventDetails(
