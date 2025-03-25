@@ -13,6 +13,7 @@ The purpose of this service is to:
 * Development
   * [Running](./Running.md)
   * [Regression tests](./RegressionTests.md)
+  * [Adding a new field to the index](./AddingNewField.md)
 * Support
   * [Index maintenance](./IndexMaintenance.md)
   * [Prisoner differences](./PrisonerDifferences.md)
