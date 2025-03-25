@@ -178,8 +178,6 @@ fun Prisoner.translate(
 
   this.allConvictedOffences = ob.allConvictedOffences?.toOffences(ob.bookingId)
 
-  this.testValue = ob.lastName
-
   return this
 }
 
