@@ -140,6 +140,10 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.LOCATION)
   var prisonName: String? = null
 
+  @Schema(description = "Example field", example = "a value")
+  // @DiffableProperty(DiffCategory.LOCATION)
+  var testValue: String? = null
+
   @Schema(description = "In prison cell location", example = "A-1-002")
   @DiffableProperty(DiffCategory.LOCATION)
   var cellLocation: String? = null
