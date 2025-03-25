@@ -6,10 +6,6 @@ abstract class IndexException(message: String) : RuntimeException(message)
 abstract class IndexConflictException(message: String) : IndexException(message)
 
 class BuildAlreadyInProgressException(indexStatus: IndexStatus) : IndexConflictException(startAlreadyMessage(indexStatus))
-class BuildInProgressException(indexStatus: IndexStatus) : IndexConflictException(startAlreadyMessage(indexStatus))
-
-class BuildCancelledException(indexStatus: IndexStatus) : IndexConflictException(startStateMessage(indexStatus))
-class BuildAbsentException(indexStatus: IndexStatus) : IndexConflictException(startStateMessage(indexStatus))
 
 class BuildNotInProgressException(indexStatus: IndexStatus) : IndexConflictException(endStateMessage(indexStatus))
 class WrongIndexRequestedException(indexStatus: IndexStatus) : IndexException(endStateMessage(indexStatus))
@@ -20,8 +16,5 @@ class PrisonerNotFoundException(prisonerNumber: String) : IndexException("The pr
 
 class ActiveMessagesExistException(indexQueueStatus: IndexQueueStatus, action: String) : IndexConflictException("The index has active messages $indexQueueStatus so we cannot process $action")
 
-class ThresholdNotReachedException(threshold: Long) : IndexConflictException("The index has not reached threshold $threshold so we cannot mark the index as complete")
-
 private fun startAlreadyMessage(indexStatus: IndexStatus) = "The build is already ${indexStatus.currentIndexState} (started at ${indexStatus.currentIndexStartBuildTime})"
 private fun endStateMessage(indexStatus: IndexStatus) = "The index is in state ${indexStatus.currentIndexState} (ended at ${indexStatus.currentIndexEndBuildTime})"
-private fun startStateMessage(indexStatus: IndexStatus) = "The build is in state ${indexStatus.currentIndexState} (started at ${indexStatus.currentIndexStartBuildTime})"
