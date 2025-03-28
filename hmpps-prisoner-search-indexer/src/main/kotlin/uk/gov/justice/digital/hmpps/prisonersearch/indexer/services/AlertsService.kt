@@ -27,6 +27,8 @@ class AlertsService(
         .queryParam("isActive", true)
         .queryParam("page", 0)
         .queryParam("size", 1000)
+        .queryParam("sort", "activeFrom,DESC")
+        .queryParam("sort", "createdAt,ASC")
         .build(offenderNo)
     }
     .retrieve()
@@ -39,7 +41,11 @@ class AlertsService(
       val totalElements = result.totalElements
       val numberOfElements = result.numberOfElements
       if (totalElements != numberOfElements.toLong()) throw IllegalStateException("Page size of 1000 for /prisoners/{offenderNo}/alerts not big enough $totalElements not equal to $numberOfElements")
-      result.content
+      // Ensure order is fixed. This is important as any change will result in the refresh firing a lot of diff events
+      result.content.sortedWith(
+        compareByDescending<Alert> { it.activeFrom }
+          .thenBy { it.createdAt }, // Note this is Ascending
+      )
     }
 }
 
