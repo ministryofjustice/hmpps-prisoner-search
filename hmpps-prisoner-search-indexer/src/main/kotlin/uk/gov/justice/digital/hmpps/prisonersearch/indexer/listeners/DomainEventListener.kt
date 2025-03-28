@@ -33,13 +33,6 @@ class DomainEventListener(
       "restricted-patients.patient.removed",
       "restricted-patients.patient.supporting-prison-changed",
     )
-    private val alertEvent = setOf(
-      "person.alert.created",
-      "person.alert.updated",
-      "person.alert.deleted",
-      // "person.alert.inactive", this event is not handled as it only occurs alongside a "person.alert.updated" event
-      // "person.alerts.changed", this event is not handled as it only occurs alongside another alert event
-    )
   }
 
   @SqsListener("hmppsdomainqueue", factory = "hmppsQueueContainerFactoryProxy")
@@ -52,7 +45,7 @@ class DomainEventListener(
       when (eventType) {
         in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message), eventType)
         in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message), eventType)
-        in alertEvent -> indexListenerService.alertChange(fromJson(message), eventType)
+        "person.alerts.changed" -> indexListenerService.alertChange(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }

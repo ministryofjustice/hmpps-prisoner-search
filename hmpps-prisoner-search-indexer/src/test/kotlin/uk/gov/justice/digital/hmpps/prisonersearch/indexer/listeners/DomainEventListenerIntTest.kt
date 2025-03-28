@@ -105,7 +105,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
 
     hmppsDomainSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
-        .messageBody(validAlertsMessage(prisonerNumber, "person.alert.created")).build(),
+        .messageBody(validAlertsMessage(prisonerNumber, "person.alerts.changed")).build(),
     )
 
     await untilAsserted {

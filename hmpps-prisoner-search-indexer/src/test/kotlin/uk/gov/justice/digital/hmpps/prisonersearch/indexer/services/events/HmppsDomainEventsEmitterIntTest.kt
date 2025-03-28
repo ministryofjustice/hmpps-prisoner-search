@@ -333,7 +333,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     alertsApi.stubSuccess("A1239DD", listOf("X" to "XTACT", "W" to "WO"))
 
-    hmppsDomainQueueSqsClient.sendDomainMessage(validAlertsMessage("A1239DD", "person.alert.created"))
+    hmppsDomainQueueSqsClient.sendDomainMessage(validAlertsMessage("A1239DD", "person.alerts.changed"))
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
     val nextTwoEventTypes = listOf(readEventFromNextDomainEventMessage(), readEventFromNextDomainEventMessage())
@@ -396,7 +396,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
     alertsApi.stubSuccess("A1239DD", listOf("W" to "WO"))
 
-    hmppsDomainQueueSqsClient.sendDomainMessage(validAlertsMessage("A1239DD", "person.alert.updated"))
+    hmppsDomainQueueSqsClient.sendDomainMessage(validAlertsMessage("A1239DD", "person.alerts.changed"))
 
     await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 2 }
 
