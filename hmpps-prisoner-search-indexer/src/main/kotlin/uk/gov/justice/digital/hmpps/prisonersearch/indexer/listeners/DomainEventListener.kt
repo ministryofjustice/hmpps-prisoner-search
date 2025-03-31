@@ -81,20 +81,8 @@ data class RestrictedPatientAdditionalInformation(
 data class AlertEvent(
   val description: String?,
   val eventType: String,
-  val additionalInformation: AlertAdditionalInformation,
   val personReference: PersonReference,
 )
-
-data class AlertAdditionalInformation(
-  val alertUuid: String,
-  val alertCode: String,
-  val source: AlertSource,
-)
-
-enum class AlertSource {
-  DPS,
-  NOMIS,
-}
 
 data class EventType(@JsonProperty("Value") val Value: String)
 data class MessageAttributes(val eventType: EventType)

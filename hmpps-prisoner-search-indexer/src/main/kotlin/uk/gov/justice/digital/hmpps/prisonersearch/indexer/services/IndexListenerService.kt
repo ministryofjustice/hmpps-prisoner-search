@@ -48,7 +48,7 @@ class IndexListenerService(
       )
       prisonerSynchroniserService.reindexAlerts(prisonerNumber, eventType)
     }
-      ?: throw IllegalStateException("Alert event found with no prisonerNumber: uuid = " + message.additionalInformation.alertUuid)
+      ?: throw IllegalStateException("Alert event found with no prisonerNumber: $message")
   }
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)
