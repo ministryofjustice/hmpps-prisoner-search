@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -164,6 +165,50 @@ internal class PrisonerSynchroniserServiceTest {
         eq(prisonerNumber),
         eq(newIncentive.toCurrentIncentive()),
         eq(prisonerDocumentSummaryAfterUpdate),
+      )
+    }
+
+    @Test
+    fun `will generate domain events if nomis booking id has changed and a domain update fails`() {
+      val changedBookingId = 112233L
+      val prisonerDocumentSummaryAfterUpdate = PrisonerDocumentSummary(
+        prisonerNumber,
+        Prisoner().apply { bookingId = changedBookingId.toString() },
+        sequenceNumber = 0,
+        primaryTerm = 0,
+      )
+      whenever(prisonerRepository.getSummary(any())).thenReturn(
+        prisonerDocumentSummary,
+        prisonerDocumentSummaryAfterUpdate,
+      )
+      whenever(prisonerRepository.updatePrisoner(eq(prisonerNumber), any(), eq(prisonerDocumentSummary)))
+        .thenReturn(true)
+      whenever(
+        prisonerRepository.updateRestrictedPatient(
+          eq(prisonerNumber),
+          eq(false),
+          isNull(),
+          isNull(),
+          isNull(),
+          isNull(),
+          isNull(),
+          isNull(),
+          eq(prisonerDocumentSummaryAfterUpdate),
+        ),
+      ).thenThrow(RuntimeException("test"))
+
+      val changedBooking = booking.copy(bookingId = changedBookingId)
+
+      assertThrows<RuntimeException> { service.reindexUpdate(changedBooking, "event") }
+
+      verify(prisonerMovementsEventService).generateAnyEvents(
+        eq(existingPrisoner),
+        any(),
+        eq(changedBooking),
+      )
+      verify(convictedStatusEventService).generateAnyEvents(
+        eq(existingPrisoner),
+        any(),
       )
     }
   }

@@ -67,12 +67,24 @@ class PrisonerSynchroniserService(
           eventType = eventType,
         )
         // If the current booking id changed, some domain data needs updating too, retrieving using the new booking id
-        if (summary.prisoner.bookingId?.toLong() != ob.bookingId) {
-          reindexIncentive(ob.offenderNo, eventType)
-          reindexRestrictedPatient(ob.offenderNo, ob, eventType)
+        // If this fails (e.g. seq_no conflict), allow important events to be generated before failing
+        val bookingChanged = summary.prisoner.bookingId?.toLong() != ob.bookingId
+        val incentiveResult = runCatching {
+          if (bookingChanged) {
+            reindexIncentive(ob.offenderNo, eventType)
+          }
         }
+        val restrictedPatientResult = runCatching {
+          if (bookingChanged) {
+            reindexRestrictedPatient(ob.offenderNo, ob, eventType)
+          }
+        }
+
         prisonerMovementsEventService.generateAnyEvents(summary.prisoner, prisoner, ob)
         convictedStatusEventService.generateAnyEvents(summary.prisoner, prisoner)
+
+        incentiveResult.onFailure { throw it }
+        restrictedPatientResult.onFailure { throw it }
       } else {
         telemetryClient.trackPrisonerEvent(
           TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE,
