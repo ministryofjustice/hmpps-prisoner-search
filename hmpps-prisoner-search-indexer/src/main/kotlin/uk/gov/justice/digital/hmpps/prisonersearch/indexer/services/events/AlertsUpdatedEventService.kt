@@ -28,8 +28,8 @@ class AlertsUpdatedEventService(
       domainEventEmitter.emitPrisonerAlertsUpdatedEvent(
         prisoner.prisonerNumber!!,
         prisoner.bookingId,
-        alertsAdded,
-        alertsRemoved,
+        alertsAdded.filterNotNull().toSet(),
+        alertsRemoved.filterNotNull().toSet(),
       )
     }
   }
