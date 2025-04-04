@@ -15,9 +15,31 @@ typealias Attributes = Map<String, Attribute>
 
 @Configuration
 class AttributeResolver {
+  // attributes contains everything you can use in queries in the attributes search
   @Bean
   fun attributes(): Attributes = getAttributes(Prisoner::class)
+
+  // attributesAndObjects contains everything you can request to be populated on the Prisoner record
+  @Bean
+  fun attributeAndObjects(attributes: Attributes): List<String> = attributes.attributeAndObjects()
+
+  @Bean
+  fun requestedAttributeValidator(attributesAndObjects: List<String>): RequestedAttributeValidator = RequestedAttributeValidator(attributesAndObjects)
 }
+
+class RequestedAttributeValidator(private val attributesAndObjects: List<String> = emptyList<String>()) {
+  fun findMissing(requestedAttributes: List<String>) = requestedAttributes.filterNot { it in attributesAndObjects }
+}
+
+// Add each object to the list of attributes, e.g. "currentIncentive.code" -> listOf("currentIncentive", "currentIncentive.code")
+internal fun Attributes.attributeAndObjects(): List<String> = this.keys
+  .flatMap { attribute ->
+    attribute.split(".").let { parts ->
+      parts.mapIndexed { index, _ -> parts.take(index + 1).joinToString(".") }
+    }
+  }
+  .toCollection(LinkedHashSet())
+  .toList()
 
 /**
  * Derive all attributes that can be searched for in queries
@@ -42,12 +64,24 @@ private fun findAttributes(
   // We've found a list of objects - use recursion with this method to derive the object's attributes
   PropertyType.LIST_OBJECTS -> {
     prop.getGenericTypeClass().memberProperties
-      .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
+      .flatMap { childProp ->
+        findAttributes(
+          childProp,
+          "${prefix}${prop.name}.",
+          nested || prop.hasFieldAnnotation("Nested"),
+        )
+      }
   }
   // We've found a nested object - use recursion with this method to derive the object's attributes
   PropertyType.OBJECT -> {
     prop.getPropertyClass().memberProperties
-      .flatMap { childProp -> findAttributes(childProp, "${prefix}${prop.name}.", nested || prop.hasFieldAnnotation("Nested")) }
+      .flatMap { childProp ->
+        findAttributes(
+          childProp,
+          "${prefix}${prop.name}.",
+          nested || prop.hasFieldAnnotation("Nested"),
+        )
+      }
   }
 }
 
@@ -95,6 +129,7 @@ private fun KProperty1<*, *>.getPropertyType(): PropertyType = when (returnType.
       else -> PropertyType.LIST_OBJECTS
     }
   }
+
   in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
   else -> PropertyType.OBJECT
 }

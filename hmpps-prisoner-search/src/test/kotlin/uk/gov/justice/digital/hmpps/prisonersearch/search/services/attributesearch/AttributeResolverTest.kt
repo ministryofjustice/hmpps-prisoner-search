@@ -113,4 +113,40 @@ class AttributeResolverTest {
       assertThat(it.message).contains("listString").contains("Lists of simple types are not supported")
     }
   }
+
+  @Test
+  fun `should derive attributes and objects`() {
+    assertThat(attributes.attributeAndObjects()).containsExactlyInAnyOrder(
+      "keywordString",
+      "string",
+      "boolean",
+      "integer",
+      "localDate",
+      "localDateTime",
+      "list",
+      "list.string",
+      "list.boolean",
+      "list.integer",
+      "list.localDate",
+      "list.localDateTime",
+      "list.nested",
+      "list.nested.code",
+      "list.nested.description",
+      "list.nestedList",
+      "list.nestedList.code",
+      "list.nestedList.description",
+      "complex",
+      "complex.string",
+      "complex.boolean",
+      "complex.integer",
+      "complex.localDate",
+      "complex.localDateTime",
+      "complex.nested",
+      "complex.nested.code",
+      "complex.nested.description",
+      "complex.nestedList",
+      "complex.nestedList.code",
+      "complex.nestedList.description",
+    )
+  }
 }

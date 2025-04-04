@@ -4,5 +4,5 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class EmailAddress(
   @Schema(description = "The email address", example = "john.smith@gmail.com")
-  val email: String,
+  val email: String? = null,
 )

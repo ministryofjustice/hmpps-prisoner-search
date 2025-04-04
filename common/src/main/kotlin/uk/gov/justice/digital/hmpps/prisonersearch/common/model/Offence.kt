@@ -8,20 +8,20 @@ import java.time.LocalDate
 
 data class Offence(
   @Schema(description = "The statue code", example = "TH68")
-  val statuteCode: String,
+  val statuteCode: String? = null,
 
   @Schema(description = "The offence code", example = "TH68010")
-  val offenceCode: String,
+  val offenceCode: String? = null,
 
   @Schema(description = "The offence description", example = "Theft from a shop")
-  val offenceDescription: String,
+  val offenceDescription: String? = null,
 
   @Schema(description = "The date of the offence", example = "2024-05-23")
   @Field(type = FieldType.Date, format = [DateFormat.date])
   val offenceDate: LocalDate? = null,
 
   @Schema(description = "Indicates this offence is for the latest NOMIS booking")
-  val latestBooking: Boolean,
+  val latestBooking: Boolean? = null,
 
   @Schema(description = "Start date of sentence - null if there is no associated sentence", example = "2018-03-10")
   @Field(type = FieldType.Date, format = [DateFormat.date])

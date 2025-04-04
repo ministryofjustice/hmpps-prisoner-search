@@ -8,27 +8,27 @@ import java.time.LocalDate
 
 data class PrisonerAlias(
   @Schema(description = "Title", example = "Ms")
-  var title: String?,
+  var title: String? = null,
 
   @Schema(description = "First Name", example = "Robert")
-  val firstName: String,
+  val firstName: String? = null,
 
   @Schema(description = "Middle names", example = "Trevor")
-  val middleNames: String?,
+  val middleNames: String? = null,
 
   @Schema(description = "Last name", example = "Lorsen")
-  val lastName: String,
+  val lastName: String? = null,
 
   @Field(type = FieldType.Date, format = [DateFormat.date])
   @Schema(description = "Date of birth", example = "1975-04-02")
-  val dateOfBirth: LocalDate,
+  val dateOfBirth: LocalDate? = null,
 
   @Schema(description = "Gender", example = "Male")
-  val gender: String?,
+  val gender: String? = null,
 
   @Schema(description = "Ethnicity", example = "White : Irish")
-  val ethnicity: String?,
+  val ethnicity: String? = null,
 
   @Schema(description = "Ethnicity code", example = "W1")
-  val raceCode: String?,
+  val raceCode: String? = null,
 )

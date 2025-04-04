@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.core.ParameterizedTypeReference
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -323,6 +324,7 @@ class PrisonersInPrisonResourceTest : AbstractSearchIntegrationTest() {
         check {
           assertThat(it.pagination.size).isEqualTo(3000)
         },
+        isNull(),
       )
     }
   }
