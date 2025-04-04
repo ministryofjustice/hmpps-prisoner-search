@@ -36,8 +36,8 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
         identifiers = listOf(
           IdentifierBuilder(type = "CRO", value = "345678/12T", createdDatetime = "2022-01-01T12:00:00"),
           IdentifierBuilder(type = "PNC", value = "25/123456R", createdDatetime = "2022-02-02T14:20:00"),
-        )
-      )
+        ),
+      ),
     )
     loadPrisonersFromBuilders(prisonerData)
   }
@@ -207,19 +207,19 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       val responseType = object : ParameterizedTypeReference<RestResponsePage<Prisoner>>() {}
 
       return webTestClient.get().uri {
-          it.path("/prison/$prisonId/prisoners")
-            .queryParam("term", request.term)
-            .queryParam("page", request.pagination.page)
-            .queryParam("size", request.pagination.size)
-            .queryParam("sort", sort)
-            .apply { requestedAttributes?.forEach { queryParam("requestedAttributes", it) } }
-            .build()
-        }
-          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))
-          .header("Content-Type", "application/json")
-          .exchange().expectStatus().isOk
-          .expectBody(responseType)
-          .returnResult().responseBody!!
+        it.path("/prison/$prisonId/prisoners")
+          .queryParam("term", request.term)
+          .queryParam("page", request.pagination.page)
+          .queryParam("size", request.pagination.size)
+          .queryParam("sort", sort)
+          .apply { requestedAttributes?.forEach { queryParam("requestedAttributes", it) } }
+          .build()
+      }
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange().expectStatus().isOk
+        .expectBody(responseType)
+        .returnResult().responseBody!!
     }
 
     private fun WebTestClient.searchError(
@@ -232,19 +232,19 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       val responseType = object : ParameterizedTypeReference<ErrorResponse>() {}
 
       return webTestClient.get().uri {
-          it.path("/prison/$prisonId/prisoners")
-            .queryParam("term", request.term)
-            .queryParam("page", request.pagination.page)
-            .queryParam("size", request.pagination.size)
-            .queryParam("sort", sort)
-            .apply { requestedAttributes?.forEach { queryParam("requestedAttributes", it) } }
-            .build()
-        }
-          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))
-          .header("Content-Type", "application/json")
-          .exchange().expectStatus().isEqualTo(status)
-          .expectBody(responseType)
-          .returnResult().responseBody!!
+        it.path("/prison/$prisonId/prisoners")
+          .queryParam("term", request.term)
+          .queryParam("page", request.pagination.page)
+          .queryParam("size", request.pagination.size)
+          .queryParam("sort", sort)
+          .apply { requestedAttributes?.forEach { queryParam("requestedAttributes", it) } }
+          .build()
+      }
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange().expectStatus().isEqualTo(status)
+        .expectBody(responseType)
+        .returnResult().responseBody!!
     }
   }
 }

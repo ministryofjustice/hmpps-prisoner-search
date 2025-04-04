@@ -141,7 +141,6 @@ class PrisonersInPrisonResource(
     @PageableDefault(sort = ["lastName", "firstName", "prisonerNumber"], direction = Sort.Direction.ASC)
     pageable: Pageable,
   ): Page<Prisoner> {
-
     requestedAttributes?.run {
       requestedAttributeValidator.findMissing(requestedAttributes)
         .takeIf { it.isNotEmpty() }

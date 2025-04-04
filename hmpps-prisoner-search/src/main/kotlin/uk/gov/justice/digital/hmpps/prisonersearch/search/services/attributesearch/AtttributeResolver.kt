@@ -44,8 +44,7 @@ internal fun Attributes.attributeAndObjects(): List<String> = this.keys
 /**
  * Derive all attributes that can be searched for in queries
  */
-internal fun getAttributes(kClass: KClass<*>): Attributes =
-  kClass.memberProperties.flatMap { prop -> findAttributes(prop) }.toMap()
+internal fun getAttributes(kClass: KClass<*>): Attributes = kClass.memberProperties.flatMap { prop -> findAttributes(prop) }.toMap()
 
 private fun findAttributes(
   prop: KProperty1<*, *>,
@@ -93,12 +92,11 @@ private fun KProperty1<*, *>.getGenericTypeClass() = returnType.genericType()
 private fun KProperty1<*, *>.getPropertyClass() = returnType.classifier as KClass<*>
 
 // Get the name of a property as used by OpenSearch, e.g. firstName -> firstName.keyword
-private fun KProperty1<*, *>.getOpenSearchName(): String =
-  if (getPropertyClass().simpleName != "String" || (hasFieldAnnotation("Keyword"))) {
-    name
-  } else {
-    "$name.keyword"
-  }
+private fun KProperty1<*, *>.getOpenSearchName(): String = if (getPropertyClass().simpleName != "String" || (hasFieldAnnotation("Keyword"))) {
+  name
+} else {
+  "$name.keyword"
+}
 
 // Checks if a property has an annotation of the passed type
 private fun KProperty1<*, *>.hasFieldAnnotation(fieldType: String): Boolean = getFieldType() == fieldType
