@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class PhoneNumber(
   @Schema(description = "The type of the phone number", example = "HOME, MOB")
-  val type: String,
+  val type: String? = null,
 
   @Schema(description = "The phone number. Numeric characters only (no whitespace).", example = "01141234567")
-  val number: String,
+  val number: String? = null,
 )
