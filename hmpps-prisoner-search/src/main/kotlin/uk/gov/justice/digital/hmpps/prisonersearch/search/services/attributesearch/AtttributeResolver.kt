@@ -6,6 +6,7 @@ import org.springframework.data.elasticsearch.annotations.Field
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TypeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.genericType
+import kotlin.collections.flatMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
@@ -21,18 +22,18 @@ class AttributeResolver {
 
   // attributesAndObjects contains everything you can request to be populated on the Prisoner record
   @Bean
-  fun attributeAndObjects(attributes: Attributes): List<String> = attributes.attributeAndObjects()
+  fun allResponseFields(attributes: Attributes): List<String> = attributes.allResponseFields()
 
   @Bean
-  fun requestedAttributeValidator(attributesAndObjects: List<String>): RequestedAttributeValidator = RequestedAttributeValidator(attributesAndObjects)
+  fun responseFieldsValidator(attributesAndObjects: List<String>): ResponseFieldsValidator = ResponseFieldsValidator(attributesAndObjects)
 }
 
-class RequestedAttributeValidator(private val attributesAndObjects: List<String> = emptyList<String>()) {
-  fun findMissing(requestedAttributes: List<String>) = requestedAttributes.filterNot { it in attributesAndObjects }
+class ResponseFieldsValidator(private val allResponseFields: List<String> = emptyList<String>()) {
+  fun findMissing(responseFields: List<String>) = responseFields.filterNot { it in allResponseFields }
 }
 
 // Add each object to the list of attributes, e.g. "currentIncentive.code" -> listOf("currentIncentive", "currentIncentive.code")
-internal fun Attributes.attributeAndObjects(): List<String> = this.keys
+internal fun Attributes.allResponseFields(): List<String> = this.keys
   .flatMap { attribute ->
     attribute.split(".").let { parts ->
       parts.mapIndexed { index, _ -> parts.take(index + 1).joinToString(".") }
@@ -45,6 +46,20 @@ internal fun Attributes.attributeAndObjects(): List<String> = this.keys
  * Derive all attributes that can be searched for in queries
  */
 internal fun getAttributes(kClass: KClass<*>): Attributes = kClass.memberProperties.flatMap { prop -> findAttributes(prop) }.toMap()
+
+/**
+ * Derive all complex object types for fields that can be included in the response.
+ *
+ * Ignores simple types String, Int, Boolean, LocalDate, LocalDateTime
+ */
+internal fun findComplexObjectTypes(kClass: KClass<*>): Set<KClass<*>> = kClass.memberProperties.mapNotNull { prop ->
+  when (prop.getPropertyType()) {
+    PropertyType.SUPPORTED_TYPE -> null
+    PropertyType.LIST_SUPPORTED_TYPES -> null
+    PropertyType.LIST_OBJECTS -> prop.getGenericTypeClass()
+    PropertyType.OBJECT -> prop.getPropertyClass()
+  }
+}.union(setOf(kClass))
 
 private fun findAttributes(
   prop: KProperty1<*, *>,

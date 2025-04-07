@@ -115,8 +115,8 @@ class AttributeResolverTest {
   }
 
   @Test
-  fun `should derive attributes and objects`() {
-    assertThat(attributes.attributeAndObjects()).containsExactlyInAnyOrder(
+  fun `should derive all possible response fields`() {
+    assertThat(attributes.allResponseFields()).containsExactlyInAnyOrder(
       "keywordString",
       "string",
       "boolean",

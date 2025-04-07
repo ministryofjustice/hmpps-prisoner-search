@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Prisoners
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
-class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
+class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
     val prisonerData = listOf(
       PrisonerBuilder(
@@ -44,13 +44,13 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
 
   @DisplayName("Prisoners in prison search")
   @Nested
-  inner class PrisonerInPrisonSearch {
+  inner class PrisonersInPrisonSearch {
     @Test
-    fun `should return bad request for unknown attributes`() {
+    fun `should return bad request for unknown fields`() {
       webTestClient.searchError(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf("prisonerNumber", "doesNotExist", "nested.alsoDoesNotExist"),
+        responseFields = listOf("prisonerNumber", "doesNotExist", "nested.alsoDoesNotExist"),
       ).also {
         assertThat(it.userMessage).doesNotContain("prisonerNumber")
         assertThat(it.userMessage).contains("doesNotExist")
@@ -59,11 +59,11 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
-    fun `should return attributes of different types`() {
+    fun `should return fields of different types`() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(
+        responseFields = listOf(
           "prisonerNumber",
           "dateOfBirth",
           "recall",
@@ -82,11 +82,11 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
-    fun `should return all attributes if empty list of attributes requested`() {
+    fun `should return all fields if empty list of fields requested`() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(),
+        responseFields = listOf(),
       )
 
       with(response.content.first()!!) {
@@ -99,11 +99,11 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
-    fun `should return null for attributes not requested`() {
+    fun `should return null for fields not requested`() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(
+        responseFields = listOf(
           "prisonerNumber",
           "currentIncentive.level.description",
         ),
@@ -124,7 +124,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(
+        responseFields = listOf(
           "prisonerNumber",
           "currentIncentive",
         ),
@@ -143,7 +143,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(
+        responseFields = listOf(
           "prisonerNumber",
           "currentIncentive.level",
         ),
@@ -162,7 +162,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(
+        responseFields = listOf(
           "prisonerNumber",
           "identifiers",
         ),
@@ -182,7 +182,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
         prisonId = "MDI",
-        requestedAttributes = listOf(
+        responseFields = listOf(
           "prisonerNumber",
           "identifiers.type",
           "identifiers.value",
@@ -202,7 +202,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       request: PrisonersInPrisonRequest = PrisonersInPrisonRequest(),
       sort: String? = null,
       prisonId: String = "MDI",
-      requestedAttributes: List<String>? = null,
+      responseFields: List<String>? = null,
     ): RestResponsePage<Prisoner> {
       val responseType = object : ParameterizedTypeReference<RestResponsePage<Prisoner>>() {}
 
@@ -212,7 +212,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
           .queryParam("page", request.pagination.page)
           .queryParam("size", request.pagination.size)
           .queryParam("sort", sort)
-          .apply { requestedAttributes?.forEach { queryParam("requestedAttributes", it) } }
+          .apply { responseFields?.forEach { queryParam("responseFields", it) } }
           .build()
       }
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))
@@ -226,7 +226,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
       request: PrisonersInPrisonRequest = PrisonersInPrisonRequest(),
       sort: String? = null,
       prisonId: String = "MDI",
-      requestedAttributes: List<String>? = null,
+      responseFields: List<String>? = null,
       status: HttpStatus = HttpStatus.BAD_REQUEST,
     ): ErrorResponse {
       val responseType = object : ParameterizedTypeReference<ErrorResponse>() {}
@@ -237,7 +237,7 @@ class PartialPrisonerResponseTest : AbstractSearchIntegrationTest() {
           .queryParam("page", request.pagination.page)
           .queryParam("size", request.pagination.size)
           .queryParam("sort", sort)
-          .apply { requestedAttributes?.forEach { queryParam("requestedAttributes", it) } }
+          .apply { responseFields?.forEach { queryParam("responseFields", it) } }
           .build()
       }
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))

@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.RequestedAttributeValidator
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
@@ -36,7 +36,7 @@ import java.time.LocalDate
 @PreAuthorize("hasAnyRole('ROLE_PRISONER_IN_PRISON_SEARCH', 'ROLE_PRISONER_SEARCH')")
 class PrisonersInPrisonResource(
   private val searchService: PrisonersInPrisonService,
-  private val requestedAttributeValidator: RequestedAttributeValidator,
+  private val responseFieldsValidator: ResponseFieldsValidator,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -134,15 +134,18 @@ class PrisonersInPrisonResource(
     @RequestParam(value = "incentiveLevelCode", required = false)
     @Parameter(description = "Filter for the prisoners on an incentive level.", example = "STD")
     incentiveLevelCode: String?,
-    @RequestParam(value = "requestedAttributes", required = false)
-    @Parameter(description = "A list of attributes to return on the Prisoner record. An empty list defaults to all attributes.", example = "prisonerNumber,firstName")
-    requestedAttributes: List<String>? = null,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code",
+    )
+    responseFields: List<String>? = null,
     @ParameterObject
     @PageableDefault(sort = ["lastName", "firstName", "prisonerNumber"], direction = Sort.Direction.ASC)
     pageable: Pageable,
   ): Page<Prisoner> {
-    requestedAttributes?.run {
-      requestedAttributeValidator.findMissing(requestedAttributes)
+    responseFields?.run {
+      responseFieldsValidator.findMissing(responseFields)
         .takeIf { it.isNotEmpty() }
         ?.run { throw BadRequestException("Invalid attributes requested: $this") }
     }
@@ -159,7 +162,7 @@ class PrisonersInPrisonResource(
         incentiveLevelCode = incentiveLevelCode,
         sort = pageable.sort,
       ),
-      requestedAttributes,
+      responseFields,
     )
   }
 }
