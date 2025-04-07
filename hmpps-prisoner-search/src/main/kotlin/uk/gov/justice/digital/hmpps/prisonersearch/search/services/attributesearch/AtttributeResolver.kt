@@ -29,7 +29,7 @@ class AttributeResolver {
 }
 
 class ResponseFieldsValidator(private val allResponseFields: List<String> = emptyList<String>()) {
-  fun findMissing(responseFields: List<String>) = responseFields.filterNot { it in allResponseFields }
+  fun findMissing(responseFields: List<String>) = responseFields - allResponseFields
 }
 
 // Add each object to the list of attributes, e.g. "currentIncentive.code" -> listOf("currentIncentive", "currentIncentive.code")

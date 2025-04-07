@@ -10,11 +10,11 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class CurrentIncentive(
-  @Schema(description = "Incentive level")
+  @Schema(description = "Incentive level. Will never be null.")
   val level: IncentiveLevel? = null,
 
   @Field(type = FieldType.Date, format = [DateFormat.date_hour_minute_second])
-  @Schema(required = true, description = "Date time of the incentive", example = "2022-11-10T15:47:24")
+  @Schema(required = true, description = "Date time of the incentive. Will never be null.", example = "2022-11-10T15:47:24")
   val dateTime: LocalDateTime? = null,
 
   @Field(type = FieldType.Date, format = [DateFormat.date])
@@ -25,9 +25,9 @@ data class CurrentIncentive(
 }
 
 data class IncentiveLevel(
-  @Schema(description = "code", example = "STD")
+  @Schema(description = "code. Will never be null.", example = "STD")
   val code: String? = null,
 
-  @Schema(description = "description", example = "Standard")
+  @Schema(description = "description. Will never be null.", example = "Standard")
   val description: String? = null,
 )

@@ -8,10 +8,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Identifier(
-  @Schema(description = "The type of identifier", example = "PNC, CRO, DL, NINO")
+  @Schema(description = "The type of identifier. Will never be null.", example = "PNC, CRO, DL, NINO")
   val type: String? = null,
 
-  @Schema(description = "The identifier value", example = "12/394773H")
+  @Schema(description = "The identifier value. Will never be null.", example = "12/394773H")
   val value: String? = null,
 
   @Schema(description = "The date the identifier was issued according to NOMIS", example = "2020-07-17")
@@ -21,7 +21,7 @@ data class Identifier(
   @Schema(description = "Free text entered into NOMIS when the identifier was recorded.")
   val issuedAuthorityText: String? = null,
 
-  @Schema(description = "The date/time the identifier was created in the system", example = "2020-07-17T12:34:56.833Z")
+  @Schema(description = "The date/time the identifier was created in the system. Will never be null.", example = "2020-07-17T12:34:56.833Z")
   @Field(type = FieldType.Date, format = [DateFormat.date_hour_minute_second])
   val createdDateTime: LocalDateTime? = null,
 )
