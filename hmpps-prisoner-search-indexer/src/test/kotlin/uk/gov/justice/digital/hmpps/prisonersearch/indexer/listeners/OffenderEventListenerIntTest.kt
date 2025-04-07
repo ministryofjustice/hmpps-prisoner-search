@@ -150,6 +150,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       this.bookingId = bookingId.toString()
       this.inOutStatus = "IN"
       this.status = "ACTIVE IN"
+      this.restrictedPatient = false
     }
     prisonerRepository.save(prisoner)
 
@@ -200,6 +201,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonerNumber = prisonerNumber
         this.prisonId = "EWI"
         this.cellLocation = "RES1-2-014"
+        this.restrictedPatient = false
       },
     )
     prisonerRepository.save(
@@ -207,6 +209,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonerNumber = "O7089FF"
         this.prisonId = "EWI"
         this.cellLocation = "RES1-2-014"
+        this.restrictedPatient = false
       },
     )
     prisonerRepository.save(
@@ -214,6 +217,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonerNumber = "O7089FG"
         this.prisonId = "EWI"
         this.cellLocation = "RES1-1-014" // wrong cell
+        this.restrictedPatient = false
       },
     )
     prisonerRepository.save(
@@ -221,6 +225,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
         this.prisonerNumber = "O7089FH"
         this.prisonId = "MDI" // wrong prison
         this.cellLocation = "RES1-2-014"
+        this.restrictedPatient = false
       },
     )
     await untilCallTo { prisonerRepository.count() } matches { it == 4L }
