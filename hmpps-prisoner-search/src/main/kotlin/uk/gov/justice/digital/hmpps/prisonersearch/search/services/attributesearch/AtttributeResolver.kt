@@ -20,19 +20,19 @@ class AttributeResolver {
   @Bean
   fun attributes(): Attributes = getAttributes(Prisoner::class)
 
-  // attributesAndObjects contains everything you can request to be populated on the Prisoner record
+  // allResponseFields contains everything you can request to be populated on the Prisoner record
   @Bean
   fun allResponseFields(attributes: Attributes): List<String> = attributes.allResponseFields()
 
   @Bean
-  fun responseFieldsValidator(attributesAndObjects: List<String>): ResponseFieldsValidator = ResponseFieldsValidator(attributesAndObjects)
+  fun responseFieldsValidator(allResponseFields: List<String>): ResponseFieldsValidator = ResponseFieldsValidator(allResponseFields)
 }
 
 class ResponseFieldsValidator(private val allResponseFields: List<String> = emptyList<String>()) {
   fun findMissing(responseFields: List<String>) = responseFields - allResponseFields
 }
 
-// Add each object to the list of attributes, e.g. "currentIncentive.code" -> listOf("currentIncentive", "currentIncentive.code")
+// Add each object to the list of response fields, e.g. "currentIncentive.code" -> listOf("currentIncentive", "currentIncentive.code")
 internal fun Attributes.allResponseFields(): List<String> = this.keys
   .flatMap { attribute ->
     attribute.split(".").let { parts ->

@@ -147,7 +147,7 @@ class PrisonersInPrisonResource(
     responseFields?.run {
       responseFieldsValidator.findMissing(responseFields)
         .takeIf { it.isNotEmpty() }
-        ?.run { throw BadRequestException("Invalid attributes requested: $this") }
+        ?.run { throw BadRequestException("Invalid response fields requested: $this") }
     }
 
     return searchService.search(
