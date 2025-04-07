@@ -137,7 +137,7 @@ class PrisonersInPrisonResource(
     @RequestParam(value = "responseFields", required = false)
     @Parameter(
       description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
-      example = "prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
     @ParameterObject
