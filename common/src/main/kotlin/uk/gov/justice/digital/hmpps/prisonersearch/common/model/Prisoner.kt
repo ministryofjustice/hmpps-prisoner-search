@@ -311,9 +311,9 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.LOCATION)
   var locationDescription: String? = null
 
-  @Schema(required = true, description = "Indicates a restricted patient", example = "true")
+  @Schema(required = true, description = "Indicates a restricted patient. Will never be null.", example = "true")
   @DiffableProperty(DiffCategory.RESTRICTED_PATIENT)
-  var restrictedPatient: Boolean = false
+  var restrictedPatient: Boolean? = false
 
   @Schema(description = "Supporting prison ID for POM", example = "LEI")
   @DiffableProperty(DiffCategory.RESTRICTED_PATIENT)

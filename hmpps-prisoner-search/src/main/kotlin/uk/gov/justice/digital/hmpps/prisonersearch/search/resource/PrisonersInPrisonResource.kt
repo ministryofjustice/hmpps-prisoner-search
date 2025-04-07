@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springdoc.core.annotations.ParameterObject
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -21,16 +22,22 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import java.time.LocalDate
 
 @RestController
 @Validated
 @PreAuthorize("hasAnyRole('ROLE_PRISONER_IN_PRISON_SEARCH', 'ROLE_PRISONER_SEARCH')")
-class PrisonersInPrisonResource(private val searchService: PrisonersInPrisonService) {
+class PrisonersInPrisonResource(
+  private val searchService: PrisonersInPrisonService,
+  private val responseFieldsValidator: ResponseFieldsValidator,
+) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
@@ -127,20 +134,35 @@ class PrisonersInPrisonResource(private val searchService: PrisonersInPrisonServ
     @RequestParam(value = "incentiveLevelCode", required = false)
     @Parameter(description = "Filter for the prisoners on an incentive level.", example = "STD")
     incentiveLevelCode: String?,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code",
+    )
+    responseFields: List<String>? = null,
     @ParameterObject
     @PageableDefault(sort = ["lastName", "firstName", "prisonerNumber"], direction = Sort.Direction.ASC)
     pageable: Pageable,
-  ) = searchService.search(
-    prisonId,
-    PrisonersInPrisonRequest(
-      term = term,
-      pagination = PaginationRequest(pageable.pageNumber, pageable.pageSize),
-      alertCodes = alerts,
-      fromDob = fromDob,
-      toDob = toDob,
-      cellLocationPrefix = cellLocationPrefix,
-      incentiveLevelCode = incentiveLevelCode,
-      sort = pageable.sort,
-    ),
-  )
+  ): Page<Prisoner> {
+    responseFields?.run {
+      responseFieldsValidator.findMissing(responseFields)
+        .takeIf { it.isNotEmpty() }
+        ?.run { throw BadRequestException("Invalid response fields requested: $this") }
+    }
+
+    return searchService.search(
+      prisonId,
+      PrisonersInPrisonRequest(
+        term = term,
+        pagination = PaginationRequest(pageable.pageNumber, pageable.pageSize),
+        alertCodes = alerts,
+        fromDob = fromDob,
+        toDob = toDob,
+        cellLocationPrefix = cellLocationPrefix,
+        incentiveLevelCode = incentiveLevelCode,
+        sort = pageable.sort,
+      ),
+      responseFields,
+    )
+  }
 }

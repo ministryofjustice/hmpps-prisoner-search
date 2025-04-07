@@ -3,12 +3,12 @@ package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PrisonerAlert(
-  @Schema(description = "Alert Type", example = "H")
-  val alertType: String,
-  @Schema(description = "Alert Code", example = "HA")
-  val alertCode: String,
-  @Schema(description = "Active", example = "true")
-  val active: Boolean,
-  @Schema(description = "Expired", example = "true")
-  val expired: Boolean,
+  @Schema(description = "Alert Type. Will never be null.", example = "H")
+  val alertType: String? = null,
+  @Schema(description = "Alert Code. Will never be null.", example = "HA")
+  val alertCode: String? = null,
+  @Schema(description = "Active. Will never be null.", example = "true")
+  val active: Boolean? = null,
+  @Schema(description = "Expired. Will never be null.", example = "true")
+  val expired: Boolean? = null,
 )

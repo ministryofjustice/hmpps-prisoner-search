@@ -47,10 +47,10 @@ class PrisonersInPrisonService(
     }
   }
 
-  fun search(prisonId: String, prisonerSearchRequest: PrisonersInPrisonRequest): Page<Prisoner> {
+  fun search(prisonId: String, prisonerSearchRequest: PrisonersInPrisonRequest, responseFields: List<String>? = null): Page<Prisoner> {
     log.info("Received keyword request ${gson.toJson(prisonerSearchRequest)}")
 
-    val searchSourceBuilder = createSourceBuilder(prisonId, prisonerSearchRequest)
+    val searchSourceBuilder = createSourceBuilder(prisonId, prisonerSearchRequest, responseFields)
     val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
 
     // Useful for logging the JSON elastic search query that is executed
@@ -65,6 +65,7 @@ class PrisonersInPrisonService(
   private fun createSourceBuilder(
     prisonId: String,
     searchRequest: PrisonersInPrisonRequest,
+    responseFields: List<String>? = null,
   ): SearchSourceBuilder {
     val pageable = PageRequest.of(searchRequest.pagination.page, searchRequest.pagination.size)
     val sorting = searchRequest.sort.toList()
@@ -83,6 +84,7 @@ class PrisonersInPrisonService(
       from(pageable.offset.toInt())
       trackTotalHits(true)
       query(buildKeywordQuery(prisonId, searchRequest))
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       // This was sort(sorting) - but no longer takes a list, so loop round
       for (fieldSortBuilder in sorting) {
         sort(fieldSortBuilder)

@@ -159,7 +159,7 @@ fun Prisoner.translate(
     this.restrictedPatient = existingPrisoner?.restrictedPatient == true
 
     // When this is a non-RP event and the prisoner is not an RP, use the ob data
-    this.locationDescription = if (restrictedPatient) existingPrisoner?.locationDescription else ob.locationDescription
+    this.locationDescription = if (restrictedPatient == true) existingPrisoner?.locationDescription else ob.locationDescription
 
     this.supportingPrisonId = existingPrisoner?.supportingPrisonId
     this.dischargedHospitalId = existingPrisoner?.dischargedHospitalId
