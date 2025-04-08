@@ -94,6 +94,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       prisonerNumber = "A7089EY"
       status = "ACTIVE IN"
       prisonId = "MDI"
+      restrictedPatient = false
     }.also {
       prisonerRepository.save(it)
     }
