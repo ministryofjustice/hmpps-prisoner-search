@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springdoc.core.annotations.ParameterObject
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
@@ -17,13 +18,16 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonSearch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.PrisonerNumbers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReleaseDateSearch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 
 @RestController
 @Validated
@@ -33,7 +37,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
   produces = [MediaType.APPLICATION_JSON_VALUE],
   consumes = [MediaType.APPLICATION_JSON_VALUE],
 )
-class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchService) {
+class PrisonerSearchResource(
+  private val prisonerSearchService: PrisonerSearchService,
+  private val responseFieldsValidator: ResponseFieldsValidator,
+) {
 
   @Deprecated(message = "Use the /match-prisoners endpoint")
   @PostMapping("/match")
@@ -113,7 +120,21 @@ class PrisonerSearchResource(private val prisonerSearchService: PrisonerSearchSe
       required = false,
       defaultValue = "false",
     ) includeRestrictedPatients: Boolean,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
     @ParameterObject @PageableDefault
     pageable: Pageable,
-  ) = prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients)
+  ): Page<Prisoner> {
+    responseFields?.run {
+      responseFieldsValidator.findMissing(responseFields)
+        .takeIf { it.isNotEmpty() }
+        ?.run { throw BadRequestException("Invalid response fields requested: $this") }
+    }
+
+    return prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients, responseFields)
+  }
 }
