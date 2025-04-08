@@ -257,6 +257,7 @@ private fun NomisAddress.toAddress(): Address {
     startDate = startDate,
     primaryAddress = primary,
     phoneNumbers = phones?.toPhoneNumbers(),
+    noFixedAddress = false,
   )
 }
 

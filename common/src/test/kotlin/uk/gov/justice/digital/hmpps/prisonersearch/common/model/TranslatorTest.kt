@@ -738,6 +738,7 @@ class TranslatorTest {
           "S10 1AB",
           LocalDate.now(),
           true,
+          false,
         ),
       )
     }
@@ -774,6 +775,7 @@ class TranslatorTest {
           "S10 1AB",
           LocalDate.now(),
           true,
+          false,
         ),
       )
     }
@@ -824,8 +826,9 @@ class TranslatorTest {
           "S10 1AB",
           LocalDate.now(),
           true,
+          false,
         ),
-        Address("1 Big Street, Sheffield, S11 1BB", "S11 1BB", LocalDate.now(), false),
+        Address("1 Big Street, Sheffield, S11 1BB", "S11 1BB", LocalDate.now(), false, false),
       )
     }
 
@@ -930,7 +933,7 @@ class TranslatorTest {
       )
 
       assertThat(prisoner.addresses).containsExactly(
-        Address("S11 1BB", "S11 1BB", LocalDate.now(), false),
+        Address("S11 1BB", "S11 1BB", LocalDate.now(), false, false),
       )
     }
 
@@ -961,7 +964,7 @@ class TranslatorTest {
       )
 
       assertThat(prisoner.addresses).containsExactly(
-        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, England", null, LocalDate.now(), true),
+        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, England", null, LocalDate.now(), true, false),
       )
     }
 
@@ -992,7 +995,7 @@ class TranslatorTest {
       )
 
       assertThat(prisoner.addresses).containsExactly(
-        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", null, true),
+        Address("Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England", "S10 1AB", null, true, false),
       )
     }
 
