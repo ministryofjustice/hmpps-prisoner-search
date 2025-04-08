@@ -58,6 +58,7 @@ internal fun findComplexObjectTypes(kClass: KClass<*>): Set<KClass<*>> = kClass.
     PropertyType.LIST_SUPPORTED_TYPES -> null
     PropertyType.LIST_OBJECTS -> prop.getGenericTypeClass()
     PropertyType.OBJECT -> prop.getPropertyClass()
+    PropertyType.NO_BACKING_FIELD -> null
   }
 }.union(setOf(kClass))
 
@@ -98,6 +99,8 @@ private fun findAttributes(
         )
       }
   }
+  // We've found a derived field so we're going to ignore it
+  PropertyType.NO_BACKING_FIELD -> emptyList()
 }
 
 // Get the generic type of a list, e.g. List<OffenderIdentifier> -> OffenderIdentifier
@@ -135,17 +138,21 @@ private enum class PropertyType {
 
   // A list of objects that won't have its own matcher, e.g. List<Address>
   LIST_OBJECTS,
+
+  // A derived type that isn't backed by a real Java field, e.g. Prisoner.active which is derived from status
+  NO_BACKING_FIELD,
 }
 
-private fun KProperty1<*, *>.getPropertyType(): PropertyType = when (returnType.classifier) {
-  List::class -> {
+private fun KProperty1<*, *>.getPropertyType(): PropertyType = when {
+  this.javaField == null -> PropertyType.NO_BACKING_FIELD
+  returnType.classifier == List::class -> {
     when (this.getGenericTypeClass()) {
       in TypeMatcher.getSupportedTypes() -> PropertyType.LIST_SUPPORTED_TYPES
       else -> PropertyType.LIST_OBJECTS
     }
   }
 
-  in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
+  returnType.classifier in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
   else -> PropertyType.OBJECT
 }
 

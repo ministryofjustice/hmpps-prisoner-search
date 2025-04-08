@@ -84,6 +84,13 @@ class ResponseFieldsResourceTest : IntegrationTestBase() {
         )
       }
     }
+
+    @Test
+    fun `should not return the derived type active`() {
+      webTestClient.getResponseFields { result: List<String> ->
+        assertThat(result).doesNotContain("active")
+      }
+    }
   }
 
   private fun WebTestClient.getResponseFields(tests: (List<String>) -> Unit) = webTestClient.get().uri("/response-fields")

@@ -260,13 +260,13 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
       private fun validBooleanMatcher() = """
       {
         "type": "Boolean",
-        "attribute": "active",
+        "attribute": "recall",
         "condition": true
       }
       """.trimIndent()
 
       private fun String.withType(type: String) = replace(""""type": "Boolean"""", """"type": "$type"""")
-      private fun String.withAttribute(attribute: String) = replace(""""attribute": "active"""", """"attribute": "$attribute"""")
+      private fun String.withAttribute(attribute: String) = replace(""""attribute": "recall"""", """"attribute": "$attribute"""")
 
       private fun String.withConditionJson(conditionJson: String) = replace(""""condition": true""", conditionJson)
 
@@ -281,7 +281,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
         webTestClient.attributeSearch(validBooleanRequest().withType("Date"))
           .expectStatus().isBadRequest
           .expectBody().jsonPath("$.userMessage").value<String> {
-            assertThat(it).contains("active").contains("Boolean").contains("LocalDate")
+            assertThat(it).contains("recall").contains("Boolean").contains("LocalDate")
           }
       }
 
