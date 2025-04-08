@@ -89,10 +89,16 @@ class PrisonerSearchService(
     return PageImpl(listOf(), pageable, 0L)
   }
 
-  fun findByPrison(prisonId: String, pageable: Pageable, includeRestrictedPatients: Boolean = false): Page<Prisoner> {
+  fun findByPrison(
+    prisonId: String,
+    pageable: Pageable,
+    includeRestrictedPatients: Boolean = false,
+    responseFields: List<String>? = null,
+  ): Page<Prisoner> {
     queryBy(
       prisonId,
       pageable,
+      responseFields,
     ) { if (includeRestrictedPatients) includeRestricted(it) else locationMatch(it) } onMatch {
       customEventForFindByPrisonId(prisonId, it.matches.size)
       return PageImpl(it.matches, pageable, it.totalHits)
@@ -173,6 +179,7 @@ class PrisonerSearchService(
   private fun queryBy(
     prisonId: String,
     pageable: Pageable,
+    responseFields: List<String>? = null,
     queryBuilder: (prisonId: String) -> BoolQueryBuilder?,
   ): GlobalResult {
     val query = queryBuilder(prisonId)
@@ -181,6 +188,7 @@ class PrisonerSearchService(
         query(query)
         size(pageable.pageSize)
         from(pageable.offset.toInt())
+        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
         sort("_score")
         sort("prisonerNumber")
         trackTotalHits(true)
