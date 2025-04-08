@@ -21,7 +21,7 @@ data class Address(
   val primaryAddress: Boolean? = null,
 
   @Schema(description = "No fixed address. This address record is only ever returned if it is also the primary address, otherwise it is ignored. Will never be null.", example = "true")
-  val noFixedAddress: Boolean? = false,
+  val noFixedAddress: Boolean? = null,
 
   @Schema(description = "Phone numbers linked to the address. Note the phone number contains only numbers, no whitespace. Therefore searching on 'addresses.phoneNumbers.number' should not pass any non-numeric characters.")
   val phoneNumbers: List<PhoneNumber>? = null,
