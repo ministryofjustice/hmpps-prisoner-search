@@ -36,7 +36,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @PostMapping
   @Tag(name = "Attribute search")
   @Operation(
-    summary = "*** BETA *** Search for prisoners by attributes",
+    summary = "Search for prisoners by attributes",
     description = """<p>This endpoint allows you to create queries over all attributes from the <em>Prisoner</em> record. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role.</p>
       <p>The request contains a list of queries to search on one or more attributes using a list of matchers. For example attribute "lastName""
       requires a <em>StringMatcher</em> so we can query on <strong>"lastName IS Smith"</strong>. Other type matchers include <em>IntMatcher</em>, <em>BooleanMatcher</em>,
@@ -229,7 +229,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   @GetMapping("/attributes")
   @Tag(name = "Attribute search")
   @Operation(
-    summary = "*** BETA *** Retrieve all attributes supported by the attribute search",
+    summary = "Retrieve all attributes supported by the attribute search",
     description = "Returns all attributes that can be passed into the attribute search including their type.",
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [

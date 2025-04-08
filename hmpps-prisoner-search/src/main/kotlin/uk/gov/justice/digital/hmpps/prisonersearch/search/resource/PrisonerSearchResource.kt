@@ -122,7 +122,7 @@ class PrisonerSearchResource(
     ) includeRestrictedPatients: Boolean,
     @RequestParam(value = "responseFields", required = false)
     @Parameter(
-      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      description = "*** BETA *** A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields. Note that this is currently being piloted in beta and should not be used yet. Please contact #syscon-devs if you wish to use this feature.",
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
