@@ -58,6 +58,7 @@ internal fun findComplexObjectTypes(kClass: KClass<*>): Set<KClass<*>> = kClass.
     PropertyType.LIST_SUPPORTED_TYPES -> null
     PropertyType.LIST_OBJECTS -> prop.getGenericTypeClass()
     PropertyType.OBJECT -> prop.getPropertyClass()
+    PropertyType.NO_BACKING_FIELD -> null
   }
 }.union(setOf(kClass))
 
@@ -98,6 +99,8 @@ private fun findAttributes(
         )
       }
   }
+  // We've found a field that isn't stored in the OpenSearch document so we're going to ignore it
+  PropertyType.NO_BACKING_FIELD -> emptyList()
 }
 
 // Get the generic type of a list, e.g. List<OffenderIdentifier> -> OffenderIdentifier
@@ -122,7 +125,7 @@ private fun KProperty1<*, *>.getFieldType(): String? {
   return name
 }
 
-// The type of a property on the Prisoner record, used to derive searchable attributes
+// The type of a property on the Prisoner record, used to derive searchable attributes and response fields
 private enum class PropertyType {
   // A type that is supported because it has a dedicated matcher, e.g. DateTime
   SUPPORTED_TYPE,
@@ -135,17 +138,20 @@ private enum class PropertyType {
 
   // A list of objects that won't have its own matcher, e.g. List<Address>
   LIST_OBJECTS,
+
+  // A derived field that doesn't exist on the OpenSearch document, e.g. Prisoner.active
+  NO_BACKING_FIELD,
 }
 
-private fun KProperty1<*, *>.getPropertyType(): PropertyType = when (returnType.classifier) {
-  List::class -> {
+private fun KProperty1<*, *>.getPropertyType(): PropertyType = when {
+  this.javaField == null -> PropertyType.NO_BACKING_FIELD
+  returnType.classifier == List::class -> {
     when (this.getGenericTypeClass()) {
       in TypeMatcher.getSupportedTypes() -> PropertyType.LIST_SUPPORTED_TYPES
       else -> PropertyType.LIST_OBJECTS
     }
   }
-
-  in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
+  returnType.classifier in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
   else -> PropertyType.OBJECT
 }
 

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -29,7 +30,11 @@ class AttributeResolverTest {
     val list: List<Complex>,
     @Field(type = FieldType.Nested)
     val complex: Complex,
-  )
+  ) {
+    @get:JsonIgnore
+    val noBackingField: Int
+      get() = integer * 2
+  }
 
   private class Complex(
     val string: String,
@@ -148,5 +153,10 @@ class AttributeResolverTest {
       "complex.nestedList.code",
       "complex.nestedList.description",
     )
+  }
+
+  @Test
+  fun `should not include derived fields`() {
+    assertThat(attributes.allResponseFields()).doesNotContain("noBackingField")
   }
 }
