@@ -57,9 +57,6 @@ class TranslatorTest {
       ob = OffenderBooking(
         offenderNo = "A1234AA",
         offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(topupSupervisionExpiryDate = tseDate),
       ),
     )
@@ -73,9 +70,6 @@ class TranslatorTest {
       ob = OffenderBooking(
         offenderNo = "A1234AA",
         offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(topupSupervisionStartDate = tssDate),
       ),
     )
@@ -89,9 +83,6 @@ class TranslatorTest {
       ob = OffenderBooking(
         offenderNo = "A1234AA",
         offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(homeDetentionCurfewEndDate = hdcend),
       ),
     )
@@ -108,9 +99,6 @@ class TranslatorTest {
       ob = OffenderBooking(
         offenderNo = "A1234AA",
         offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(
           conditionalReleaseDate = releaseDate,
           conditionalReleaseOverrideDate = conditionalReleaseOverrideDate,
@@ -135,9 +123,6 @@ class TranslatorTest {
       ob = OffenderBooking(
         offenderNo = "A1234AA",
         offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
         sentenceDetail = SentenceDetail(
           conditionalReleaseDate = conditionalReleaseDate,
           automaticReleaseDate = automaticReleaseDate,
@@ -156,9 +141,6 @@ class TranslatorTest {
       ob = OffenderBooking(
         offenderNo = "A1234AA",
         offenderId = 1L,
-        firstName = "Fred",
-        lastName = "Bloggs",
-        dateOfBirth = LocalDate.of(1976, 5, 15),
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Serving Life Imprisonment",
         convictedStatus = "Remand",
@@ -170,7 +152,7 @@ class TranslatorTest {
   }
 
   @Test
-  fun `last times are present`() {
+  fun `reception and admission dates are present`() {
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
         offenderNo = "A1234AA",
