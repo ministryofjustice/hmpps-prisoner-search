@@ -15,9 +15,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as Nomis
 fun Prisoner.translate(
   existingPrisoner: Prisoner? = null,
   ob: OffenderBooking,
-  incentiveLevel: Result<IncentiveLevel?>,
-  restrictedPatientData: Result<RestrictedPatient?>,
-  alerts: Result<List<Alert>?>,
+  incentiveLevel: Result<IncentiveLevel?> = Result.success(null),
+  restrictedPatientData: Result<RestrictedPatient?> = Result.success(null),
+  alerts: Result<List<Alert>?> = Result.success(null),
 ): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
@@ -125,6 +125,7 @@ fun Prisoner.translate(
   this.releaseOnTemporaryLicenceDate = ob.sentenceDetail?.releaseOnTemporaryLicenceDate
 
   this.receptionDate = ob.receptionDate
+  this.lastAdmissionDate = ob.lastAdmissionTime?.toLocalDate()
   this.paroleEligibilityDate = ob.sentenceDetail?.paroleEligibilityDate
   this.automaticReleaseDate =
     ob.sentenceDetail?.automaticReleaseOverrideDate ?: ob.sentenceDetail?.automaticReleaseDate
