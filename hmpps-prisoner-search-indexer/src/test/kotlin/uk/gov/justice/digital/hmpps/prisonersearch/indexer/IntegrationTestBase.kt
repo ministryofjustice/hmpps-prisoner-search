@@ -409,6 +409,7 @@ data class PrisonerBuilder(
         ),
         status = "ACTIVE IN",
         legalStatus = "REMAND",
+        lastAdmissionTime = LocalDateTime.parse("2025-04-22T11:12:13"),
         imprisonmentStatus = "LIFE",
         imprisonmentStatusDescription = "Life imprisonment",
         convictedStatus = convictedStatus,

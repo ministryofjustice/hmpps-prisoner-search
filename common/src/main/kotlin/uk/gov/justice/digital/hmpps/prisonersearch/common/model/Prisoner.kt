@@ -265,9 +265,14 @@ class Prisoner : Diffable<Prisoner> {
   var nonDtoReleaseDateType: String? = null
 
   @Field(type = FieldType.Date, format = [DateFormat.date])
-  @Schema(description = "Date prisoner was received into the prison", example = "2023-05-01")
+  @Schema(description = "Date prisoner was received into prison at the start of the term", example = "2023-05-01")
   @DiffableProperty(DiffCategory.SENTENCE)
   var receptionDate: LocalDate? = null
+
+  // @DiffableProperty(DiffCategory.SENTENCE)
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  @Schema(description = "Date prisoner was transferred into the current or latest prison", example = "2023-05-01")
+  var lastAdmissionDate: LocalDate? = null
 
   @Field(type = FieldType.Date, format = [DateFormat.date])
   @Schema(description = "Parole  Eligibility Date", example = "2023-05-01")
