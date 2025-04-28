@@ -19,14 +19,14 @@ The purpose of this service is to:
 *WE STRONGLY ADVISE, WHEN RUNNING LOCALLY, TO POINT AT SERVICES IN THE T3/DEV ENVIRONMENT*
 
 Since search has a number of dependencies that themselves have dependencies, it is recommended that when running locally you point mostly at services
-running in T3. The exception is pointing at localstack for AWS services, but HMPPS Auth, prison-api, incentives services are best used directly on T3 dev environment.
+running in T3. The exception is pointing at localstack for AWS services, but HMPPS Auth, prison-api, and domain services are best used directly on T3 dev environment.
 The docker-compose.yml file is provided as reference but the dependencies of dependencies are not shown and are subject to change.
 To run against T3 dependencies the environment variables as shown in the helm_deploy/values-dev.yaml file for paths can be used.
 Personal client credentials for the T3 services can be obtained from the HMPPS Auth team with the appropriate roles.
 
 To start up localstack and other dependencies with prisoner search running in Docker too:
 ```shell
-docker compose up localstack hmpps-auth prison-api restricted-patients hmpps-incentives-api hpsi-db
+docker compose up localstack hmpps-auth prison-api restricted-patients hmpps-incentives-api ??? hpsi-db
 ```
 
 Once localstack has started then, in another terminal, run the following command to start prisoner search too:

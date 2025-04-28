@@ -19,6 +19,7 @@ api:
       restricted-patients: http://localhost:8095
       incentives: http://localhost:8096
       alerts: http://localhost:8097
+      complexity-of-needs: http://localhost:8098
 
 restricted-patients:
   client:
@@ -38,6 +39,11 @@ incentives:
 alerts:
   client:
     id: alerts-api
+    secret: clientsecret
+
+complexity-of-needs:
+  client:
+    id: complexity-of-needs-api
     secret: clientsecret
 
 opensearch:

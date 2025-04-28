@@ -3,6 +3,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeeds
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
@@ -18,6 +19,7 @@ fun Prisoner.translate(
   incentiveLevel: Result<IncentiveLevel?> = Result.success(null),
   restrictedPatientData: Result<RestrictedPatient?> = Result.success(null),
   alerts: Result<List<Alert>?> = Result.success(null),
+  complexityOfNeeds: Result<ComplexityOfNeeds?> = Result.success(null),
 ): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
@@ -168,8 +170,14 @@ fun Prisoner.translate(
     this.dischargeDate = existingPrisoner?.dischargeDate
     this.dischargeDetails = existingPrisoner?.dischargeDetails
   }
+//  complexityOfNeeds.onSuccess { cn ->
+//    this.complexityOfNeedsLevel = cn?.level
+//  }.onFailure {
+//    this.complexityOfNeedsLevel = existingPrisoner?.complexityOfNeedsLevel
+//  }
 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
+  this.complexityOfNeedsLevel = complexityOfNeeds.map { it?.level }.getOrElse { existingPrisoner?.complexityOfNeedsLevel }
 
   this.addresses = ob.addresses?.map { it.toAddress() }
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }

@@ -25,6 +25,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeeds
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
@@ -48,6 +49,7 @@ internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
   private val restrictedPatientService = mock<RestrictedPatientService>()
   private val alertsService = mock<AlertsService>()
+  private val complexityOfNeedsService = mock<ComplexityOfNeedsService>()
   private val prisonerRepository = mock<PrisonerRepository>()
   private val telemetryClient = mock<TelemetryClient>()
   private val prisonerDifferenceService = mock<PrisonerDifferenceService>()
@@ -62,6 +64,7 @@ internal class PrisonerSynchroniserServiceTest {
     restrictedPatientService,
     incentivesService,
     alertsService,
+    complexityOfNeedsService,
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
@@ -677,6 +680,100 @@ internal class PrisonerSynchroniserServiceTest {
   }
 
   @Nested
+  inner class ReindexComplexityOfNeeds {
+    private val prisonerNumber = "A1234AA"
+    private val newComplexityOfNeeds = ComplexityOfNeeds(prisonerNumber, "medium", true)
+    val prisoner = Prisoner().apply {
+      bookingId = bookingId.toString()
+      complexityOfNeedsLevel = "old-value"
+    }
+    private val prisonerDocumentSummary =
+      PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
+
+    @BeforeEach
+    fun setup() {
+      whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
+    }
+
+    @Test
+    fun `will save ComplexityOfNeeds level to current index`() {
+      whenever(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeeds)
+      service.reindexComplexityOfNeedsWithGet(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateComplexityOfNeeds(
+        eq(prisonerNumber),
+        eq(newComplexityOfNeeds.level),
+        eq(prisonerDocumentSummary),
+      )
+    }
+
+    @Test
+    fun `will create telemetry`() {
+      whenever(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeeds)
+      whenever(prisonerRepository.updateComplexityOfNeeds(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexComplexityOfNeedsWithGet(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.COMPLEXITY_OF_NEEDS_UPDATED.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "not set"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will not save prisoner if no changes`() {
+      whenever(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeeds)
+      whenever(prisonerRepository.updateComplexityOfNeeds(eq(prisonerNumber), any(), any())).thenReturn(false)
+      service.reindexComplexityOfNeedsWithGet(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.COMPLEXITY_OF_NEEDS_OPENSEARCH_NO_CHANGE.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "not set"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will do nothing if prisoner not found`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
+
+      service.reindexComplexityOfNeedsWithGet(prisonerNumber, "event")
+
+      verify(prisonerRepository, never()).updateComplexityOfNeeds(any(), any(), any())
+    }
+
+    @Test
+    fun `Updates ok when no data`() {
+      whenever(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(prisonerNumber)).thenReturn(null)
+
+      service.reindexComplexityOfNeedsWithGet(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateComplexityOfNeeds(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
+    }
+
+    @Test
+    fun `will NOT call prisoner difference to handle differences`() {
+      whenever(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeeds)
+      whenever(prisonerRepository.updateComplexityOfNeeds(eq("A1234AA"), any(), any())).thenReturn(true)
+      service.reindexComplexityOfNeedsWithGet(prisonerNumber, "event")
+
+      verifyNoInteractions(prisonerDifferenceService)
+    }
+  }
+
+  @Nested
   inner class Index {
     private val booking = OffenderBookingBuilder().anOffenderBooking()
 
@@ -800,7 +897,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerRepository, never()).save(any())
       verify(prisonerDifferenceService).hasChanged(any(), any())
@@ -812,7 +909,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
       verify(prisonerRepository).save(any())
@@ -824,7 +921,7 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any())).thenReturn(existingPrisoner)
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
       verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any())

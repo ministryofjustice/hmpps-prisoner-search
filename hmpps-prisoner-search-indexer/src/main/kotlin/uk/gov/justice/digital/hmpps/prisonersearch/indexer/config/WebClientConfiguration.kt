@@ -19,6 +19,7 @@ class WebClientConfiguration(
   @Value("\${api.base.url.incentives}") val incentivesBaseUri: String,
   @Value("\${api.base.url.restricted-patients}") val restrictedPatientBaseUrl: String,
   @Value("\${api.base.url.alerts}") val alertsBaseUri: String,
+  @Value("\${api.base.url.complexity-of-needs}") val complexityOfNeedsBaseUri: String,
   @Value("\${api.base.url.oauth}") val hmppsAuthBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:20s}") val timeout: Duration,
@@ -49,4 +50,10 @@ class WebClientConfiguration(
 
   @Bean
   fun alertsWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "alerts-api", url = alertsBaseUri, timeout)
+
+  @Bean
+  fun complexityOfNeedsHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(complexityOfNeedsBaseUri, healthTimeout)
+
+  @Bean
+  fun complexityOfNeedsWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "complexity-of-needs-api", url = complexityOfNeedsBaseUri, timeout)
 }

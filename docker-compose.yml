@@ -166,6 +166,32 @@ services:
       - SPRING_R2DBC_PASSWORD=incentives
       - ?????
 
+  complexity-of-needs-api:
+    image: quay.io/hmpps/hmpps-complexity-of-needs-api:latest
+    networks:
+      - hmpps
+    container_name: hmpps-complexity-of-needs-api
+    depends_on:
+      - hmpps-auth
+    ports:
+      - "8097:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=localstack
+      - HMPPS_SQS_LOCALSTACKURL=http://localstack-psi:4566
+      - API_BASE_URL_OAUTH=http://hmpps-auth:8080/auth
+      - API_BASE_URL_PRISON=http://prison-api:8080
+      - API_BASE_URL_OFFENDER_SEARCH=http://hmpps-prisoner-search:8080
+      - SPRING_FLYWAY_URL=jdbc:postgresql://incentives-db:5432/incentives?sslmode=prefer
+      - SPRING_R2DBC_URL=r2dbc:postgresql://incentives-db:5432/incentives?sslmode=disable
+      - SPRING_FLYWAY_USER=incentives
+      - SPRING_FLYWAY_PASSWORD=incentives
+      - SPRING_R2DBC_USERNAME=incentives
+      - SPRING_R2DBC_PASSWORD=incentives
+      - ?????
+
   localstack:
     image: localstack/localstack:4
     networks:

@@ -9,4 +9,4 @@ If you add a new field to the index, the refresh cronjob will see that every pri
 This can be avoided by either:
 - running a build in each environment as soon as the new code is deployed, ensuring it will finish before a refresh is started. The build process never sends events. Or (preferably) ...
 - initially omitting the @DiffableProperty annotation from the new field, so it is not considered by the PrisonerDifferenceService,
-then running a refresh or build which silently updates it, and then adding the annotation in a subsequent release.
+then waiting for the nightly refresh which will silently update it, and then adding the annotation in a subsequent release.

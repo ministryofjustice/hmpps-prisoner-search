@@ -33,7 +33,6 @@ import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
@@ -53,6 +52,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainInde
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.EventMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.MsgBody
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
@@ -77,6 +77,7 @@ import kotlin.random.Random
   PrisonApiExtension::class,
   RestrictedPatientsApiExtension::class,
   AlertsApiExtension::class,
+  ComplexityOfNeedsApiExtension::class,
   HmppsAuthApiExtension::class,
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -295,13 +296,11 @@ data class PrisonerBuilder(
   val aliases: List<AliasBuilder> = listOf(),
   val physicalCharacteristics: PhysicalCharacteristicBuilder? = null,
   val physicalMarks: PhysicalMarkBuilder? = null,
-  val currentIncentive: CurrentIncentive? = null,
   val assignedLivingUnitLocationId: Long? = Random.nextLong(),
   val sentenceDetail: SentenceDetail? = null,
   val convictedStatus: String? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
 ) {
-
   fun toOffenderBooking(): String {
     val offenderId = Random.nextLong()
     return GsonConfig().gson().toJson(
@@ -480,6 +479,25 @@ fun validAlertsMessage(prisonerNumber: String, eventType: String) =
     "MessageId" : "55569f56-8858-5ef8-aeab-ff05da86cf1e",
     "TopicArn" : "arn:aws:sns:eu-west-2:754256621582:cloud-platform-Digital-Prison-Services-97e6567cf80881a8a52290ff2c269b08",
     "Message" : "{\"eventType\":\"$eventType\",\"version\":1,\"description\":\"An alert has been updated in the alerts service\",\"occurredAt\":\"2025-03-18T10:53:18.091892898Z\",\"detailUrl\":\"https://alerts-api.hmpps.service.justice.gov.uk/alerts/01953611-1bf7-7f1c-8b81-3e16d98acb14\",\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"$prisonerNumber\"}]}}",
+    "Timestamp" : "2025-03-18T10:53:18.130Z",
+    "SignatureVersion" : "1",
+    "Signature" : "cqRwyU35w91AyxCnWCE5NXQf49vJON6HKPysfOc9CAsqGwcS6T/UmAsj2FJt1SI48+7L/yg29SbBoizM1hZ+9OtB56SC+OfLE0vMoswIN2BLLwas166VQ4L2uSsxuvrF1SRONmFulvxm/9qWOpu9Zb0LR3C41HSK8EN/JDWUuq69qAhY6tqXmJe/DiDx1ovTu7WOBxNFWvL3kxChz/iYO7m5TFewiieLkA1V6PmZRzDSljMhxpTdxj7Lt4hVTF8j/uVxdvQeoSBysSDTDjvqHFONEftoH/Lpn/7tWxfsbyArqLa/SCODoDt6dpcdiEGaHbZYBTAkSNM3Fg8y7uApJA==",
+    "SigningCertURL" : "https://sns.eu-west-2.amazonaws.com/SimpleNotificationService-9c6465fa7f48f5cacd23014631ec1136.pem",
+    "UnsubscribeURL" : "https://sns.eu-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-west-2:754256621582:cloud-platform-Digital-Prison-Services-97e6567cf80881a8a52290ff2c269b08:340b799a-084f-4027-a214-510087556d97",
+    "MessageAttributes" : {
+      "noTracing" : {"Type":"String","Value":"true"},
+      "eventType" : {"Type":"String","Value":"$eventType"}
+    }
+  }
+  """.trimIndent()
+
+fun validComplexityOfNeedsMessage(prisonerNumber: String, eventType: String) =
+  """
+  {
+    "Type" : "Notification",
+    "MessageId" : "55569f56-8858-5ef8-aeab-ff05da86cf1e",
+    "TopicArn" : "arn:aws:sns:eu-west-2:754256621582:cloud-platform-Digital-Prison-Services-97e6567cf80881a8a52290ff2c269b08",
+    "Message" : "{\"offenderNo\":\"$prisonerNumber\",\"level\":\"medium\",\"active\":true}",
     "Timestamp" : "2025-03-18T10:53:18.130Z",
     "SignatureVersion" : "1",
     "Signature" : "cqRwyU35w91AyxCnWCE5NXQf49vJON6HKPysfOc9CAsqGwcS6T/UmAsj2FJt1SI48+7L/yg29SbBoizM1hZ+9OtB56SC+OfLE0vMoswIN2BLLwas166VQ4L2uSsxuvrF1SRONmFulvxm/9qWOpu9Zb0LR3C41HSK8EN/JDWUuq69qAhY6tqXmJe/DiDx1ovTu7WOBxNFWvL3kxChz/iYO7m5TFewiieLkA1V6PmZRzDSljMhxpTdxj7Lt4hVTF8j/uVxdvQeoSBysSDTDjvqHFONEftoH/Lpn/7tWxfsbyArqLa/SCODoDt6dpcdiEGaHbZYBTAkSNM3Fg8y7uApJA==",
