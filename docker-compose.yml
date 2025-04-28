@@ -167,7 +167,7 @@ services:
       - ?????
 
   localstack:
-    image: localstack/localstack:3
+    image: localstack/localstack:4
     networks:
       - hmpps
     container_name: localstack-psi
