@@ -1,8 +1,8 @@
 version: 2.1
 setup: true
 orbs:
-  path-filtering: circleci/path-filtering@0.1.6 # Dynamic config must be enabled. See https://circleci.com/docs/2.0/dynamic-config
-  hmpps: ministryofjustice/hmpps@10
+  path-filtering: circleci/path-filtering@1.2.0 # Dynamic config must be enabled. See https://circleci.com/docs/2.0/dynamic-config
+  hmpps: ministryofjustice/hmpps@11
 parameters:
   alerts-slack-channel:
     type: string
@@ -12,6 +12,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           name: check-for-changes
+          tag: '3.13'
           mapping: |
             (common/.*|build.gradle.kts|.circleci/.*) build-common true
             (hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*) build-indexer true
