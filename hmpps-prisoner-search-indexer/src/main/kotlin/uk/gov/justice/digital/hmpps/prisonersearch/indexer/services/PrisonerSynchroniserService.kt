@@ -106,7 +106,7 @@ class PrisonerSynchroniserService(
         incentiveLevel = runCatching { getIncentive(ob) },
         restrictedPatientData = runCatching { getRestrictedPatient(ob) },
         alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
-        complexityOfNeeds = runCatching { complexityOfNeedsService.getComplexityOfNeedsForPrisoner(ob.offenderNo) }
+        complexityOfNeeds = runCatching { complexityOfNeedsService.getComplexityOfNeedsForPrisoner(ob.offenderNo) },
       )
       prisonerRepository.createPrisoner(prisoner)
       // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
