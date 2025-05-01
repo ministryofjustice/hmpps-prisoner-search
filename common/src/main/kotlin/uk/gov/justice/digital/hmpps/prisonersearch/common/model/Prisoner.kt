@@ -162,9 +162,9 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.STATUS)
   var category: String? = null
 
-  @Schema(description = "Complexity of needs level if female", example = "low")
+  @Schema(description = "Complexity of Need level if female", example = "low")
   @DiffableProperty(DiffCategory.STATUS)
-  var complexityOfNeedsLevel: String? = null
+  var complexityOfNeedLevel: String? = null
 
   @Schema(
     description = "Legal Status",

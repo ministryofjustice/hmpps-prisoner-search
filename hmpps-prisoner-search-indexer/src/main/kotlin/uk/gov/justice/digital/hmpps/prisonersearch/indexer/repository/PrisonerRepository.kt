@@ -127,13 +127,13 @@ class PrisonerRepository(
     summary,
   )
 
-  fun updateComplexityOfNeeds(
+  fun updateComplexityOfNeed(
     prisonerNumber: String,
-    complexityOfNeedsLevel: String?,
+    complexityOfNeedLevel: String?,
     summary: PrisonerDocumentSummary,
   ): Boolean = doUpdate(
     prisonerNumber,
-    mapOf("complexityOfNeedsLevel" to complexityOfNeedsLevel),
+    mapOf("complexityOfNeedLevel" to complexityOfNeedLevel),
     summary,
   )
 
@@ -224,7 +224,7 @@ private fun removeDomainFields(
   }
 
   prisonerMap.remove("alerts")
-  prisonerMap.remove("complexityOfNeedsLevel")
+  prisonerMap.remove("complexityOfNeedLevel")
 }
 
 data class PrisonerDocumentSummary(

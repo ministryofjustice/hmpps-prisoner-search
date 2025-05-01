@@ -18,9 +18,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.validAlertsMessage
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.validComplexityOfNeedsMessage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.validComplexityOfNeedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedsApiExtension.Companion.complexityOfNeedsApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
@@ -153,7 +153,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ComplexityOfNeeds {
+  inner class ComplexityOfNeed {
     @Test
     fun `will index when message received`() {
       val prisonerNumber = "A7089FF"
@@ -163,23 +163,23 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       }
       prisonerRepository.save(prisoner)
       prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
-      complexityOfNeedsApi.stubSuccess(prisonerNumber, "high")
+      complexityOfNeedApi.stubSuccess(prisonerNumber, "high")
 
       reset(prisonerSpyBeanRepository) // zero the call count
 
       hmppsDomainSqsClient.sendMessage(
         SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
-          .messageBody(validComplexityOfNeedsMessage(prisonerNumber, "complexity-of-need.level.changed")).build(),
+          .messageBody(validComplexityOfNeedMessage(prisonerNumber, "complexity-of-need.level.changed")).build(),
       )
 
       await untilAsserted {
         prisonerRepository.get(prisonerNumber)!!.apply {
           assertThat(prisonerNumber).isEqualTo(prisonerNumber)
-          assertThat(complexityOfNeedsLevel).isEqualTo("medium")
+          assertThat(complexityOfNeedLevel).isEqualTo("medium")
         }
       }
       verify(prisonerSpyBeanRepository, never()).save(any())
-      verify(prisonerSpyBeanRepository, times(1)).updateComplexityOfNeeds(eq(prisonerNumber), eq("medium"), any())
+      verify(prisonerSpyBeanRepository, times(1)).updateComplexityOfNeed(eq(prisonerNumber), eq("medium"), any())
       verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any())
     }
   }

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-class ComplexityOfNeedsApiMockServer : WireMockServer(8098) {
+class ComplexityOfNeedApiMockServer : WireMockServer(8098) {
   fun stubHealthPing(status: Int) {
     stubFor(
       get("/health/ping").willReturn(
@@ -48,16 +48,16 @@ class ComplexityOfNeedsApiMockServer : WireMockServer(8098) {
   }
 }
 
-class ComplexityOfNeedsApiExtension :
+class ComplexityOfNeedApiExtension :
   BeforeAllCallback,
   AfterAllCallback,
   BeforeEachCallback {
   companion object {
     @JvmField
-    val complexityOfNeedsApi = ComplexityOfNeedsApiMockServer()
+    val complexityOfNeedApi = ComplexityOfNeedApiMockServer()
   }
 
-  override fun beforeAll(context: ExtensionContext): Unit = complexityOfNeedsApi.start()
-  override fun beforeEach(context: ExtensionContext): Unit = complexityOfNeedsApi.resetAll()
-  override fun afterAll(context: ExtensionContext): Unit = complexityOfNeedsApi.stop()
+  override fun beforeAll(context: ExtensionContext): Unit = complexityOfNeedApi.start()
+  override fun beforeEach(context: ExtensionContext): Unit = complexityOfNeedApi.resetAll()
+  override fun afterAll(context: ExtensionContext): Unit = complexityOfNeedApi.stop()
 }

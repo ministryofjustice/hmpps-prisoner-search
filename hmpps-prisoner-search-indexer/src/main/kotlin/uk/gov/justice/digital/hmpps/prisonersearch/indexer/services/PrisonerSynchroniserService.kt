@@ -4,7 +4,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeeds
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
@@ -33,7 +33,7 @@ class PrisonerSynchroniserService(
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
   private val alertsService: AlertsService,
-  private val complexityOfNeedsService: ComplexityOfNeedsService,
+  private val complexityOfNeedService: ComplexityOfNeedService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
   private val prisonerMovementsEventService: PrisonerMovementsEventService,
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
@@ -54,7 +54,7 @@ class PrisonerSynchroniserService(
         incentiveLevel = Result.failure(Exception()),
         restrictedPatientData = Result.failure(Exception()),
         alerts = Result.failure(Exception()),
-        complexityOfNeeds = Result.failure(Exception()),
+        complexityOfNeed = Result.failure(Exception()),
       )
       // opensearch reports if there are any differences
       val isUpdated = prisonerRepository.updatePrisoner(ob.offenderNo, prisoner, summary)
@@ -106,7 +106,7 @@ class PrisonerSynchroniserService(
         incentiveLevel = runCatching { getIncentive(ob) },
         restrictedPatientData = runCatching { getRestrictedPatient(ob) },
         alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
-        complexityOfNeeds = runCatching { complexityOfNeedsService.getComplexityOfNeedsForPrisoner(ob.offenderNo) },
+        complexityOfNeed = runCatching { complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo) },
       )
       prisonerRepository.createPrisoner(prisoner)
       // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
@@ -216,16 +216,16 @@ class PrisonerSynchroniserService(
         }
     }
 
-  internal fun reindexComplexityOfNeeds(prisonerNo: String, level: String?, eventType: String) = prisonerRepository.getSummary(prisonerNo)
+  internal fun reindexComplexityOfNeed(prisonerNo: String, level: String?, eventType: String) = prisonerRepository.getSummary(prisonerNo)
     ?.run {
       assertPrisonerNo(prisonerNo)
-      prisonerRepository.updateComplexityOfNeeds(prisonerNo, level, this)
+      prisonerRepository.updateComplexityOfNeed(prisonerNo, level, this)
         .also { updated ->
           telemetryClient.trackPrisonerEvent(
             if (updated) {
-              TelemetryEvents.COMPLEXITY_OF_NEEDS_UPDATED
+              TelemetryEvents.COMPLEXITY_OF_NEED_UPDATED
             } else {
-              TelemetryEvents.COMPLEXITY_OF_NEEDS_OPENSEARCH_NO_CHANGE
+              TelemetryEvents.COMPLEXITY_OF_NEED_OPENSEARCH_NO_CHANGE
             },
             prisonerNumber = prisonerNo,
             null,
@@ -239,9 +239,9 @@ class PrisonerSynchroniserService(
         }
     }
 
-  internal fun reindexComplexityOfNeedsWithGet(prisonerNo: String, eventType: String) {
-    val level = complexityOfNeedsService.getComplexityOfNeedsForPrisoner(prisonerNo)?.level
-    reindexComplexityOfNeeds(prisonerNo, level, eventType)
+  internal fun reindexComplexityOfNeedWithGet(prisonerNo: String, eventType: String) {
+    val level = complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNo)?.level
+    reindexComplexityOfNeed(prisonerNo, level, eventType)
   }
 
   private fun PrisonerDocumentSummary.assertPrisonerNo(prisonerNo: String) {
@@ -260,7 +260,7 @@ class PrisonerSynchroniserService(
     incentiveLevelData: Result<IncentiveLevel?>,
     restrictedPatientData: Result<RestrictedPatient?>,
     alerts: Result<List<Alert>?>,
-    complexityOfNeeds: Result<ComplexityOfNeeds?>,
+    complexityOfNeed: Result<ComplexityOfNeed?>,
   ) {
     val existingPrisoner = prisonerRepository.get(ob.offenderNo)
 
@@ -270,7 +270,7 @@ class PrisonerSynchroniserService(
       incentiveLevel = incentiveLevelData,
       restrictedPatientData = restrictedPatientData,
       alerts = alerts,
-      complexityOfNeeds = complexityOfNeeds,
+      complexityOfNeed = complexityOfNeed,
     )
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
@@ -290,7 +290,7 @@ class PrisonerSynchroniserService(
       Result.success(getIncentive(ob)),
       Result.success(getRestrictedPatient(ob)),
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-      Result.success(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(ob.offenderNo)),
+      Result.success(complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo)),
     )
   }
 
@@ -299,7 +299,7 @@ class PrisonerSynchroniserService(
     incentiveLevel = Result.success(getIncentive(ob)),
     restrictedPatientData = Result.success(getRestrictedPatient(ob)),
     alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-    complexityOfNeeds = Result.success(complexityOfNeedsService.getComplexityOfNeedsForPrisoner(ob.offenderNo)),
+    complexityOfNeed = Result.success(complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo)),
   )
 
   fun delete(prisonerNumber: String) {

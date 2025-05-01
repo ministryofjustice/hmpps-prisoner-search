@@ -52,7 +52,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainInde
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.EventMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.MsgBody
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedsApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
@@ -77,7 +77,7 @@ import kotlin.random.Random
   PrisonApiExtension::class,
   RestrictedPatientsApiExtension::class,
   AlertsApiExtension::class,
-  ComplexityOfNeedsApiExtension::class,
+  ComplexityOfNeedApiExtension::class,
   HmppsAuthApiExtension::class,
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -491,7 +491,7 @@ fun validAlertsMessage(prisonerNumber: String, eventType: String) =
   }
   """.trimIndent()
 
-fun validComplexityOfNeedsMessage(prisonerNumber: String, eventType: String) =
+fun validComplexityOfNeedMessage(prisonerNumber: String, eventType: String) =
   """
   {
     "Type" : "Notification",
