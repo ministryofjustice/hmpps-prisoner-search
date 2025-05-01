@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
@@ -156,5 +157,6 @@ class HealthCheckIntTest : IntegrationTestBase() {
     prisonApi.stubHealthPing(status)
     incentivesApi.stubHealthPing(status)
     alertsApi.stubHealthPing(status)
+    complexityOfNeedApi.stubHealthPing(status)
   }
 }

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.MISSING_OFFENDER_ID_DISPLAY
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.AlertEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.ComplexityOfNeedEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
@@ -49,6 +50,15 @@ class IndexListenerService(
       prisonerSynchroniserService.reindexAlerts(prisonerNumber, eventType)
     }
       ?: throw IllegalStateException("Alert event found with no prisonerNumber: $message")
+  }
+
+  fun complexityOfNeedChange(message: ComplexityOfNeedEvent, eventType: String) {
+    log.info(
+      "Complexity of need change: {} for prisoner {}",
+      message.level,
+      message.offenderNo,
+    )
+    prisonerSynchroniserService.reindexComplexityOfNeed(message.offenderNo, message.level, eventType)
   }
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)

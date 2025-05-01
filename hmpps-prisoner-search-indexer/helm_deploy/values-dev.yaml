@@ -12,6 +12,7 @@ generic-service:
     API_BASE_URL_RESTRICTED_PATIENTS: "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk"
     API_BASE_URL_INCENTIVES: "https://incentives-api-dev.hmpps.service.justice.gov.uk"
     API_BASE_URL_ALERTS: "https://alerts-api-dev.hmpps.service.justice.gov.uk"
+    API_BASE_URL_COMPLEXITY_OF_NEED: "https://complexity-of-need-staging.hmpps.service.justice.gov.uk"
     INDEX_BUILD_COMPLETE_THRESHOLD: 500000
     DIFF_HOST: "https://prisoner-search-dev.prison.service.justice.gov.uk"
     DIFF_PREFIX: ""

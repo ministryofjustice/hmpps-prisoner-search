@@ -114,6 +114,7 @@ class MaintainIndexService(
         prisonerSynchroniserService.reindexIncentive(prisonerNumber, "MAINTAIN")
         prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, "MAINTAIN")
         prisonerSynchroniserService.reindexAlerts(prisonerNumber, "MAINTAIN")
+        prisonerSynchroniserService.reindexComplexityOfNeedWithGet(prisonerNumber, "MAINTAIN")
       }
       ?.let {
         prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")
@@ -121,11 +122,11 @@ class MaintainIndexService(
       ?: prisonerRepository.get(prisonerNumber)
         ?.apply {
           // Prisoner not in NOMIS, but found in indexes so remove
-          this@MaintainIndexService.prisonerSynchroniserService.delete(prisonerNumber)
+          prisonerSynchroniserService.delete(prisonerNumber)
         }
       ?: run {
         // not found in either NOMIS or index, so log and throw
-        this@MaintainIndexService.telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
+        telemetryClient.trackPrisonerEvent(PRISONER_NOT_FOUND, prisonerNumber)
         throw PrisonerNotFoundException(prisonerNumber)
       }
   }

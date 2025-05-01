@@ -43,7 +43,7 @@ class PrisonerRepository(
 
   fun count() = try {
     client.count(CountRequest(PRISONER_INDEX), RequestOptions.DEFAULT).count
-  } catch (e: OpenSearchStatusException) {
+  } catch (_: OpenSearchStatusException) {
     // if the index doesn't exist yet then we will get an exception, so catch and move on
     -1
   }
@@ -76,19 +76,7 @@ class PrisonerRepository(
   ): Boolean {
     val prisonerMap = objectMapperWithNulls.convertValue<Map<String, *>>(prisoner).toMutableMap()
 
-    prisonerMap.remove("currentIncentive")
-
-    prisonerMap.remove("restrictedPatient")
-    prisonerMap.remove("supportingPrisonId")
-    prisonerMap.remove("dischargedHospitalId")
-    prisonerMap.remove("dischargedHospitalDescription")
-    prisonerMap.remove("dischargeDate")
-    prisonerMap.remove("dischargeDetails")
-    if (summary.prisoner?.restrictedPatient == true) {
-      prisonerMap.remove("locationDescription")
-    }
-
-    prisonerMap.remove("alerts")
+    removeDomainFields(prisonerMap, summary)
 
     return doUpdate(prisonerNumber, prisonerMap, summary)
   }
@@ -136,6 +124,16 @@ class PrisonerRepository(
     alerts?.let {
       mapOf("alerts" to objectMapperWithNulls.convertValue(alerts))
     } ?: mapOf("alerts" to null),
+    summary,
+  )
+
+  fun updateComplexityOfNeed(
+    prisonerNumber: String,
+    complexityOfNeedLevel: String?,
+    summary: PrisonerDocumentSummary,
+  ): Boolean = doUpdate(
+    prisonerNumber,
+    mapOf("complexityOfNeedLevel" to complexityOfNeedLevel),
     summary,
   )
 
@@ -207,6 +205,26 @@ class PrisonerRepository(
       primaryTerm.toInt(),
     )
   }
+}
+
+private fun removeDomainFields(
+  prisonerMap: MutableMap<String, Any?>,
+  summary: PrisonerDocumentSummary,
+) {
+  prisonerMap.remove("currentIncentive")
+
+  prisonerMap.remove("restrictedPatient")
+  prisonerMap.remove("supportingPrisonId")
+  prisonerMap.remove("dischargedHospitalId")
+  prisonerMap.remove("dischargedHospitalDescription")
+  prisonerMap.remove("dischargeDate")
+  prisonerMap.remove("dischargeDetails")
+  if (summary.prisoner?.restrictedPatient == true) {
+    prisonerMap.remove("locationDescription")
+  }
+
+  prisonerMap.remove("alerts")
+  prisonerMap.remove("complexityOfNeedLevel")
 }
 
 data class PrisonerDocumentSummary(

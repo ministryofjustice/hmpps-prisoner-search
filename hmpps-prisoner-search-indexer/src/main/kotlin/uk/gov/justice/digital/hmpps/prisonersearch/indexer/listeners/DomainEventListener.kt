@@ -46,6 +46,7 @@ class DomainEventListener(
         in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message), eventType)
         in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message), eventType)
         "person.alerts.changed" -> indexListenerService.alertChange(fromJson(message), eventType)
+        "complexity-of-need.level.changed" -> indexListenerService.complexityOfNeedChange(fromJson(message), eventType)
 
         else -> log.warn("We received a message of event type {} which I really wasn't expecting", eventType)
       }
@@ -82,6 +83,12 @@ data class AlertEvent(
   val description: String?,
   val eventType: String,
   val personReference: PersonReference,
+)
+
+data class ComplexityOfNeedEvent(
+  val offenderNo: String,
+  val level: String,
+  val active: Boolean, // not yet used as it is ignored by existing profile and KW services
 )
 
 data class EventType(@JsonProperty("Value") val Value: String)

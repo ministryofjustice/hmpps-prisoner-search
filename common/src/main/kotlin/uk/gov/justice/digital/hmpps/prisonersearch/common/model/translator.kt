@@ -3,6 +3,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.common.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
@@ -18,6 +19,7 @@ fun Prisoner.translate(
   incentiveLevel: Result<IncentiveLevel?> = Result.success(null),
   restrictedPatientData: Result<RestrictedPatient?> = Result.success(null),
   alerts: Result<List<Alert>?> = Result.success(null),
+  complexityOfNeed: Result<ComplexityOfNeed?> = Result.success(null),
 ): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
@@ -170,6 +172,7 @@ fun Prisoner.translate(
   }
 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
+  this.complexityOfNeedLevel = complexityOfNeed.map { it?.level }.getOrElse { existingPrisoner?.complexityOfNeedLevel }
 
   this.addresses = ob.addresses?.map { it.toAddress() }
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
