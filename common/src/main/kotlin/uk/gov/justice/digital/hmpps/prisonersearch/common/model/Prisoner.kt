@@ -162,8 +162,8 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.STATUS)
   var category: String? = null
 
-  // @DiffableProperty(DiffCategory.STATUS)
   @Schema(description = "Complexity of Need level if female", example = "low")
+  @DiffableProperty(DiffCategory.STATUS)
   var complexityOfNeedLevel: String? = null
 
   @Schema(
@@ -273,9 +273,9 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.SENTENCE)
   var receptionDate: LocalDate? = null
 
-  // @DiffableProperty(DiffCategory.SENTENCE)
   @Field(type = FieldType.Date, format = [DateFormat.date])
   @Schema(description = "Date prisoner was transferred into the current or latest prison", example = "2023-05-01")
+  @DiffableProperty(DiffCategory.LOCATION)
   var lastAdmissionDate: LocalDate? = null
 
   @Field(type = FieldType.Date, format = [DateFormat.date])
