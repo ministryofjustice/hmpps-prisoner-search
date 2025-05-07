@@ -114,6 +114,14 @@ class PrisonerSynchroniserService(
       domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo)
       prisonerMovementsEventService.generateAnyEvents(null, prisoner, ob)
       convictedStatusEventService.generateAnyEvents(null, prisoner)
+
+      telemetryClient.trackPrisonerEvent(
+        TelemetryEvents.PRISONER_CREATED,
+        prisonerNumber = ob.offenderNo,
+        bookingId = ob.bookingId,
+        eventType = eventType,
+      )
+
       prisoner
     }
 
