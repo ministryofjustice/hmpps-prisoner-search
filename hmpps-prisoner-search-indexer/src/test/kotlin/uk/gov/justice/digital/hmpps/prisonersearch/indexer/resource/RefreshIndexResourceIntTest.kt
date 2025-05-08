@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Instant
 import java.time.LocalDate
@@ -36,6 +37,8 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       PrisonerBuilder("A7089EY", released = true, heightCentimetres = 200),
     )
     alertsApi.stubSuccess("A1239DD", listOf("P" to "PL1"))
+    complexityOfNeedApi.stubSuccess("A9999AA", "low")
+    complexityOfNeedApi.stubSuccess("A7089EY", "high")
     buildAndSwitchIndex(2)
     purgeDomainEventsQueue()
   }
@@ -88,16 +91,19 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     }.also {
       prisonerRepository.save(it)
     }
-
     // Modify index record A7089EY a lot
     Prisoner().apply {
       prisonerNumber = "A7089EY"
       status = "ACTIVE IN"
       prisonId = "MDI"
       restrictedPatient = false
+      complexityOfNeedLevel = "medium"
     }.also {
       prisonerRepository.save(it)
     }
+
+    // A7089EY complexityOfNeed is changing from a value to null
+    complexityOfNeedApi.stubNotFound("A7089EY")
 
     val detailsForA9999AA = webTestClient.get().uri("/compare-index/prisoner/A9999AA")
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
@@ -122,6 +128,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       "[bookNumber: null, V61587]",
       "[croNumber: null, 29906/12L]",
       "[dateOfBirth: null, 1965-07-19]",
+      "[complexityOfNeedLevel: medium, null]",
     )
 
     webTestClient.put().uri("/refresh-index")

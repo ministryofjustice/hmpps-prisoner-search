@@ -169,7 +169,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
 
       hmppsDomainSqsClient.sendMessage(
         SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
-          .messageBody(validComplexityOfNeedMessage(prisonerNumber, "complexity-of-need.level.changed")).build(),
+          .messageBody(validComplexityOfNeedMessage(prisonerNumber, true)).build(),
       )
 
       await untilAsserted {
@@ -180,6 +180,35 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       }
       verify(prisonerSpyBeanRepository, never()).save(any())
       verify(prisonerSpyBeanRepository, times(1)).updateComplexityOfNeed(eq(prisonerNumber), eq("medium"), any())
+      verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any())
+    }
+
+    @Test
+    fun `will set to null if not active`() {
+      val prisonerNumber = "A7089FF"
+      val prisoner = Prisoner().apply {
+        this.prisonerNumber = prisonerNumber
+        bookingId = "1234"
+      }
+      prisonerRepository.save(prisoner)
+      prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber))
+      complexityOfNeedApi.stubSuccess(prisonerNumber, "high")
+
+      reset(prisonerSpyBeanRepository) // zero the call count
+
+      hmppsDomainSqsClient.sendMessage(
+        SendMessageRequest.builder().queueUrl(hmppsDomainQueueUrl)
+          .messageBody(validComplexityOfNeedMessage(prisonerNumber, false)).build(),
+      )
+
+      await untilAsserted {
+        prisonerRepository.get(prisonerNumber)!!.apply {
+          assertThat(prisonerNumber).isEqualTo(prisonerNumber)
+          assertThat(complexityOfNeedLevel).isNull()
+        }
+      }
+      verify(prisonerSpyBeanRepository, never()).save(any())
+      verify(prisonerSpyBeanRepository, times(1)).updateComplexityOfNeed(eq(prisonerNumber), isNull(), any())
       verify(prisonerSpyBeanRepository, never()).updatePrisoner(any(), any(), any())
     }
   }

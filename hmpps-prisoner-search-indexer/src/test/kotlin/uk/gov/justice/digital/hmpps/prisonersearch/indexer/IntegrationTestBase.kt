@@ -491,13 +491,13 @@ fun validAlertsMessage(prisonerNumber: String, eventType: String) =
   }
   """.trimIndent()
 
-fun validComplexityOfNeedMessage(prisonerNumber: String, eventType: String) =
+fun validComplexityOfNeedMessage(prisonerNumber: String, active: Boolean) =
   """
   {
     "Type" : "Notification",
     "MessageId" : "55569f56-8858-5ef8-aeab-ff05da86cf1e",
     "TopicArn" : "arn:aws:sns:eu-west-2:754256621582:cloud-platform-Digital-Prison-Services-97e6567cf80881a8a52290ff2c269b08",
-    "Message" : "{\"offenderNo\":\"$prisonerNumber\",\"level\":\"medium\",\"active\":true}",
+    "Message" : "{\"offenderNo\":\"$prisonerNumber\",\"level\":\"medium\",\"active\":$active}",
     "Timestamp" : "2025-03-18T10:53:18.130Z",
     "SignatureVersion" : "1",
     "Signature" : "cqRwyU35w91AyxCnWCE5NXQf49vJON6HKPysfOc9CAsqGwcS6T/UmAsj2FJt1SI48+7L/yg29SbBoizM1hZ+9OtB56SC+OfLE0vMoswIN2BLLwas166VQ4L2uSsxuvrF1SRONmFulvxm/9qWOpu9Zb0LR3C41HSK8EN/JDWUuq69qAhY6tqXmJe/DiDx1ovTu7WOBxNFWvL3kxChz/iYO7m5TFewiieLkA1V6PmZRzDSljMhxpTdxj7Lt4hVTF8j/uVxdvQeoSBysSDTDjvqHFONEftoH/Lpn/7tWxfsbyArqLa/SCODoDt6dpcdiEGaHbZYBTAkSNM3Fg8y7uApJA==",
@@ -505,7 +505,7 @@ fun validComplexityOfNeedMessage(prisonerNumber: String, eventType: String) =
     "UnsubscribeURL" : "https://sns.eu-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-west-2:754256621582:cloud-platform-Digital-Prison-Services-97e6567cf80881a8a52290ff2c269b08:340b799a-084f-4027-a214-510087556d97",
     "MessageAttributes" : {
       "noTracing" : {"Type":"String","Value":"true"},
-      "eventType" : {"Type":"String","Value":"$eventType"}
+      "eventType" : {"Type":"String","Value":"complexity-of-need.level.changed"}
     }
   }
   """.trimIndent()

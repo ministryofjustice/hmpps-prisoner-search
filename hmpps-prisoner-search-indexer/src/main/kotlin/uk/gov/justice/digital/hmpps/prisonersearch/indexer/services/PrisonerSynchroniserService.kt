@@ -239,11 +239,6 @@ class PrisonerSynchroniserService(
             null,
             eventType = eventType,
           )
-          // TODO are any events needed ?
-//          if (updated) {
-//            prisonerDifferenceService.generateAlertDiffEvent(this.prisoner.alerts, prisonerNo, alerts)
-//            alertsUpdatedEventService.generateAnyEvents(this.prisoner.alerts, alerts, prisoner)
-//          }
         }
     }
 
