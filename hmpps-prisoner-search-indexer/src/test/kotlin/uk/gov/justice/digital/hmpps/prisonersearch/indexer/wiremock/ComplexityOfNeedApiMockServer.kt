@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
+import com.github.tomakehurst.wiremock.client.WireMock.status
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -44,6 +45,13 @@ class ComplexityOfNeedApiMockServer : WireMockServer(8098) {
             """.trimIndent(),
           ),
         ),
+    )
+  }
+
+  fun stubNotFound(prisonerNumber: String) {
+    stubFor(
+      get(urlPathMatching("/v1/complexity-of-need/offender-no/$prisonerNumber"))
+        .willReturn(status(404)),
     )
   }
 }

@@ -54,11 +54,17 @@ class IndexListenerService(
 
   fun complexityOfNeedChange(message: ComplexityOfNeedEvent, eventType: String) {
     log.info(
-      "Complexity of need change: {} for prisoner {}",
+      "Complexity of need change: {}, active={} for prisoner {}",
       message.level,
+      message.active,
       message.offenderNo,
     )
-    prisonerSynchroniserService.reindexComplexityOfNeed(message.offenderNo, message.level, eventType)
+    val level = if (message.active) {
+      message.level
+    } else {
+      null
+    }
+    prisonerSynchroniserService.reindexComplexityOfNeed(message.offenderNo, level, eventType)
   }
 
   fun externalMovement(message: ExternalPrisonerMovementMessage, eventType: String) = sync(message.bookingId, eventType)
