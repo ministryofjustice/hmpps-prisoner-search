@@ -7,12 +7,11 @@ import org.springframework.cache.annotation.EnableCaching
 import org.springframework.cache.caffeine.CaffeineCache
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonRegisterService
 import java.util.concurrent.TimeUnit
 
 @Configuration
 @EnableCaching(proxyTargetClass = true)
-class CacheConfig(private val prisonRegisterService: PrisonRegisterService) : CachingConfigurer {
+class CacheConfig : CachingConfigurer {
   @Bean
   fun prisonRegisterCache(): Cache = CaffeineCache(
     "prisons",
