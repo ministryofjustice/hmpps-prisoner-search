@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Convi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PrisonerMovementsEventService
 import java.time.LocalDate
+import kotlin.collections.map
 
 @Service
 class PrisonerSynchroniserService(
@@ -34,6 +35,7 @@ class PrisonerSynchroniserService(
   private val incentivesService: IncentivesService,
   private val alertsService: AlertsService,
   private val complexityOfNeedService: ComplexityOfNeedService,
+  private val prisonRegisterService: PrisonRegisterService,
   private val prisonerDifferenceService: PrisonerDifferenceService,
   private val prisonerMovementsEventService: PrisonerMovementsEventService,
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
@@ -106,7 +108,7 @@ class PrisonerSynchroniserService(
         incentiveLevel = runCatching { getIncentive(ob) },
         restrictedPatientData = runCatching { getRestrictedPatient(ob) },
         alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
-        complexityOfNeed = runCatching { complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo) },
+        complexityOfNeed = runCatching { getComplexityOfNeed(ob) },
       )
       prisonerRepository.createPrisoner(prisoner)
       // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
@@ -242,9 +244,9 @@ class PrisonerSynchroniserService(
         }
     }
 
-  internal fun reindexComplexityOfNeedWithGet(prisonerNo: String, eventType: String) {
-    val level = complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNo)?.level
-    reindexComplexityOfNeed(prisonerNo, level, eventType)
+  internal fun reindexComplexityOfNeedWithGet(ob: OffenderBooking, eventType: String) {
+    val level = getComplexityOfNeed(ob)?.level
+    reindexComplexityOfNeed(ob.offenderNo, level, eventType)
   }
 
   private fun PrisonerDocumentSummary.assertPrisonerNo(prisonerNo: String) {
@@ -293,7 +295,7 @@ class PrisonerSynchroniserService(
       Result.success(getIncentive(ob)),
       Result.success(getRestrictedPatient(ob)),
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-      Result.success(complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo)),
+      Result.success(getComplexityOfNeed(ob)),
     )
   }
 
@@ -302,7 +304,7 @@ class PrisonerSynchroniserService(
     incentiveLevel = Result.success(getIncentive(ob)),
     restrictedPatientData = Result.success(getRestrictedPatient(ob)),
     alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-    complexityOfNeed = Result.success(complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo)),
+    complexityOfNeed = Result.success(getComplexityOfNeed(ob)),
   )
 
   fun delete(prisonerNumber: String) {
@@ -315,4 +317,20 @@ class PrisonerSynchroniserService(
   }
 
   private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }
+
+  private fun getComplexityOfNeed(ob: OffenderBooking): ComplexityOfNeed? = if (isInFemalePrison(ob)) {
+    complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo)
+  } else {
+    null
+  }
+
+  private fun isInFemalePrison(ob: OffenderBooking): Boolean {
+    val femalePrisons = prisonRegisterService.getAllPrisons()
+      ?.filter { it.female }
+      ?.map { it.prisonId }
+    return ob.agencyId != null &&
+      ob.agencyId != "OUT" &&
+      // Failsafe - if prison register not available, make the CNL call regardless of gender
+      (femalePrisons == null || femalePrisons.contains(ob.agencyId))
+  }
 }

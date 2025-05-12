@@ -22,3 +22,6 @@ class AlertsApiHealth(@Qualifier("alertsHealthWebClient") webClient: WebClient) 
 
 @Component("complexityOfNeedApi")
 class ComplexityOfNeedApiHealth(@Qualifier("complexityOfNeedHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)
+
+@Component("prisonRegisterApi")
+class PrisonRegisterApiHealth(@Qualifier("prisonRegisterWebClient") webClient: WebClient) : HealthPingCheck(webClient)

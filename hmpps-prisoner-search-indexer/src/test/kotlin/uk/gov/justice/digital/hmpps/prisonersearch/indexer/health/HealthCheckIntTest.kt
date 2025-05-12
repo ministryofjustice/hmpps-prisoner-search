@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOf
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension.Companion.prisonRegisterApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 
 class HealthCheckIntTest : IntegrationTestBase() {
@@ -158,5 +159,6 @@ class HealthCheckIntTest : IntegrationTestBase() {
     incentivesApi.stubHealthPing(status)
     alertsApi.stubHealthPing(status)
     complexityOfNeedApi.stubHealthPing(status)
+    prisonRegisterApi.stubHealthPing(status)
   }
 }

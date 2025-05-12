@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOf
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
 import uk.gov.justice.hmpps.sqs.HmppsQueueFactory
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -78,6 +79,7 @@ import kotlin.random.Random
   RestrictedPatientsApiExtension::class,
   AlertsApiExtension::class,
   ComplexityOfNeedApiExtension::class,
+  PrisonRegisterApiExtension::class,
   HmppsAuthApiExtension::class,
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
