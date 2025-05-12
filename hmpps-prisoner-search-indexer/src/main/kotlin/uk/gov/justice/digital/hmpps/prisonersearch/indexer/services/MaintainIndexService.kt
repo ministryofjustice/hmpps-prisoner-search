@@ -114,7 +114,7 @@ class MaintainIndexService(
         prisonerSynchroniserService.reindexIncentive(prisonerNumber, "MAINTAIN")
         prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, "MAINTAIN")
         prisonerSynchroniserService.reindexAlerts(prisonerNumber, "MAINTAIN")
-        prisonerSynchroniserService.reindexComplexityOfNeedWithGet(prisonerNumber, "MAINTAIN")
+        prisonerSynchroniserService.reindexComplexityOfNeedWithGet(offenderBooking, "MAINTAIN")
       }
       ?.let {
         prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")

@@ -56,6 +56,7 @@ internal class PrisonerSynchroniserServiceTest {
   private val prisonerMovementsEventService = mock<PrisonerMovementsEventService>()
   private val alertsUpdatedEventService = mock<AlertsUpdatedEventService>()
   private val convictedStatusEventService = mock<ConvictedStatusEventService>()
+  private val prisonRegisterService = mock<PrisonRegisterService>()
   private val domainEventEmitter = mock<HmppsDomainEventEmitter>()
 
   private val service = PrisonerSynchroniserService(
@@ -65,6 +66,7 @@ internal class PrisonerSynchroniserServiceTest {
     incentivesService,
     alertsService,
     complexityOfNeedService,
+    prisonRegisterService,
     prisonerDifferenceService,
     prisonerMovementsEventService,
     alertsUpdatedEventService,
@@ -681,7 +683,10 @@ internal class PrisonerSynchroniserServiceTest {
 
   @Nested
   inner class ReindexComplexityOfNeed {
-    private val prisonerNumber = "A1234AA"
+    private val femaleBooking = OffenderBookingBuilder().anOffenderBooking().copy(agencyId = "BZI")
+    private val maleBooking = OffenderBookingBuilder().anOffenderBooking()
+
+    private val prisonerNumber = femaleBooking.offenderNo
     private val newComplexityOfNeed = ComplexityOfNeed(prisonerNumber, "medium", true)
     val prisoner = Prisoner().apply {
       bookingId = bookingId.toString()
@@ -693,12 +698,19 @@ internal class PrisonerSynchroniserServiceTest {
     @BeforeEach
     fun setup() {
       whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
+
+      whenever(prisonRegisterService.getAllPrisons()).thenReturn(
+        listOf(
+          PrisonDto(prisonId = "BZI", active = true, male = false, female = true),
+          PrisonDto(prisonId = "MDI", active = true, male = true, female = false),
+        ),
+      )
     }
 
     @Test
     fun `will save ComplexityOfNeed level to current index`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
-      service.reindexComplexityOfNeedWithGet(prisonerNumber, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
 
       verify(prisonerRepository).updateComplexityOfNeed(
         eq(prisonerNumber),
@@ -711,7 +723,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will create telemetry`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
       whenever(prisonerRepository.updateComplexityOfNeed(eq("A1234AA"), any(), any())).thenReturn(true)
-      service.reindexComplexityOfNeedWithGet(prisonerNumber, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.COMPLEXITY_OF_NEED_UPDATED.name),
@@ -730,7 +742,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will not save prisoner if no changes`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
       whenever(prisonerRepository.updateComplexityOfNeed(eq(prisonerNumber), any(), any())).thenReturn(false)
-      service.reindexComplexityOfNeedWithGet(prisonerNumber, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.COMPLEXITY_OF_NEED_OPENSEARCH_NO_CHANGE.name),
@@ -749,7 +761,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will do nothing if prisoner not found`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(null)
 
-      service.reindexComplexityOfNeedWithGet(prisonerNumber, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
 
       verify(prisonerRepository, never()).updateComplexityOfNeed(any(), any(), any())
     }
@@ -758,7 +770,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `Updates ok when no data`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(null)
 
-      service.reindexComplexityOfNeedWithGet(prisonerNumber, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
 
       verify(prisonerRepository).updateComplexityOfNeed(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
     }
@@ -767,9 +779,23 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will NOT call prisoner difference to handle differences`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
       whenever(prisonerRepository.updateComplexityOfNeed(eq("A1234AA"), any(), any())).thenReturn(true)
-      service.reindexComplexityOfNeedWithGet(prisonerNumber, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
 
       verifyNoInteractions(prisonerDifferenceService)
+    }
+
+    @Test
+    fun `will not call complexity of need for male prison`() {
+      service.reindexComplexityOfNeedWithGet(maleBooking, "event")
+
+      verifyNoInteractions(complexityOfNeedService)
+    }
+
+    @Test
+    fun `will not call complexity of need for prisoner who is OUT`() {
+      service.reindexComplexityOfNeedWithGet(femaleBooking.copy(agencyId = "OUT"), "event")
+
+      verifyNoInteractions(complexityOfNeedService)
     }
   }
 
@@ -988,6 +1014,21 @@ internal class PrisonerSynchroniserServiceTest {
       service.refresh(outsidePrisoner)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
+    }
+
+    @Test
+    fun `will call complexity of need for female prison`() {
+      val femalePrisoner = OffenderBookingBuilder().anOffenderBooking().copy(agencyId = "BZI")
+      whenever(prisonRegisterService.getAllPrisons()).thenReturn(
+        listOf(
+          PrisonDto(prisonId = "BZI", active = true, male = false, female = true),
+          PrisonDto(prisonId = "MDI", active = true, male = true, female = false),
+        ),
+      )
+
+      service.refresh(femalePrisoner)
+
+      verify(complexityOfNeedService).getComplexityOfNeedForPrisoner("A1234AA")
     }
   }
 

@@ -20,6 +20,7 @@ api:
       incentives: http://localhost:8096
       alerts: http://localhost:8097
       complexity-of-need: http://localhost:8098
+      prison-register: http://localhost:8099
 
 restricted-patients:
   client:

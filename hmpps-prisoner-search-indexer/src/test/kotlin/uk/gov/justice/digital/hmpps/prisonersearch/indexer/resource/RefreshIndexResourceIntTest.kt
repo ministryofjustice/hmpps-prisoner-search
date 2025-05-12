@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension.Companion.prisonRegisterApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Instant
 import java.time.LocalDate
@@ -39,6 +40,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     alertsApi.stubSuccess("A1239DD", listOf("P" to "PL1"))
     complexityOfNeedApi.stubSuccess("A9999AA", "low")
     complexityOfNeedApi.stubSuccess("A7089EY", "high")
+    prisonRegisterApi.stubGetPrisons() // NOTE response is cached
     buildAndSwitchIndex(2)
     purgeDomainEventsQueue()
   }

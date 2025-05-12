@@ -47,6 +47,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
   implementation("org.awaitility:awaitility-kotlin:4.3.0")
+  implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
 
   implementation(project(":common"))
 

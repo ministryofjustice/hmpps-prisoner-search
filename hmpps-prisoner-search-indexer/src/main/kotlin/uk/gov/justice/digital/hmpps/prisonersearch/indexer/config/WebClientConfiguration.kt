@@ -20,6 +20,7 @@ class WebClientConfiguration(
   @Value("\${api.base.url.restricted-patients}") val restrictedPatientBaseUrl: String,
   @Value("\${api.base.url.alerts}") val alertsBaseUri: String,
   @Value("\${api.base.url.complexity-of-need}") val complexityOfNeedBaseUri: String,
+  @Value("\${api.base.url.prison-register}") private val prisonRegisterUri: String,
   @Value("\${api.base.url.oauth}") val hmppsAuthBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:20s}") val timeout: Duration,
@@ -56,4 +57,7 @@ class WebClientConfiguration(
 
   @Bean
   fun complexityOfNeedWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "complexity-of-need-api", url = complexityOfNeedBaseUri, timeout)
+
+  @Bean
+  fun prisonRegisterWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(prisonRegisterUri, healthTimeout)
 }

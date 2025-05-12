@@ -13,6 +13,7 @@ class OffenderBookingBuilder {
     lastName = "Bloggs",
     dateOfBirth = LocalDate.of(1976, 5, 15),
     bookingId = bookingId,
+    agencyId = "MDI",
     assignedLivingUnit = AssignedLivingUnit(
       agencyId = "MDI",
       locationId = 1,

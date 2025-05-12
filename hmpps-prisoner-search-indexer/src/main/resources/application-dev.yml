@@ -20,10 +20,7 @@ api:
       incentives: http://localhost:8096
       alerts: http://localhost:8097
       complexity-of-need: http://localhost:8098
-#      oauth: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
-#      prison-api: https://prison-api-dev.prison.service.justice.gov.uk
-#      restricted-patients: https://restricted-patients-api-dev.hmpps.service.justice.gov.uk
-#      incentives: https://incentives-api-dev.hmpps.service.justice.gov.uk
+      prison-register: http://localhost:8099
 
 prison-api:
   client:
