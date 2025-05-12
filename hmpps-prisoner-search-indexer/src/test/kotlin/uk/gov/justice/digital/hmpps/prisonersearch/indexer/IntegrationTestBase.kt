@@ -388,6 +388,7 @@ data class PrisonerBuilder(
           ProfileInformation("YOUTH", "Youth Offender?", "NO"),
           ProfileInformation("RELF", "Religion", "Christian"),
           ProfileInformation("NAT", "Nationality?", "British"),
+          ProfileInformation("SMOKE", "Smoker?", "V"),
         ),
         inOutStatus = "IN",
         allIdentifiers = listOf(

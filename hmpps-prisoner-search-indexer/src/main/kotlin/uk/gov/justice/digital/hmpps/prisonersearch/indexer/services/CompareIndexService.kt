@@ -41,7 +41,7 @@ class CompareIndexService(
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
-    return SizeCheck(timeMs = end - start, totalNomisNumber, totalNomisNumber, totalRedNumber).also {
+    return SizeCheck(timeMs = end - start, totalNomisNumber, totalRedNumber, totalRedNumber).also {
       telemetryClient.trackEvent(TelemetryEvents.COMPARE_INDEX_SIZE, it.toMap())
     }
   }

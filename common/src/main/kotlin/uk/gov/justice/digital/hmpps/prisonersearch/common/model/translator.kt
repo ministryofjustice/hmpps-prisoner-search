@@ -107,8 +107,31 @@ fun Prisoner.translate(
   this.nationality = ob.profileInformation?.firstOrNull { p -> p.type == "NAT" }?.resultValue
   this.religion = ob.profileInformation?.firstOrNull { p -> p.type == "RELF" }?.resultValue
   this.maritalStatus = ob.profileInformation?.firstOrNull { p -> p.type == "MARITAL" }?.resultValue
-  this.youthOffender =
-    ob.profileInformation?.firstOrNull { p -> p.type == "YOUTH" }?.resultValue?.uppercase() == "YES"
+  this.smoker = ob.profileInformation?.firstOrNull { p -> p.type == "SMOKE" }?.resultValue
+  this.youthOffender = ob.profileInformation?.firstOrNull { p -> p.type == "YOUTH" }?.resultValue?.uppercase() == "YES"
+  this.personalCareNeeds = ob.personalCareNeeds?.map {
+    PersonalCareNeed(
+      it.problemType,
+      it.problemCode,
+      it.problemStatus,
+      it.problemDescription,
+      it.commentText,
+      it.startDate,
+      it.endDate,
+    )
+  }
+    ?.filter { it.endDate == null || it.endDate.isAfter(LocalDate.now()) }
+
+  this.languages = ob.languages?.map {
+    Language(
+      it.type,
+      it.code,
+      it.readSkill,
+      it.writeSkill,
+      it.speakSkill,
+      it.interpreterRequested,
+    )
+  }
 
   this.sentenceStartDate = ob.sentenceDetail?.sentenceStartDate
   this.confirmedReleaseDate = ob.sentenceDetail?.confirmedReleaseDate

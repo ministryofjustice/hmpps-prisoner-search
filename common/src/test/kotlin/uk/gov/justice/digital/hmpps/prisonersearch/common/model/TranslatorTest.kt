@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderLanguageDto
+import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PersonalCareNeedDto
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
@@ -619,6 +621,99 @@ class TranslatorTest {
         Tuple.tuple("HOME", "01141234567"),
         Tuple.tuple("MOB", "07771234567"),
       )
+  }
+
+  @Nested
+  inner class PersonalCareNeeds {
+    @Test
+    internal fun `Active PersonalCareNeeds are mapped`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          personalCareNeeds = listOf(
+            PersonalCareNeedDto(
+              problemType = "TYPE1",
+              problemCode = "CODE1",
+              problemStatus = "STATUS1",
+              problemDescription = "Desc1",
+              commentText = "Comment1",
+              startDate = LocalDate.parse("2023-04-05"),
+              endDate = null,
+            ),
+            PersonalCareNeedDto(
+              problemType = "INACTIVE",
+              problemCode = "CODE2",
+              problemStatus = "STATUS2",
+              problemDescription = "Desc2",
+              commentText = "Comment2",
+              startDate = LocalDate.parse("2023-04-05"),
+              endDate = LocalDate.parse("2025-04-05"),
+            ),
+            PersonalCareNeedDto(
+              problemType = "TYPE3",
+              problemCode = "CODE3",
+              problemStatus = "STATUS3",
+              problemDescription = "Desc3",
+              commentText = "Comment3",
+              startDate = LocalDate.parse("2023-04-05"),
+              endDate = LocalDate.parse("2199-04-05"),
+            ),
+          ),
+        ),
+      )
+      assertThat(prisoner.personalCareNeeds)
+        .containsExactlyInAnyOrder(
+          PersonalCareNeed(
+            problemType = "TYPE1",
+            problemCode = "CODE1",
+            problemStatus = "STATUS1",
+            problemDescription = "Desc1",
+            commentText = "Comment1",
+            startDate = LocalDate.parse("2023-04-05"),
+            endDate = null,
+          ),
+          PersonalCareNeed(
+            problemType = "TYPE3",
+            problemCode = "CODE3",
+            problemStatus = "STATUS3",
+            problemDescription = "Desc3",
+            commentText = "Comment3",
+            startDate = LocalDate.parse("2023-04-05"),
+            endDate = LocalDate.parse("2199-04-05"),
+          ),
+        )
+    }
+  }
+
+  @Nested
+  inner class Languages {
+    @Test
+    internal fun `Languages are mapped`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          languages = listOf(
+            OffenderLanguageDto(
+              type = "TYPE",
+              code = "ENG",
+              readSkill = "G",
+              writeSkill = "A",
+              speakSkill = "P",
+              interpreterRequested = true,
+            ),
+          ),
+        ),
+      )
+      assertThat(prisoner.languages)
+        .containsExactlyInAnyOrder(
+          Language(
+            type = "TYPE",
+            code = "ENG",
+            readSkill = "G",
+            writeSkill = "A",
+            speakSkill = "P",
+            interpreterRequested = true,
+          ),
+        )
+    }
   }
 
   @Nested
