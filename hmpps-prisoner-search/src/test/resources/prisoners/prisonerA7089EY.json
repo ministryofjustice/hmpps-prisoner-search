@@ -17,6 +17,28 @@
   "maritalStatus": "Married",
   "religion": "Christian",
   "nationality": "British",
+  "smoker": "Y",
+  "personalCareNeeds": [
+    {
+      "problemType": "MATSTAT",
+      "problemCode": "ACCU9",
+      "problemStatus": "ON",
+      "problemDescription": "Desc",
+      "commentText": "Comment",
+      "startDate": "2023-06-15",
+      "endDate": "2129-09-14"
+    }
+  ],
+  "languages": [
+    {
+      "type": "PRIM",
+      "code": "WEL",
+      "readSkill": "G",
+      "writeSkill": "A",
+      "speakSkill": "P",
+      "interpreterRequested": true
+    }
+  ],
   "status": "ACTIVE IN",
   "lastMovementTypeCode": "ADM",
   "lastMovementReasonCode": "24",
