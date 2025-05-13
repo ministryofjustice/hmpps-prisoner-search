@@ -14,7 +14,32 @@
   "maritalStatus": "Married",
   "religion": "Christian",
   "nationality": "British",
+  "smoker": "Y",
+  "personalCareNeeds": [
+    {
+      "problemType": "MATSTAT",
+      "problemCode": "ACCU9",
+      "problemStatus": "ON",
+      "problemDescription": "Desc",
+      "commentText": "Comment",
+      "startDate": "2023-06-15",
+      "endDate": "2129-09-14"
+    }
+  ],
+  "languages": [
+    {
+      "type": "PRIM",
+      "code": "WEL",
+      "readSkill": "G",
+      "writeSkill": "A",
+      "speakSkill": "P",
+      "interpreterRequested": true
+    }
+  ],
   "status": "ACTIVE IN",
+  "lastMovementTypeCode": "ADM",
+  "lastMovementReasonCode": "24",
+  "inOutStatus": "IN",
   "prisonId": "MDI",
   "prisonName": "Moorland Prison",
   "cellLocation": "A-1-001",
@@ -56,7 +81,11 @@
   "csra": "High",
   "category": "C",
   "legalStatus": "SENTENCED",
+  "imprisonmentStatus": "LASPO_DR",
+  "convictedStatus": "Remand",
   "mostSeriousOffence": "Handle stolen goods",
+  "recall": false,
+  "indeterminateSentence": true,
   "sentenceStartDate": "2016-09-09",
   "releaseDate": "2023-04-01",
   "confirmedReleaseDate": "2023-04-01",
@@ -67,5 +96,17 @@
   "homeDetentionCurfewEndDate": "2019-06-22",
   "additionalDaysAwarded": 27,
   "nonDtoReleaseDate": "2023-05-16",
-  "nonDtoReleaseDateType": "CRD"
+  "nonDtoReleaseDateType": "CRD",
+  "paroleEligibilityDate": "2020-12-30",
+  "conditionalReleaseDate": "2023-05-16",
+  "restrictedPatient": false,
+  "heightCentimetres": 165,
+  "weightKilograms": 57,
+  "hairColour": "Brown",
+  "rightEyeColour": "Blue",
+  "leftEyeColour": "Green",
+  "facialHair": "Beard",
+  "shapeOfFace": "Oval",
+  "build": "Slim",
+  "shoeSize": 8
 }
