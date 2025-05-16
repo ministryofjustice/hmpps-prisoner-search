@@ -102,17 +102,17 @@ class IndexListenerService(
   }
 
   fun bookingDeleted(message: BookingDeletedMessage, eventType: String) {
-      val offender = nomisService.getOffender(message.offenderIdDisplay)
-      if (offender == null) {
-        // Last booking was deleted
-        log.debug("Booking Delete check: offender ID {} no longer exists, deleting", this)
-        prisonerSynchroniserService.delete(message.offenderIdDisplay)
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(message.offenderIdDisplay)
-      } else {
-        log.debug("Booking Delete check: offender ID {} still exists, so just update", this)
-        prisonerSynchroniserService.reindexUpdate(offender, eventType)
-      }
+    val offender = nomisService.getOffender(message.offenderIdDisplay)
+    if (offender == null) {
+      // Last booking was deleted
+      log.debug("Booking Delete check: offender ID {} no longer exists, deleting", this)
+      prisonerSynchroniserService.delete(message.offenderIdDisplay)
+      hmppsDomainEventEmitter.emitPrisonerRemovedEvent(message.offenderIdDisplay)
+    } else {
+      log.debug("Booking Delete check: offender ID {} still exists, so just update", this)
+      prisonerSynchroniserService.reindexUpdate(offender, eventType)
     }
+  }
 
   fun offenderBookingReassigned(message: OffenderBookingReassignedMessage, eventType: String) {
     message.offenderIdDisplay?.run {
