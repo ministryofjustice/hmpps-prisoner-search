@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.dao.OptimisticLockingFailureException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BookingDeletedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.ExternalPrisonerMovementMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderBookingChangedMessage
@@ -108,6 +109,19 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
       )
     }
 
+    @Test
+    fun `will call service for booking deletion`() {
+      val eventType = "BOOKING-DELETED"
+      listener.processOffenderEvent(validBookingDeletedMessage(eventType))
+      verify(indexListenerService).bookingDeleted(
+        BookingDeletedMessage(
+          offenderIdDisplay = "A123ZZZ",
+          bookingId = 1234,
+        ),
+        eventType,
+      )
+    }
+
     @ParameterizedTest
     @ValueSource(strings = ["ASSESSMENT-UPDATED"])
     fun `will call republish message for assessment updated`(eventType: String) {
@@ -189,6 +203,11 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   private fun validOffenderBookingReassignedMessage(eventType: String) = validMessage(
     eventType = eventType,
     message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"previousOffenderIdDisplay\":\"A123ZZZ\",\"previousOffenderId\":\"2345611\",\"bookingId\":\"1234\",\"nomisEventType\":\"OFF_BKB_UPD\"}""",
+  )
+
+  private fun validBookingDeletedMessage(eventType: String) = validMessage(
+    eventType = eventType,
+    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2025-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"bookingId\":\"1234\",\"nomisEventType\":\"$eventType\"}""",
   )
 
   private fun validPrisonerLocationChangeMessage(eventType: String) = validMessage(

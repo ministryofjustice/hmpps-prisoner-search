@@ -293,6 +293,31 @@ internal class IndexListenerServiceTest {
   }
 
   @Nested
+  inner class BookingDeleted {
+    @Test
+    fun `will reindex if offender exists`() {
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      val offenderNo = booking.offenderNo
+      whenever(nomisService.getOffender(offenderNo)).thenReturn(booking)
+
+      indexListenerService.bookingDeleted(BookingDeletedMessage(offenderNo, booking.bookingId!!), "BOOKING-DELETED")
+
+      verify(prisonerSynchroniserService).reindexUpdate(booking, "BOOKING-DELETED")
+    }
+
+    @Test
+    fun `will delete if offender does not exist`() {
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      val offenderNo = booking.offenderNo
+      whenever(nomisService.getOffender(offenderNo)).thenReturn(null)
+
+      indexListenerService.bookingDeleted(BookingDeletedMessage(offenderNo, booking.bookingId!!), "BOOKING-DELETED")
+
+      verify(prisonerSynchroniserService).delete(offenderNo)
+    }
+  }
+
+  @Nested
   inner class offenderBookingReassignment {
     @Test
     fun `will create an event for missing offender id display`() {
