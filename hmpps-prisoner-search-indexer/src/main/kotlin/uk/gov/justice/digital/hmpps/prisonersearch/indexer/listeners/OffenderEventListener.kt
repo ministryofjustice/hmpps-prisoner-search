@@ -80,6 +80,7 @@ class OffenderEventListener(
         "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
         in offenderEvent -> indexListenerService.offenderChange(fromJson(message), eventType)
         "OFFENDER-DELETED" -> indexListenerService.maybeDeleteOffender(fromJson(message), eventType)
+        "BOOKING-DELETED" -> indexListenerService.bookingDeleted(fromJson(message), eventType)
         "OFFENDER_BOOKING-REASSIGNED" -> indexListenerService.offenderBookingReassigned(fromJson(message), eventType)
         "AGENCY_INTERNAL_LOCATIONS-UPDATED" -> indexListenerService.prisonerLocationChange(fromJson(message), eventType)
 
