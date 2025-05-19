@@ -7,7 +7,9 @@ import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest
 import org.opensearch.action.get.GetRequest
 import org.opensearch.action.get.GetResponse
+import org.opensearch.client.Request
 import org.opensearch.client.RequestOptions
+import org.opensearch.client.ResponseException
 import org.opensearch.client.RestHighLevelClient
 import org.opensearch.client.core.CountRequest
 import org.opensearch.client.indices.CreateIndexRequest
@@ -22,6 +24,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery
 import org.springframework.data.elasticsearch.core.query.UpdateResponse
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
@@ -163,8 +166,18 @@ class PrisonerRepository(
     }
   }
 
-  fun delete(prisonerNumber: String) {
-    openSearchRestTemplate.delete(prisonerNumber, IndexCoordinates.of(PRISONER_INDEX))
+  fun delete(prisonerNumber: String): Boolean {
+    val request = Request("DELETE", "/$PRISONER_INDEX/_doc/$prisonerNumber")
+    try {
+      client.lowLevelClient.performRequest(request)
+      return true
+    } catch (e: ResponseException) {
+      log.error("Unexpected response ${e.response} from delete of $prisonerNumber", e)
+      if (e.response.statusLine.statusCode == 404) {
+        return false
+      }
+      throw e
+    }
   }
 
   fun get(prisonerNumber: String): Prisoner? = openSearchRestTemplate

@@ -307,9 +307,17 @@ class PrisonerSynchroniserService(
     complexityOfNeed = Result.success(getComplexityOfNeed(ob)),
   )
 
-  fun delete(prisonerNumber: String) {
-    prisonerRepository.delete(prisonerNumber)
-    telemetryClient.trackPrisonerEvent(TelemetryEvents.PRISONER_REMOVED, prisonerNumber)
+  fun delete(prisonerNumber: String): Boolean {
+    val deleted = prisonerRepository.delete(prisonerNumber)
+    telemetryClient.trackPrisonerEvent(
+      if (deleted) {
+        TelemetryEvents.PRISONER_REMOVED
+      } else {
+        TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE
+      },
+      prisonerNumber,
+    )
+    return deleted
   }
 
   private fun getRestrictedPatient(ob: OffenderBooking) = ob.takeIf { it.assignedLivingUnit?.agencyId == "OUT" }?.let {

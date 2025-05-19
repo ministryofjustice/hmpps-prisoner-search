@@ -1035,12 +1035,27 @@ internal class PrisonerSynchroniserServiceTest {
   @Nested
   inner class Delete {
     @Test
-    fun `will raise a telemetry event`() {
+    fun `will raise a PRISONER_REMOVED telemetry event`() {
+      whenever(prisonerRepository.delete("ABC123D")).thenReturn(true)
+
       service.delete("ABC123D")
 
       verify(telemetryClient).trackEvent(
         TelemetryEvents.PRISONER_REMOVED.name,
         mapOf("prisonerNumber" to "ABC123D"),
+        null,
+      )
+    }
+
+    @Test
+    fun `will raise a PRISONER_OPENSEARCH_NO_CHANGE telemetry event`() {
+      whenever(prisonerRepository.delete("NEVER-EXISTED")).thenReturn(false)
+
+      service.delete("NEVER-EXISTED")
+
+      verify(telemetryClient).trackEvent(
+        TelemetryEvents.PRISONER_OPENSEARCH_NO_CHANGE.name,
+        mapOf("prisonerNumber" to "NEVER-EXISTED"),
         null,
       )
     }
