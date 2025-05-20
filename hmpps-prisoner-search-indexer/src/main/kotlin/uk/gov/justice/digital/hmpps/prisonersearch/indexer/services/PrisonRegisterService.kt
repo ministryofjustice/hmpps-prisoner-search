@@ -16,7 +16,7 @@ class PrisonRegisterService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @Cacheable("prisons", sync = true)
+  @Cacheable("prisons")
   fun getAllPrisons(): List<PrisonDto>? {
     try {
       return prisonRegisterWebClient
