@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
@@ -87,5 +88,48 @@ class PrisonerSearchByPrisonerNumbersResourceTest : AbstractSearchIntegrationTes
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isForbidden
+  }
+
+  @Test
+  fun `returns only requested response fields`() {
+    webTestClient.post()
+      .uri {
+        it.path("/prisoner-search/prisoner-numbers")
+          .queryParam("responseFields", "prisonerNumber")
+          .queryParam("responseFields", "lastName")
+          .build()
+      }
+      .body(BodyInserters.fromValue(gson.toJson(PrisonerNumbers(listOf("AN1", "AN2")))))
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.length()").isEqualTo(2)
+      .jsonPath("$[0].prisonerNumber").isEqualTo("AN1")
+      .jsonPath("$[0].lastName").isEqualTo("MORALES")
+      .jsonPath("$[0].firstName").doesNotExist()
+      .jsonPath("$[1].prisonerNumber").isEqualTo("AN2")
+      .jsonPath("$[1].lastName").isEqualTo("MORALES")
+      .jsonPath("$[1].firstName").doesNotExist()
+  }
+
+  @Test
+  fun `returns bad request for invalid response field`() {
+    webTestClient.post()
+      .uri {
+        it.path("/prisoner-search/prisoner-numbers")
+          .queryParam("responseFields", "prisonerNumber")
+          .queryParam("responseFields", "doesNotExist")
+          .build()
+      }
+      .body(BodyInserters.fromValue(gson.toJson(PrisonerNumbers(listOf("AN1", "AN2")))))
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isBadRequest
+      .expectBody().jsonPath("userMessage").value<String> {
+        assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+      }
   }
 }

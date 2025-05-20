@@ -133,12 +133,14 @@ class PrisonerSearchService(
 
   private fun <T> queryBy(
     searchCriteria: T,
+    responseFields: List<String>? = null,
     queryBuilder: (searchCriteria: T) -> BoolQueryBuilder?,
   ): Result {
     val query = queryBuilder(searchCriteria)
     return query?.let {
       val searchSourceBuilder = SearchSourceBuilder().apply {
         size(RESULT_HITS_MAX)
+        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
         query(it)
       }
       val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
@@ -330,7 +332,7 @@ class PrisonerSearchService(
     return searchHits.map { gson.fromJson(it.sourceAsString, Prisoner::class.java) }
   }
 
-  fun findBy(criteria: PrisonerListCriteria<Any>): List<Prisoner> {
+  fun findBy(criteria: PrisonerListCriteria<Any>, responseFields: List<String>? = null): List<Prisoner> {
     with(criteria) {
       if (!isValid()) {
         with("Invalid search  - please provide a minimum of 1 and a maximum of 1000 $type") {
@@ -339,7 +341,7 @@ class PrisonerSearchService(
         }
       }
 
-      queryBy(criteria) { matchByIds(it) } onMatch {
+      queryBy(criteria, responseFields) { matchByIds(it) } onMatch {
         customEventForFindBy(type, values().size, it.matches.size)
         return it.matches
       }

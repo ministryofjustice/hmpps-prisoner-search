@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReleaseDateSe
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 
 @RestController
 @Validated
@@ -82,7 +81,19 @@ class PrisonerSearchResource(
   )
   @Tag(name = "Batch")
   @Tag(name = "Popular")
-  fun findByNumbers(@Parameter(required = true) @Valid @RequestBody criteria: PrisonerNumbers) = prisonerSearchService.findBy(criteria)
+  fun findByNumbers(
+    @Parameter(required = true) @Valid @RequestBody criteria: PrisonerNumbers,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
+  ): List<Prisoner> {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
+
+    return prisonerSearchService.findBy(criteria, responseFields)
+  }
 
   @PostMapping("/booking-ids")
   @Operation(
@@ -122,18 +133,14 @@ class PrisonerSearchResource(
     ) includeRestrictedPatients: Boolean,
     @RequestParam(value = "responseFields", required = false)
     @Parameter(
-      description = "*** BETA *** A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields. Note that this is currently being piloted in beta and should not be used yet. Please contact #syscon-devs if you wish to use this feature.",
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
     @ParameterObject @PageableDefault
     pageable: Pageable,
   ): Page<Prisoner> {
-    responseFields?.run {
-      responseFieldsValidator.findMissing(responseFields)
-        .takeIf { it.isNotEmpty() }
-        ?.run { throw BadRequestException("Invalid response fields requested: $this") }
-    }
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
 
     return prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients, responseFields)
   }

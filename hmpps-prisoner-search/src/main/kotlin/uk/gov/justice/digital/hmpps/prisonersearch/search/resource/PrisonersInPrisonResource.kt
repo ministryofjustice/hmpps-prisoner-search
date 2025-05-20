@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPr
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import java.time.LocalDate
 
 @RestController
@@ -136,7 +135,7 @@ class PrisonersInPrisonResource(
     incentiveLevelCode: String?,
     @RequestParam(value = "responseFields", required = false)
     @Parameter(
-      description = "*** BETA *** A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields. Note that this is currently being piloted in beta and should not be used yet. Please contact #syscon-devs if you wish to use this feature.",
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
@@ -144,11 +143,7 @@ class PrisonersInPrisonResource(
     @PageableDefault(sort = ["lastName", "firstName", "prisonerNumber"], direction = Sort.Direction.ASC)
     pageable: Pageable,
   ): Page<Prisoner> {
-    responseFields?.run {
-      responseFieldsValidator.findMissing(responseFields)
-        .takeIf { it.isNotEmpty() }
-        ?.run { throw BadRequestException("Invalid response fields requested: $this") }
-    }
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
 
     return searchService.search(
       prisonId,
