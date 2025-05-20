@@ -279,10 +279,22 @@ internal class IndexListenerServiceTest {
 
     @Test
     fun `will raise a deletion event on OFFENDER-DELETED event if no longer exists`() {
-      whenever(nomisService.getOffender(any())).thenReturn(null)
+      whenever(nomisService.getOffender("A123BC")).thenReturn(null)
+      whenever(prisonerSynchroniserService.delete("A123BC")).thenReturn(true)
+
       indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
 
       verify(hmppsDomainEventEmitter).emitPrisonerRemovedEvent("A123BC")
+    }
+
+    @Test
+    fun `will not raise a deletion event if prisoner never existed`() {
+      whenever(nomisService.getOffender("A123BC")).thenReturn(null)
+      whenever(prisonerSynchroniserService.delete("A123BC")).thenReturn(false)
+
+      indexListenerService.maybeDeleteOffender(anOffenderChanged("A123BC"), "OFFENDER-DELETED")
+
+      verifyNoInteractions(hmppsDomainEventEmitter)
     }
 
     private fun anOffenderChanged(prisonerNumber: String?) = OffenderChangedMessage(

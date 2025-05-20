@@ -658,14 +658,21 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" })
       assertThat(highLevelClient.get(GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()
 
-      prisonerRepository.delete(prisonerNumber = "X12345")
+      val result = prisonerRepository.delete(prisonerNumber = "X12345")
 
+      assertThat(result).isTrue()
       assertThat(
         highLevelClient.get(
           GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX).id("X12345"),
           RequestOptions.DEFAULT,
         ).isExists,
       ).isFalse()
+    }
+
+    @Test
+    fun `deleting prisoner that does not exist`() {
+      val result = prisonerRepository.delete(prisonerNumber = "DOESNOTEXIST")
+      assertThat(result).isFalse()
     }
   }
 

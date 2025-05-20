@@ -92,8 +92,9 @@ class IndexListenerService(
       val offender = nomisService.getOffender(offenderNo = this)
       if (offender == null) {
         log.debug("Delete check: offender ID {} no longer exists, deleting", this)
-        prisonerSynchroniserService.delete(prisonerNumber = this)
-        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this)
+        if (prisonerSynchroniserService.delete(prisonerNumber = this)) {
+          hmppsDomainEventEmitter.emitPrisonerRemovedEvent(offenderNo = this)
+        }
       } else {
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
         prisonerSynchroniserService.reindexUpdate(offender, eventType)
@@ -104,10 +105,11 @@ class IndexListenerService(
   fun bookingDeleted(message: BookingDeletedMessage, eventType: String) {
     val offender = nomisService.getOffender(message.offenderIdDisplay)
     if (offender == null) {
-      // Last booking was deleted
+      // The last booking was deleted
       log.debug("Booking Delete check: offender ID {} no longer exists, deleting", this)
-      prisonerSynchroniserService.delete(message.offenderIdDisplay)
-      hmppsDomainEventEmitter.emitPrisonerRemovedEvent(message.offenderIdDisplay)
+      if (prisonerSynchroniserService.delete(message.offenderIdDisplay)) {
+        hmppsDomainEventEmitter.emitPrisonerRemovedEvent(message.offenderIdDisplay)
+      }
     } else {
       log.debug("Booking Delete check: offender ID {} still exists, so just update", this)
       prisonerSynchroniserService.reindexUpdate(offender, eventType)
