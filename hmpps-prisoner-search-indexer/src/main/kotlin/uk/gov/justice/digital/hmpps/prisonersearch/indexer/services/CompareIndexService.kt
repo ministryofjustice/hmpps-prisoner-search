@@ -37,21 +37,20 @@ class CompareIndexService(
 
   fun doIndexSizeCheck(): SizeCheck {
     val start = System.currentTimeMillis()
-    val totalRedNumber = prisonerRepository.count()
+    val totalIndexNumber = prisonerRepository.count()
     val totalNomisNumber = nomisService.getTotalNumberOfPrisoners()
     val end = System.currentTimeMillis()
 
-    return SizeCheck(timeMs = end - start, totalNomisNumber, totalRedNumber, totalRedNumber).also {
+    return SizeCheck(timeMs = end - start, totalNomis = totalNomisNumber, totalIndex = totalIndexNumber).also {
       telemetryClient.trackEvent(TelemetryEvents.COMPARE_INDEX_SIZE, it.toMap())
     }
   }
 
-  data class SizeCheck(val timeMs: Long, val totalNomis: Long, val totalIndex: Long, val totalRed: Long) {
+  data class SizeCheck(val timeMs: Long, val totalNomis: Long, val totalIndex: Long) {
     fun toMap() = mapOf(
       "timeMs" to timeMs.toString(),
       "totalNomis" to totalNomis.toString(),
       "totalIndex" to totalIndex.toString(),
-      "totalRed" to totalRed.toString(),
     )
   }
 
