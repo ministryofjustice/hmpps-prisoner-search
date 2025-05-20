@@ -91,7 +91,7 @@ class SearchClientTest {
   }
 
   @Test
-  fun `red index name is returned when new regime`() {
+  fun `index name is returned`() {
     val searchClient = SearchClient(restHighLevelClient)
     assertThat(searchClient.getAlias().first()).isSameAs(OpenSearchIndexConfiguration.PRISONER_INDEX)
   }

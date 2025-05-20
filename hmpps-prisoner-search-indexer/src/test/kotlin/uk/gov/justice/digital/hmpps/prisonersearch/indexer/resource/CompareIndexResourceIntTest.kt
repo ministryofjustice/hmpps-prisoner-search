@@ -134,7 +134,7 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
         check<Map<String, String>> {
           assertThat(it["timeMs"]?.toInt()).isGreaterThan(0)
           assertThat(it["totalNomis"]?.toInt()).isEqualTo(6)
-          assertThat(it["totalRed"]?.toInt()).isEqualTo(9)
+          assertThat(it["totalIndex"]?.toInt()).isEqualTo(9)
         },
         isNull(),
       )
@@ -148,9 +148,9 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
         .expectBody()
-        .jsonPath("timeMs").value<Int?> { assertThat(it).isGreaterThan(0) }
-        .jsonPath("totalNomis").value<Int?> { assertThat(it).isEqualTo(6) }
-        .jsonPath("totalRed").value<Int?> { assertThat(it).isEqualTo(9) }
+        .jsonPath("timeMs").value<Int?> { assertThat(it!!).isGreaterThan(0) }
+        .jsonPath("totalNomis").value<Int?> { assertThat(it!!).isEqualTo(6) }
+        .jsonPath("totalIndex").value<Int?> { assertThat(it!!).isEqualTo(9) }
     }
 
     @Test
