@@ -109,16 +109,16 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var nationality: String? = null
 
-  // @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   @Schema(description = "Smoker (V=vapes)", allowableValues = ["Y", "N", "V"])
   var smoker: String? = null
 
-  // @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   @Schema(description = "Personal Care Needs")
   var personalCareNeeds: List<PersonalCareNeed>? = null
 
-  // @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
-  @Schema(description = "Personal Care Needs")
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @Schema(description = "Languages")
   var languages: List<Language>? = null
 
   @Field(type = FieldType.Keyword)
