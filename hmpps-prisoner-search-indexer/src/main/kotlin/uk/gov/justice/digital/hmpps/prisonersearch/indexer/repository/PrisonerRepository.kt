@@ -171,10 +171,10 @@ class PrisonerRepository(
       client.lowLevelClient.performRequest(request)
       return true
     } catch (e: ResponseException) {
-      log.error("Unexpected response ${e.response} from delete of $prisonerNumber", e)
       if (e.response.statusLine.statusCode == 404) {
         return false
       }
+      log.error("Unexpected response ${e.response} from delete of $prisonerNumber", e)
       throw e
     }
   }
