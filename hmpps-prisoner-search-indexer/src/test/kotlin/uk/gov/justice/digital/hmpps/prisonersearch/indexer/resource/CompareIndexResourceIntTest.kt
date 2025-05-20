@@ -148,9 +148,9 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
         .expectBody()
-        .jsonPath("timeMs").value<Int?> { assertThat(it!!).isGreaterThan(0) }
-        .jsonPath("totalNomis").value<Int?> { assertThat(it!!).isEqualTo(6) }
-        .jsonPath("totalIndex").value<Int?> { assertThat(it!!).isEqualTo(9) }
+        .jsonPath("timeMs").value<Int> { assertThat(it).isGreaterThan(0) }
+        .jsonPath("totalNomis").value<Int> { assertThat(it).isEqualTo(6) }
+        .jsonPath("totalIndex").value<Int> { assertThat(it).isEqualTo(9) }
     }
 
     @Test
