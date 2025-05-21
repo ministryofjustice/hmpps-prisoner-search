@@ -82,6 +82,33 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
     }
 
     @Test
+    fun `should handle response fields query parameters in alternative format`() {
+      val request = PrisonersInPrisonRequest(term = "A1234AA")
+      val response = webTestClient.get().uri {
+        it.path("/prison/MDI/prisoners")
+          .queryParam("term", request.term)
+          .queryParam("page", request.pagination.page)
+          .queryParam("size", request.pagination.size)
+          .queryParam("responseFields", "prisonerNumber,dateOfBirth,recall,heightCentimetres,currentIncentive.level.description")
+          .build()
+      }
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange().expectStatus().isOk
+        .expectBody(object : ParameterizedTypeReference<RestResponsePage<Prisoner>>() {})
+        .returnResult().responseBody!!
+
+      with(response.content.first()!!) {
+        assertThat(prisonerNumber).isEqualTo("A1234AA")
+        assertThat(dateOfBirth).isEqualTo("1975-07-20")
+        assertThat(recall).isEqualTo(true)
+        assertThat(heightCentimetres).isEqualTo(180)
+        assertThat(currentIncentive?.level?.description).isEqualTo("Standard")
+        assertThat(firstName).isNull()
+      }
+    }
+
+    @Test
     fun `should return all fields if empty list of fields requested`() {
       val response = webTestClient.search(
         request = PrisonersInPrisonRequest(term = "A1234AA"),
