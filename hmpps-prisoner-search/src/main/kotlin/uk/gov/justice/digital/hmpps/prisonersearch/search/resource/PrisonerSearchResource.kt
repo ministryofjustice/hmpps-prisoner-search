@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListC
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReleaseDateSearch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
 
 @RestController
@@ -38,7 +37,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
 )
 class PrisonerSearchResource(
   private val prisonerSearchService: PrisonerSearchService,
-  private val responseFieldsValidator: ResponseFieldsValidator,
 ) {
 
   @Deprecated(message = "Use the /match-prisoners endpoint")
@@ -89,11 +87,7 @@ class PrisonerSearchResource(
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
-  ): List<Prisoner> {
-    responseFields?.run { responseFieldsValidator.validate(responseFields) }
-
-    return prisonerSearchService.findBy(criteria, responseFields)
-  }
+  ): List<Prisoner> = prisonerSearchService.findBy(criteria, responseFields)
 
   @PostMapping("/booking-ids")
   @Operation(
@@ -139,9 +133,5 @@ class PrisonerSearchResource(
     responseFields: List<String>? = null,
     @ParameterObject @PageableDefault
     pageable: Pageable,
-  ): Page<Prisoner> {
-    responseFields?.run { responseFieldsValidator.validate(responseFields) }
-
-    return prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients, responseFields)
-  }
+  ): Page<Prisoner> = prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients, responseFields)
 }

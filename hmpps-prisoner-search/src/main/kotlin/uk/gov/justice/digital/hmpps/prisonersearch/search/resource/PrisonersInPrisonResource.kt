@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
 import java.time.LocalDate
@@ -35,7 +34,6 @@ import java.time.LocalDate
 @PreAuthorize("hasAnyRole('ROLE_PRISONER_IN_PRISON_SEARCH', 'ROLE_PRISONER_SEARCH')")
 class PrisonersInPrisonResource(
   private val searchService: PrisonersInPrisonService,
-  private val responseFieldsValidator: ResponseFieldsValidator,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -142,22 +140,18 @@ class PrisonersInPrisonResource(
     @ParameterObject
     @PageableDefault(sort = ["lastName", "firstName", "prisonerNumber"], direction = Sort.Direction.ASC)
     pageable: Pageable,
-  ): Page<Prisoner> {
-    responseFields?.run { responseFieldsValidator.validate(responseFields) }
-
-    return searchService.search(
-      prisonId,
-      PrisonersInPrisonRequest(
-        term = term,
-        pagination = PaginationRequest(pageable.pageNumber, pageable.pageSize),
-        alertCodes = alerts,
-        fromDob = fromDob,
-        toDob = toDob,
-        cellLocationPrefix = cellLocationPrefix,
-        incentiveLevelCode = incentiveLevelCode,
-        sort = pageable.sort,
-      ),
-      responseFields,
-    )
-  }
+  ): Page<Prisoner> = searchService.search(
+    prisonId,
+    PrisonersInPrisonRequest(
+      term = term,
+      pagination = PaginationRequest(pageable.pageNumber, pageable.pageSize),
+      alertCodes = alerts,
+      fromDob = fromDob,
+      toDob = toDob,
+      cellLocationPrefix = cellLocationPrefix,
+      incentiveLevelCode = incentiveLevelCode,
+      sort = pageable.sort,
+    ),
+    responseFields,
+  )
 }
