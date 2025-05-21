@@ -121,6 +121,10 @@ class Prisoner : Diffable<Prisoner> {
   @Schema(description = "Languages")
   var languages: List<Language>? = null
 
+  // @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @Schema(description = "The prisoner's current facial image can be retrieved by plugging this id into the prison-api endpoint /app/images/{prisonerNumber}/data?imageId={imageId}", example = "2122100")
+  var currentFacialImageId: Long? = null
+
   @Field(type = FieldType.Keyword)
   @Schema(required = true, description = "Status of the prisoner", example = "ACTIVE IN")
   @DiffableProperty(DiffCategory.STATUS)

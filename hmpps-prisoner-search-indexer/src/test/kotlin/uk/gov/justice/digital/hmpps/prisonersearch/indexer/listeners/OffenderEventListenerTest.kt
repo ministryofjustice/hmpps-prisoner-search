@@ -75,12 +75,16 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     @ValueSource(
       strings = [
         "OFFENDER-INSERTED", "OFFENDER-UPDATED", "OFFENDER_DETAILS-CHANGED", "OFFENDER_ALIAS-CHANGED",
+        "KEY_DATE_ADJUSTMENT_UPSERTED", "KEY_DATE_ADJUSTMENT_DELETED",
         "OFFENDER_PHYSICAL_DETAILS-CHANGED", "OFFENDER_IDENTIFIER-UPDATED", "ASSESSMENT-UPDATED_REPUBLISHED",
+        "OFFENDER_CHARGES-UPDATED", "OFFENDER_CHARGES-INSERTED", "OFFENDER_CHARGES-DELETED",
         "OFFENDER_ADDRESS-INSERTED", "OFFENDER_ADDRESS-UPDATED", "OFFENDER_EMAIL-INSERTED", "OFFENDER_EMAIL-DELETED",
         "OFFENDER_EMAIL-UPDATED", "OFFENDER_PHONE-INSERTED", "OFFENDER_PHONE-DELETED", "OFFENDER_PHONE-UPDATED",
         "OFFENDER_ADDRESS_PHONE-INSERTED", "OFFENDER_ADDRESS_PHONE-UPDATED", "OFFENDER_ADDRESS_PHONE-DELETED",
         "OFFENDER_PHYSICAL_ATTRIBUTES-CHANGED", "OFFENDER_IDENTIFYING_MARKS-CHANGED", "OFFENDER_IDENTIFYING_MARKS-DELETED",
         "OFFENDER_ADDRESS-DELETED",
+        "SENTENCE_ADJUSTMENT_UPSERTED", "SENTENCE_ADJUSTMENT_DELETED",
+        "OFFENDER_MARKS_IMAGE-CREATED", "OFFENDER_MARKS_IMAGE-UPDATED", "OFFENDER_MARKS_IMAGE-DELETED",
       ],
     )
     fun `will call service for offender change`(eventType: String) {
@@ -111,14 +115,13 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
 
     @Test
     fun `will call service for booking deletion`() {
-      val eventType = "BOOKING-DELETED"
-      listener.processOffenderEvent(validBookingDeletedMessage(eventType))
+      listener.processOffenderEvent(validBookingDeletedMessage())
       verify(indexListenerService).bookingDeleted(
         BookingDeletedMessage(
           offenderIdDisplay = "A123ZZZ",
           bookingId = 1234,
         ),
-        eventType,
+        "BOOKING-DELETED",
       )
     }
 
@@ -205,9 +208,9 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
     message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2020-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"previousOffenderIdDisplay\":\"A123ZZZ\",\"previousOffenderId\":\"2345611\",\"bookingId\":\"1234\",\"nomisEventType\":\"OFF_BKB_UPD\"}""",
   )
 
-  private fun validBookingDeletedMessage(eventType: String) = validMessage(
-    eventType = eventType,
-    message = """{\"eventType\":\"$eventType\",\"eventDatetime\":\"2025-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"bookingId\":\"1234\",\"nomisEventType\":\"$eventType\"}""",
+  private fun validBookingDeletedMessage() = validMessage(
+    eventType = "BOOKING-DELETED",
+    message = """{\"eventType\":\"BOOKING-DELETED\",\"eventDatetime\":\"2025-02-25T11:24:32.935401\",\"offenderIdDisplay\":\"A123ZZZ\",\"offenderId\":\"2345612\",\"bookingId\":\"1234\",\"nomisEventType\":\"BOOKING-DELETED\"}""",
   )
 
   private fun validPrisonerLocationChangeMessage(eventType: String) = validMessage(

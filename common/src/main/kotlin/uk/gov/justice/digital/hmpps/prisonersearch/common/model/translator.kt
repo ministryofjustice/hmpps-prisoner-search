@@ -133,6 +133,8 @@ fun Prisoner.translate(
     )
   }
 
+  this.currentFacialImageId = ob.imageId
+
   this.sentenceStartDate = ob.sentenceDetail?.sentenceStartDate
   this.confirmedReleaseDate = ob.sentenceDetail?.confirmedReleaseDate
   this.releaseDate = ob.sentenceDetail?.releaseDate
