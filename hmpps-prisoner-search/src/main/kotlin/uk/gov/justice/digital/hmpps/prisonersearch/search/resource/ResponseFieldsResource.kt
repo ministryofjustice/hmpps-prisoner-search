@@ -16,7 +16,7 @@ class ResponseFieldsResource(private val responseFields: List<String>) {
   @GetMapping
   @Operation(
     summary = "Get all available response fields",
-    description = "*** BETA ** This exists for developers to find all available values for responseFields parameters. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+    description = "This exists for developers to find all available values for responseFields parameters. Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
   )
   fun responseFields() = responseFields
 }

@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
@@ -34,6 +35,7 @@ class PrisonersInPrisonService(
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
+  private val responseFieldsValidator: ResponseFieldsValidator,
   @Value("\${search.prisoner.max-results}") private val maxSearchResults: Int = 3000,
   @Value("\${search.keyword.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
@@ -49,6 +51,8 @@ class PrisonersInPrisonService(
 
   fun search(prisonId: String, prisonerSearchRequest: PrisonersInPrisonRequest, responseFields: List<String>? = null): Page<Prisoner> {
     log.info("Received keyword request ${gson.toJson(prisonerSearchRequest)}")
+
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
 
     val searchSourceBuilder = createSourceBuilder(prisonId, prisonerSearchRequest, responseFields)
     val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)

@@ -25,10 +25,8 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import java.time.LocalDate
 
 @RestController
@@ -36,7 +34,6 @@ import java.time.LocalDate
 @PreAuthorize("hasAnyRole('ROLE_PRISONER_IN_PRISON_SEARCH', 'ROLE_PRISONER_SEARCH')")
 class PrisonersInPrisonResource(
   private val searchService: PrisonersInPrisonService,
-  private val responseFieldsValidator: ResponseFieldsValidator,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -136,33 +133,25 @@ class PrisonersInPrisonResource(
     incentiveLevelCode: String?,
     @RequestParam(value = "responseFields", required = false)
     @Parameter(
-      description = "*** BETA *** A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields. Note that this is currently being piloted in beta and should not be used yet. Please contact #syscon-devs if you wish to use this feature.",
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
     @ParameterObject
     @PageableDefault(sort = ["lastName", "firstName", "prisonerNumber"], direction = Sort.Direction.ASC)
     pageable: Pageable,
-  ): Page<Prisoner> {
-    responseFields?.run {
-      responseFieldsValidator.findMissing(responseFields)
-        .takeIf { it.isNotEmpty() }
-        ?.run { throw BadRequestException("Invalid response fields requested: $this") }
-    }
-
-    return searchService.search(
-      prisonId,
-      PrisonersInPrisonRequest(
-        term = term,
-        pagination = PaginationRequest(pageable.pageNumber, pageable.pageSize),
-        alertCodes = alerts,
-        fromDob = fromDob,
-        toDob = toDob,
-        cellLocationPrefix = cellLocationPrefix,
-        incentiveLevelCode = incentiveLevelCode,
-        sort = pageable.sort,
-      ),
-      responseFields,
-    )
-  }
+  ): Page<Prisoner> = searchService.search(
+    prisonId,
+    PrisonersInPrisonRequest(
+      term = term,
+      pagination = PaginationRequest(pageable.pageNumber, pageable.pageSize),
+      alertCodes = alerts,
+      fromDob = fromDob,
+      toDob = toDob,
+      cellLocationPrefix = cellLocationPrefix,
+      incentiveLevelCode = incentiveLevelCode,
+      sort = pageable.sort,
+    ),
+    responseFields,
+  )
 }

@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.PrisonerNumbers
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
@@ -29,6 +30,7 @@ class PrisonerSearchService(
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
+  private val responseFieldsValidator: ResponseFieldsValidator,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -95,6 +97,8 @@ class PrisonerSearchService(
     includeRestrictedPatients: Boolean = false,
     responseFields: List<String>? = null,
   ): Page<Prisoner> {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
+
     queryBy(
       prisonId,
       pageable,
@@ -133,12 +137,14 @@ class PrisonerSearchService(
 
   private fun <T> queryBy(
     searchCriteria: T,
+    responseFields: List<String>? = null,
     queryBuilder: (searchCriteria: T) -> BoolQueryBuilder?,
   ): Result {
     val query = queryBuilder(searchCriteria)
     return query?.let {
       val searchSourceBuilder = SearchSourceBuilder().apply {
         size(RESULT_HITS_MAX)
+        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
         query(it)
       }
       val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
@@ -330,7 +336,9 @@ class PrisonerSearchService(
     return searchHits.map { gson.fromJson(it.sourceAsString, Prisoner::class.java) }
   }
 
-  fun findBy(criteria: PrisonerListCriteria<Any>): List<Prisoner> {
+  fun findBy(criteria: PrisonerListCriteria<Any>, responseFields: List<String>? = null): List<Prisoner> {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
+
     with(criteria) {
       if (!isValid()) {
         with("Invalid search  - please provide a minimum of 1 and a maximum of 1000 $type") {
@@ -339,7 +347,7 @@ class PrisonerSearchService(
         }
       }
 
-      queryBy(criteria) { matchByIds(it) } onMatch {
+      queryBy(criteria, responseFields) { matchByIds(it) } onMatch {
         customEventForFindBy(type, values().size, it.matches.size)
         return it.matches
       }

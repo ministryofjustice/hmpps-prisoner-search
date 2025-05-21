@@ -6,6 +6,7 @@ import org.springframework.data.elasticsearch.annotations.Field
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.TypeMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.genericType
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import kotlin.collections.flatMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -29,7 +30,9 @@ class AttributeResolver {
 }
 
 class ResponseFieldsValidator(private val allResponseFields: List<String> = emptyList<String>()) {
-  fun findMissing(responseFields: List<String>) = responseFields - allResponseFields
+  fun validate(responseFields: List<String>) = (responseFields - allResponseFields)
+    .takeIf { it.isNotEmpty() }
+    ?.run { throw BadRequestException("Invalid response fields requested: $this") }
 }
 
 // Add each object to the list of response fields, e.g. "currentIncentive.code" -> listOf("currentIncentive", "currentIncentive.code")
@@ -151,6 +154,7 @@ private fun KProperty1<*, *>.getPropertyType(): PropertyType = when {
       else -> PropertyType.LIST_OBJECTS
     }
   }
+
   returnType.classifier in TypeMatcher.getSupportedTypes() -> PropertyType.SUPPORTED_TYPE
   else -> PropertyType.OBJECT
 }
