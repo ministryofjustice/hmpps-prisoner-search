@@ -95,7 +95,15 @@ class PrisonerSearchResource(
     description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
   )
   @Tag(name = "Batch")
-  fun findByIds(@Parameter(required = true) @Valid @RequestBody criteria: BookingIds) = prisonerSearchService.findBy(criteria)
+  fun findByIds(
+    @Parameter(required = true) @Valid @RequestBody criteria: BookingIds,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
+  ): List<Prisoner> = prisonerSearchService.findBy(criteria, responseFields)
 
   @PostMapping("/release-date-by-prison")
   @Operation(
