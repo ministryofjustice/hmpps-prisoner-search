@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IdentifierBuilde
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.IncentiveLevelBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PrisonersInPrisonRequest
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -469,5 +470,74 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         .expectBody(responseType)
         .returnResult().responseBody!!
     }
+  }
+
+  @DisplayName("Match Prisoners search")
+  @Nested
+  inner class MatchPrisonersSearch {
+
+    @Test
+    fun `should return bad request for unknown fields`() {
+      val searchCriteria = SearchCriteria(prisonerIdentifier = "A1234AA", firstName = null, lastName = null)
+
+      with(searchError(searchCriteria, responseFields = listOf("prisonerNumber", "doesNotExist"))) {
+        assertThat(status).isEqualTo(400)
+        assertThat(userMessage).contains("Invalid response fields")
+        assertThat(userMessage).contains("doesNotExist")
+      }
+    }
+
+    @Test
+    fun `should return requested response fields only - by prison identifier`() {
+      val searchCriteria = SearchCriteria(prisonerIdentifier = "A1234AA", firstName = null, lastName = null)
+
+      with(searchOk(searchCriteria, responseFields = listOf("prisonerNumber", "lastName"))) {
+        assertThat(this[0].prisonerNumber).isEqualTo("A1234AA")
+        assertThat(this[0].firstName).isNull()
+        assertThat(this[0].lastName).isEqualTo("JONES")
+      }
+    }
+
+    @Test
+    fun `should return requested response fields only - by name`() {
+      val searchCriteria = SearchCriteria(prisonerIdentifier = null, firstName = "SMITH", lastName = "JONES")
+
+      with(searchOk(searchCriteria, responseFields = listOf("prisonerNumber", "lastName"))) {
+        assertThat(this[0].prisonerNumber).isEqualTo("A1234AA")
+        assertThat(this[0].firstName).isNull()
+        assertThat(this[0].lastName).isEqualTo("JONES")
+      }
+    }
+
+    @Test
+    fun `should return requested response fields only - by name with aliases`() {
+      val searchCriteria = SearchCriteria(prisonerIdentifier = null, firstName = "SMITH", lastName = "JONES", includeAliases = true)
+
+      with(searchOk(searchCriteria, responseFields = listOf("prisonerNumber", "lastName"))) {
+        assertThat(this[0].prisonerNumber).isEqualTo("A1234AA")
+        assertThat(this[0].firstName).isNull()
+        assertThat(this[0].lastName).isEqualTo("JONES")
+      }
+    }
+
+    private fun searchOk(searchCriteria: SearchCriteria, responseFields: List<String>? = null): List<Prisoner> = search(searchCriteria, responseFields)
+      .expectStatus().isOk
+      .expectBody(object : ParameterizedTypeReference<List<Prisoner>>() {})
+      .returnResult().responseBody!!
+
+    private fun searchError(searchCriteria: SearchCriteria, responseFields: List<String>? = null, status: HttpStatus = HttpStatus.BAD_REQUEST): ErrorResponse = search(searchCriteria, responseFields)
+      .expectStatus().isEqualTo(status)
+      .expectBody(ErrorResponse::class.java)
+      .returnResult().responseBody!!
+
+    private fun search(searchCriteria: SearchCriteria, responseFields: List<String>? = null) = webTestClient.post()
+      .uri {
+        it.path("/prisoner-search/match-prisoners")
+          .queryParam("responseFields", responseFields)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .bodyValue(searchCriteria)
+      .exchange()
   }
 }

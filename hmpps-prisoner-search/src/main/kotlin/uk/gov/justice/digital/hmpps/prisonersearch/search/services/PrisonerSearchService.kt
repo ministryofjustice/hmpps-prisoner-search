@@ -37,22 +37,23 @@ class PrisonerSearchService(
     const val RESULT_HITS_MAX = 1000
   }
 
-  fun findBySearchCriteria(searchCriteria: SearchCriteria): List<Prisoner> {
+  fun findBySearchCriteria(searchCriteria: SearchCriteria, responseFields: List<String>? = null): List<Prisoner> {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
     validateSearchForm(searchCriteria)
     if (searchCriteria.prisonerIdentifier != null) {
-      queryBy(searchCriteria) { idMatch(it) } onMatch {
+      queryBy(searchCriteria, responseFields) { idMatch(it) } onMatch {
         customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
         return it.matches
       }
     }
     if (!(searchCriteria.firstName.isNullOrBlank() && searchCriteria.lastName.isNullOrBlank())) {
       if (searchCriteria.includeAliases) {
-        queryBy(searchCriteria) { nameMatchWithAliases(it) } onMatch {
+        queryBy(searchCriteria, responseFields) { nameMatchWithAliases(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return it.matches
         }
       } else {
-        queryBy(searchCriteria) { nameMatch(it) } onMatch {
+        queryBy(searchCriteria, responseFields) { nameMatch(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return it.matches
         }
