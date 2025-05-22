@@ -58,7 +58,15 @@ class PrisonerSearchResource(
   )
   @Tag(name = "Matching")
   @Tag(name = "Popular")
-  fun findByCriteria(@Parameter(required = true) @RequestBody searchCriteria: SearchCriteria) = prisonerSearchService.findBySearchCriteria(searchCriteria)
+  fun findByCriteria(
+    @Parameter(required = true) @RequestBody searchCriteria: SearchCriteria,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
+  ) = prisonerSearchService.findBySearchCriteria(searchCriteria, responseFields)
 
   @PostMapping("/possible-matches")
   @Operation(
