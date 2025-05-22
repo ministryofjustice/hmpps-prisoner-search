@@ -122,12 +122,15 @@ class PrisonerSearchService(
 
   private fun queryBy(
     searchCriteria: SearchCriteria,
+    responseFields: List<String>? = null,
     queryBuilder: (searchCriteria: SearchCriteria) -> BoolQueryBuilder?,
   ): Result {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
     val query = queryBuilder(searchCriteria)
     return query?.let {
       val searchSourceBuilder = SearchSourceBuilder().apply {
         query(query.withDefaults(searchCriteria))
+        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
         size(RESULT_HITS_MAX)
       }
       val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
