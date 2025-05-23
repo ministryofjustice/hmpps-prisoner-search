@@ -122,9 +122,15 @@ class PrisonerSearchResource(
   @Tag(name = "Specific use case")
   fun findByReleaseDateAndPrison(
     @Parameter(required = true) @Valid @RequestBody criteria: ReleaseDateSearch,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
     @ParameterObject @PageableDefault
     pageable: Pageable,
-  ) = prisonerSearchService.findByReleaseDate(criteria, pageable)
+  ) = prisonerSearchService.findByReleaseDate(criteria, pageable, responseFields)
 
   @GetMapping("/prison/{prisonId}")
   @Operation(
