@@ -78,7 +78,15 @@ class PrisonerSearchResource(
        """,
   )
   @Tag(name = "Matching")
-  fun findPossibleMatchesBySearchCriteria(@Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria) = prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria)
+  fun findPossibleMatchesBySearchCriteria(
+    @Parameter(required = true) @RequestBody searchCriteria: PossibleMatchCriteria,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
+  ) = prisonerSearchService.findPossibleMatchesBySearchCriteria(searchCriteria, responseFields)
 
   @PostMapping("/prisoner-numbers")
   @Operation(

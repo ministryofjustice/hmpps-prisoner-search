@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
@@ -135,4 +136,60 @@ class PossibleMatchesSearchResourceTest : AbstractSearchDataIntegrationTest() {
       "/results/possibleMatches/multiple_results.json",
     )
   }
+
+  @Test
+  fun `should return bad request for invalid response fields`() {
+    val search = PossibleMatchCriteria(null, null, null, null, "A7089FA")
+    webTestClient.possibleMatch(search, listOf("prisonerNumber", "doesNotExist"))
+      .expectStatus().isBadRequest
+      .expectBody()
+      .jsonPath("developerMessage").isEqualTo("Invalid response fields requested: [doesNotExist]")
+  }
+
+  @Test
+  fun `should only return requested response fields - by noms number`() {
+    val search = PossibleMatchCriteria(null, null, null, null, "A7089FA")
+    webTestClient.possibleMatch(search, listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].prisonerNumber").isEqualTo("A7089FA")
+      .jsonPath("$[0].lastName").isEqualTo("DAVIES")
+      .jsonPath("$[0].firstName").doesNotExist()
+  }
+
+  @Test
+  fun `should only return requested response fields - by pnc number`() {
+    val search = PossibleMatchCriteria(null, null, null, "2015/001234S", null)
+    webTestClient.possibleMatch(search, listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].prisonerNumber").isEqualTo("A9999AA")
+      .jsonPath("$[0].lastName").isEqualTo("BOOTH")
+      .jsonPath("$[0].firstName").doesNotExist()
+  }
+
+  @Test
+  fun `should only return requested response fields - by last name and date of birth`() {
+    val search = PossibleMatchCriteria(null, "Davies", LocalDate.of(1990, 1, 31), null, null)
+    webTestClient.possibleMatch(search, listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].prisonerNumber").isEqualTo("A7089FA")
+      .jsonPath("$[0].lastName").isEqualTo("DAVIES")
+      .jsonPath("$[0].firstName").doesNotExist()
+  }
+
+  private fun WebTestClient.possibleMatch(search: PossibleMatchCriteria, responseFields: List<String>) = post()
+    .uri {
+      it.path("/prisoner-search/possible-matches")
+        .queryParam("responseFields", responseFields)
+        .build()
+    }
+    .body(BodyInserters.fromValue(gson.toJson(search)))
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
 }
