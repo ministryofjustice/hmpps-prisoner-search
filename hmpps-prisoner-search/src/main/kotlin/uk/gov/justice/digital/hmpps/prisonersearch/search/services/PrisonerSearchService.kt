@@ -83,9 +83,10 @@ class PrisonerSearchService(
     return result.distinctBy { it.prisonerNumber }
   }
 
-  fun findByReleaseDate(searchCriteria: ReleaseDateSearch, pageable: Pageable): Page<Prisoner> {
+  fun findByReleaseDate(searchCriteria: ReleaseDateSearch, pageable: Pageable, responseFields: List<String>? = null): Page<Prisoner> {
     searchCriteria.validate()
-    queryBy(searchCriteria, pageable) { releaseDateMatch(it) } onMatch {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
+    queryBy(searchCriteria, pageable, responseFields) { releaseDateMatch(it) } onMatch {
       customEventForFindByReleaseDate(searchCriteria, it.matches.size)
       return PageImpl(it.matches, pageable, it.totalHits)
     }
@@ -160,6 +161,7 @@ class PrisonerSearchService(
   private fun queryBy(
     searchCriteria: ReleaseDateSearch,
     pageable: Pageable,
+    responseFields: List<String>? = null,
     queryBuilder: (searchCriteria: ReleaseDateSearch) -> BoolQueryBuilder?,
   ): GlobalResult {
     val query = queryBuilder(searchCriteria)
@@ -171,6 +173,7 @@ class PrisonerSearchService(
         sort("_score")
         sort("prisonerNumber")
         trackTotalHits(true)
+        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       }
       val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val searchResults = searchClient.search(searchRequest)

@@ -128,4 +128,42 @@ class PrisonerSearchByReleaseDateResourceTest : AbstractSearchDataIntegrationTes
       "/results/releaseDateSearch/search_date_range_pagination_page_2.json",
     )
   }
+
+  @Test
+  fun `should return bad request for invalid response fields`() {
+    webTestClient.post()
+      .uri {
+        it.path("/prisoner-search/release-date-by-prison")
+          .queryParam("responseFields", listOf("prisonerNumber", "doesNotExist"))
+          .build()
+      }
+      .body(BodyInserters.fromValue(gson.toJson(ReleaseDateSearch(latestReleaseDate = LocalDate.now()))))
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isBadRequest
+      .expectBody()
+      .jsonPath("developerMessage").isEqualTo("Invalid response fields requested: [doesNotExist]")
+  }
+
+  @Test
+  fun `should only return requested response fields`() {
+    val search = ReleaseDateSearch(earliestReleaseDate = LocalDate.parse("2023-05-16"), latestReleaseDate = LocalDate.parse("2023-05-16"))
+    webTestClient.post()
+      .uri {
+        it.path("/prisoner-search/release-date-by-prison")
+          .queryParam("responseFields", listOf("prisonerNumber", "lastName"))
+          .build()
+      }
+      .body(BodyInserters.fromValue(gson.toJson(search)))
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("content.length()").isEqualTo(1)
+      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+      .jsonPath("content[0].lastName").isEqualTo("SMITH")
+      .jsonPath("content[0].firstName").doesNotExist()
+  }
 }
