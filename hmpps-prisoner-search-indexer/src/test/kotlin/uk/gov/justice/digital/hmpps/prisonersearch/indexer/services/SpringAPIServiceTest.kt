@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,6 +38,6 @@ import kotlin.annotation.AnnotationTarget.CLASS
 )
 @ActiveProfiles("test")
 @EnableWebFlux
-@SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class])
+@SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class, OAuth2ClientWebSecurityAutoConfiguration::class])
 @BootstrapWith(SpringBootTestContextBootstrapper::class)
 annotation class SpringAPIServiceTest

@@ -30,7 +30,7 @@ class PrisonerDifferencesRepositoryTest {
     val prisonerDifferences = repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[]"))
     assertThat(prisonerDifferences.nomsNumber).isEqualTo("A1111AA")
 
-    val saved = repository.findByIdOrNull(prisonerDifferences.prisonerDifferencesId)
+    val saved = repository.findByIdOrNull(prisonerDifferences.prisonerDifferencesId!!)
     assertThat(saved?.differences).isEqualTo("[]")
   }
 
