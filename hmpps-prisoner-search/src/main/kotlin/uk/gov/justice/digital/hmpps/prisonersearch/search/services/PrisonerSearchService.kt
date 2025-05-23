@@ -63,7 +63,8 @@ class PrisonerSearchService(
     return emptyList()
   }
 
-  fun findPossibleMatchesBySearchCriteria(searchCriteria: PossibleMatchCriteria): List<Prisoner> {
+  fun findPossibleMatchesBySearchCriteria(searchCriteria: PossibleMatchCriteria, responseFields: List<String>? = null): List<Prisoner> {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
     if (!searchCriteria.isValid()) {
       with("Invalid search  - please provide at least 1 search parameter") {
         log.warn(this)
@@ -72,13 +73,13 @@ class PrisonerSearchService(
     }
     val result = mutableListOf<Prisoner>()
     if (searchCriteria.nomsNumber != null) {
-      result += queryBy(searchCriteria.nomsNumber.uppercase()) { fieldMatch("prisonerNumber", it) }.collect()
+      result += queryBy(searchCriteria.nomsNumber.uppercase(), responseFields) { fieldMatch("prisonerNumber", it) }.collect()
     }
     if (searchCriteria.pncNumber != null) {
-      result += queryBy(searchCriteria.pncNumber) { pncMatch(it) }.collect()
+      result += queryBy(searchCriteria.pncNumber, responseFields) { pncMatch(it) }.collect()
     }
     if (searchCriteria.lastName != null && searchCriteria.dateOfBirth != null) {
-      result += queryBy(searchCriteria) { nameMatchWithAliasesAndDob(it) }.collect()
+      result += queryBy(searchCriteria, responseFields) { nameMatchWithAliasesAndDob(it) }.collect()
     }
     return result.distinctBy { it.prisonerNumber }
   }
