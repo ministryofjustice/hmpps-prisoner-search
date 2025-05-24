@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.times
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.Gender
@@ -475,4 +475,60 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
       "/results/globalSearch/search_results_sam_pagination3.json",
     )
   }
+
+  @Test
+  fun `should return bad request for invalid response fields`() {
+    val search = GlobalSearchCriteria("A7089EY", null, null, null, null, null)
+    webTestClient.globalSearch(search, listOf("prisonerNumber", "doesNotExist"))
+      .expectStatus().isBadRequest
+      .expectBody()
+      .jsonPath("developerMessage").isEqualTo("Invalid response fields requested: [doesNotExist]")
+  }
+
+  @Test
+  fun `should only return requested response fields - by prisoner number`() {
+    val search = GlobalSearchCriteria("A7089EY", null, null, null, null, null)
+    webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("content.length()").isEqualTo(1)
+      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+      .jsonPath("content[0].lastName").isEqualTo("SMITH")
+      .jsonPath("content[0].firstName").doesNotExist()
+  }
+
+  @Test
+  fun `should only return requested response fields - by first and last name`() {
+    val search = GlobalSearchCriteria(null, "john", "smith", null, null, null)
+    webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("content.length()").isEqualTo(1)
+      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+      .jsonPath("content[0].lastName").isEqualTo("SMITH")
+      .jsonPath("content[0].firstName").doesNotExist()
+  }
+
+  @Test
+  fun `should only return requested response fields - include aliases`() {
+    val search = GlobalSearchCriteria(null, "master", "cordian", null, null, null, true)
+    webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("content.length()").isEqualTo(1)
+      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EZ")
+      .jsonPath("content[0].lastName").isEqualTo("SMYTH")
+      .jsonPath("content[0].firstName").doesNotExist()
+  }
+
+  private fun WebTestClient.globalSearch(search: GlobalSearchCriteria, responseFields: List<String>) = post()
+    .uri {
+      it.path("/global-search")
+        .queryParam("responseFields", responseFields)
+        .build()
+    }
+    .body(BodyInserters.fromValue(gson.toJson(search)))
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
 }
