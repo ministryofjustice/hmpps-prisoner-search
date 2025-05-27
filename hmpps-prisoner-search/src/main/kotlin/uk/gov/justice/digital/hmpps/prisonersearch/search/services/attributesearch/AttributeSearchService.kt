@@ -29,17 +29,19 @@ class AttributeSearchService(
   private val attributes: Attributes,
   private val elasticsearchClient: SearchClient,
   private val mapper: ObjectMapper,
+  private val responseFieldsValidator: ResponseFieldsValidator,
   private val telemetryClient: TelemetryClient,
 ) {
 
-  fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.ofSize(10)): Page<Prisoner> {
+  fun search(request: AttributeSearchRequest, pageable: Pageable = Pageable.ofSize(10), responseFields: List<String>? = null): Page<Prisoner> {
     log.info("searchByAttributes called with request: $request, pageable: $pageable")
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
     val telemetryMap = mutableMapOf("query" to request.toString(), "pageable" to pageable.toString())
 
     return try {
       request.validate(attributes)
       buildQuery(request)
-        .search(pageable, telemetryMap)
+        .search(pageable, telemetryMap, responseFields)
         .respond(pageable)
         .also { telemetryClient.trackEvent("POSAttributeSearch", telemetryMap, null) }
     } catch (e: Exception) {
@@ -58,8 +60,8 @@ class AttributeSearchService(
     }
   }
 
-  private fun BoolQueryBuilder.search(pageable: Pageable, telemetryMap: MutableMap<String, String>): SearchResponse {
-    val searchSourceBuilder = pageable.searchSourceBuilder(this)
+  private fun BoolQueryBuilder.search(pageable: Pageable, telemetryMap: MutableMap<String, String>, responseFields: List<String>? = null): SearchResponse {
+    val searchSourceBuilder = pageable.searchSourceBuilder(this, responseFields)
     val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
     return elasticsearchClient.search(searchRequest)
       .also {
@@ -74,7 +76,7 @@ class AttributeSearchService(
   private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> = hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
     .let { PageImpl(it, pageable, hits.totalHits?.value ?: 0) }
 
-  private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder): SearchSourceBuilder {
+  private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder, responseFields: List<String>? = null): SearchSourceBuilder {
     val sortBuilders = sort.map {
       FieldSortBuilder(getSortableAttribute(it)).order(SortOrder.fromString(it.direction.name))
     }.toList()
@@ -82,6 +84,7 @@ class AttributeSearchService(
       query(queryBuilder)
       size(pageSize)
       from(offset.toInt())
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       sortBuilders.takeIf { it.isNotEmpty() }
         ?.forEach { sort(it) }
         ?: sort("prisonerNumber")

@@ -206,6 +206,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("true")
           },
           any(),
+          isNull(),
         )
       }
 
@@ -220,6 +221,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$today")
           },
           any(),
+          isNull(),
         )
       }
 
@@ -234,6 +236,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("$now")
           },
           any(),
+          isNull(),
         )
       }
 
@@ -248,6 +251,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as StringMatcher).searchTerm).isEqualTo("1234")
           },
           any(),
+          isNull(),
         )
       }
     }
@@ -305,6 +309,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isTrue()
           },
           any(),
+          isNull(),
         )
       }
 
@@ -337,6 +342,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isTrue()
           },
           any(),
+          isNull(),
         )
       }
 
@@ -351,6 +357,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as BooleanMatcher).condition).isFalse()
           },
           any(),
+          isNull(),
         )
       }
 
@@ -428,6 +435,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as DateMatcher).minValue?.year).isEqualTo(1970)
           },
           any(),
+          isNull(),
         )
       }
 
@@ -442,6 +450,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as DateMatcher).maxValue).isEqualTo(now.toLocalDate())
           },
           any(),
+          isNull(),
         )
       }
 
@@ -636,6 +645,7 @@ class AttributeSearchResourceTest : AbstractSearchDataIntegrationTest() {
             assertThat((it.queries.first().matchers?.first() as IntMatcher).minValue).isEqualTo(140)
           },
           any(),
+          isNull(),
         )
       }
 
