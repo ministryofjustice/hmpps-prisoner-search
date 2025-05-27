@@ -1935,13 +1935,47 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
     }
   }
 
-  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) = post()
-    .uri("/attribute-search")
+  @Nested
+  inner class ResponseFields {
+    @Test
+    fun `should return bad request for invalid response fields`() {
+      webTestClient.attributeSearch(
+        RequestDsl { query { stringMatcher("prisonerNumber" IS "P1") } },
+        listOf("prisonerNumber", "doesNotExist"),
+      )
+        .expectStatus().isBadRequest
+        .expectBody().jsonPath("userMessage").value<String> {
+          assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+        }
+    }
+
+    @Test
+    fun `should only return requested response fields`() {
+      webTestClient.attributeSearch(
+        RequestDsl { query { stringMatcher("prisonerNumber" IS "P1") } },
+        listOf("prisonerNumber", "dateOfBirth"),
+      )
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("P1")
+        .jsonPath("content[0].dateOfBirth").isEqualTo("1990-01-01")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+  }
+
+  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest) = this.attributeSearch(request, listOf())
+    .expectStatus().isOk
+
+  private fun WebTestClient.attributeSearch(request: AttributeSearchRequest, responseFields: List<String>) = post()
+    .uri {
+      it.path("/attribute-search")
+        .queryParam("responseFields", responseFields)
+        .build()
+    }
     .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
     .header("Content-Type", "application/json")
     .bodyValue(objectMapper.writeValueAsString(request))
     .exchange()
-    .expectStatus().isOk
 
   private fun WebTestClient.ResponseSpec.expectPrisoners(vararg prisonerNumbers: String) = expectBody()
     .jsonPath("$.content[*].prisonerNumber").value<List<String>> {

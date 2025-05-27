@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.resource.advice.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
@@ -224,7 +225,13 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
   fun attributeSearch(
     @Parameter(required = true) @RequestBody request: AttributeSearchRequest,
     @ParameterObject @PageableDefault pageable: Pageable,
-  ) = attributeSearchService.search(request, pageable)
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
+  ) = attributeSearchService.search(request, pageable, responseFields)
 
   @GetMapping("/attributes")
   @Tag(name = "Attribute search")

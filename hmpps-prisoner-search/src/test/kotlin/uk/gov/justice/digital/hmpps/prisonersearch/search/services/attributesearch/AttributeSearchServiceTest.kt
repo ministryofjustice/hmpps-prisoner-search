@@ -39,8 +39,9 @@ class AttributeSearchServiceTest {
   private val telemetryClient = mock<TelemetryClient>()
   private val elasticsearchClient = mock<SearchClient>()
   private val mapper = mock<ObjectMapper>()
+  private val responseFieldsValidator = mock<ResponseFieldsValidator>()
 
-  private val service = AttributeSearchService(getAttributes(Prisoner::class), elasticsearchClient, mapper, telemetryClient)
+  private val service = AttributeSearchService(getAttributes(Prisoner::class), elasticsearchClient, mapper, responseFieldsValidator, telemetryClient)
 
   @BeforeEach
   fun setUp() {
