@@ -235,6 +235,7 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
 
   @GetMapping("/attributes")
   @Tag(name = "Attribute search")
+  @Tag(name = "Developer information")
   @Operation(
     summary = "Retrieve all attributes supported by the attribute search",
     description = "Returns all attributes that can be passed into the attribute search including their type.",

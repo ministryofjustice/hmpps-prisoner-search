@@ -59,6 +59,7 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
   )
   @GetMapping("/{attribute}")
   @Tag(name = "Reference data")
+  @Tag(name = "Developer information")
   fun referenceData(
     @Valid @PathVariable
     attribute: ReferenceDataAttribute,
@@ -97,5 +98,6 @@ class ReferenceDataResource(private val referenceDataService: ReferenceDataServi
   )
   @GetMapping("/alerts/types")
   @Tag(name = "Reference data")
+  @Tag(name = "Developer information")
   fun alertsReferenceData(): ReferenceDataAlertsResponse = referenceDataService.findAlertsReferenceDataCached()
 }
