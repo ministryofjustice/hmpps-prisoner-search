@@ -27,6 +27,29 @@
     </ul>
     See the schema definition for the API for full details.
   </div>
+  <h3 id="response-fields">Filtering response data</h3>
+  <div>The <strong>Prisoner</strong> object returned from most endpoints has grown very large over time. This has become problematic for a few reasons:
+     <ul>
+      <li>Calls with a large number of results can have exceedingly large payloads returned, sometimes breaking response size limits</li>
+      <li>Some data points aren't suitable for all clients, in particular 3rd parties should not receive data they don't explicitly need</li>
+      <li>Most teams are only interested in a small portion of the response object; the rest is superfluous, noisy and a waste of resource</li>
+    </ul>
+  </div>
+  <p>
+    To address these issues, endpoints that return the <strong>Prisoner</strong> object now support filtering of response data via the
+    <strong>responseFields</strong> query parameter.
+  </p>
+  <p>
+    For example, to only return the prisoner's name and date of birth,
+    you would use query: <strong>/prisoner/A1234BC?responseFields=firstName,lastName,dateOfBirth</strong>
+  </p>
+  <p>
+    Note that it is also possible to specify nested objects or fields from lists of objects, for example:
+    <strong>/prisoner/A1234BC?responseFields=aliases.lastName,currentIncentive.level</strong>
+  </p>
+  <p>
+    To find which fields can be included as <strong>responseFields</strong> call the endpoint <a href="#/Developer information/responseFields" target="_blank">GET /response-fields</a>.
+  </p>
   <h2 id="role-restrictions">Role restrictions</h2>
   <p>
     Role restrictions in this service are applied by a `@PreAuthorize` annotation at either resource or service level.
