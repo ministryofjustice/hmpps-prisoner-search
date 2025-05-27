@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
@@ -84,6 +85,25 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
   @Test
   fun `can perform a get on prisoner number for role PRISONER_SEARCH__PRISONER__RO`() {
     getPrisonerSearchCorePerson("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
+  }
+
+  @Test
+  fun `should return bad request for get prisoner with invalid response fields`() {
+    webTestClient.getPrisoner("A7089EY", listOf("prisonerNumber", "doesNotExist"))
+      .expectStatus().isBadRequest
+      .expectBody().jsonPath("userMessage").value<String> {
+        assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+      }
+  }
+
+  @Test
+  fun `should only return requested response fields`() {
+    webTestClient.getPrisoner("A7089EY", listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("prisonerNumber").isEqualTo("A7089EY")
+      .jsonPath("lastName").isEqualTo("SMITH")
+      .jsonPath("firstName").doesNotExist()
   }
 
   @Test
@@ -529,6 +549,16 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
     }
     .body(BodyInserters.fromValue(gson.toJson(search)))
     .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
+
+  private fun WebTestClient.getPrisoner(prisonNumber: String, responseFields: List<String>) = get()
+    .uri {
+      it.path("/prisoner/{id}")
+        .queryParam("responseFields", responseFields)
+        .build(prisonNumber)
+    }
+    .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
     .header("Content-Type", "application/json")
     .exchange()
 }

@@ -63,6 +63,14 @@ class GlobalSearchResource(
     security = [SecurityRequirement(name = "view-prisoner-data-role"), SecurityRequirement(name = "prisoner-search-role")],
   )
   @Tag(name = "Popular")
-  fun findByPrisonNumber(@PathVariable id: String): Prisoner? = prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null)).firstOrNull()
+  fun findByPrisonNumber(
+    @PathVariable id: String,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
+  ): Prisoner? = prisonerSearchService.findBySearchCriteria(SearchCriteria(id, null, null), responseFields).firstOrNull()
     ?: throw NotFoundException("$id not found")
 }
