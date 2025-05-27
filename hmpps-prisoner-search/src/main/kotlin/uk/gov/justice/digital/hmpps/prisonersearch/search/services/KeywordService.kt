@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.KeywordRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.SearchType
@@ -33,6 +34,7 @@ class KeywordService(
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
+  private val responseFieldsValidator: ResponseFieldsValidator,
   @Value("\${search.keyword.max-results}") private val maxSearchResults: Int = 200,
   @Value("\${search.keyword.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
@@ -47,11 +49,12 @@ class KeywordService(
     }
   }
 
-  fun findByKeyword(keywordRequest: KeywordRequest): Page<Prisoner> {
+  fun findByKeyword(keywordRequest: KeywordRequest, responseFields: List<String>? = null): Page<Prisoner> {
     log.info("Received keyword request ${gson.toJson(keywordRequest)}")
 
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
     validateKeywordRequest(keywordRequest)
-    val searchSourceBuilder = createSourceBuilder(keywordRequest)
+    val searchSourceBuilder = createSourceBuilder(keywordRequest, responseFields)
     val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
 
     // Useful for logging the JSON elastic search query that is executed
@@ -67,7 +70,7 @@ class KeywordService(
     }
   }
 
-  private fun createSourceBuilder(keywordRequest: KeywordRequest): SearchSourceBuilder {
+  private fun createSourceBuilder(keywordRequest: KeywordRequest, responseFields: List<String>? = null): SearchSourceBuilder {
     val pageable = PageRequest.of(keywordRequest.pagination.page, keywordRequest.pagination.size)
     return SearchSourceBuilder().apply {
       timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
@@ -75,6 +78,7 @@ class KeywordService(
       from(pageable.offset.toInt())
       trackTotalHits(true)
       query(buildKeywordQuery(keywordRequest))
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       when (keywordRequest.type) {
         SearchType.DEFAULT -> {
           sort("_score")
