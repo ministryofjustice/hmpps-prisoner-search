@@ -8,6 +8,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
@@ -108,6 +109,57 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
         "/results/restrictedPatientsSearch/search_results_hosp_patient_one.json",
       )
     }
+
+    @Test
+    fun `should return bad request for invalid response fields`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria("A9999RB", null, null), listOf("prisonerNumber", "doesNotExist"))
+        .expectStatus().isBadRequest
+        .expectBody().jsonPath("userMessage").value<String> {
+          assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+        }
+    }
+
+    @Test
+    fun `should only return requested response fields - by empty search criteria`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, null, null), listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content.length()").isEqualTo(4)
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A7090BF")
+        .jsonPath("content[0].lastName").isEqualTo("FELLOWS")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields - by prisoner identifier`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria("A9999RB", null, null), listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RB")
+        .jsonPath("content[0].lastName").isEqualTo("PATIENTONE")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields - by name`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, "hosp", "patienttwo"), listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RC")
+        .jsonPath("content[0].lastName").isEqualTo("PATIENTTWO")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    private fun WebTestClient.matchRestrictedPatients(criteria: RestrictedPatientSearchCriteria, responseFields: List<String>) = post()
+      .uri {
+        it.path("/restricted-patient-search/match-restricted-patients")
+          .queryParam("responseFields", responseFields)
+          .build()
+      }
+      .body(BodyInserters.fromValue(gson.toJson(criteria)))
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
   }
 
   @Nested

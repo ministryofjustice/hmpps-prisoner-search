@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 
 @Service
@@ -24,26 +25,27 @@ class RestrictedPatientSearchService(
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
+  private val responseFieldsValidator: ResponseFieldsValidator,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun findBySearchCriteria(searchCriteria: RestrictedPatientSearchCriteria, pageable: Pageable): Page<Prisoner> {
+  fun findBySearchCriteria(searchCriteria: RestrictedPatientSearchCriteria, pageable: Pageable, responseFields: List<String>? = null): Page<Prisoner> {
     if (searchCriteria.isEmpty()) {
-      queryBy(searchCriteria, pageable) { anyMatch() } onMatch {
+      queryBy(searchCriteria, pageable, responseFields) { anyMatch() } onMatch {
         customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
         return PageImpl(it.matches, pageable, it.totalHits)
       }
     } else {
       if (searchCriteria.prisonerIdentifier != null) {
-        queryBy(searchCriteria, pageable) { idMatch(it) } onMatch {
+        queryBy(searchCriteria, pageable, responseFields) { idMatch(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
         }
       }
       if (!(searchCriteria.firstName.isNullOrBlank() && searchCriteria.lastName.isNullOrBlank())) {
-        queryBy(searchCriteria, pageable) { nameMatchWithAliases(it) } onMatch {
+        queryBy(searchCriteria, pageable, responseFields) { nameMatchWithAliases(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
         }
@@ -56,8 +58,10 @@ class RestrictedPatientSearchService(
   private fun queryBy(
     searchCriteria: RestrictedPatientSearchCriteria,
     pageable: Pageable,
+    responseFields: List<String>? = null,
     queryBuilder: (searchCriteria: RestrictedPatientSearchCriteria) -> BoolQueryBuilder?,
   ): RestrictedPatientResult {
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
     val query = queryBuilder(searchCriteria)
     return query?.let {
       val searchSourceBuilder = SearchSourceBuilder().apply {
@@ -65,6 +69,7 @@ class RestrictedPatientSearchService(
         size(pageable.pageSize)
         from(pageable.offset.toInt())
         sort("prisonerNumber")
+        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       }
       val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val searchResults = searchClient.search(searchRequest)
