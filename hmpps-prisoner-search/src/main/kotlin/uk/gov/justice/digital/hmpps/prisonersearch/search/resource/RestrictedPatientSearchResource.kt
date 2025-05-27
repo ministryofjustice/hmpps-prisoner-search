@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchService
@@ -31,7 +32,13 @@ class RestrictedPatientSearchResource(private val restrictedPatientSearchService
   @Tag(name = "Specific use case")
   fun findByCriteria(
     @Parameter(required = true) @RequestBody searchCriteria: RestrictedPatientSearchCriteria,
+    @RequestParam(value = "responseFields", required = false)
+    @Parameter(
+      description = "A list of fields to populate on the Prisoner record returned in the response. An empty list defaults to all fields.",
+      example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
+    )
+    responseFields: List<String>? = null,
     @ParameterObject @PageableDefault
     pageable: Pageable,
-  ) = restrictedPatientSearchService.findBySearchCriteria(searchCriteria, pageable)
+  ) = restrictedPatientSearchService.findBySearchCriteria(searchCriteria, pageable, responseFields)
 }

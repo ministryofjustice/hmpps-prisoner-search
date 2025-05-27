@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
@@ -67,6 +68,36 @@ class PrisonerDetailResourceTest : AbstractSearchDataIntegrationTest() {
       .exchange()
       .expectStatus().isOk
   }
+
+  @Test
+  fun `should return bad request for invalid response fields`() {
+    webTestClient.prisonerDetailSearch(PrisonerDetailRequest(nomsNumber = "A7089EY", prisonIds = listOf("MDI")), listOf("prisonerNumber", "doesNotExist"))
+      .expectStatus().isBadRequest
+      .expectBody().jsonPath("userMessage").value<String> {
+        assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+      }
+  }
+
+  @Test
+  fun `should only return requested response fields`() {
+    webTestClient.prisonerDetailSearch(PrisonerDetailRequest(nomsNumber = "A7089EY", prisonIds = listOf("MDI")), listOf("prisonerNumber", "lastName"))
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+      .jsonPath("content[0].lastName").isEqualTo("SMITH")
+      .jsonPath("content[0].firstName").doesNotExist()
+  }
+
+  private fun WebTestClient.prisonerDetailSearch(request: PrisonerDetailRequest, responseFields: List<String>) = post()
+    .uri {
+      it.path("/prisoner-detail")
+        .queryParam("responseFields", responseFields)
+        .build()
+    }
+    .body(BodyInserters.fromValue(gson.toJson(request)))
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
 
   @Test
   fun `find by whole prisoner number`() {
