@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PhysicalDetailRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
@@ -32,6 +33,7 @@ class PhysicalDetailService(
   private val gson: Gson,
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
+  private val responseFieldsValidator: ResponseFieldsValidator,
   @Value("\${search.detailed.max-results}") private val maxSearchResults: Int = 200,
   @Value("\${search.detailed.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
@@ -63,11 +65,12 @@ class PhysicalDetailService(
     }
   }
 
-  fun findByPhysicalDetail(detailRequest: PhysicalDetailRequest): Page<Prisoner> {
+  fun findByPhysicalDetail(detailRequest: PhysicalDetailRequest, responseFields: List<String>? = null): Page<Prisoner> {
     log.info("Received physical detail search request {}", gson.toJson(detailRequest))
 
     validateDetailRequest(detailRequest)
-    val searchSourceBuilder = createSourceBuilder(detailRequest)
+    responseFields?.run { responseFieldsValidator.validate(responseFields) }
+    val searchSourceBuilder = createSourceBuilder(detailRequest, responseFields)
     val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
 
     // Useful for logging the JSON elastic search query that is executed
@@ -84,12 +87,13 @@ class PhysicalDetailService(
     }
   }
 
-  private fun createSourceBuilder(detailRequest: PhysicalDetailRequest): SearchSourceBuilder {
+  private fun createSourceBuilder(detailRequest: PhysicalDetailRequest, responseFields: List<String>? = null): SearchSourceBuilder {
     val pageable = PageRequest.of(detailRequest.pagination.page, detailRequest.pagination.size)
     return SearchSourceBuilder().apply {
       timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
       size(pageable.pageSize.coerceAtMost(maxSearchResults))
       from(pageable.offset.toInt())
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       sort("_score")
       sort("prisonerNumber")
       minScore(0.01f) // needed so we exclude prisoners who are just matched by prison / cell location

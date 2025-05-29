@@ -258,6 +258,49 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
     expectedPrisoners = listOf("H7089EY", "H7090BB"),
   )
 
+  @Test
+  fun `bad request when invalid response fields requested`() {
+    webTestClient.post()
+      .uri {
+        it.path("/physical-detail")
+          .queryParam("responseFields", listOf("prisonerNumber", "doesNotExist"))
+          .build()
+      }
+      .bodyValue(
+        PhysicalDetailRequest(minHeight = 100, prisonIds = listOf("MDI"), cellLocationPrefix = "ABC-1"),
+      )
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isBadRequest
+      .expectBody().jsonPath("userMessage").value<String> {
+        assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+      }
+  }
+
+  @Test
+  fun `returns requested response fields only`() {
+    webTestClient.post()
+      .uri {
+        it.path("/physical-detail")
+          .queryParam("responseFields", listOf("prisonerNumber", "lastName"))
+          .build()
+      }
+      .bodyValue(PhysicalDetailRequest(minHeight = 100, prisonIds = listOf("MDI"), cellLocationPrefix = "MDI-A"))
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("content.length()").isEqualTo(2)
+      .jsonPath("content[0].prisonerNumber").isEqualTo("H7089EY")
+      .jsonPath("content[0].lastName").isEqualTo("MORALES")
+      .jsonPath("content[0].firstName").doesNotExist()
+      .jsonPath("content[1].prisonerNumber").isEqualTo("H7090BB")
+      .jsonPath("content[1].lastName").isEqualTo("MORALES")
+      .jsonPath("content[1].firstName").doesNotExist()
+  }
+
   @Nested
   inner class `height and weight tests` {
     @Test
