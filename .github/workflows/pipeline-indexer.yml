@@ -56,7 +56,7 @@ jobs:
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/docker_build.yml@v2 # LOCAL VERSION
+    uses: ./.github/workflows/docker_build.yml # LOCAL VERSION
     needs:
       - gradle_verify
       - gradle_common_verify
