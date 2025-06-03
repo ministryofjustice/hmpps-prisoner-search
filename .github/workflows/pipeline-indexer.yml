@@ -1,6 +1,6 @@
 name: Pipeline indexer [test -> build -> deploy]
 on:
-  push:
+  workflow_call:
     branches:
       - '**'
     paths:
