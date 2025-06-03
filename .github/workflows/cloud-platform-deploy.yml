@@ -1,124 +1,141 @@
 name: Cloud Platform Deploy
 description: Deploy to Cloud Platform using Helm
 
-inputs:
-  environment:
-    description: The environment to deploy to (dev/staging/preprod/prod)
-    required: true
-  version:
-    description: The version of the service to deploy
-    required: true
-  api:
-    description: The KUBE_ENV_API
-    required: true
-  cert:
-    description: The KUBE_CERT
-    required: true
-  cluster:
-    description: The KUBE_CLUSTER
-    required: true
-  namespace:
-    description: The KUBE_NAMESPACE
-    required: true
-  token:
-    description: The KUBE_TOKEN
-    required: true
-  k8s_deployment_name:
-    description: "Kubernetes deployment name"
-    required: true
-  changelog_git_paths:
-    default: ""
-    description: When set it will limit the file changes shown in the changelog to the specified paths only. This is useful for multi-project builds where otherwise it will show all changes from all projects.
-    required: false
-  show_changelog:
-    description: Whether the changelog should be sent by slack
-    required: false
-  helm_additional_args:
-    description: any additional helm arguments
-    required: false
-    default: ""
-  helm_timeout:
-    description: helm timeout period
-    required: false
-    default: 5m
-  helm_dir:
-    description: location of helm configuration
-    required: false
-    default: helm_deploy
-  helm_allowlist_groups:
-    description: values for location of allowlist groups file
-    required: false
-  helm_allowlist_version:
-    description: setting for version of allowlist file
-    required: false
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: The environment to deploy to (dev/staging/preprod/prod)
+        required: true
+        type: string
+      version:
+        description: The version of the service to deploy
+        required: true
+        type: string
+      api:
+        description: The KUBE_ENV_API
+        required: true
+        type: string
+      cert:
+        description: The KUBE_CERT
+        required: true
+        type: string
+      cluster:
+        description: The KUBE_CLUSTER
+        required: true
+        type: string
+      namespace:
+        description: The KUBE_NAMESPACE
+        required: true
+        type: string
+      token:
+        description: The KUBE_TOKEN
+        required: true
+        type: string
+      k8s_deployment_name:
+        description: "Kubernetes deployment name"
+        required: true
+        type: string
+      changelog_git_paths:
+        default: ""
+        description: When set it will limit the file changes shown in the changelog to the specified paths only. This is useful for multi-project builds where otherwise it will show all changes from all projects.
+        required: false
+        type: string
+      show_changelog:
+        description: Whether the changelog should be sent by slack
+        required: false
+        type: boolean
+      helm_additional_args:
+        description: any additional helm arguments
+        required: false
+        default: ""
+        type: string
+      helm_timeout:
+        description: helm timeout period
+        required: false
+        default: 5m
+        type: string
+      helm_dir:
+        description: location of helm configuration
+        required: false
+        default: helm_deploy
+        type: string
+      helm_allowlist_groups:
+        description: values for location of allowlist groups file
+        required: false
+        type: string
+      helm_allowlist_version:
+        description: setting for version of allowlist file
+        required: false
+        type: string
 
-outputs:
-  deployment_changelog:
-    description: "The changelog for the deployment"
-    value: ${{ steps.version_history.outputs.deployment_changelog }}
+    outputs:
+      deployment_changelog:
+        description: "The changelog for the deployment"
+        value: ${{ steps.version_history.outputs.deployment_changelog }}
 
-runs:
-  using: composite
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: Authenticate
-      uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/cloud-platform-auth@v2 # WORKFLOW_VERSION
-      with:
-        api: ${{ inputs.api }}
-        cert: ${{ inputs.cert }}
-        cluster: ${{ inputs.cluster }}
-        namespace: ${{ inputs.namespace }}
-        token: ${{ inputs.token }}
+    runs:
+      using: composite
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Authenticate
+          uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/cloud-platform-auth@v2 # WORKFLOW_VERSION
+          with:
+            api: ${{ inputs.api }}
+            cert: ${{ inputs.cert }}
+            cluster: ${{ inputs.cluster }}
+            namespace: ${{ inputs.namespace }}
+            token: ${{ inputs.token }}
 
-    - name: get version history
-      uses: ministryofjustice/hmpps-github-actions/.github/actions/version_history@v2 # WORKFLOW VERSION
-      if: ${{ inputs.show_changelog }}
-      id: version_history
-      with:
-        app_version: ${{ inputs.version }}
-        environment: ${{ inputs.environment }}
-        namespace: ${{ inputs.namespace }}
-        k8s_deployment_name: ${{ inputs.k8s_deployment_name }}
-        changelog_git_paths: ${{ inputs.changelog_git_paths }}
+        - name: get version history
+          uses: ministryofjustice/hmpps-github-actions/.github/actions/version_history@v2 # WORKFLOW VERSION
+          if: ${{ inputs.show_changelog }}
+          id: version_history
+          with:
+            app_version: ${{ inputs.version }}
+            environment: ${{ inputs.environment }}
+            namespace: ${{ inputs.namespace }}
+            k8s_deployment_name: ${{ inputs.k8s_deployment_name }}
+            changelog_git_paths: ${{ inputs.changelog_git_paths }}
 
-    - name: Check for IP_ALLOWLIST_GROUPS_YAML
-      shell: bash
-      id: check-ip-allowlists
-      run: |
-        if [[ -n "${{ inputs.helm_allowlist_groups }}" ]]; then
-          echo "${{ inputs.helm_allowlist_groups }}" | base64 --decode > ./ip-allowlist-groups.yaml
-          echo "ALLOWLIST_GROUPS=--values ./ip-allowlist-groups.yaml" >> $GITHUB_OUTPUT
-        fi
+        - name: Check for IP_ALLOWLIST_GROUPS_YAML
+          shell: bash
+          id: check-ip-allowlists
+          run: |
+            if [[ -n "${{ inputs.helm_allowlist_groups }}" ]]; then
+              echo "${{ inputs.helm_allowlist_groups }}" | base64 --decode > ./ip-allowlist-groups.yaml
+              echo "ALLOWLIST_GROUPS=--values ./ip-allowlist-groups.yaml" >> $GITHUB_OUTPUT
+            fi
 
-    - name: Check for IP_ALLOWLIST_GROUPS_VERSION
-      shell: bash
-      id: check-ip-allowlists-version
-      run: |
-        if [[ -n "${{ inputs.helm_allowlist_version }}" ]]; then
-          echo "ALLOWLIST_VERSION=--set generic-service.allowlist_version=${{ inputs.helm_allowlist_version }}" >> $GITHUB_OUTPUT
-        fi
+        - name: Check for IP_ALLOWLIST_GROUPS_VERSION
+          shell: bash
+          id: check-ip-allowlists-version
+          run: |
+            if [[ -n "${{ inputs.helm_allowlist_version }}" ]]; then
+              echo "ALLOWLIST_VERSION=--set generic-service.allowlist_version=${{ inputs.helm_allowlist_version }}" >> $GITHUB_OUTPUT
+            fi
 
-    - name: Deploy
-      shell: bash
-      run: |
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        brew install helm
-        yq -i ".appVersion = \"${{ inputs.version }}\"" "${{ inputs.helm_dir }}/${{ k8s_deployment_name }}/Chart.yaml"
-        helm dependency update "${{ inputs.helm_dir }}/${{ k8s_deployment_name }}"
-        exec helm upgrade '${{ k8s_deployment_name }}' '${{ inputs.helm_dir }}/${{ k8s_deployment_name }}' \
-          --atomic \
-          --history-max 10 \
-          --force \
-          --install \
-          --reset-values \
-          --set 'generic-service.image.tag=${{ inputs.version }}' \
-          --set 'version=${{ inputs.version }}' \
-          --set 'global.environment=${{ inputs.environment }}' \
-          --timeout ${{ inputs.helm_timeout }} \
-          --values '${{ inputs.helm_dir }}/values-${{ inputs.environment }}.yaml' \
-          ${{ inputs.helm_additional_args }} \
-          ${{ steps.check-ip-allowlists.outputs.ALLOWLIST_GROUPS }} \
-          ${{ steps.check-ip-allowlists-version.outputs.ALLOWLIST_VERSION }} \
-          --wait
+        - name: Deploy
+          shell: bash
+          run: |
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            brew install helm
+            yq -i ".appVersion = \"${{ inputs.version }}\"" "${{ inputs.helm_dir }}/${{ k8s_deployment_name }}/Chart.yaml"
+            helm dependency update "${{ inputs.helm_dir }}/${{ k8s_deployment_name }}"
+            exec helm upgrade '${{ k8s_deployment_name }}' '${{ inputs.helm_dir }}/${{ k8s_deployment_name }}' \
+              --atomic \
+              --history-max 10 \
+              --force \
+              --install \
+              --reset-values \
+              --set 'generic-service.image.tag=${{ inputs.version }}' \
+              --set 'version=${{ inputs.version }}' \
+              --set 'global.environment=${{ inputs.environment }}' \
+              --timeout ${{ inputs.helm_timeout }} \
+              --values '${{ inputs.helm_dir }}/values-${{ inputs.environment }}.yaml' \
+              ${{ inputs.helm_additional_args }} \
+              ${{ steps.check-ip-allowlists.outputs.ALLOWLIST_GROUPS }} \
+              ${{ steps.check-ip-allowlists-version.outputs.ALLOWLIST_VERSION }} \
+              --wait

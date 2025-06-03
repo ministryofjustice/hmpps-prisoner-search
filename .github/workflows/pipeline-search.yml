@@ -1,6 +1,6 @@
 name: Pipeline search [test -> build -> deploy]
 on:
-  workflow_call:
+  push:
     branches:
       - '**'
     paths:
