@@ -7,7 +7,7 @@ generic-service:
   replicaCount: 4
 
   image:
-    repository: quay.io/hmpps/hmpps-prisoner-search-indexer
+    repository: ghcr.io/ministryofjustice/hmpps-prisoner-search-indexer
     tag: app_version # override at deployment time
     port: 8080
 
@@ -46,7 +46,7 @@ generic-service:
     HMPPS_SQS_USE_WEB_TOKEN: "true"
 
   namespace_secrets:
-    application-insights:
+    hmpps-prisoner-search-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
     hmpps-prisoner-search-indexer:
       RESTRICTED_PATIENTS_CLIENT_ID: "RESTRICTED_PATIENTS_CLIENT_ID"

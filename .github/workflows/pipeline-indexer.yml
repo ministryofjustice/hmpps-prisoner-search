@@ -1,0 +1,124 @@
+name: Pipeline indexer [test -> build -> deploy]
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'hmpps-prisoner-search-indexer/**'
+      - 'common/**'
+      - 'build.gradle.kts'
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  workflow_dispatch:
+    inputs:
+      additional_docker_tag:
+        description: Additional docker tag that can be used to specify stable or testing tags
+        required: false
+        default: ''
+        type: string
+      push:
+        description: Push docker image to registry flag
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  # only cancel in progress when on a branch - use SHA on main to ensure uniqueness
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+jobs:
+  helm_lint:
+    strategy:
+      matrix:
+        environments: ['dev', 'preprod', 'prod']
+    name: helm lint
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW_VERSION
+    secrets: inherit
+    with:
+      environment: ${{ matrix.environments }}
+      chart_name : 'hmpps-prisoner-search-indexer'
+      helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
+  gradle_verify:
+    name: Validate the kotlin
+    uses: ./.github/workflows/gradle_localstack_postgres_verify.yml # LOCAL_VERSION
+    secrets: inherit
+    with:
+      gradle-command: ./gradlew :hmpps-prisoner-search-indexer:check
+      localstack-services: 'opensearch,sqs,sns'
+      localstack-tag: '3'
+      postgres-tag: "17"
+      postgres-db: "pos"
+      postgres-username: "pos"
+      postgres-password: "pos"
+  gradle_common_verify:
+    name: Validate the common package
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    secrets: inherit
+    with:
+      gradle-command: ./gradlew :common:check
+  build:
+    name: Build docker image from hmpps-github-actions
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/docker_build.yml # LOCAL VERSION
+    needs:
+      - gradle_verify
+      - gradle_common_verify
+    with:
+      docker_registry: 'ghcr.io'
+      registry_org: 'ministryofjustice'
+      additional_docker_tag: ""
+      push: ${{ inputs.push || true }}
+      docker_multiplatform: false
+      additional_docker_build_args: "-f hmpps-prisoner-search-indexer/Dockerfile"
+      image_name: 'hmpps-prisoner-search-indexer'
+  deploy_dev:
+    name: Deploy to the dev environment
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - build
+      - helm_lint
+    uses: ./.github/workflows/deploy_env.yml # LOCAL_VERSION
+    secrets: inherit
+    with:
+      environment: 'dev'
+      app_version: '${{ needs.build.outputs.app_version }}'
+      k8s_deployment_name: 'hmpps-prisoner-search-indexer'
+      helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
+      changelog_git_paths: 'hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*'
+  smoke_test:
+    name: Run the smoke tests
+    uses: ./.github/workflows/smoke_test.yml # LOCAL_VERSION
+    secrets: inherit
+    with:
+      gradle-command: './gradlew :hmpps-prisoner-search-indexer:testSmoke -Dtestlogger.showStandardStreams=true'
+      build-dir: 'hmpps-prisoner-search-indexer/build'
+    needs:
+      - deploy_dev
+  deploy_preprod:
+    name: Deploy to the preprod environment
+    needs:
+      - build
+      - smoke_test
+    uses: ./.github/workflows/deploy_env.yml # LOCAL_VERSION
+    secrets: inherit
+    with:
+      environment: 'preprod'
+      app_version: '${{ needs.build.outputs.app_version }}'
+      k8s_deployment_name: 'hmpps-prisoner-search-indexer'
+      helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
+      changelog_git_paths: 'hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*'
+  deploy_prod:
+    name: Deploy to the prod environment
+    needs:
+      - build
+      - deploy_preprod
+    uses: ./.github/workflows/deploy_env.yml # LOCAL_VERSION
+    secrets: inherit
+    with:
+      environment: 'prod'
+      app_version: '${{ needs.build.outputs.app_version }}'
+      k8s_deployment_name: 'hmpps-prisoner-search-indexer'
+      helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
+      changelog_git_paths: 'hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*'
