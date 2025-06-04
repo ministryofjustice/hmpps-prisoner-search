@@ -42,12 +42,15 @@ jobs:
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
   gradle_verify:
     name: Validate the kotlin
-    uses: ./.github/workflows/gradle_localstack_verify.yml # LOCAL_VERSION
+    uses: ./.github/workflows/gradle_localstack_postgres_verify.yml # LOCAL_VERSION
     secrets: inherit
     with:
       gradle-command: ./gradlew :hmpps-prisoner-search-indexer:check
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
+      postgres-tag: "17"
+      postgres-username: "pos"
+      postgres-password: "pos"
   gradle_common_verify:
     name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
