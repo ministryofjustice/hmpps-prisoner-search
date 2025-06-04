@@ -4,11 +4,11 @@ on:
     branches:
       - '**'
     paths:
-      - hmpps-prisoner-search-indexer/.*
-      - common/.*
-      - build.gradle.kts
-      - .github/workflows/.*
-      - .github/actions/.*
+      - 'hmpps-prisoner-search-indexer/**'
+      - 'common/**'
+      - 'build.gradle.kts'
+      - '.github/workflows/**'
+      - '.github/actions/**'
   workflow_dispatch:
     inputs:
       additional_docker_tag:
