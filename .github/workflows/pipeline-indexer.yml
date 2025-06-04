@@ -60,7 +60,6 @@ jobs:
       gradle-command: ./gradlew :common:check
   build:
     name: Build docker image from hmpps-github-actions
-    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/docker_build.yml # LOCAL VERSION
     needs:
       - gradle_verify
