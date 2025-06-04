@@ -49,6 +49,7 @@ jobs:
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
       postgres-tag: "17"
+      postgres-db: "pos"
       postgres-username: "pos"
       postgres-password: "pos"
   gradle_common_verify:
