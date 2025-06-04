@@ -8,6 +8,7 @@ on:
       - common/.*
       - build.gradle.kts
       - .github/workflows/.*
+      - .github/actions/.*
   workflow_dispatch:
     inputs:
       additional_docker_tag:
