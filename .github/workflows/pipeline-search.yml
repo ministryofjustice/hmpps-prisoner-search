@@ -3,12 +3,6 @@ on:
   push:
     branches:
       - '**'
-    paths:
-      - hmpps-prisoner-search/.*
-      - common/.*
-      - build.gradle.kts
-      - .github/workflows/.*
-      - .github/actions/.*
   workflow_dispatch:
     inputs:
       additional_docker_tag:
