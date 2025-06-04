@@ -78,7 +78,7 @@ jobs:
         name: Application version creators
         uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/build_docker.yml # LOCAL VERSION
+      - uses: ./.github/actions/build_docker/actions.yml # LOCAL VERSION
         if: ${{ ( inputs.docker_registry  == 'ghcr.io' ) && ( ! inputs.docker_multiplatform )}}
         with:
           image_name: ${{ inputs.image_name || github.event.repository.name }}
