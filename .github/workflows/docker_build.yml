@@ -52,6 +52,10 @@ on:
         description: Name of the image
         required: false
         type: string
+      file:
+        description: "Path to the Dockerfile"
+        required: false
+        type: string
     secrets:
       HMPPS_QUAYIO_USER:
         required: false
@@ -77,7 +81,8 @@ jobs:
       - id: app_version
         name: Application version creators
         uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
-      - uses: ./.github/actions/build_docker.yml # LOCAL VERSION
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build_docker # LOCAL VERSION
         if: ${{ ( inputs.docker_registry  == 'ghcr.io' ) && ( ! inputs.docker_multiplatform )}}
         with:
           image_name: ${{ inputs.image_name || github.event.repository.name }}
@@ -91,6 +96,7 @@ jobs:
           load: ${{ inputs.load }}
           app_version: ${{ steps.app_version.outputs.version }}
           additional_docker_build_args: ${{ inputs.additional_docker_build_args }}
+          file: ${{ inputs.file }}
 
       - uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/build_docker@v2 # WORKFLOW_VERSION
         if: ${{ ( inputs.docker_registry  == 'quay.io' ) && ( ! inputs.docker_multiplatform )}}

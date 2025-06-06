@@ -17,6 +17,9 @@ inputs:
   additional_docker_build_args:
     description: Additional docker build args
     required: false
+  file:
+    description: "Path to the Dockerfile"
+    required: false
   push:
     description: Push docker image to registry flag
     required: true
@@ -104,6 +107,7 @@ runs:
         push: ${{ inputs.push }}
         load: ${{ inputs.load }}
         provenance: false
+        file: ${{ inputs.file }}
         build-args: |
           "BUILD_NUMBER=${{ inputs.app_version }}"
           "GIT_REF=${{ github.sha }}"
