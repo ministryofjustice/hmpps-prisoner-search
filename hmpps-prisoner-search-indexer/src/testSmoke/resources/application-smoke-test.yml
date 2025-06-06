@@ -11,7 +11,7 @@ spring:
             scope: read
         provider:
           hmpps-smoketest-auth:
-            token-uri: ${smoketest.oauth.endpoint.url}/oauth/token
+            token-uri: ${smoketest.hmpps-auth.endpoint.url}/oauth/token
 
 smoketest:
   enabled: true
