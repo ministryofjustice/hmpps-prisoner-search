@@ -105,9 +105,9 @@ runs:
       run: |
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew install helm
-        yq -i ".appVersion = \"${{ inputs.version }}\"" "${{ inputs.helm_dir }}/${{ k8s_deployment_name }}/Chart.yaml"
-        helm dependency update "${{ inputs.helm_dir }}/${{ k8s_deployment_name }}"
-        exec helm upgrade '${{ k8s_deployment_name }}' '${{ inputs.helm_dir }}/${{ k8s_deployment_name }}' \
+        yq -i ".appVersion = \"${{ inputs.version }}\"" "${{ inputs.helm_dir }}/${{ inputs.k8s_deployment_name }}/Chart.yaml"
+        helm dependency update "${{ inputs.helm_dir }}/${{ inputs.k8s_deployment_name }}"
+        exec helm upgrade '${{ inputs.k8s_deployment_name }}' '${{ inputs.helm_dir }}/${{ inputs.k8s_deployment_name }}' \
           --atomic \
           --history-max 10 \
           --force \
