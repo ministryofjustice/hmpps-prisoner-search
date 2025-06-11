@@ -42,7 +42,7 @@ jobs:
       helm_dir: 'hmpps-prisoner-search/helm_deploy'
   gradle_verify:
     name: Validate the kotlin
-    uses: ./.github/workflows/gradle_localstack_verify.yml # LOCAL_VERSION
+    uses: ./.github/workflows/gradle_localstack_verify.yml # LOCAL_VERSION - for additional opensearch
     secrets: inherit
     with:
       gradle-command: ./gradlew :hmpps-prisoner-search:check
@@ -57,7 +57,7 @@ jobs:
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/docker_build.yml # LOCAL VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
     needs:
       - gradle_verify
       - gradle_common_verify
@@ -75,7 +75,7 @@ jobs:
     needs:
       - build
       - helm_lint
-    uses: ./.github/workflows/deploy_env.yml # LOCAL_VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
       environment: 'dev'
@@ -96,8 +96,9 @@ jobs:
     name: Deploy to the preprod environment
     needs:
       - build
+      - helm_lint
       - smoke_test
-    uses: ./.github/workflows/deploy_env.yml # LOCAL_VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
       environment: 'preprod'
@@ -109,8 +110,9 @@ jobs:
     name: Deploy to the prod environment
     needs:
       - build
+      - helm_lint
       - deploy_preprod
-    uses: ./.github/workflows/deploy_env.yml # LOCAL_VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
       environment: 'prod'
