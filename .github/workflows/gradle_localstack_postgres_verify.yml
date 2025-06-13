@@ -116,6 +116,6 @@ jobs:
         with:
           artifact: ${{ inputs.artifact-name }}
           name: Test Results
-          path: '${{ inputs.build-dir }}/test-results/test/**/*.xml'
+          path: '${{ inputs.artifact-name }}/test-results/test/**/*.xml'
           reporter: java-junit
           fail-on-error: false
