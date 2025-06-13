@@ -48,6 +48,7 @@ jobs:
       gradle-command: ./gradlew :hmpps-prisoner-search:check
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
+      build-dir: 'hmpps-prisoner-search/build'
   gradle_common_verify:
     name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
