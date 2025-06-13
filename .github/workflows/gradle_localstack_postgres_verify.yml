@@ -39,7 +39,7 @@ on:
         required: false
       artifact-name:
         type: string
-        default: 'test results'
+        default: 'test-results'
         required: false
       build-dir:
         type: string
