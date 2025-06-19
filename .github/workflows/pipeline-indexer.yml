@@ -52,6 +52,7 @@ jobs:
       postgres-db: "pos"
       postgres-username: "pos"
       postgres-password: "pos"
+      build-dir: 'hmpps-prisoner-search-indexer/build'
   gradle_common_verify:
     name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
