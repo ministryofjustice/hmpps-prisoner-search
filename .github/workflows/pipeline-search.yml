@@ -49,12 +49,15 @@ jobs:
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
       build-dir: 'hmpps-prisoner-search/build'
+      artifact-name: 'hmpps-prisoner-search'
   gradle_common_verify:
     name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
       gradle-command: ./gradlew :common:check
+      build-dir: 'common/build'
+      artifact-name: 'common'
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
