@@ -55,6 +55,7 @@ jobs:
     secrets: inherit
     with:
       gradle-command: ./gradlew :common:check
+      build-dir: 'hmpps-prisoner-search/build'
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'

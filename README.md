@@ -7,7 +7,7 @@ This README provides information on the prisoner search service.  For the indexe
 up-to-date from Prison systems (NOMIS) please see the [indexer README](hmpps-prisoner-search-indexer/README.md).
 
 The purpose of this service is to:
-* API to provides searching of prisoner records in NOMIS via OpenSearch
+* API to provide searching of prisoner records in NOMIS via OpenSearch
 
 ### Running
 
