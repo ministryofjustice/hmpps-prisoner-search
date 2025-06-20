@@ -32,7 +32,7 @@ Once localstack has started then, in another terminal, run the following command
 ```shell
 docker-compose up hmpps-prisoner-search --detach
 ```
-  To check that it has all started correctly use `docker ps`.
+To check that it has all started correctly use `docker ps`.
 
 #### Running prisoner search in IntelliJ or on the command line
 To start up localstack and other dependencies with prisoner search running in IntelliJ:
