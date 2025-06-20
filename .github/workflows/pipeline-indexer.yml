@@ -53,6 +53,7 @@ jobs:
       postgres-username: "pos"
       postgres-password: "pos"
       build-dir: 'hmpps-prisoner-search-indexer/build'
+      artifact-name: 'hmpps-prisoner-search-indexer'
   gradle_common_verify:
     name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
@@ -60,6 +61,7 @@ jobs:
     with:
       gradle-command: ./gradlew :common:check
       build-dir: 'common/build'
+      artifact-name: 'common'
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
