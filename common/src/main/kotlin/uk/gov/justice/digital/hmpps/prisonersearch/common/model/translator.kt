@@ -311,6 +311,7 @@ private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? = this?
   when (it.type) {
     "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
     "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+    "MERGED" -> Identifier(it.type, it.value, null, null, it.whenCreated.withNano(0))
     else -> null
   }
 }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
