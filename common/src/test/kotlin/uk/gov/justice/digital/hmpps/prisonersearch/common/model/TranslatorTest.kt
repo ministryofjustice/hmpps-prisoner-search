@@ -1118,6 +1118,23 @@ class TranslatorTest {
 
     assertThat(prisoner.identifiers?.first()?.value).isEqualTo(prisonerPnc)
   }
+
+  @Test
+  fun `MERGED identifiers are mapped`() {
+    val aTimestamp = LocalDateTime.parse("2025-06-14T12:13:14")
+    val prisoner = Prisoner().translate(
+      ob = aBooking().copy(
+        allIdentifiers = listOf(
+          OffenderIdentifier(1L, "MERGED", "B1234BB", null, null, aTimestamp),
+        ),
+      ),
+    )
+    with(prisoner.identifiers?.first()!!) {
+      assertThat(type).isEqualTo("MERGED")
+      assertThat(value).isEqualTo("B1234BB")
+      assertThat(createdDateTime).isEqualTo(aTimestamp)
+    }
+  }
 }
 
 private fun aBooking() = OffenderBooking("A1234AA", 1L, "Fred", "Bloggs", LocalDate.now().minusYears(18))
