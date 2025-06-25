@@ -260,6 +260,7 @@ class PrisonerSearchService(
           latestReleaseDate,
           "conditionalReleaseDate",
           "confirmedReleaseDate",
+          "postRecallReleaseDate",
         )
         .filterWhenPresent("prisonId", searchCriteria.prisonIds?.toList())
     }
