@@ -60,7 +60,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*${{ github.inputs.k8s_deployment_name }}* version `${{ inputs.app_version }}` deploy to *${{ inputs.environment }}*"
+                  "text": "*${{ inputs.k8s_deployment_name }}* version `${{ inputs.app_version }}` deploy to *${{ inputs.environment }}*"
                 },
                 "accessory": {
                   "type": "button",
