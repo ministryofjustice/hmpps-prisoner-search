@@ -10,10 +10,10 @@ dependencyCheck {
 }
 
 dependencies {
-  implementation("org.springframework.data:spring-data-elasticsearch:5.5.0")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.5.1")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:1.7.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:1.8.1")
 }
 
 kotlin {
