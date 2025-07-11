@@ -4,8 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_UNKNOWN_MOVEMENT
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION
@@ -101,15 +99,49 @@ class PrisonerMovementsEventService(
       prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot)
     ) {
       PossibleMovementChange.None.also {
-        // really can't think a scenario where will hit this line, so lets log since it means
-        // we are not dealing with all scenarios correctly
-        telemetryClient.trackPrisonerEvent(EVENTS_UNKNOWN_MOVEMENT, prisonerNumber)
+        // This can happen, so log details as we are not dealing with all scenarios correctly
+        mutableMapOf("prisonerNumber" to prisonerNumber)
+          .also { eventMap ->
+            eventMap.add("this", prisoner)
+            eventMap.add("previous", previousPrisonerSnapshot)
+            telemetryClient.trackEvent("EVENTS_UNKNOWN_MOVEMENT", eventMap, null)
+          }
       }
     } else {
       PossibleMovementChange.None
     }
   }
 }
+
+fun MutableMap<String, String>.add(
+  prefix: String,
+  prisoner: Prisoner?,
+) {
+  this.put(
+    prefix,
+    UnknownEventData(
+      prisoner?.bookingId,
+      prisoner?.inOutStatus,
+      prisoner?.status,
+      prisoner?.lastMovementTypeCode,
+      prisoner?.lastMovementReasonCode,
+      prisoner?.lastPrisonId,
+      prisoner?.recall,
+      prisoner?.restrictedPatient,
+    ).toString(),
+  )
+}
+
+data class UnknownEventData(
+  val bookingId: String?,
+  val inOutStatus: String?,
+  val status: String?,
+  val lastMovementTypeCode: String?,
+  val lastMovementReasonCode: String?,
+  val lastPrisonId: String?,
+  val recall: Boolean?,
+  val restrictedPatient: Boolean?,
+)
 
 private fun Prisoner.isTransferIn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "TRN" && inOutStatus == "IN"
 
