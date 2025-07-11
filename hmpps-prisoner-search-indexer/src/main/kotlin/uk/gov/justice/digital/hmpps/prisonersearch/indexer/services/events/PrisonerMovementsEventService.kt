@@ -113,7 +113,7 @@ class PrisonerMovementsEventService(
   }
 }
 
-fun MutableMap<String, String>.add(
+private fun MutableMap<String, String>.add(
   prefix: String,
   prisoner: Prisoner?,
 ) {
