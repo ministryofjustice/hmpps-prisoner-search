@@ -1,30 +1,19 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.model
 
 import org.apache.commons.lang3.RandomStringUtils
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.translate
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.ProfileInformation
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
-import uk.gov.justice.digital.hmpps.prisonersearch.search.config.GsonConfig
-import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberLong
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
-import kotlin.random.Random
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
 
 data class PrisonerBuilder(
   val prisonerNumber: String = generatePrisonerNumber(),
@@ -101,14 +90,8 @@ data class IncentiveLevelBuilder(
 )
 
 data class AddressBuilder(
-  val flat: String? = null,
-  val premise: String? = null,
-  val street: String? = null,
-  val locality: String? = null,
-  val town: String? = null,
-  val county: String? = null,
+  val fullAddress: String? = null,
   val postalCode: String? = null,
-  val country: String? = null,
   val primary: Boolean = true,
   val startDate: LocalDate? = null,
   val phones: List<PhoneBuilder>? = null,
@@ -157,213 +140,158 @@ fun letters(length: Int): String = RandomStringUtils.insecure().next(length, tru
 
 fun numbers(length: Int): String = RandomStringUtils.insecure().next(length, false, true)
 
-fun PrisonerBuilder.toIncentiveLevel(): IncentiveLevel? = this.currentIncentive?.let {
-  IncentiveLevel(
-    iepCode = it.levelCode,
-    iepLevel = it.levelDescription,
-    iepTime = it.dateTime,
-    nextReviewDate = it.nextReviewDate,
-  )
-}
-
-fun PrisonerBuilder.toAlerts(): List<Alert>? = this.alertCodes.map {
-  Alert(
-    alertUuid = UUID.fromString("00001111-2222-3333-4444-000000000001"),
-    prisonNumber = this.prisonerNumber,
-    alertCode = AlertCodeSummary(
-      alertTypeCode = it.first,
-      alertTypeDescription = "Alert type description",
-      code = it.second,
-      description = "Alert code description",
-    ),
-    description = "Alert description",
-    authorisedBy = "A. Nurse, An Agency",
-    activeFrom = LocalDate.parse("2021-09-27"),
-    activeTo = LocalDate.parse("2022-07-15"),
-    isActive = true,
-    createdAt = LocalDateTime.parse("2021-09-27T14:19:25"),
-    createdBy = "USER1234",
-    createdByDisplayName = "Firstname Lastname",
-    lastModifiedAt = LocalDateTime.parse("2022-07-15T15:24:56"),
-    lastModifiedBy = "USER1234",
-    lastModifiedByDisplayName = "Firstname Lastname",
-    activeToLastSetAt = LocalDateTime.parse("2022-07-15T15:24:56"),
-    activeToLastSetBy = "USER123",
-    activeToLastSetByDisplayName = "Firstname Lastname",
-  )
-}
-
-fun PrisonerBuilder.toOffenderBooking(): OffenderBooking {
-  val offenderId = Random.nextLong()
-  return getOffenderBookingTemplate().copy(
-    offenderNo = this.prisonerNumber,
-    bookingId = this.bookingId,
-    offenderId = offenderId,
-    title = this.title,
-    firstName = this.firstName,
-    lastName = this.lastName,
-    agencyId = this.agencyId,
-    dateOfBirth = LocalDate.parse(this.dateOfBirth),
-    physicalAttributes = PhysicalAttributes(
-      gender = this.gender,
-      raceCode = this.raceCode,
-      ethnicity = this.ethnicity,
-      heightFeet = null,
-      heightInches = null,
-      heightMetres = null,
-      heightCentimetres = this.heightCentimetres,
-      weightPounds = null,
-      weightKilograms = this.weightKilograms,
-    ),
-    assignedLivingUnit = AssignedLivingUnit(
-      agencyId = this.agencyId,
-      locationId = Random.nextLong(),
-      description = this.cellLocation,
-      agencyName = "$agencyId (HMP)",
-    ),
-    aliases = this.aliases.map { a ->
-      Alias(
-        gender = a.gender,
-        ethnicity = a.ethnicity,
-        raceCode = a.raceCode,
-        title = a.title ?: this.title,
-        firstName = a.firstName ?: this.firstName,
-        middleName = null,
-        lastName = this.lastName,
-        age = null,
-        dob = LocalDate.parse(this.dateOfBirth),
-        nameType = null,
-        createDate = LocalDate.now(),
-        offenderId = Random.nextLong(),
-      )
-    },
-    physicalCharacteristics = mutableListOf<PhysicalCharacteristic>().also { pcs ->
-      this.physicalCharacteristics?.hairColour?.let {
-        pcs.add(PhysicalCharacteristic("HAIR", "Hair Colour", it, null))
-      }
-      this.physicalCharacteristics?.rightEyeColour?.let {
-        pcs.add(PhysicalCharacteristic("R_EYE_C", "Right Eye Colour", it, null))
-      }
-      this.physicalCharacteristics?.leftEyeColour?.let {
-        pcs.add(PhysicalCharacteristic("L_EYE_C", "Left Eye Colour", it, null))
-      }
-      this.physicalCharacteristics?.facialHair?.let {
-        pcs.add(PhysicalCharacteristic("FACIAL_HAIR", "Facial Hair", it, null))
-      }
-      this.physicalCharacteristics?.shapeOfFace?.let {
-        pcs.add(PhysicalCharacteristic("FACE", "Shape of Face", it, null))
-      }
-      this.physicalCharacteristics?.build?.let {
-        pcs.add(PhysicalCharacteristic("BUILD", "Build", it, null))
-      }
-      this.physicalCharacteristics?.shoeSize?.let {
-        pcs.add(PhysicalCharacteristic("SHOESIZE", "Shoe Size", it.toString(), null))
-      }
-    },
-    physicalMarks = mutableListOf<PhysicalMark>().also { pms ->
-      this.physicalMarks?.tattoo?.forEach {
-        pms.add(PhysicalMark("Tattoo", null, it.bodyPart, null, it.comment, null))
-      }
-      this.physicalMarks?.mark?.forEach {
-        pms.add(PhysicalMark("Mark", null, it.bodyPart, null, it.comment, null))
-      }
-      this.physicalMarks?.scar?.forEach {
-        pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
-      }
-    },
-    profileInformation = mutableListOf<ProfileInformation>().also { pi ->
-      profileInformation?.religion?.let {
-        pi.add(ProfileInformation(type = "RELF", question = "Religion", resultValue = it))
-      }
-      profileInformation?.nationality?.let {
-        pi.add(ProfileInformation(type = "NAT", question = "Nationality?", resultValue = it))
-      }
-      profileInformation?.youthOffender?.let {
-        pi.add(ProfileInformation(type = "YOUTH", question = "Youth Offender?", resultValue = if (it) "YES" else "NO"))
-      }
-      profileInformation?.maritalStatus?.let {
-        pi.add(ProfileInformation(type = "MARITAL", question = "Marital Status?", resultValue = it))
-      }
-    },
-    categoryCode = category,
-    csra = csra,
-    recall = recall,
-    receptionDate = receptionDate?.let { LocalDate.parse(it) },
-    addresses = addresses?.map {
-      NomisAddress(
-        addressId = numbers(length = 5).toLong(),
-        flat = it.flat,
-        premise = it.premise,
-        street = it.street,
-        locality = it.locality,
-        town = it.town,
-        postalCode = it.postalCode,
-        county = it.county,
-        country = it.country,
-        primary = it.primary,
-        startDate = it.startDate,
-        phones = it.phones?.map { Telephone(type = it.type!!, number = it.number!!) },
-      )
-    },
-    emailAddresses = emailAddresses?.filter { it.email != null }?.map { EmailAddress(it.email!!) },
-    phones = phones?.map { Telephone(type = it.type!!, number = it.number!!) },
-    allIdentifiers = identifiers?.map {
-      OffenderIdentifier(
-        type = it.type,
-        value = it.value,
-        issuedDate = it.issuedDate?.let { LocalDate.parse(it) },
-        issuedAuthorityText = it.issuedAuthorityText,
-        whenCreated = it.createdDatetime?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now(),
-        offenderId = offenderId,
-      )
-    },
-    allConvictedOffences = allConvictedOffences?.map {
-      OffenceHistoryDetail(
-        statuteCode = it.statuteCode,
-        offenceCode = it.offenceCode,
-        offenceDescription = it.offenceDescription,
-        offenceDate = it.offenceDate,
-        offenceRangeDate = null,
-        bookingId = it.bookingId,
-        mostSerious = it.mostSerious,
-        offenceSeverityRanking = it.offenceSeverityRanking,
-        sentenceStartDate = it.sentenceStartDate,
-        primarySentence = it.primarySentence,
-      )
-    },
-  ).let {
-    if (released) {
-      it.copy(
-        status = "INACTIVE OUT",
-        lastMovementTypeCode = "REL",
-        lastMovementReasonCode = "HP",
-        inOutStatus = "OUT",
-        agencyId = "OUT",
-      )
-    } else {
-      it.copy(
-        lastMovementTypeCode = "ADM",
-        lastMovementReasonCode = "I",
-      )
-    }
+fun PrisonerBuilder.toPrisoner(): Prisoner = Prisoner().also { p ->
+  p.prisonerNumber = this.prisonerNumber
+  p.pncNumber = this.identifiers?.firstOrNull { it.type == "PNC" }?.value
+  p.pncNumberCanonicalShort = this.identifiers?.firstOrNull { it.type == "PNC" }?.value?.canonicalPNCNumberShort()
+  p.pncNumberCanonicalLong = this.identifiers?.firstOrNull { it.type == "PNC" }?.value?.canonicalPNCNumberLong()
+  p.croNumber = this.identifiers?.firstOrNull { it.type == "CRO" }?.value
+  p.bookingId = this.bookingId?.toString()
+  p.bookNumber = "V61587"
+  p.title = this.title
+  p.firstName = this.firstName
+  p.middleNames = null
+  p.lastName = this.lastName
+  p.dateOfBirth = LocalDate.parse(this.dateOfBirth)
+  p.gender = this.gender
+  p.ethnicity = this.ethnicity
+  p.raceCode = this.raceCode
+  p.youthOffender = this.profileInformation?.youthOffender
+  p.maritalStatus = this.profileInformation?.maritalStatus
+  p.religion = this.profileInformation?.religion
+  p.nationality = this.profileInformation?.nationality
+  p.smoker = null
+  p.personalCareNeeds = null
+  p.languages = null
+  p.currentFacialImageId = null
+  if (released) {
+    p.status = "INACTIVE OUT"
+    p.lastMovementTypeCode = "REL"
+    p.lastMovementReasonCode = "HP"
+    p.inOutStatus = "OUT"
+    p.prisonId = "OUT"
+  } else {
+    p.status = "ACTIVE IN"
+    p.lastMovementTypeCode = "ADM"
+    p.lastMovementReasonCode = "I"
+    p.inOutStatus = "IN"
+    p.prisonId = this.agencyId
   }
-}
+  p.lastPrisonId = null
+  p.prisonName = "Moorland Prison"
+  p.cellLocation = this.cellLocation
+  p.aliases = this.aliases.map {
+    PrisonerAlias(
+      title = it.title,
+      firstName = it.firstName,
+      gender = it.gender,
+      raceCode = it.raceCode,
+      ethnicity = it.ethnicity,
+    )
+  }
+  p.alerts = this.alertCodes.map {
+    PrisonerAlert(
+      alertType = it.first,
+      alertCode = it.second,
+      expired = false,
+      active = true,
+    )
+  }
+  p.csra = this.csra
+  p.category = this.category
+  p.complexityOfNeedLevel = null
+  p.legalStatus = "REMAND"
+  p.imprisonmentStatus = "LIFE"
+  p.imprisonmentStatusDescription = "Life imprisonment"
+  p.convictedStatus = "Remand"
+  p.mostSeriousOffence = null
+  p.recall = this.recall
+  p.indeterminateSentence = null
+  p.sentenceStartDate = null
+  p.releaseDate = null
+  p.confirmedReleaseDate = null
+  p.sentenceExpiryDate = null
+  p.licenceExpiryDate = null
+  p.homeDetentionCurfewEligibilityDate = null
+  p.homeDetentionCurfewActualDate = null
+  p.homeDetentionCurfewEndDate = null
+  p.topupSupervisionStartDate = null
+  p.topupSupervisionExpiryDate = null
+  p.additionalDaysAwarded = null
+  p.nonDtoReleaseDate = null
+  p.nonDtoReleaseDateType = null
+  p.receptionDate = this.receptionDate?.let { LocalDate.parse(it) }
+  p.lastAdmissionDate = null
+  p.paroleEligibilityDate = null
+  p.automaticReleaseDate = null
+  p.postRecallReleaseDate = null
+  p.conditionalReleaseDate = null
+  p.actualParoleDate = null
+  p.tariffDate = null
+  p.releaseOnTemporaryLicenceDate = null
 
-fun PrisonerBuilder.toPrisoner(): Prisoner = toPrisoner(ob = toOffenderBooking(), incentiveLevel = toIncentiveLevel(), null, alerts = toAlerts())
-
-private fun getOffenderBookingTemplate(): OffenderBooking = GsonConfig().gson().fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
-
-fun toPrisoner(
-  ob: OffenderBooking,
-  incentiveLevel: IncentiveLevel?,
-  restrictedPatientData: RestrictedPatient?,
-  alerts: List<Alert>?,
-) = Prisoner().apply {
-  this.translate(
-    null,
-    ob,
-    Result.success(incentiveLevel),
-    Result.success(restrictedPatientData),
-    Result.success(alerts),
-  )
+  // take into account restricted patient here
+  p.locationDescription = null
+  p.restrictedPatient = false
+  p.supportingPrisonId = null
+  p.dischargedHospitalId = null
+  p.dischargedHospitalDescription = null
+  p.dischargeDate = null
+  p.dischargeDetails = null
+  p.currentIncentive = this.currentIncentive?.let {
+    CurrentIncentive(
+      level = uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel(it.levelCode, it.levelDescription),
+      nextReviewDate = it.nextReviewDate,
+      dateTime = it.dateTime,
+    )
+  }
+  p.heightCentimetres = this.heightCentimetres
+  p.weightKilograms = this.weightKilograms
+  p.hairColour = this.physicalCharacteristics?.hairColour
+  p.rightEyeColour = this.physicalCharacteristics?.rightEyeColour
+  p.leftEyeColour = this.physicalCharacteristics?.leftEyeColour
+  p.facialHair = this.physicalCharacteristics?.facialHair
+  p.shapeOfFace = this.physicalCharacteristics?.shapeOfFace
+  p.build = this.physicalCharacteristics?.build
+  p.shoeSize = this.physicalCharacteristics?.shoeSize
+  p.tattoos = this.physicalMarks?.tattoo?.map { BodyPartDetail(it.bodyPart, it.comment) }
+  p.scars = this.physicalMarks?.scar?.map { BodyPartDetail(it.bodyPart, it.comment) }
+  p.marks = this.physicalMarks?.mark?.map { BodyPartDetail(it.bodyPart, it.comment) }
+  p.addresses = this.addresses?.map {
+    Address(
+      fullAddress = it.fullAddress,
+      postalCode = it.postalCode,
+      startDate = it.startDate,
+      primaryAddress = it.primary,
+      phoneNumbers = it.phones?.map { pn -> PhoneNumber(pn.type, pn.number?.split(Regex("\\D+"))?.filter { f -> f.isNotBlank() }?.joinToString(separator = "")) },
+      noFixedAddress = false,
+    )
+  }
+  p.emailAddresses = this.emailAddresses?.map { uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress(it.email) }
+  p.phoneNumbers = this.phones?.map {
+    PhoneNumber(
+      type = it.type,
+      number = it.number?.split(Regex("\\D+"))?.filter { it.isNotBlank() }?.joinToString(separator = ""),
+    )
+  }
+  p.identifiers = this.identifiers?.map {
+    Identifier(
+      type = it.type,
+      value = it.value,
+      issuedDate = it.issuedDate?.let { id -> LocalDate.parse(id) },
+      issuedAuthorityText = it.issuedAuthorityText,
+      createdDateTime = it.createdDatetime?.let { cd -> LocalDateTime.parse(cd) },
+    )
+  }
+  p.allConvictedOffences = this.allConvictedOffences?.map {
+    Offence(
+      statuteCode = it.statuteCode,
+      offenceCode = it.offenceCode,
+      offenceDescription = it.offenceDescription,
+      offenceDate = it.offenceDate,
+      latestBooking = it.bookingId == this.bookingId,
+      sentenceStartDate = it.sentenceStartDate,
+      primarySentence = it.primarySentence,
+    )
+  }
 }

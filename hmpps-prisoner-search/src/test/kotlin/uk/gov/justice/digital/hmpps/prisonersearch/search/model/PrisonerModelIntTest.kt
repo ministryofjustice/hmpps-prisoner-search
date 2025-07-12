@@ -23,20 +23,13 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
     raceCode = "M1",
     addresses = listOf(
       AddressBuilder(
-        flat = "1",
-        premise = "2",
-        street = "High Street",
-        locality = "Crookes",
-        town = "Sheffield",
+        fullAddress = "Some full address",
         postalCode = "S12 3DE",
-        county = "South Yorkshire",
-        country = "England",
         startDate = LocalDate.parse("2013-12-02"),
         primary = true,
         phones = listOf(
-          PhoneBuilder("MOB", "07987 654321"),
-          PhoneBuilder("HOME", "0119 87654321"),
-          PhoneBuilder("OTH", "0111 111 111"),
+          PhoneBuilder("MOB", "07987654321"),
+          PhoneBuilder("HOME", "011987654321"),
         ),
       ),
     ),
@@ -50,13 +43,12 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       PhoneBuilder("HOME", "01123456789"),
     ),
     identifiers = listOf(
-      IdentifierBuilder("PNC", "2012/0394773H", "2019-07-17", "NOMIS", "2019-07-17T12:34:56.833133"),
+      IdentifierBuilder("PNC", "12/0394773H", "2019-07-17", "NOMIS", "2019-07-17T12:34:56.833133"),
       IdentifierBuilder("PNC", "12/0394773H", "2019-07-17", null, "2020-07-17T12:34:56.833133"),
       IdentifierBuilder("CRO", "145845/12U", null, "Incorrect CRO - typo", "2021-10-18T12:34:56.833133"),
       IdentifierBuilder("CRO", "145835/12U", null, null, "2021-10-19T12:34:56.833133"),
       IdentifierBuilder("NINO", "JE460605B", null, null, "2019-06-11T12:34:56.833133"),
       IdentifierBuilder("DL", "COLBO/912052/JM9MU", null, null, "2022-04-12T12:34:56.833133"),
-      IdentifierBuilder("HOREF", "T3037620", null, null, "2020-04-12T12:34:56.833133"),
     ),
     allConvictedOffences = listOf(
       OffenceBuilder(
@@ -96,7 +88,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .jsonPath("addresses[0].fullAddress").isEqualTo("Flat 1, 2 High Street, Crookes, Sheffield, South Yorkshire, S12 3DE, England")
+      .jsonPath("addresses[0].fullAddress").isEqualTo("Some full address")
       .jsonPath("addresses[0].postalCode").isEqualTo("S12 3DE")
       .jsonPath("addresses[0].primaryAddress").isEqualTo(true)
       .jsonPath("addresses[0].noFixedAddress").isEqualTo(false)
@@ -185,10 +177,10 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
       .consumeWith {
         with(it.responseBody as Prisoner) {
           assertThat(identifiers)
-            .containsExactly(
+            .containsExactlyInAnyOrder(
               Identifier("NINO", "JE460605B", null, null, LocalDateTime.parse("2019-06-11T12:34:56")),
-              Identifier("PNC", "12/394773H", LocalDate.parse("2019-07-17"), "NOMIS", LocalDateTime.parse("2019-07-17T12:34:56")),
-              Identifier("PNC", "12/394773H", LocalDate.parse("2019-07-17"), null, LocalDateTime.parse("2020-07-17T12:34:56")),
+              Identifier("PNC", "12/0394773H", LocalDate.parse("2019-07-17"), "NOMIS", LocalDateTime.parse("2019-07-17T12:34:56")),
+              Identifier("PNC", "12/0394773H", LocalDate.parse("2019-07-17"), null, LocalDateTime.parse("2020-07-17T12:34:56")),
               Identifier("CRO", "145845/12U", null, "Incorrect CRO - typo", LocalDateTime.parse("2021-10-18T12:34:56")),
               Identifier("CRO", "145835/12U", null, null, LocalDateTime.parse("2021-10-19T12:34:56")),
               Identifier("DL", "COLBO/912052/JM9MU", null, null, LocalDateTime.parse("2022-04-12T12:34:56")),
@@ -196,7 +188,7 @@ class PrisonerModelIntTest : AbstractSearchIntegrationTest() {
           assertThat(pncNumber).isEqualTo("12/0394773H")
           assertThat(pncNumberCanonicalShort).isEqualTo("12/394773H")
           assertThat(pncNumberCanonicalLong).isEqualTo("2012/394773H")
-          assertThat(croNumber).isEqualTo("145835/12U")
+          assertThat(croNumber).isEqualTo("145845/12U")
         }
       }
   }
