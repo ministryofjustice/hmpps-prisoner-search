@@ -59,11 +59,8 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
       cellLocation = "1-1-002",
       addresses = listOf(
         AddressBuilder(
-          premise = "1",
-          street = "Main Street",
-          town = "Sheffield",
+          fullAddress = "1 Main Street, Sheffield, S1 1BG, England",
           postalCode = "S1 1BG",
-          country = "England",
           startDate = LocalDate.parse("2021-03-23"),
           primary = true,
         ),
