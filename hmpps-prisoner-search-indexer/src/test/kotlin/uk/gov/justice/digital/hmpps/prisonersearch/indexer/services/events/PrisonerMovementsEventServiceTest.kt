@@ -30,7 +30,7 @@ import java.time.LocalDateTime
 private const val OFFENDER_NO = "A9460DY"
 
 @JsonTest
-internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMapper: ObjectMapper) {
+internal class PrisonerMovementsEventServiceTest(@param:Autowired private val objectMapper: ObjectMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
   private val telemetryClient = mock<TelemetryClient>()
 
@@ -188,6 +188,42 @@ internal class PrisonerMovementsEventServiceTest(@Autowired private val objectMa
     @Test
     internal fun `will emit receive event with reason of new admission for new booking`() {
       val prisoner = prisonerInWithMovedBooking("BXI")
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = NEW_ADMISSION,
+        prisonId = "BXI",
+      )
+    }
+  }
+
+  @Nested
+  inner class MovedBookingsAfterReturnFromCourt {
+    private val previousPrisonerSnapshot = releasedPrisoner()
+
+    @Test
+    internal fun `will emit receive event with reason of new admission for new booking`() {
+      val prisoner = prisonerInWithMovedBooking("BXI").apply { this.lastMovementTypeCode = "CRT" }
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = NEW_ADMISSION,
+        prisonId = "BXI",
+      )
+    }
+  }
+
+  @Nested
+  inner class MovedBookingsAfterReturnFromTAP {
+    private val previousPrisonerSnapshot = releasedPrisoner()
+
+    @Test
+    internal fun `will emit receive event with reason of new admission for new booking`() {
+      val prisoner = prisonerInWithMovedBooking("BXI").apply { this.lastMovementTypeCode = "TAP" }
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
 
