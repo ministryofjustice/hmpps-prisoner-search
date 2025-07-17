@@ -94,6 +94,8 @@ class PrisonerMovementsEventService(
       Released(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
     } else if (prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
       NewAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
+      NewAdmission(prisonerNumber, prisoner.prisonId!!)
     } else if (
       prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot) ||
       prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot)
@@ -182,6 +184,9 @@ private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) = this.
   this.bookingId != previousPrisonerSnapshot?.bookingId
 
 private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.bookingId == null &&
+  this.status == "ACTIVE IN"
+
+private fun Prisoner.isAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.status == "INACTIVE OUT" &&
   this.status == "ACTIVE IN"
 
 private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
