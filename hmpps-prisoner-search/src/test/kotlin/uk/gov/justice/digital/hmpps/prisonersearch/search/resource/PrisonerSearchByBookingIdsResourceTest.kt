@@ -3,23 +3,16 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.BodyInserters
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.toPrisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 
 class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
   override fun loadPrisonerData() {
-    val prisonerNumbers = List(12) { i -> "AN$i" }
-    val prisoners = ArrayList<Prisoner>()
-    prisonerNumbers.forEachIndexed { bookingId: Int, prisonNumber: String ->
-      val offenderBooking = getOffenderBooking(prisonNumber, bookingId.toLong())
-      val prisoner = toPrisoner(offenderBooking, null, null, null)
-      prisoners.add(prisoner)
-    }
-    loadPrisoners(prisoners)
+    List(12) { i -> "AN$i" }.mapIndexed { bookingId: Int, prisonNumber: String ->
+      PrisonerBuilder(bookingId = bookingId.toLong(), prisonerNumber = prisonNumber).toPrisoner()
+    }.apply { loadPrisoners(this) }
   }
 
   @Test
@@ -111,10 +104,10 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
       .expectBody()
       .jsonPath("$.length()").isEqualTo(2)
       .jsonPath("$[0].prisonerNumber").isEqualTo("AN1")
-      .jsonPath("$[0].lastName").isEqualTo("WALLIS")
+      .jsonPath("$[0].lastName").isEqualTo("MORALES")
       .jsonPath("$[0].firstName").doesNotExist()
       .jsonPath("$[1].prisonerNumber").isEqualTo("AN2")
-      .jsonPath("$[1].lastName").isEqualTo("WALLIS")
+      .jsonPath("$[1].lastName").isEqualTo("MORALES")
       .jsonPath("$[1].firstName").doesNotExist()
   }
 
@@ -135,10 +128,5 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
       .expectBody().jsonPath("userMessage").value<String> {
         assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
       }
-  }
-
-  private fun getOffenderBooking(offenderNo: String, bookingId: Long): OffenderBooking {
-    val templateOffender = gson.fromJson("/templates/booking.json".readResourceAsText(), OffenderBooking::class.java)
-    return templateOffender.copy(offenderNo = offenderNo, bookingId = bookingId)
   }
 }
