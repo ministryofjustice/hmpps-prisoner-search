@@ -743,11 +743,11 @@ class TranslatorTest {
 
       assertThat(prisoner.addresses).containsExactly(
         Address(
-          "Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England",
-          "S10 1AB",
-          LocalDate.now(),
-          true,
-          false,
+          fullAddress = "Flat 2, 3 Main Street, Crookes, Sheffield, South Yorkshire, S10 1AB, England",
+          postalCode = "S10 1AB",
+          startDate = LocalDate.now(),
+          primaryAddress = true,
+          noFixedAddress = false,
         ),
       )
     }
@@ -1101,38 +1101,71 @@ class TranslatorTest {
       )
   }
 
-  @ParameterizedTest
-  @CsvSource(
-    "12/394773H,12/394773H",
-    "12/0394773H,12/394773H",
-    "2012/394773H,12/394773H",
-    "2012/0394773H,12/394773H",
-    "INVALID_PNC,INVALID_PNC",
-  )
-  fun `should always convert PNC number to short format if possible`(nomisPnc: String, prisonerPnc: String) {
-    val prisoner = Prisoner().translate(
-      ob = aBooking().copy(
-        allIdentifiers = listOf(OffenderIdentifier(1L, "PNC", nomisPnc, null, null, LocalDateTime.now())),
-      ),
+  @Nested
+  inner class Identifiers {
+    @ParameterizedTest
+    @CsvSource(
+      "12/394773H,12/394773H",
+      "12/0394773H,12/394773H",
+      "2012/394773H,12/394773H",
+      "2012/0394773H,12/394773H",
+      "INVALID_PNC,INVALID_PNC",
     )
-
-    assertThat(prisoner.identifiers?.first()?.value).isEqualTo(prisonerPnc)
-  }
-
-  @Test
-  fun `MERGED identifiers are mapped`() {
-    val aTimestamp = LocalDateTime.parse("2025-06-14T12:13:14")
-    val prisoner = Prisoner().translate(
-      ob = aBooking().copy(
-        allIdentifiers = listOf(
-          OffenderIdentifier(1L, "MERGED", "B1234BB", null, null, aTimestamp),
+    fun `should always convert PNC number to short format if possible`(nomisPnc: String, prisonerPnc: String) {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          allIdentifiers = listOf(OffenderIdentifier(1L, "PNC", nomisPnc, null, null, LocalDateTime.now())),
         ),
-      ),
-    )
-    with(prisoner.identifiers?.first()!!) {
-      assertThat(type).isEqualTo("MERGED")
-      assertThat(value).isEqualTo("B1234BB")
-      assertThat(createdDateTime).isEqualTo(aTimestamp)
+      )
+
+      assertThat(prisoner.identifiers?.first()?.value).isEqualTo(prisonerPnc)
+    }
+
+    @Test
+    fun `MERGED identifiers are mapped`() {
+      val aTimestamp = LocalDateTime.parse("2025-06-14T12:13:14")
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          allIdentifiers = listOf(
+            OffenderIdentifier(1L, "MERGED", "B1234BB", null, null, aTimestamp),
+          ),
+        ),
+      )
+      with(prisoner.identifiers?.first()!!) {
+        assertThat(type).isEqualTo("MERGED")
+        assertThat(value).isEqualTo("B1234BB")
+        assertThat(createdDateTime).isEqualTo(aTimestamp)
+      }
+    }
+
+    @Test
+    fun `should map identifiers`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          allIdentifiers = listOf(
+            OffenderIdentifier(offenderId = 123, type = "PNC", value = "2012/0394773H", issuedDate = LocalDate.parse("2019-07-17"), issuedAuthorityText = "NOMIS", whenCreated = LocalDateTime.parse("2019-07-17T12:34:56.833133")),
+            OffenderIdentifier(offenderId = 123, type = "PNC", value = "12/0394773H", issuedDate = LocalDate.parse("2019-07-17"), issuedAuthorityText = null, whenCreated = LocalDateTime.parse("2020-07-17T12:34:56.833133")),
+            OffenderIdentifier(offenderId = 123, type = "CRO", value = "145845/12U", issuedDate = null, issuedAuthorityText = "Incorrect CRO - typo", whenCreated = LocalDateTime.parse("2021-10-18T12:34:56.833133")),
+            OffenderIdentifier(offenderId = 123, type = "CRO", value = "145835/12U", issuedDate = null, issuedAuthorityText = null, whenCreated = LocalDateTime.parse("2021-10-19T12:34:56.833133")),
+            OffenderIdentifier(offenderId = 123, type = "NINO", value = "JE460605B", issuedDate = null, issuedAuthorityText = null, whenCreated = LocalDateTime.parse("2019-06-11T12:34:56.833133")),
+            OffenderIdentifier(offenderId = 123, type = "DL", value = "COLBO/912052/JM9MU", issuedDate = null, issuedAuthorityText = null, whenCreated = LocalDateTime.parse("2022-04-12T12:34:56.833133")),
+            OffenderIdentifier(offenderId = 123, type = "HOREF", value = "T3037620", issuedDate = null, issuedAuthorityText = null, whenCreated = LocalDateTime.parse("2020-04-12T12:34:56.833133")),
+          ),
+        ),
+      )
+      assertThat(prisoner.identifiers)
+        .containsExactly(
+          Identifier("NINO", "JE460605B", null, null, LocalDateTime.parse("2019-06-11T12:34:56")),
+          Identifier("PNC", "12/394773H", LocalDate.parse("2019-07-17"), "NOMIS", LocalDateTime.parse("2019-07-17T12:34:56")),
+          Identifier("PNC", "12/394773H", LocalDate.parse("2019-07-17"), null, LocalDateTime.parse("2020-07-17T12:34:56")),
+          Identifier("CRO", "145845/12U", null, "Incorrect CRO - typo", LocalDateTime.parse("2021-10-18T12:34:56")),
+          Identifier("CRO", "145835/12U", null, null, LocalDateTime.parse("2021-10-19T12:34:56")),
+          Identifier("DL", "COLBO/912052/JM9MU", null, null, LocalDateTime.parse("2022-04-12T12:34:56")),
+        )
+      assertThat(prisoner.pncNumber).isEqualTo("12/0394773H")
+      assertThat(prisoner.pncNumberCanonicalShort).isEqualTo("12/394773H")
+      assertThat(prisoner.pncNumberCanonicalLong).isEqualTo("2012/394773H")
+      assertThat(prisoner.croNumber).isEqualTo("145835/12U")
     }
   }
 }
