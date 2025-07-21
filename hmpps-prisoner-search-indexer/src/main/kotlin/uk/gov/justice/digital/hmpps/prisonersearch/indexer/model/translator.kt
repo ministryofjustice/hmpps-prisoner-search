@@ -2,10 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeed
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
@@ -21,6 +17,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberLong
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.isPNCNumber
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier

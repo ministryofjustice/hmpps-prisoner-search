@@ -7,8 +7,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 import java.time.LocalDate
 
