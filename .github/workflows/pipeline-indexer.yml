@@ -89,6 +89,7 @@ jobs:
       environment: 'dev'
       app_version: '${{ needs.build.outputs.app_version }}'
       k8s_deployment_name: 'hmpps-prisoner-search-indexer'
+      helm_chart_name: 'hmpps-prisoner-search-indexer'
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
       changelog_git_paths: 'hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*'
   smoke_test:
@@ -111,6 +112,7 @@ jobs:
       environment: 'preprod'
       app_version: '${{ needs.build.outputs.app_version }}'
       k8s_deployment_name: 'hmpps-prisoner-search-indexer'
+      helm_chart_name: 'hmpps-prisoner-search-indexer'
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
       changelog_git_paths: 'hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*'
   deploy_prod:
@@ -124,5 +126,6 @@ jobs:
       environment: 'prod'
       app_version: '${{ needs.build.outputs.app_version }}'
       k8s_deployment_name: 'hmpps-prisoner-search-indexer'
+      helm_chart_name: 'hmpps-prisoner-search-indexer'
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
       changelog_git_paths: 'hmpps-prisoner-search-indexer/.*|common/.*|build.gradle.kts|.circleci/.*'
