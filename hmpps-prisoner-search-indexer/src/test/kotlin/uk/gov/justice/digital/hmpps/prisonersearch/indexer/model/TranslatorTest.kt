@@ -14,11 +14,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
@@ -30,6 +28,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalC
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -225,16 +225,17 @@ class TranslatorTest {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(locationDescription = "OUT"),
       restrictedPatientData = Result.success(
-        RestrictedPatient(
-          supportingPrisonId = "MDI",
-          dischargedHospital = Agency(
+        RestrictedPatientDto(
+          prisonerNumber = "A1234AA",
+          supportingPrison = Agency(agencyId = "MDI"),
+          hospitalLocation = Agency(
             agencyId = "HAZLWD",
             agencyType = "HSHOSP",
             active = true,
             description = "Hazelwood Hospital",
           ),
-          dischargeDate = LocalDate.now(),
-          dischargeDetails = "Getting worse",
+          dischargeTime = LocalDateTime.now(),
+          commentText = "Getting worse",
         ),
       ),
     )
@@ -424,16 +425,17 @@ class TranslatorTest {
       val existingPrisoner = Prisoner().translate(
         ob = aBooking().copy(locationDescription = "OUT"),
         restrictedPatientData = Result.success(
-          RestrictedPatient(
-            supportingPrisonId = "MDI",
-            dischargedHospital = Agency(
+          RestrictedPatientDto(
+            prisonerNumber = "A1234AA",
+            supportingPrison = Agency(agencyId = "MDI"),
+            hospitalLocation = Agency(
               agencyId = "HAZLWD",
               agencyType = "HSHOSP",
               active = true,
               description = "Hazelwood Hospital",
             ),
-            dischargeDate = LocalDate.now(),
-            dischargeDetails = "Getting worse",
+            dischargeTime = LocalDateTime.now(),
+            commentText = "Getting worse",
           ),
         ),
       )

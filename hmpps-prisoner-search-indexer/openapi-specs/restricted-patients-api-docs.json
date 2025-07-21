@@ -1,0 +1,621 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Restricted Patients API",
+    "description" : "Service for managing restricted patients",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2025-07-21.38.9a93215"
+  },
+  "servers" : [ {
+    "url" : "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/",
+    "description" : "Development"
+  }, {
+    "url" : "https://restricted-patients-api-preprod.hmpps.service.justice.gov.uk/",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://restricted-patients-api.hmpps.service.justice.gov.uk/",
+    "description" : "Production"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ "read", "write" ]
+  } ],
+  "paths" : {
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate-in-restricted-patient" : {
+      "post" : {
+        "tags" : [ "restricted-patients-controller" ],
+        "operationId" : "migrateInPatient",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigrateInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestrictedPatientDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discharge-to-hospital" : {
+      "post" : {
+        "tags" : [ "restricted-patients-controller" ],
+        "operationId" : "dischargeToHospital",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DischargeToHospitalRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestrictedPatientDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/change-supporting-prison" : {
+      "post" : {
+        "tags" : [ "restricted-patients-controller" ],
+        "operationId" : "changeSupportingPrison",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SupportingPrisonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestrictedPatientDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subject-access-request" : {
+      "get" : {
+        "tags" : [ "Subject Access Request" ],
+        "summary" : "Provides content for a prisoner to satisfy the needs of a subject access request on their behalf",
+        "description" : "Requires role SAR_DATA_ACCESS or additional role as specified by hmpps.sar.additionalAccessRole configuration.",
+        "operationId" : "getSarContentByReference",
+        "parameters" : [ {
+          "name" : "prn",
+          "in" : "query",
+          "description" : "NOMIS Prison Reference Number",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "crn",
+          "in" : "query",
+          "description" : "nDelius Case Reference Number",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Optional parameter denoting minimum date of event occurrence which should be returned in the response",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Optional parameter denoting maximum date of event occurrence which should be returned in the response",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - content found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmppsSubjectAccessRequestContent"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "Request successfully processed - no content found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "209" : {
+            "description" : "Subject Identifier is not recognised by this service",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "The client does not have authorisation to make this request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/restricted-patient/prison-number/{prison-number}" : {
+      "get" : {
+        "tags" : [ "restricted-patients-controller" ],
+        "operationId" : "getRestrictedPatientByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prison-number",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestrictedPatientDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "restricted-patients-controller" ],
+        "operationId" : "removeRestrictedPatient",
+        "parameters" : [ {
+          "name" : "prison-number",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestrictedPatient"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "MigrateInRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "hospitalLocationCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "hospitalLocationCode", "offenderNo" ]
+      },
+      "Agency" : {
+        "type" : "object",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "longDescription" : {
+            "type" : "string"
+          },
+          "agencyType" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "agencyId" ]
+      },
+      "RestrictedPatientDto" : {
+        "type" : "object",
+        "description" : "Restricted patient",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "Then NOMS Id of the restricted patient",
+            "example" : "G1072GT"
+          },
+          "fromLocation" : {
+            "$ref" : "#/components/schemas/Agency",
+            "description" : "Previous location id",
+            "example" : "MDI"
+          },
+          "hospitalLocation" : {
+            "$ref" : "#/components/schemas/Agency",
+            "description" : "Hospital location code, this indicates the current location of a prisoner",
+            "example" : "HAZLWD"
+          },
+          "supportingPrison" : {
+            "$ref" : "#/components/schemas/Agency",
+            "description" : "Prison where the offender is supported by POM",
+            "example" : "LEI"
+          },
+          "dischargeTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date and time the prisoner was discharged to hospital"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Useful comments"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date time the record was created"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The user id of the person who created the record"
+          }
+        },
+        "required" : [ "dischargeTime", "prisonerNumber" ]
+      },
+      "DischargeToHospitalRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "commentText" : {
+            "type" : "string"
+          },
+          "fromLocationId" : {
+            "type" : "string"
+          },
+          "hospitalLocationCode" : {
+            "type" : "string"
+          },
+          "supportingPrisonId" : {
+            "type" : "string"
+          },
+          "dischargeTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "fromLocationId", "hospitalLocationCode", "offenderNo" ]
+      },
+      "SupportingPrisonRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "supportingPrisonId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "offenderNo", "supportingPrisonId" ]
+      },
+      "HmppsSubjectAccessRequestContent" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "description" : "The content of the subject access request response"
+          }
+        },
+        "required" : [ "content" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "RestrictedPatient" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string"
+          },
+          "fromLocationId" : {
+            "type" : "string"
+          },
+          "hospitalLocationCode" : {
+            "type" : "string"
+          },
+          "supportingPrisonId" : {
+            "type" : "string"
+          },
+          "dischargeTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "commentText" : {
+            "type" : "string"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createUserId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "dischargeTime", "fromLocationId", "hospitalLocationCode", "prisonerNumber", "supportingPrisonId" ]
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

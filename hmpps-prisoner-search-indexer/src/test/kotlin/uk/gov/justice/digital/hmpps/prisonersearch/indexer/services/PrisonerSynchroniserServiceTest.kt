@@ -28,15 +28,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.ConvictedStatusEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
@@ -358,11 +358,11 @@ internal class PrisonerSynchroniserServiceTest {
       ),
     )
     private val bookingId = outsidePrisoner.bookingId
-    private val newRestrictedPatient = RestrictedPatient(
-      "SWI",
-      Agency("HOS2", null, null, "HOSP", true),
-      LocalDate.parse("2024-10-25"),
-      null,
+    private val newRestrictedPatient = RestrictedPatientDto(
+      prisonerNumber = prisonerNumber,
+      supportingPrison = Agency(agencyId = "SWI"),
+      hospitalLocation = Agency("HOS2", null, null, "HOSP", true),
+      dischargeTime = LocalDateTime.parse("2024-10-25T10:20:30"),
     )
     val prisoner = Prisoner().apply {
       bookingId = this@ReindexRestrictedPatient.bookingId.toString()

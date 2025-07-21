@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.isExpired
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.setLocationDescription
@@ -20,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentIncent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.translate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.AlertsUpdatedEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.ConvictedStatusEventService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
@@ -263,7 +263,7 @@ class PrisonerSynchroniserService(
   internal fun compareAndMaybeIndex(
     ob: OffenderBooking,
     incentiveLevelData: Result<IncentiveLevel?>,
-    restrictedPatientData: Result<RestrictedPatient?>,
+    restrictedPatientData: Result<RestrictedPatientDto?>,
     alerts: Result<List<Alert>?>,
     complexityOfNeed: Result<ComplexityOfNeed?>,
   ) {
