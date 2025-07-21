@@ -27,7 +27,7 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.7")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.10")
   implementation("org.opensearch.client:spring-data-opensearch-starter:1.8.1")
   implementation("com.google.code.gson:gson:2.13.1")
   implementation("org.springframework.boot:spring-boot-starter-cache")
