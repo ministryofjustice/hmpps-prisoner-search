@@ -22,17 +22,17 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeed
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
@@ -144,7 +144,12 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will update domain data if nomis booking id has changed`() {
       val changedBookingId = 112233L
       val newIncentive =
-        uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel("NEW", "Desc", LocalDateTime.now(), null)
+        uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel(
+          "NEW",
+          "Desc",
+          LocalDateTime.now(),
+          null,
+        )
       val prisonerDocumentSummaryAfterUpdate = PrisonerDocumentSummary(
         prisonerNumber,
         Prisoner().apply { bookingId = changedBookingId.toString() },
@@ -224,7 +229,12 @@ internal class PrisonerSynchroniserServiceTest {
     private val bookingId = 2L
     private val oldIncentive = CurrentIncentive(IncentiveLevel("OLD", "Desc"), LocalDateTime.now(), null)
     private val newIncentive =
-      uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel("NEW", "Desc", LocalDateTime.now(), null)
+      uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel(
+        "NEW",
+        "Desc",
+        LocalDateTime.now(),
+        null,
+      )
     val prisoner = Prisoner().apply {
       bookingId = this@ReindexIncentive.bookingId.toString()
       currentIncentive = oldIncentive

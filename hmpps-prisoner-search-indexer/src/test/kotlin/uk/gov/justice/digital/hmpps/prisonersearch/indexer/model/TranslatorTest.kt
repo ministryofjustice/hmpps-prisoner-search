@@ -6,11 +6,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Agency
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
@@ -19,6 +14,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.common.dps
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps
 
 import java.time.LocalDate
 import java.time.LocalDateTime

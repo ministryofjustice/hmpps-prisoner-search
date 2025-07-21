@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.common.dps
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalDate
