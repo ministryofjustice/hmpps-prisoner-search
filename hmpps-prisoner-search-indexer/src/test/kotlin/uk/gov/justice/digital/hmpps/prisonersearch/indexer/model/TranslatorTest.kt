@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.common.model
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.groups.Tuple
@@ -11,22 +11,30 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.EmailAddress
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderLanguageDto
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PersonalCareNeedDto
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalAttributes
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalCharacteristic
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.PhysicalMark
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.SentenceDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Language
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.EmailAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderLanguageDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PersonalCareNeedDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalAttributes
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalCharacteristic
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
 class TranslatorTest {
 
