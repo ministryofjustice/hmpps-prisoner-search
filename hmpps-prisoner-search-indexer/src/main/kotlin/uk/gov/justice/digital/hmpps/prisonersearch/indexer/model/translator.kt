@@ -1,17 +1,32 @@
 @file:Suppress("ktlint:standard:filename")
 
-package uk.gov.justice.digital.hmpps.prisonersearch.common.model
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.dps.RestrictedPatient
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenceHistoryDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Language
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlias
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberLong
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.isPNCNumber
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
 import java.time.LocalDate
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Address as NomisAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
 fun Prisoner.translate(
   existingPrisoner: Prisoner? = null,
@@ -120,7 +135,7 @@ fun Prisoner.translate(
       it.endDate,
     )
   }
-    ?.filter { it.endDate == null || it.endDate.isAfter(LocalDate.now()) }
+    ?.filter { it.endDate == null || it.endDate!!.isAfter(LocalDate.now()) }
 
   this.languages = ob.languages?.map {
     Language(
@@ -212,7 +227,7 @@ fun Prisoner.translate(
 
 fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
   CurrentIncentive(
-    level = IncentiveLevel(it.iepCode, it.iepLevel),
+    level = uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel(it.iepCode, it.iepLevel),
     nextReviewDate = it.nextReviewDate,
     // ES only stores to the second
     dateTime = it.iepTime.withNano(0),
@@ -331,4 +346,4 @@ private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List
 }
 
 // expired mapping logic is the same as for sync to Nomis:
-fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo.isAfter(now)
+fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo!!.isAfter(now)

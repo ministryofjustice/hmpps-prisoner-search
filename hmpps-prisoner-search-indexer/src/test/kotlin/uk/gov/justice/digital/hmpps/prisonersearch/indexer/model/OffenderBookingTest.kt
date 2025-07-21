@@ -1,10 +1,10 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.common.model
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.Alias
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.common.nomis.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Alias
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import java.time.LocalDate
 
 class OffenderBookingTest {
