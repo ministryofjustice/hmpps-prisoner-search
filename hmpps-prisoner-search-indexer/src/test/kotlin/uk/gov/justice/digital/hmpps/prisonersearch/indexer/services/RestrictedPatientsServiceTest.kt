@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Agency
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(RestrictedPatientService::class, WebClientConfiguration::class)
@@ -36,12 +36,12 @@ internal class RestrictedPatientsServiceTest {
     val restrictedPatient = restrictedPatientService.getRestrictedPatient("A123ZZZ")!!
     restrictedPatientsApi.verifyGetRestrictedPatientRequest("A123ZZZ")
 
-    assertThat(restrictedPatient.dischargeDate).isEqualTo(LocalDate.parse("2020-10-10"))
-    assertThat(restrictedPatient.dischargeDetails).isEqualTo("Prisoner was released on bail")
-    assertThat(restrictedPatient.dischargedHospital).isEqualTo(
+    assertThat(restrictedPatient.dischargeTime).isEqualTo(LocalDateTime.parse("2020-10-10T21:00:00"))
+    assertThat(restrictedPatient.commentText).isEqualTo("Prisoner was released on bail")
+    assertThat(restrictedPatient.hospitalLocation).isEqualTo(
       Agency("HAZLWD", "Hazelwood House", "Hazelwood House", "HSHOSP", true),
     )
-    assertThat(restrictedPatient.supportingPrisonId).isEqualTo("MDI")
+    assertThat(restrictedPatient.supportingPrison?.agencyId).isEqualTo("MDI")
   }
 
   @Test

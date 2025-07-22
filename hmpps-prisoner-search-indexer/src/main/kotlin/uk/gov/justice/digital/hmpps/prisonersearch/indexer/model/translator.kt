@@ -20,11 +20,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.isPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.RestrictedPatient
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
@@ -32,7 +32,7 @@ fun Prisoner.translate(
   existingPrisoner: Prisoner? = null,
   ob: OffenderBooking,
   incentiveLevel: Result<IncentiveLevel?> = Result.success(null),
-  restrictedPatientData: Result<RestrictedPatient?> = Result.success(null),
+  restrictedPatientData: Result<RestrictedPatientDto?> = Result.success(null),
   alerts: Result<List<Alert>?> = Result.success(null),
   complexityOfNeed: Result<ComplexityOfNeed?> = Result.success(null),
 ): Prisoner {
@@ -234,19 +234,19 @@ fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
   )
 }
 
-fun Prisoner.setLocationDescription(rp: RestrictedPatient?, ob: OffenderBooking) {
+fun Prisoner.setLocationDescription(rp: RestrictedPatientDto?, ob: OffenderBooking) {
   this.locationDescription = rp
-    ?.let { "${ob.locationDescription} - discharged to ${it.dischargedHospital?.description}" }
+    ?.let { "${ob.locationDescription} - discharged to ${it.hospitalLocation?.description}" }
     ?: ob.locationDescription
 }
 
-fun Prisoner.setRestrictedPatientFields(rp: RestrictedPatient?) {
+fun Prisoner.setRestrictedPatientFields(rp: RestrictedPatientDto?) {
   this.restrictedPatient = rp != null
-  this.supportingPrisonId = rp?.supportingPrisonId
-  this.dischargedHospitalId = rp?.dischargedHospital?.agencyId
-  this.dischargedHospitalDescription = rp?.dischargedHospital?.description
-  this.dischargeDate = rp?.dischargeDate
-  this.dischargeDetails = rp?.dischargeDetails
+  this.supportingPrisonId = rp?.supportingPrison?.agencyId
+  this.dischargedHospitalId = rp?.hospitalLocation?.agencyId
+  this.dischargedHospitalDescription = rp?.hospitalLocation?.description
+  this.dischargeDate = rp?.dischargeTime?.toLocalDate()
+  this.dischargeDetails = rp?.commentText
 }
 
 private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail, keyword: String): List<BodyPartDetail>? = if (bodyPart.comment?.lowercase()?.contains(keyword) == true) {
@@ -346,4 +346,4 @@ private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List
 }
 
 // expired mapping logic is the same as for sync to Nomis:
-fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo!!.isAfter(now)
+fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo.isAfter(now)
