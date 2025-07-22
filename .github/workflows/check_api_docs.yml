@@ -1,0 +1,72 @@
+name: Check API docs are up to date
+
+on:
+  schedule:
+    - cron: "10 7 * * MON-FRI" # Every weekday at 07:10 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  setup-api-matrix:
+    name: Create api matrix
+    uses: ./.github/workflows/setup_api_matrix.yml # LOCAL_VERSION
+    secrets: inherit
+  build:
+    runs-on: [self-hosted, hmpps-github-actions-runner]
+    strategy:
+      matrix: ${{ fromJson(needs.setup-api-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          repositories: ${{ github.event.repository.name }}
+          owner: ministryofjustice
+          # Created by PGP following instructions in https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#authenticating-with-github-app-generated-tokens
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Check API docs
+        id: check-api
+        run: ./check-api-docs.bash ${{ matrix.project }} "hmpps-prisoner-search-indexer"
+
+      - name: Upload differences report
+        if: steps.check-api.outputs.differences == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          path: hmpps-prisoner-search-indexer/build/api.diff
+          name: ${{ matrix.project }}-api.diff
+
+      - name: Create Pull Request
+        if: steps.check-api.outputs.differences == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Update api docs for ${{ matrix.project }} to ${{ steps.check-api.outputs.new_version }}
+          title: Update api docs for ${{ matrix.project }} to ${{ steps.check-api.outputs.new_version }}
+          body: |
+            Update api docs from ${{ steps.check-api.outputs.old_version }} to ${{ steps.check-api.outputs.new_version }}
+
+            Current production version is ${{ steps.check-api.outputs.production_version }}
+          branch: api-docs-${{ matrix.project }}
+          base: main
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Delete Pull Request
+        if: steps.check-api.outputs.differences == 'false'
+        run: ./delete-pull-request.bash api-docs-${{ matrix.project }}
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+    needs:
+      - setup-api-matrix
