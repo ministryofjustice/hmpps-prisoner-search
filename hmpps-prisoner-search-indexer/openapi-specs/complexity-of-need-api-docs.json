@@ -1,0 +1,507 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Complexity of Need API",
+    "version" : "v1",
+    "description" : "A microservice which holds the Complexity of Need level associated with offenders\n\n### Authentication\n\nThis API is secured by OAuth 2 with tokens supplied by HMPPS Auth.\n\nRead permissions are granted to clients with the role `ROLE_COMPLEXITY_OF_NEED`\n\nWrite permissions are granted to clients with the role `ROLE_UPDATE_COMPLEXITY_OF_NEED`.\n\nTo use the SAR API, clients will need the role `ROLE_SAR_DATA_ACCESS`.\n\n---\n\nOwned by the **Manage POM Cases** team\n\n- Slack: [#manage-pom-cases](https://mojdt.slack.com/channels/manage-pom-cases)\n- GitHub: [ministryofjustice/hmpps-complexity-of-need](https://github.com/ministryofjustice/hmpps-complexity-of-need)\n"
+  },
+  "consumes" : [ "application/json" ],
+  "produces" : [ "application/json" ],
+  "security" : [ {
+    "HmppsAuth" : [ "read" ]
+  } ],
+  "components" : {
+    "securitySchemes" : {
+      "Bearer" : {
+        "type" : "apiKey",
+        "description" : "A bearer token obtained from HMPPS SSO",
+        "name" : "Authorization",
+        "in" : "header"
+      },
+      "HmppsAuth" : {
+        "type" : "oauth2",
+        "flows" : {
+          "clientCredentials" : {
+            "scopes" : {
+              "read" : "Grants read access",
+              "write" : "Grants write access"
+            }
+          }
+        }
+      }
+    },
+    "schemas" : {
+      "Level" : {
+        "type" : "string",
+        "enum" : [ "low", "medium", "high" ],
+        "description" : "Complexity of Need Level",
+        "example" : "low"
+      },
+      "OffenderNo" : {
+        "type" : "string",
+        "description" : "NOMIS Offender Number",
+        "example" : "A0000AA"
+      },
+      "ComplexityOfNeed" : {
+        "type" : "object",
+        "properties" : {
+          "offenderNo" : {
+            "$ref" : "#/components/schemas/OffenderNo"
+          },
+          "level" : {
+            "$ref" : "#/components/schemas/Level"
+          },
+          "sourceUser" : {
+            "type" : "string",
+            "description" : "The NOMIS username that supplied this Complexity of Need entry",
+            "example" : "JSMITH_GEN"
+          },
+          "sourceSystem" : {
+            "type" : "string",
+            "description" : "The OAuth Client ID of the system that created this entry",
+            "example" : "hmpps-api-client-id"
+          },
+          "notes" : {
+            "type" : "string",
+            "description" : "Free-text notes for this entry"
+          },
+          "createdTimeStamp" : {
+            "type" : "string",
+            "format" : "date_time",
+            "description" : "The date & time this entry was created (in RFC 3339 format)",
+            "example" : "2021-03-02T17:18:46.457Z"
+          },
+          "updatedTimeStamp" : {
+            "type" : "string",
+            "format" : "date_time",
+            "description" : "The date & time this entry was updated (in RFC 3339 format)",
+            "example" : "2021-03-02T17:18:46.457Z"
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether it is active or not"
+          }
+        },
+        "required" : [ "offenderNo", "level", "createdTimeStamp", "updatedTimeStamp", "sourceSystem", "active" ],
+        "additionalProperties" : false
+      },
+      "NewComplexityOfNeed" : {
+        "type" : "object",
+        "properties" : {
+          "level" : {
+            "$ref" : "#/components/schemas/Level"
+          },
+          "sourceUser" : {
+            "type" : "string",
+            "description" : "The NOMIS username that supplied this Complexity of Need entry",
+            "example" : "JSMITH_GEN"
+          },
+          "notes" : {
+            "type" : "string",
+            "description" : "Free-text notes for this entry"
+          }
+        },
+        "required" : [ "level" ],
+        "additionalProperties" : false
+      },
+      "SarError" : {
+        "required" : [ "developerMessage", "errorCode", "status", "userMessage" ],
+        "type" : "object",
+        "properties" : {
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "errorCode" : {
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "integer"
+          },
+          "userMessage" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SarOffenderData" : {
+        "required" : [ "content" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ComplexityOfNeed"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags" : [ {
+    "name" : "Single Offender",
+    "description" : "Access Complexity of Need for a single offender"
+  }, {
+    "name" : "Multiple Offenders",
+    "description" : "Access Complexity of Need for multiple offenders at once"
+  } ],
+  "paths" : {
+    "/v1/complexity-of-need/offender-no/{offender_no}" : {
+      "parameters" : [ {
+        "name" : "offender_no",
+        "in" : "path",
+        "description" : "NOMIS Offender Number",
+        "example" : "A0000AA",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      } ],
+      "get" : {
+        "summary" : "Retrieve the current Complexity of Need level for an offender",
+        "tags" : [ "Single Offender" ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender's current Complexity of Need level found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ComplexityOfNeed"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Invalid or missing access token"
+          },
+          "403" : {
+            "description" : "Access token is missing necessary role"
+          },
+          "404" : {
+            "description" : "The Complexity of Need level for this offender is not known"
+          }
+        }
+      },
+      "post" : {
+        "summary" : "Update the Complexity of Need level for an offender",
+        "tags" : [ "Single Offender" ],
+        "description" : "Clients calling this endpoint must have role: `ROLE_UPDATE_COMPLEXITY_OF_NEED`",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "Complexity of Need level set successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ComplexityOfNeed"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "There were validation errors. Make sure you've given a valid level."
+          },
+          "401" : {
+            "description" : "Invalid or missing access token"
+          },
+          "403" : {
+            "description" : "Access token is missing role `ROLE_COMPLEXITY_OF_NEED`"
+          }
+        },
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewComplexityOfNeed"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/complexity-of-need/multiple/offender-no" : {
+      "post" : {
+        "summary" : "Retrieve the current Complexity of Need levels for multiple offenders",
+        "tags" : [ "Multiple Offenders" ],
+        "description" : "This endpoint returns a JSON array containing the current Complexity of Need entry for multiple offenders.\n\nThe response array:\n  - will exclude offenders whose Complexity of Need level is not known (i.e. these would result in a `404 Not Found` error on the single `GET` endpoint)\n  - will exclude offenders without a current active level\n  - is not sorted in the same order as the request body\n  - is not paginated\n",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ComplexityOfNeed"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request body was invalid. Make sure you've provided a JSON array of NOMIS Offender Numbers."
+          },
+          "401" : {
+            "description" : "Invalid or missing access token"
+          },
+          "403" : {
+            "description" : "Access token is missing necessary role"
+          }
+        },
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/OffenderNo"
+                },
+                "description" : "A JSON array of NOMIS Offender Numbers",
+                "example" : [ "A0000AA", "B0000BB", "C0000CC" ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/complexity-of-need/offender-no/{offender_no}/history" : {
+      "parameters" : [ {
+        "name" : "offender_no",
+        "in" : "path",
+        "description" : "NOMIS Offender Number",
+        "example" : "A0000AA",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      } ],
+      "get" : {
+        "summary" : "Retrieve full history of Complexity of Needs for an offender",
+        "tags" : [ "Single Offender" ],
+        "description" : "Results are sorted chronologically (newest first, oldest last)",
+        "responses" : {
+          "200" : {
+            "description" : "Offender's Complexity of Need history found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ComplexityOfNeed"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Invalid or missing access token"
+          },
+          "403" : {
+            "description" : "Access token is missing necessary role"
+          },
+          "404" : {
+            "description" : "The Complexity of Need level for this offender is not known"
+          }
+        }
+      }
+    },
+    "/v1/complexity-of-need/offender-no/{offender_no}/inactivate" : {
+      "parameters" : [ {
+        "name" : "offender_no",
+        "in" : "path",
+        "description" : "NOMIS Offender Number",
+        "example" : "A0000AA",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      } ],
+      "put" : {
+        "summary" : "Inactivate the Complexity of Need level for an offender",
+        "tags" : [ "Single Offender" ],
+        "description" : "Clients calling this endpoint must have role: `ROLE_UPDATE_COMPLEXITY_OF_NEED`",
+        "responses" : {
+          "200" : {
+            "description" : "Complexity of Need level inactivated successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ComplexityOfNeed"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Invalid or missing access token"
+          },
+          "403" : {
+            "description" : "Access token is missing role `ROLE_COMPLEXITY_OF_NEED`"
+          }
+        }
+      }
+    },
+    "/subject-access-request" : {
+      "get" : {
+        "summary" : "Retrieves all held info for offender",
+        "security" : [ {
+          "Bearer" : [ ]
+        } ],
+        "tags" : [ "Subject Access Request" ],
+        "description" : "* NOMIS Prison Number (PRN) must be provided as part of the request.\n* The role ROLE_SAR_DATA_ACCESS is required\n* If the product uses the identifier type transmitted in the request, it can respond with its data and HTTP code 200\n* If the product uses the identifier type transmitted in the request but has no data to respond with, it should respond with HTTP code 204\n* If the product does not use the identifier type transmitted in the request, it should respond with HTTP code 209",
+        "parameters" : [ {
+          "name" : "prn",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/OffenderNo"
+          },
+          "description" : "NOMIS Prison Reference Number"
+        }, {
+          "name" : "crn",
+          "in" : "query",
+          "description" : "nDelius Case Reference Number. **Do not use this parameter for this endpoint**",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Optional parameter denoting minimum date of event occurrence which should be returned in the response (if used, both dates must be provided)",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Optional parameter denoting maximum date of event occurrence which should be returned in the response (if used, both dates must be provided)",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "401" : {
+            "description" : "Request is not authorised",
+            "content" : {
+              "application/json" : {
+                "examples" : {
+                  "error_example" : {
+                    "value" : {
+                      "developerMessage" : "Missing or invalid access token",
+                      "errorCode" : 401,
+                      "status" : 401,
+                      "userMessage" : "Missing or invalid access token"
+                    }
+                  }
+                },
+                "schema" : {
+                  "$ref" : "#/components/schemas/SarError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Invalid token role",
+            "content" : {
+              "application/json" : {
+                "examples" : {
+                  "error_example" : {
+                    "value" : {
+                      "developerMessage" : "You need the role 'ROLE_SAR_DATA_ACCESS' to use this endpoint",
+                      "errorCode" : 403,
+                      "status" : 403,
+                      "userMessage" : "You need the role 'ROLE_SAR_DATA_ACCESS' to use this endpoint"
+                    }
+                  }
+                },
+                "schema" : {
+                  "$ref" : "#/components/schemas/SarError"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Both PRN and CRN parameter passed",
+            "content" : {
+              "application/json" : {
+                "examples" : {
+                  "error_example" : {
+                    "value" : {
+                      "developerMessage" : "Cannot supply both CRN and PRN",
+                      "errorCode" : 400,
+                      "status" : 400,
+                      "userMessage" : "Cannot supply both CRN and PRN"
+                    }
+                  }
+                },
+                "schema" : {
+                  "$ref" : "#/components/schemas/SarError"
+                }
+              }
+            }
+          },
+          "209" : {
+            "description" : "CRN parameter not allowed",
+            "content" : {
+              "application/json" : {
+                "examples" : {
+                  "error_example" : {
+                    "value" : {
+                      "developerMessage" : "CRN parameter not allowed",
+                      "errorCode" : 209,
+                      "status" : 209,
+                      "userMessage" : "CRN parameter not allowed"
+                    }
+                  }
+                },
+                "schema" : {
+                  "$ref" : "#/components/schemas/SarError"
+                }
+              }
+            }
+          },
+          "210" : {
+            "description" : "Invalid date format",
+            "content" : {
+              "application/json" : {
+                "examples" : {
+                  "error_example" : {
+                    "value" : {
+                      "developerMessage" : "Invalid date format",
+                      "errorCode" : 210,
+                      "status" : 210,
+                      "userMessage" : "Invalid date format"
+                    }
+                  }
+                },
+                "schema" : {
+                  "$ref" : "#/components/schemas/SarError"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "Offender not found"
+          },
+          "200" : {
+            "description" : "Offender found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SarOffenderData"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers" : [ {
+    "url" : "https://complexity-of-need-staging.hmpps.service.justice.gov.uk",
+    "description" : "Staging/dev environment"
+  }, {
+    "url" : "https://complexity-of-need-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-production environment"
+  }, {
+    "url" : "https://complexity-of-need.hmpps.service.justice.gov.uk",
+    "description" : "Production environment"
+  } ]
+}

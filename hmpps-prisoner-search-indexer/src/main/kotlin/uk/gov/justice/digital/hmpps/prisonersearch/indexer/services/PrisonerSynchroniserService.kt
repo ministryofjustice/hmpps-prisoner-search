@@ -7,10 +7,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.isExpired
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.setLocationDescription
@@ -245,7 +245,7 @@ class PrisonerSynchroniserService(
     }
 
   internal fun reindexComplexityOfNeedWithGet(ob: OffenderBooking, eventType: String) {
-    val level = getComplexityOfNeed(ob)?.level
+    val level = getComplexityOfNeed(ob)?.level?.value
     reindexComplexityOfNeed(ob.offenderNo, level, eventType)
   }
 
@@ -262,7 +262,7 @@ class PrisonerSynchroniserService(
 
   internal fun compareAndMaybeIndex(
     ob: OffenderBooking,
-    incentiveLevelData: Result<IncentiveLevel?>,
+    incentiveLevelData: Result<IncentiveReviewSummary?>,
     restrictedPatientData: Result<RestrictedPatientDto?>,
     alerts: Result<List<Alert>?>,
     complexityOfNeed: Result<ComplexityOfNeed?>,

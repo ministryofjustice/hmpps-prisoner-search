@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Language
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
@@ -18,8 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumberShort
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.isPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
@@ -31,7 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address a
 fun Prisoner.translate(
   existingPrisoner: Prisoner? = null,
   ob: OffenderBooking,
-  incentiveLevel: Result<IncentiveLevel?> = Result.success(null),
+  incentiveLevel: Result<IncentiveReviewSummary?> = Result.success(null),
   restrictedPatientData: Result<RestrictedPatientDto?> = Result.success(null),
   alerts: Result<List<Alert>?> = Result.success(null),
   complexityOfNeed: Result<ComplexityOfNeed?> = Result.success(null),
@@ -212,7 +213,7 @@ fun Prisoner.translate(
   }
 
   this.currentIncentive = incentiveLevel.map { it.toCurrentIncentive() }.getOrElse { existingPrisoner?.currentIncentive }
-  this.complexityOfNeedLevel = complexityOfNeed.map { it?.level }.getOrElse { existingPrisoner?.complexityOfNeedLevel }
+  this.complexityOfNeedLevel = complexityOfNeed.map { it?.level?.value }.getOrElse { existingPrisoner?.complexityOfNeedLevel }
 
   this.addresses = ob.addresses?.map { it.toAddress() }
   this.emailAddresses = ob.emailAddresses?.map { EmailAddress(it.email) }
@@ -225,9 +226,9 @@ fun Prisoner.translate(
   return this
 }
 
-fun IncentiveLevel?.toCurrentIncentive(): CurrentIncentive? = this?.let {
+fun IncentiveReviewSummary?.toCurrentIncentive(): CurrentIncentive? = this?.let {
   CurrentIncentive(
-    level = uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel(it.iepCode, it.iepLevel),
+    level = IncentiveLevel(it.iepCode, it.iepLevel),
     nextReviewDate = it.nextReviewDate,
     // ES only stores to the second
     dateTime = it.iepTime.withNano(0),

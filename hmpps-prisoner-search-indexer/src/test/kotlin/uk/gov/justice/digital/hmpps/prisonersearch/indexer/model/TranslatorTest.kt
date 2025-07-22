@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.AlertCodeSummary
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
@@ -180,11 +180,17 @@ class TranslatorTest {
     val prisoner = Prisoner().translate(
       ob = aBooking(),
       incentiveLevel = Result.success(
-        IncentiveLevel(
+        IncentiveReviewSummary(
           iepCode = "STD",
           iepLevel = "Standard",
           iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
           nextReviewDate = LocalDate.parse("2022-02-02"),
+          id = 1L,
+          prisonerNumber = "A1234AB",
+          bookingId = 2L,
+          iepDate = LocalDate.now(),
+          iepDetails = emptyList(),
+          daysSinceReview = 0,
         ),
       ),
     )
@@ -203,11 +209,17 @@ class TranslatorTest {
       null,
       aBooking(),
       incentiveLevel = Result.success(
-        IncentiveLevel(
+        IncentiveReviewSummary(
           iepCode = "STD",
           iepLevel = "Standard",
           iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
           nextReviewDate = LocalDate.parse("2022-02-02"),
+          id = 1L,
+          prisonerNumber = "A1234AB",
+          bookingId = 2L,
+          iepDate = LocalDate.now(),
+          iepDetails = emptyList(),
+          daysSinceReview = 0,
         ),
       ),
     )
@@ -367,11 +379,17 @@ class TranslatorTest {
       val existingPrisoner = Prisoner().translate(
         ob = aBooking().copy(locationDescription = "OUT"),
         incentiveLevel = Result.success(
-          IncentiveLevel(
+          IncentiveReviewSummary(
             iepCode = "STD",
             iepLevel = "Standard",
             iepTime = LocalDateTime.parse("2021-01-01T11:00:00"),
             nextReviewDate = LocalDate.parse("2022-02-02"),
+            id = 1L,
+            prisonerNumber = "A1234AB",
+            bookingId = 2L,
+            iepDate = LocalDate.now(),
+            iepDetails = emptyList(),
+            daysSinceReview = 0,
           ),
         ),
       )

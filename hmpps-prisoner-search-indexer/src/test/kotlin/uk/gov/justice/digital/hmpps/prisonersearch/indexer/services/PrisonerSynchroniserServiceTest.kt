@@ -28,11 +28,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.Level
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentIncentive
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonregister.model.PrisonDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
@@ -143,13 +146,18 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will update domain data if nomis booking id has changed`() {
       val changedBookingId = 112233L
-      val newIncentive =
-        uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel(
-          "NEW",
-          "Desc",
-          LocalDateTime.now(),
-          null,
-        )
+      val newIncentive = IncentiveReviewSummary(
+        iepCode = "NEW",
+        iepLevel = "Desc",
+        iepTime = LocalDateTime.now(),
+        nextReviewDate = LocalDate.now(),
+        id = 1L,
+        prisonerNumber = "A1234AB",
+        bookingId = 2L,
+        iepDate = LocalDate.now(),
+        iepDetails = emptyList(),
+        daysSinceReview = 0,
+      )
       val prisonerDocumentSummaryAfterUpdate = PrisonerDocumentSummary(
         prisonerNumber,
         Prisoner().apply { bookingId = changedBookingId.toString() },
@@ -228,13 +236,18 @@ internal class PrisonerSynchroniserServiceTest {
     private val prisonerNumber = "A1234AA"
     private val bookingId = 2L
     private val oldIncentive = CurrentIncentive(IncentiveLevel("OLD", "Desc"), LocalDateTime.now(), null)
-    private val newIncentive =
-      uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel(
-        "NEW",
-        "Desc",
-        LocalDateTime.now(),
-        null,
-      )
+    private val newIncentive = IncentiveReviewSummary(
+      iepCode = "NEW",
+      iepLevel = "Desc",
+      iepTime = LocalDateTime.now(),
+      nextReviewDate = LocalDate.now(),
+      id = 1L,
+      prisonerNumber = "A1234AB",
+      bookingId = 2L,
+      iepDate = LocalDate.now(),
+      iepDetails = emptyList(),
+      daysSinceReview = 0,
+    )
     val prisoner = Prisoner().apply {
       bookingId = this@ReindexIncentive.bookingId.toString()
       currentIncentive = oldIncentive
@@ -697,7 +710,14 @@ internal class PrisonerSynchroniserServiceTest {
     private val maleBooking = OffenderBookingBuilder().anOffenderBooking()
 
     private val prisonerNumber = femaleBooking.offenderNo
-    private val newComplexityOfNeed = ComplexityOfNeed(prisonerNumber, "medium", true)
+    private val newComplexityOfNeed = ComplexityOfNeed(
+      offenderNo = prisonerNumber,
+      level = Level.medium,
+      active = true,
+      sourceSystem = "NOMIS",
+      createdTimeStamp = "2010-01-02",
+      updatedTimeStamp = "2010-02-02",
+    )
     val prisoner = Prisoner().apply {
       bookingId = bookingId.toString()
       complexityOfNeedLevel = "old-value"
@@ -711,8 +731,26 @@ internal class PrisonerSynchroniserServiceTest {
 
       whenever(prisonRegisterService.getAllPrisons()).thenReturn(
         listOf(
-          PrisonDto(prisonId = "BZI", active = true, male = false, female = true),
-          PrisonDto(prisonId = "MDI", active = true, male = true, female = false),
+          PrisonDto(
+            prisonId = "BZI", active = true, male = false, female = true,
+            prisonName = "Belmarsh",
+            contracted = false,
+            lthse = false,
+            types = emptyList(),
+            categories = emptySet(),
+            addresses = emptyList(),
+            operators = emptyList(),
+          ),
+          PrisonDto(
+            prisonId = "MDI", active = true, male = true, female = false,
+            prisonName = "Moorland",
+            contracted = false,
+            lthse = false,
+            types = emptyList(),
+            categories = emptySet(),
+            addresses = emptyList(),
+            operators = emptyList(),
+          ),
         ),
       )
     }
@@ -724,7 +762,7 @@ internal class PrisonerSynchroniserServiceTest {
 
       verify(prisonerRepository).updateComplexityOfNeed(
         eq(prisonerNumber),
-        eq(newComplexityOfNeed.level),
+        eq(newComplexityOfNeed.level.value),
         eq(prisonerDocumentSummary),
       )
     }
@@ -1031,8 +1069,26 @@ internal class PrisonerSynchroniserServiceTest {
       val femalePrisoner = OffenderBookingBuilder().anOffenderBooking().copy(agencyId = "BZI")
       whenever(prisonRegisterService.getAllPrisons()).thenReturn(
         listOf(
-          PrisonDto(prisonId = "BZI", active = true, male = false, female = true),
-          PrisonDto(prisonId = "MDI", active = true, male = true, female = false),
+          PrisonDto(
+            prisonId = "BZI", active = true, male = false, female = true,
+            prisonName = "Belmarsh",
+            contracted = false,
+            lthse = false,
+            types = emptyList(),
+            categories = emptySet(),
+            addresses = emptyList(),
+            operators = emptyList(),
+          ),
+          PrisonDto(
+            prisonId = "MDI", active = true, male = true, female = false,
+            prisonName = "Moorland",
+            contracted = false,
+            lthse = false,
+            types = emptyList(),
+            categories = emptySet(),
+            addresses = emptyList(),
+            operators = emptyList(),
+          ),
         ),
       )
 
