@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.dps.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.isExpired

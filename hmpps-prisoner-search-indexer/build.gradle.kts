@@ -110,11 +110,12 @@ data class ModelConfiguration(val name: String, val packageName: String, val url
 }
 
 val models = listOf(
-//  ModelConfiguration(
-//    name = "alerts",
-//    packageName = "alerts",
-//    url = "https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-//  ),
+  ModelConfiguration(
+    name = "alerts",
+    packageName = "alerts",
+    url = "https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "Alert,AlertCodeSummary",
+  ),
 //  ModelConfiguration(
 //    name = "incentives",
 //    packageName = "incentives",
