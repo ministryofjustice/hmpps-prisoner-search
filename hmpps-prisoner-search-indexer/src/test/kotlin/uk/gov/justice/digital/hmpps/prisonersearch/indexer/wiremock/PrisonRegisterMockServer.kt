@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonregister.model.PrisonDto
 
 class PrisonRegisterMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
@@ -41,8 +41,26 @@ class PrisonRegisterMockServer : WireMockServer(WIREMOCK_PORT) {
             okJson(
               Gson().toJson(
                 listOf(
-                  PrisonDto(prisonId = "BZI", active = true, male = false, female = true),
-                  PrisonDto(prisonId = "MDI", active = true, male = true, female = false),
+                  PrisonDto(
+                    prisonId = "BZI", active = true, male = false, female = true,
+                    prisonName = "Belmarsh",
+                    contracted = false,
+                    lthse = false,
+                    types = emptyList(),
+                    categories = emptySet(),
+                    addresses = emptyList(),
+                    operators = emptyList(),
+                  ),
+                  PrisonDto(
+                    prisonId = "MDI", active = true, male = true, female = false,
+                    prisonName = "Moorland",
+                    contracted = false,
+                    lthse = false,
+                    types = emptyList(),
+                    categories = emptySet(),
+                    addresses = emptyList(),
+                    operators = emptyList(),
+                  ),
                 ),
               ),
             ),

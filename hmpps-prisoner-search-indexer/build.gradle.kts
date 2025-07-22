@@ -116,16 +116,29 @@ val models = listOf(
     url = "https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "Alert,AlertCodeSummary",
   ),
-//  ModelConfiguration(
-//    name = "incentives",
-//    packageName = "incentives",
-//    url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-//  ),
+  ModelConfiguration(
+    name = "complexity-of-need",
+    packageName = "complexityofneed",
+    url = "https://complexity-of-need-staging.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "ComplexityOfNeed,Level",
+  ),
+  ModelConfiguration(
+    name = "incentives",
+    packageName = "incentives",
+    url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "IncentiveReviewSummary,IncentiveReviewDetail",
+  ),
   //  ModelConfiguration(
   //    name = "prison-api",
   //    packageName = "prisonapi",
   //    url = "https://prison-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   //  ),
+  ModelConfiguration(
+    name = "prison-register",
+    packageName = "prisonregister",
+    url = "https://prison-register-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    models = "AddressDto,PrisonDto,PrisonOperatorDto,PrisonTypeDto",
+  ),
   ModelConfiguration(
     name = "restricted-patients",
     packageName = "restrictedpatients",
