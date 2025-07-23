@@ -128,11 +128,12 @@ val models = listOf(
     url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "IncentiveReviewSummary,IncentiveReviewDetail",
   ),
-  //  ModelConfiguration(
-  //    name = "prison-api",
-  //    packageName = "prisonapi",
-  //    url = "https://prison-api-dev.prison.service.justice.gov.uk/v3/api-docs",
-  //  ),
+  ModelConfiguration(
+    name = "prison-api",
+    packageName = "prisonapi",
+    url = "https://prison-api-dev.prison.service.justice.gov.uk/v3/api-docs",
+    models = "OffenderIdentifier",
+  ),
   ModelConfiguration(
     name = "prison-register",
     packageName = "prisonregister",
