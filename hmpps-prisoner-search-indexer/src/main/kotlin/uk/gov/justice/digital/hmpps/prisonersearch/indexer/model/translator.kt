@@ -140,11 +140,11 @@ fun Prisoner.translate(
 
   this.languages = ob.languages?.map {
     Language(
-      it.type,
+      it.type.value,
       it.code,
-      it.readSkill,
-      it.writeSkill,
-      it.speakSkill,
+      it.readSkill?.value,
+      it.writeSkill?.value,
+      it.speakSkill?.value,
       it.interpreterRequested,
     )
   }
