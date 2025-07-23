@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.Ince
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderLanguageDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PersonalCareNeedDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalAttributes
@@ -28,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalC
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.math.BigDecimal
@@ -1142,7 +1142,7 @@ class TranslatorTest {
     fun `should always convert PNC number to short format if possible`(nomisPnc: String, prisonerPnc: String) {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
-          allIdentifiers = listOf(OffenderIdentifier(1L, "PNC", nomisPnc, null, null, LocalDateTime.now())),
+          allIdentifiers = listOf(OffenderIdentifier(offenderId = 1L, type = "PNC", value = nomisPnc, whenCreated = LocalDateTime.now())),
         ),
       )
 
@@ -1155,7 +1155,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           allIdentifiers = listOf(
-            OffenderIdentifier(1L, "MERGED", "B1234BB", null, null, aTimestamp),
+            OffenderIdentifier(offenderId = 1L, type = "MERGED", value = "B1234BB", whenCreated = aTimestamp),
           ),
         ),
       )

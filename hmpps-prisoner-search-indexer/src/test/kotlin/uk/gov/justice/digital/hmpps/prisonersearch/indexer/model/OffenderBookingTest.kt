@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
 import java.time.LocalDate
 
 class OffenderBookingTest {

@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.mode
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
@@ -325,9 +325,9 @@ private fun String.extractNumbers() = split(Regex("\\D+"))
 
 private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? = this?.mapNotNull {
   when (it.type) {
-    "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
-    "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
-    "MERGED" -> Identifier(it.type, it.value, null, null, it.whenCreated.withNano(0))
+    "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated!!.withNano(0))
+    "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated!!.withNano(0))
+    "MERGED" -> Identifier(it.type, it.value, null, null, it.whenCreated!!.withNano(0))
     else -> null
   }
 }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
@@ -347,4 +347,4 @@ private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List
 }
 
 // expired mapping logic is the same as for sync to Nomis:
-fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo.isAfter(now)
+fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo!!.isAfter(now)
