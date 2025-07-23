@@ -3,12 +3,6 @@ on:
   push:
     branches:
       - '**'
-    paths:
-      - 'hmpps-prisoner-search/**'
-      - 'common/**'
-      - 'build.gradle.kts'
-      - '.github/workflows/**'
-      - '.github/actions/**'
   workflow_dispatch:
     inputs:
       additional_docker_tag:
@@ -29,20 +23,41 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            changes:
+              - 'hmpps-prisoner-search/**'
+              - 'common/**'
+              - 'build.gradle.kts'
+              - '.github/workflows/**'
+              - '.github/actions/**'
   helm_lint:
     strategy:
       matrix:
         environments: ['dev', 'preprod', 'prod']
     name: helm lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW_VERSION
+    if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
       chart_name : 'hmpps-prisoner-search'
       helm_dir: 'hmpps-prisoner-search/helm_deploy'
+    needs: changes
   gradle_verify:
     name: Validate the kotlin
     uses: ./.github/workflows/gradle_localstack_verify.yml # LOCAL_VERSION - for additional opensearch
+    if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
       gradle-command: ./gradlew :hmpps-prisoner-search:check
@@ -50,14 +65,17 @@ jobs:
       localstack-tag: '3'
       build-dir: 'hmpps-prisoner-search/build'
       artifact-name: 'hmpps-prisoner-search'
+    needs: changes
   gradle_common_verify:
     name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
       gradle-command: ./gradlew :common:check
       build-dir: 'common/build'
       artifact-name: 'common'
+    needs: changes
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
