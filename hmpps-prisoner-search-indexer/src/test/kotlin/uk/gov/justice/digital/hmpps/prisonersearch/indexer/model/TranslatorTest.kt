@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderLanguageDto
@@ -26,15 +25,16 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalA
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Email
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
 class TranslatorTest {
 
@@ -624,7 +624,7 @@ class TranslatorTest {
   fun `should map email addresses`() {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(
-        emailAddresses = listOf(EmailAddress("personalemail@hotmail.com"), EmailAddress("backupemail@gmail.com")),
+        emailAddresses = listOf(Email(email = "personalemail@hotmail.com"), Email(email = "backupemail@gmail.com")),
       ),
     )
 
@@ -751,19 +751,20 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              "2",
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              "S10 1AB",
-              "South Yorkshire",
-              "England",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              flat = "2",
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              postalCode = "S10 1AB",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -785,19 +786,19 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              null,
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              "S10 1AB",
-              "South Yorkshire",
-              "England",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              postalCode = "S10 1AB",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -819,33 +820,32 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              "2",
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              "S10 1AB",
-              "South Yorkshire",
-              "England",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              flat = "2",
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              postalCode = "S10 1AB",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
-            NomisAddress(
-              2,
-              null,
-              "1",
-              "Big Street",
-              null,
-              "Sheffield",
-              "S11 1BB",
-              null,
-              null,
-              false,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 2,
+              premise = "1",
+              street = "Big Street",
+              locality = null,
+              town = "Sheffield",
+              postalCode = "S11 1BB",
+              primary = false,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -868,61 +868,59 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              null,
-              "1",
-              "Main Street",
-              "locality",
-              "any",
-              "any",
-              "any",
-              "any",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              premise = "1",
+              street = "Main Street",
+              locality = "locality",
+              town = "any",
+              postalCode = "any",
+              county = "any",
+              country = "any",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
-            NomisAddress(
-              2,
-              null,
-              "Big House",
-              "Main Street",
-              "locality",
-              "any",
-              "any",
-              "any",
-              "any",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 2,
+              premise = "Big House",
+              street = "Main Street",
+              locality = "locality",
+              town = "any",
+              postalCode = "any",
+              county = "any",
+              country = "any",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
-            NomisAddress(
-              3,
-              null,
-              "Big House",
-              null,
-              "locality",
-              "any",
-              "any",
-              "any",
-              "any",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 3,
+              premise = "Big House",
+              locality = "locality",
+              town = "any",
+              postalCode = "any",
+              county = "any",
+              country = "any",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
-            NomisAddress(
-              4,
-              null,
-              null,
-              "Main Street",
-              "locality",
-              "any",
-              "any",
-              "any",
-              "any",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 4,
+              street = "Main Street",
+              locality = "locality",
+              town = "any",
+              postalCode = "any",
+              county = "any",
+              country = "any",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -939,19 +937,13 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              null,
-              null,
-              null,
-              null,
-              null,
-              "S11 1BB",
-              null,
-              null,
-              false,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              postalCode = "S11 1BB",
+              primary = false,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -967,19 +959,19 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              "2",
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              null,
-              "South Yorkshire",
-              "England",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              flat = "2",
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -995,19 +987,19 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              "2",
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              "S10 1AB",
-              "South Yorkshire",
-              "England",
-              true,
-              null,
-              null,
+            AddressDto(
+              addressId = 1,
+              flat = "2",
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              postalCode = "S10 1AB",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -1023,23 +1015,24 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              "2",
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              "S10 1AB",
-              "South Yorkshire",
-              "England",
-              true,
-              null,
-              listOf(
+            AddressDto(
+              addressId = 1,
+              flat = "2",
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              postalCode = "S10 1AB",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              phones = listOf(
                 Telephone("0114 1234567", "HOME"),
                 Telephone("0777 1234567", "MOB"),
                 Telephone("0114 7654321", "OTH"),
               ),
+              mail = false,
+              noFixedAddress = false,
             ),
           ),
         ),
@@ -1057,19 +1050,19 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           addresses = listOf(
-            NomisAddress(
-              1,
-              "2",
-              "3",
-              "Main Street",
-              "Crookes",
-              "Sheffield",
-              "S10 1AB",
-              "South Yorkshire",
-              "England",
-              true,
-              LocalDate.now(),
-              null,
+            AddressDto(
+              addressId = 1,
+              flat = "2",
+              premise = "3",
+              street = "Main Street",
+              locality = "Crookes",
+              town = "Sheffield",
+              postalCode = "S10 1AB",
+              county = "South Yorkshire",
+              country = "England",
+              primary = true,
+              startDate = LocalDate.now(),
+              mail = false,
               noFixedAddress = true,
             ),
           ),

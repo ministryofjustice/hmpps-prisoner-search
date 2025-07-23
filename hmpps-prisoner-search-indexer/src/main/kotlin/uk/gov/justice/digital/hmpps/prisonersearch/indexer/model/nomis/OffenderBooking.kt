@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis
 
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Email
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.ProfileInformation
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -42,8 +46,8 @@ data class OffenderBooking(
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
-  val addresses: List<Address>? = null,
-  val emailAddresses: List<EmailAddress>? = null,
+  val addresses: List<AddressDto>? = null,
+  val emailAddresses: List<Email>? = null,
   val phones: List<Telephone>? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
   val languages: List<OffenderLanguageDto>? = null,

@@ -23,11 +23,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.mode
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.time.LocalDate
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
 fun Prisoner.translate(
   existingPrisoner: Prisoner? = null,
@@ -258,7 +258,7 @@ private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail,
   this
 }
 
-private fun NomisAddress.toAddress(): Address {
+private fun AddressDto.toAddress(): Address {
   if (noFixedAddress) {
     return Address(
       fullAddress = "No fixed address",
@@ -347,4 +347,4 @@ private fun List<OffenceHistoryDetail>?.toOffences(latestBookingId: Long?): List
 }
 
 // expired mapping logic is the same as for sync to Nomis:
-fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo!!.isAfter(now)
+fun Alert.isExpired(now: LocalDate): Boolean = activeTo != null && !activeTo.isAfter(now)
