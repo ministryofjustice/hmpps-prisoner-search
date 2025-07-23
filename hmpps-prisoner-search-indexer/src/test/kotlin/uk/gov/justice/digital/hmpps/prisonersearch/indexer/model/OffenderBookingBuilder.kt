@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AssignedLivingUnit
 import java.time.LocalDate
 import kotlin.random.Random
 
