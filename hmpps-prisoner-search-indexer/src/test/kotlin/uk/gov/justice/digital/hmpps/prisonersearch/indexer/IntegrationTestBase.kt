@@ -39,12 +39,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService

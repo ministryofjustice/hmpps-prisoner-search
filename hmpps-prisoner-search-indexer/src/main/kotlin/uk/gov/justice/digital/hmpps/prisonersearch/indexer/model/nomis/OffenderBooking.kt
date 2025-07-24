@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis
 
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -53,7 +52,7 @@ data class OffenderBooking(
   fun latestIdentifier(type: String) = allIdentifiers
     ?.filter { it.type == type }
     ?.takeIf { it.isNotEmpty() }
-    ?.maxBy { it.whenCreated!! }
+    ?.maxBy { it.whenCreated }
 
   fun identifiersForActiveOffender(type: String) = allIdentifiers
     ?.filter { it.offenderId == offenderId }
