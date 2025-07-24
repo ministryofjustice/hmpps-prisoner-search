@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.AlertCod
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderLanguageDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PersonalCareNeedDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
@@ -26,8 +28,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceD
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Email
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderLanguageDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderLanguageDto.Type
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
@@ -35,7 +35,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.PersonalCareNeed as NomisPersonalCareNeed
 
 class TranslatorTest {
 
@@ -659,7 +658,7 @@ class TranslatorTest {
       val prisoner = Prisoner().translate(
         ob = aBooking().copy(
           personalCareNeeds = listOf(
-            NomisPersonalCareNeed(
+            PersonalCareNeedDto(
               problemType = "TYPE1",
               problemCode = "CODE1",
               problemStatus = "STATUS1",
@@ -668,7 +667,7 @@ class TranslatorTest {
               startDate = LocalDate.parse("2023-04-05"),
               endDate = null,
             ),
-            NomisPersonalCareNeed(
+            PersonalCareNeedDto(
               problemType = "INACTIVE",
               problemCode = "CODE2",
               problemStatus = "STATUS2",
@@ -677,7 +676,7 @@ class TranslatorTest {
               startDate = LocalDate.parse("2023-04-05"),
               endDate = LocalDate.parse("2025-04-05"),
             ),
-            NomisPersonalCareNeed(
+            PersonalCareNeedDto(
               problemType = "TYPE3",
               problemCode = "CODE3",
               problemStatus = "STATUS3",
@@ -721,11 +720,11 @@ class TranslatorTest {
         ob = aBooking().copy(
           languages = listOf(
             OffenderLanguageDto(
-              type = Type.valueOf("PRIM"),
+              type = "TYPE",
               code = "ENG",
-              readSkill = OffenderLanguageDto.ReadSkill.valueOf("G"),
-              writeSkill = OffenderLanguageDto.WriteSkill.valueOf("A"),
-              speakSkill = OffenderLanguageDto.SpeakSkill.valueOf("P"),
+              readSkill = "G",
+              writeSkill = "A",
+              speakSkill = "P",
               interpreterRequested = true,
             ),
           ),
@@ -734,7 +733,7 @@ class TranslatorTest {
       assertThat(prisoner.languages)
         .containsExactlyInAnyOrder(
           Language(
-            type = "PRIM",
+            type = "TYPE",
             code = "ENG",
             readSkill = "G",
             writeSkill = "A",

@@ -45,7 +45,7 @@ jobs:
     strategy:
       matrix:
         environments: ['dev', 'preprod', 'prod']
-    name: Helm lint for indexer
+    name: helm lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW_VERSION
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
@@ -55,7 +55,7 @@ jobs:
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
     needs: changes
   gradle_verify:
-    name: Gradle verify with localstack and postgres for indexer
+    name: Validate the kotlin
     uses: ./.github/workflows/gradle_localstack_postgres_verify.yml # LOCAL_VERSION - for additional opensearch
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
@@ -71,7 +71,7 @@ jobs:
       artifact-name: 'hmpps-prisoner-search-indexer'
     needs: changes
   gradle_common_verify:
-    name: Gradle verify common for indexer
+    name: Validate the common package
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit

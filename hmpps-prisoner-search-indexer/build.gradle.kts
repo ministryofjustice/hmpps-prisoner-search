@@ -132,7 +132,7 @@ val models = listOf(
     name = "prison-api",
     packageName = "prisonapi",
     url = "https://prison-api-dev.prison.service.justice.gov.uk/v3/api-docs",
-    models = "AddressDto,AddressUsageDto,AssignedLivingUnit,Email,OffenderIdentifier,OffenderLanguageDto,PersonalCareNeed,ProfileInformation,Telephone",
+    models = "AddressDto,AddressUsageDto,Email,OffenderIdentifier,ProfileInformation,Telephone",
   ),
   ModelConfiguration(
     name = "prison-register",

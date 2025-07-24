@@ -1,11 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis
 
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Email
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderLanguageDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.PersonalCareNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
 import java.time.LocalDate
@@ -54,7 +51,7 @@ data class OffenderBooking(
   val phones: List<Telephone>? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
   val languages: List<OffenderLanguageDto>? = null,
-  val personalCareNeeds: List<PersonalCareNeed>? = null,
+  val personalCareNeeds: List<PersonalCareNeedDto>? = null,
   val imageId: Long? = null,
 ) {
   fun latestIdentifier(type: String) = allIdentifiers
