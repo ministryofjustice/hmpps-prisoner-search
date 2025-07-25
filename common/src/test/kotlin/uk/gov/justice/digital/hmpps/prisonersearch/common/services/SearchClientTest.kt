@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.common.services
 
-import org.apache.http.ProtocolVersion
-import org.apache.http.message.BasicRequestLine
-import org.apache.http.message.BasicStatusLine
+import org.apache.hc.core5.http.ProtocolVersion
+import org.apache.hc.core5.http.message.RequestLine
+import org.apache.hc.core5.http.message.StatusLine
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -31,8 +31,8 @@ class SearchClientTest {
   private val countResponse = mock<CountResponse>()
   private val protocolVersion = ProtocolVersion("HTTP", 1, 1)
   private val mockResponse = mock<Response>().apply {
-    whenever(this.statusLine).thenReturn(BasicStatusLine(protocolVersion, 502, "Bad Gateway"))
-    whenever(this.requestLine).thenReturn(BasicRequestLine("method", "url", protocolVersion))
+    whenever(this.statusLine).thenReturn(StatusLine(protocolVersion, 502, "Bad Gateway"))
+    whenever(this.requestLine).thenReturn(RequestLine("method", "url", protocolVersion))
   }
   private val openSearchStatusException = OpenSearchStatusException(
     "unable to proxy request",
