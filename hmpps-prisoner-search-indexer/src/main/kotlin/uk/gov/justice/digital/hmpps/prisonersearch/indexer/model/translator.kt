@@ -23,11 +23,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.mode
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
 fun Prisoner.translate(
   existingPrisoner: Prisoner? = null,
@@ -140,11 +140,11 @@ fun Prisoner.translate(
 
   this.languages = ob.languages?.map {
     Language(
-      it.type.value,
+      it.type,
       it.code,
-      it.readSkill?.value,
-      it.writeSkill?.value,
-      it.speakSkill?.value,
+      it.readSkill,
+      it.writeSkill,
+      it.speakSkill,
       it.interpreterRequested,
     )
   }
@@ -258,7 +258,7 @@ private fun List<BodyPartDetail>?.addIfCommentContains(bodyPart: BodyPartDetail,
   this
 }
 
-private fun AddressDto.toAddress(): Address {
+private fun NomisAddress.toAddress(): Address {
   if (noFixedAddress) {
     return Address(
       fullAddress = "No fixed address",
@@ -325,9 +325,9 @@ private fun String.extractNumbers() = split(Regex("\\D+"))
 
 private fun List<OffenderIdentifier>?.toIdentifiers(): List<Identifier>? = this?.mapNotNull {
   when (it.type) {
-    "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated!!.withNano(0))
-    "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated!!.withNano(0))
-    "MERGED" -> Identifier(it.type, it.value, null, null, it.whenCreated!!.withNano(0))
+    "PNC" -> Identifier("PNC", it.value.toPncNumber(), it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+    "CRO", "DL", "NINO" -> Identifier(it.type, it.value, it.issuedDate, it.issuedAuthorityText, it.whenCreated.withNano(0))
+    "MERGED" -> Identifier(it.type, it.value, null, null, it.whenCreated.withNano(0))
     else -> null
   }
 }?.sortedWith(compareBy<Identifier> { it.createdDateTime }.thenBy { it.type })
