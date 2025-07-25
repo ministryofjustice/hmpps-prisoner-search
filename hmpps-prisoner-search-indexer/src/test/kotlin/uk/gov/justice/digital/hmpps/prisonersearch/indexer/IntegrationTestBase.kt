@@ -36,15 +36,15 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Alias
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalAttributes
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalCharacteristic
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
@@ -385,10 +385,10 @@ data class PrisonerBuilder(
           }
         },
         profileInformation = listOf(
-          ProfileInformation(type = "YOUTH", question = "Youth Offender?", resultValue = "NO"),
-          ProfileInformation(type = "RELF", question = "Religion", resultValue = "Christian"),
-          ProfileInformation(type = "NAT", question = "Nationality?", resultValue = "British"),
-          ProfileInformation(type = "SMOKE", question = "Smoker?", resultValue = "V"),
+          ProfileInformation("YOUTH", "Youth Offender?", "NO"),
+          ProfileInformation("RELF", "Religion", "Christian"),
+          ProfileInformation("NAT", "Nationality?", "British"),
+          ProfileInformation("SMOKE", "Smoker?", "V"),
         ),
         inOutStatus = "IN",
         allIdentifiers = listOf(

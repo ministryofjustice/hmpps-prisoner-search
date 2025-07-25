@@ -1,13 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis
 
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AddressDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Email
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.OffenderLanguageDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.PersonalCareNeed
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.ProfileInformation
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.Telephone
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -49,18 +41,18 @@ data class OffenderBooking(
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
-  val addresses: List<AddressDto>? = null,
-  val emailAddresses: List<Email>? = null,
+  val addresses: List<Address>? = null,
+  val emailAddresses: List<EmailAddress>? = null,
   val phones: List<Telephone>? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
   val languages: List<OffenderLanguageDto>? = null,
-  val personalCareNeeds: List<PersonalCareNeed>? = null,
+  val personalCareNeeds: List<PersonalCareNeedDto>? = null,
   val imageId: Long? = null,
 ) {
   fun latestIdentifier(type: String) = allIdentifiers
     ?.filter { it.type == type }
     ?.takeIf { it.isNotEmpty() }
-    ?.maxBy { it.whenCreated!! }
+    ?.maxBy { it.whenCreated }
 
   fun identifiersForActiveOffender(type: String) = allIdentifiers
     ?.filter { it.offenderId == offenderId }

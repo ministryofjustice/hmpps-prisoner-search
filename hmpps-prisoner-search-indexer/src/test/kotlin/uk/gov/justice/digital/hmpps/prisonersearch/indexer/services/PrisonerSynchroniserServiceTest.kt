@@ -33,8 +33,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.mode
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentIncentive
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonapi.model.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonregister.model.PrisonDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
