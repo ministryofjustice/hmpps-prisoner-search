@@ -60,7 +60,7 @@ jobs:
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
-      gradle-command: ./gradlew :hmpps-prisoner-search-indexer:check
+      gradle-command: './gradlew :hmpps-prisoner-search-indexer:assemble :hmpps-prisoner-search-indexer:check'
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
       postgres-tag: "17"
@@ -69,6 +69,7 @@ jobs:
       postgres-password: "pos"
       build-dir: 'hmpps-prisoner-search-indexer/build'
       artifact-name: 'hmpps-prisoner-search-indexer'
+      upload-build-artifacts: true
     needs: changes
   gradle_common_verify:
     name: Gradle verify common for indexer
@@ -95,6 +96,7 @@ jobs:
       docker_multiplatform: false
       file: 'hmpps-prisoner-search-indexer/Dockerfile'
       image_name: 'hmpps-prisoner-search-indexer'
+      download_build_artifacts: true
   deploy_dev:
     name: Deploy to the dev environment
     if: github.ref == 'refs/heads/main'
