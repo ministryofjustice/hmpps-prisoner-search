@@ -24,8 +24,8 @@ RUN addgroup --gid 2000 --system appgroup && \
     adduser --uid 2000 --system appuser --gid 2000
 
 WORKDIR /app
-COPY --chown=appuser:appgroup applicationinsights.json ./
-COPY --chown=appuser:appgroup applicationinsights.dev.json ./
+COPY --chown=appuser:appgroup hmpps-prisoner-search/applicationinsights.json ./
+COPY --chown=appuser:appgroup hmpps-prisoner-search/applicationinsights.dev.json ./
 COPY --chown=appuser:appgroup applicationinsights-agent*.jar ./agent.jar
 COPY --from=builder --chown=appuser:appgroup /builder/extracted/dependencies/ ./
 COPY --from=builder --chown=appuser:appgroup /builder/extracted/spring-boot-loader/ ./
