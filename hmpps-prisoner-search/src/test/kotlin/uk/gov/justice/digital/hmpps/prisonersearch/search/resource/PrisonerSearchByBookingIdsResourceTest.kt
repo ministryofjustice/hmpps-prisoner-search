@@ -23,8 +23,9 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isBadRequest
-      .expectBody().jsonPath("developerMessage")
-      .isEqualTo("Invalid search  - please provide a minimum of 1 and a maximum of 1000 BookingIds")
+      .expectBody().jsonPath("developerMessage").value<String> {
+        assertThat(it).contains("size must be between 1 and 1000").contains("must not be empty")
+      }
   }
 
   @Test
@@ -35,8 +36,9 @@ class PrisonerSearchByBookingIdsResourceTest : AbstractSearchIntegrationTest() {
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isBadRequest
-      .expectBody().jsonPath("developerMessage")
-      .isEqualTo("Invalid search  - please provide a minimum of 1 and a maximum of 1000 BookingIds")
+      .expectBody().jsonPath("developerMessage").value<String> {
+        assertThat(it).contains("size must be between 1 and 1000")
+      }
   }
 
   @Test
