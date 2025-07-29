@@ -60,11 +60,12 @@ jobs:
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
-      gradle-command: ./gradlew :hmpps-prisoner-search:check
+      gradle-command: './gradlew :hmpps-prisoner-search:assemble :hmpps-prisoner-search:check'
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
       build-dir: 'hmpps-prisoner-search/build'
       artifact-name: 'hmpps-prisoner-search'
+      upload-build-artifacts: true
     needs: changes
   gradle_common_verify:
     name: Gradle verify common for search
@@ -91,6 +92,7 @@ jobs:
       docker_multiplatform: false
       file: 'hmpps-prisoner-search/Dockerfile'
       image_name: 'hmpps-prisoner-search'
+      download_build_artifacts: true
   deploy_dev:
     name: Deploy to the dev environment
     if: github.ref == 'refs/heads/main'
