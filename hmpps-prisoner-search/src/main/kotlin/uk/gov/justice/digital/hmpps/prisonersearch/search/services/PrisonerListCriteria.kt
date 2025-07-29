@@ -7,9 +7,6 @@ import jakarta.validation.constraints.Size
 
 sealed class PrisonerListCriteria<out T> {
   @Schema(hidden = true)
-  abstract fun isValid(): Boolean
-
-  @Schema(hidden = true)
   abstract fun values(): List<T>
 
   @JsonIgnore
@@ -23,8 +20,6 @@ sealed class PrisonerListCriteria<out T> {
     val prisonerNumbers: List<String>,
   ) : PrisonerListCriteria<String>() {
 
-    override fun isValid() = prisonerNumbers.isNotEmpty() && prisonerNumbers.size <= 1000
-
     override fun values() = prisonerNumbers
   }
 
@@ -34,8 +29,6 @@ sealed class PrisonerListCriteria<out T> {
     @Size(min = 1, max = 1000)
     val bookingIds: List<Long>,
   ) : PrisonerListCriteria<Long>() {
-
-    override fun isValid() = bookingIds.isNotEmpty() && bookingIds.size <= 1000
 
     override fun values() = bookingIds
   }

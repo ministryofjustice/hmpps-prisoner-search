@@ -349,13 +349,6 @@ class PrisonerSearchService(
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
 
     with(criteria) {
-      if (!isValid()) {
-        with("Invalid search  - please provide a minimum of 1 and a maximum of 1000 $type") {
-          log.warn(this)
-          throw BadRequestException(this)
-        }
-      }
-
       queryBy(criteria, responseFields) { matchByIds(it) } onMatch {
         customEventForFindBy(type, values().size, it.matches.size)
         return it.matches
