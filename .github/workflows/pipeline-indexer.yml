@@ -54,13 +54,21 @@ jobs:
       chart_name : 'hmpps-prisoner-search-indexer'
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
     needs: changes
+  app_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.app_version.outputs.version }}
+    steps:
+      - id: app_version
+        name: Application version creators
+        uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
   gradle_verify:
     name: Gradle verify with localstack and postgres for indexer
     uses: ./.github/workflows/gradle_localstack_postgres_verify.yml # LOCAL_VERSION - for additional opensearch
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
-      gradle-command: './gradlew :hmpps-prisoner-search-indexer:assemble :hmpps-prisoner-search-indexer:check'
+      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew :hmpps-prisoner-search-indexer:assemble :hmpps-prisoner-search-indexer:check'
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
       postgres-tag: "17"
@@ -69,8 +77,10 @@ jobs:
       postgres-password: "pos"
       build-dir: 'hmpps-prisoner-search-indexer/build'
       artifact-name: 'hmpps-prisoner-search-indexer'
-      upload-build-artifacts: true
-    needs: changes
+      upload-build-artifacts: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      - app_version
+      - changes
   gradle_common_verify:
     name: Gradle verify common for indexer
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
