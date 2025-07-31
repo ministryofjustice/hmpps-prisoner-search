@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   changes:
-    name: Check for changes for indexer
+    name: Check for changes for search
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
