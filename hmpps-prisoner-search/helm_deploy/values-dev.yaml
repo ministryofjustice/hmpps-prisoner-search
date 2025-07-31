@@ -1,5 +1,6 @@
 ---
 generic-service:
+// we have some thign here
   replicaCount: 2
 
   ingress:
