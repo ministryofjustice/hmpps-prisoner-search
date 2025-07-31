@@ -36,7 +36,6 @@ jobs:
           pr_title: Combined update of api docs
           labels: combined-pr
           github_token: ${{ steps.generate-token.outputs.token }}
-          create_from_scratch: true
 
       - name: Check status of PRs
         id: check-prs
