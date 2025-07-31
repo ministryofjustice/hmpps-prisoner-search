@@ -24,6 +24,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   changes:
+    name: Check for changes for indexer
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -55,13 +56,16 @@ jobs:
       helm_dir: 'hmpps-prisoner-search-indexer/helm_deploy'
     needs: changes
   app_version:
+    name: Calculate application version for indexer
     runs-on: ubuntu-latest
+    if: needs.changes.outputs.changes == 'true'
     outputs:
       version: ${{ steps.app_version.outputs.version }}
     steps:
       - id: app_version
         name: Application version creators
         uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
+    needs: changes
   gradle_verify:
     name: Gradle verify with localstack and postgres for indexer
     uses: ./.github/workflows/gradle_localstack_postgres_verify.yml # LOCAL_VERSION - for additional opensearch
@@ -91,6 +95,20 @@ jobs:
       build-dir: 'common/build'
       artifact-name: 'common'
     needs: changes
+  check:  # This job does nothing and is only used for the branch protection
+    name: Checks for indexer
+    if: always()
+    needs:
+      - helm_lint
+      - gradle_verify
+      - gradle_common_verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        with:
+          jobs: ${{ toJSON(needs) }}
+          allowed-skips: 'helm_lint,gradle_verify,gradle_common_verify'
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
