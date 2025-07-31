@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-21.38.9a93215"
+    "version" : "2025-07-30.47.8a049d8"
   },
   "servers" : [ {
     "url" : "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/",
