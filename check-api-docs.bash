@@ -37,7 +37,7 @@ fi
 ./gradlew "$MODEL_TASK"
 
 # and compare
-if ! diff -r build/model_copy "${WORKING_DIR}/build/generated/$PROJECT" > "${WORKING_DIR}/build/api.diff"; then
+if ! diff -r "${WORKING_DIR}/build/model_copy" "${WORKING_DIR}/build/generated/$PROJECT" > "${WORKING_DIR}/build/api.diff"; then
   echo "Found differences between old ($OLD_VERSION) and new ($NEW_VERSION) models"
   {
     printf "differences=true\nproduction_version="
