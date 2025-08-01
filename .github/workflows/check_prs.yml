@@ -34,7 +34,6 @@ jobs:
         with:
           branch_prefix: api-docs-
           pr_title: Combined update of api docs
-          labels: combined-pr
           github_token: ${{ steps.generate-token.outputs.token }}
 
       - name: Check status of PRs
