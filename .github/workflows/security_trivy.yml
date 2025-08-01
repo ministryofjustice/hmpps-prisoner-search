@@ -2,9 +2,9 @@ name: Security trivy dependency check
 on:
   workflow_dispatch:
   schedule:
-    - cron: "25 4 * * MON-FRI" # Every weekday at 04:25 UTC
+    - cron: "53 4 * * MON-FRI" # Every weekday at 04:53 UTC
 jobs:
-  security-trivy-check-search:
+  security-kotlin-trivy-check-search:
     permissions:
       contents: read
       actions: read
@@ -15,7 +15,7 @@ jobs:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
       subproject: hmpps-prisoner-search
     secrets: inherit
-  security-trivy-check-indexer:
+  security-kotlin-trivy-check-indexer:
     permissions:
       contents: read
       actions: read
