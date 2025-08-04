@@ -5,6 +5,9 @@ on:
     - cron: "53 4 * * MON-FRI" # Every weekday at 04:53 UTC
 jobs:
   create-artifact-search:
+    permissions:
+      contents: read
+      actions: read
     name: Build the search artifact for veracode to scan
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
@@ -14,6 +17,9 @@ jobs:
       build-artifact-name: 'build-search'
       upload-test-artifacts: false
   create-artifact-indexer:
+    permissions:
+      contents: read
+      actions: read
     name: Build the indexer artifact for veracode to scan
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:

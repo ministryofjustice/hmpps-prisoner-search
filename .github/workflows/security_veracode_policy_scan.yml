@@ -5,6 +5,9 @@ on:
     - cron: "48 4 * * 1" # Every Monday at 04:48 UTC
 jobs:
   create-artifact-search:
+    permissions:
+      contents: read
+      actions: read
     name: Build the search artifact for veracode to scan
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
@@ -14,6 +17,9 @@ jobs:
       build-artifact-name: 'build-search'
       upload-test-artifacts: false
   create-artifact-indexer:
+    permissions:
+      contents: read
+      actions: read
     name: Build the indexer artifact for veracode to scan
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
@@ -46,5 +52,6 @@ jobs:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
       veracode_package_artifact_name: 'build-indexer'
       veracode_artifact_name: 'hmpps-prisoner-search-indexer-veracode.jar'
+      application_name: 'hmpps-prisoner-search-indexer'
     secrets: inherit
     needs: create-artifact-indexer
