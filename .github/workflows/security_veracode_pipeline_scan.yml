@@ -9,6 +9,7 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
       gradle-command: 'BUILD_NUMBER=veracode ./gradlew :hmpps-prisoner-search:assemble'
+      build-dir: 'hmpps-prisoner-search/build'
       upload-build-artifacts: true
       build-artifact-name: 'build-search'
       upload-test-artifacts: false
@@ -17,6 +18,7 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
       gradle-command: 'BUILD_NUMBER=veracode ./gradlew :hmpps-prisoner-search-indexer:assemble'
+      build-dir: 'hmpps-prisoner-search-indexer/build'
       upload-build-artifacts: true
       build-artifact-name: 'build-indexer'
       upload-test-artifacts: false
@@ -30,7 +32,7 @@ jobs:
     with:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
       veracode_package_artifact_name: 'build-search'
-      veracode_artifact_name: 'hnpps-prisoner-search-veracode.jar'
+      veracode_artifact_name: 'hmpps-prisoner-search-veracode.jar'
     secrets: inherit
     needs: create-artifact-search
   security-veracode-pipeline-scan-indexer:
