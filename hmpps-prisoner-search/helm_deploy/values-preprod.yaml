@@ -7,7 +7,7 @@ generic-service:
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     API_BASE_URL_HMPPS_AUTH: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
-    API_BASE_URL_PRISON_API: "https://prison-api-preprod.prison.service.justice.gov.uk"
+    API_BASE_URL_ALERTS_API: "https://alerts-api-preprod.hmpps.service.justice.gov.uk"
 
   # Additional allowlist rules
   # See also allowlist values helm_deploy/hmpps-prisoner-search/values.yaml

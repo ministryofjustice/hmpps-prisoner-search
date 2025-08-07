@@ -24,10 +24,10 @@ spring:
 
       client:
         registration:
-          prison-api:
+          alerts-api:
             provider: hmpps-auth
-            client-id: ${prison-api.client.id}
-            client-secret: ${prison-api.client.secret}
+            client-id: ${alerts-api.client.id}
+            client-secret: ${alerts-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
         provider:
