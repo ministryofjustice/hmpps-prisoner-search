@@ -25,9 +25,9 @@ generic-service:
   namespace_secrets:
     hmpps-prisoner-search-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
-    hmpps-prisoner-search:
-      PRISON_API_CLIENT_ID: "PRISON_API_CLIENT_ID"
-      PRISON_API_CLIENT_SECRET: "PRISON_API_CLIENT_SECRET"
+    hmpps-prisoner-search-client-creds:
+      ALERTS_API_CLIENT_ID: "ALERTS_API_CLIENT_ID"
+      ALERTS_API_CLIENT_SECRET: "ALERTS_API_CLIENT_SECRET"
     opensearch:
       OPENSEARCH_URIS: "url"
 

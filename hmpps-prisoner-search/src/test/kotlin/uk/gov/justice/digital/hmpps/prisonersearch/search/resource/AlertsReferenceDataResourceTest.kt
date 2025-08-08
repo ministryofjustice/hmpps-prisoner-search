@@ -7,7 +7,7 @@ import org.mockito.kotlin.reset
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchIntegrationTest
-import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.PrisonApiExtension.Companion.prisonApi
+import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.AlertCode
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.AlertType
@@ -52,7 +52,7 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
   @Test
   fun `should return alert types and codes`() {
-    prisonApi.stubGetAlertTypes(alertTypes)
+    alertsApi.stubGetAlertTypes(alertTypes)
 
     val result = webTestClient.getAlertTypes()
 
@@ -72,7 +72,7 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
   @Test
   fun `should return alert types and codes even if not found in prison api`() {
-    prisonApi.stubGetAlertTypes(alertTypes)
+    alertsApi.stubGetAlertTypes(alertTypes)
 
     val result = webTestClient.getAlertTypes()
 
@@ -90,7 +90,7 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
   @Test
   fun `should return alert types and codes ordered by descriptions`() {
-    prisonApi.stubGetAlertTypes(alertTypes)
+    alertsApi.stubGetAlertTypes(alertTypes)
 
     val result = webTestClient.getAlertTypes()
 
@@ -102,7 +102,7 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
 
   @Test
   fun `should cache alerts reference data`() {
-    prisonApi.stubGetAlertTypes(alertTypes)
+    alertsApi.stubGetAlertTypes(alertTypes)
     cacheManager.getCache("alertsReferenceData")?.clear()
 
     // pre-check to ensure that forcing elastic error causes search to fail
@@ -134,66 +134,82 @@ class AlertsReferenceDataResourceTest : AbstractSearchIntegrationTest() {
   val alertTypes = """
     [
       {
-        "domain": "ALERT",
         "code": "C",
         "description": "Child Communication Measures",
-        "activeFlag": "Y",
-        "listSeq": 3,
-        "systemDataFlag": "N",
-        "subCodes": [
+        "listSequence": 3,
+        "isActive": true,
+        "createdAt": "2008-02-01T10:25:00",
+        "createdBy": "HQJ90D",
+        "modifiedAt": "2010-03-07T16:28:00",
+        "modifiedBy": "OMS_OWNER",
+        "deactivatedAt": null,
+        "deactivatedBy": null,
+        "alertCodes": [
           {
-            "domain": "ALERT_CODE",
+            "alertTypeCode": "C",
             "code": "CC1",
             "description": "Child contact L1",
-            "parentDomain": "ALERT",
-            "parentCode": "C",
-            "activeFlag": "Y",
-            "listSeq": 3,
-            "systemDataFlag": "N",
-            "subCodes": []
+            "listSequence": 3,
+            "isActive": true,
+            "createdAt": "2015-10-27T11:03:35",
+            "createdBy": "MQE96U_ADM",
+            "modifiedAt": null,
+            "modifiedBy": null,
+            "deactivatedAt": null,
+            "deactivatedBy": null
           },
           {
-            "domain": "ALERT_CODE",
+            "alertTypeCode": "O",
             "code": "CSIP",
             "description": "CSIP",
-            "parentDomain": "ALERT",
-            "parentCode": "C",
-            "activeFlag": "Y",
-            "listSeq": 10,
-            "systemDataFlag": "N",
-            "subCodes": []
+            "listSequence": 10,
+            "isActive": true,
+            "createdAt": "2019-01-11T10:18:56",
+            "createdBy": "HQU53Y_CEN",
+            "modifiedAt": null,
+            "modifiedBy": null,
+            "deactivatedAt": null,
+            "deactivatedBy": null
           }
         ]
       },
       {
-        "domain": "ALERT",
         "code": "A",
         "description": "Social Care",
-        "activeFlag": "Y",
-        "listSeq": 12,
-        "systemDataFlag": "N",
-        "subCodes": [
+        "listSequence": 12,
+        "isActive": true,
+        "createdAt": "2015-08-01T18:27:52",
+        "createdBy": "OMS_OWNER",
+        "modifiedAt": null,
+        "modifiedBy": null,
+        "deactivatedAt": null,
+        "deactivatedBy": null,
+        "alertCodes": [
           {
-            "domain": "ALERT_CODE",
+            "alertTypeCode": "A",
             "code": "ADSC",
             "description": "Adult Social Care",
-            "parentDomain": "ALERT",
-            "parentCode": "A",
-            "activeFlag": "N",
-            "listSeq": 1,
-            "systemDataFlag": "N",
-            "subCodes": []
+            "listSequence": 1,
+            "isActive": false,
+            "createdAt": "2020-02-07T11:03:45",
+            "createdBy": "AQS39G_CEN",
+            "modifiedAt": null,
+            "modifiedBy": null,
+            "deactivatedAt": null,
+            "deactivatedBy": null
           },
           {
-            "domain": "ALERT_CODE",
+            "alertTypeCode": "V",
             "code": "AAR",
             "description": "Adult At Risk (Home Office identified)",
-            "parentDomain": "ALERT",
-            "parentCode": "A",
-            "activeFlag": "Y",
-            "listSeq": 6,
-            "systemDataFlag": "N",
-            "subCodes": []
+            "listSequence": 6,
+            "isActive": true,
+            "createdAt": "2017-07-24T19:38:32",
+            "createdBy": "HQU53Y_CEN",
+            "modifiedAt": null,
+            "modifiedBy": null,
+            "deactivatedAt": null,
+            "deactivatedBy": null
           }
         ]
       }
