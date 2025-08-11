@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class ReferenceDataService(
   private val elasticsearchClient: SearchClient,
-  private val prisonApiService: PrisonApiService,
+  private val alertsApiService: AlertsApiService,
   @Value("\${search.reference.max-results}") private val maxSearchResults: Int = 200,
   @Value("\${search.reference.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
@@ -51,9 +51,9 @@ class ReferenceDataService(
   fun findAlertsReferenceDataCached() = ReferenceDataAlertsResponse()
 
   fun findAlertsReferenceData(): ReferenceDataAlertsResponse {
-    val prisonApiAlerts = prisonApiService.getAllAlerts()
+    val alertsApiAlerts = alertsApiService.getAllAlerts()
     return findSearchableAlertsReferenceData().map { type ->
-      val alertType = prisonApiAlerts.find { alertType -> alertType.type == type.key }
+      val alertType = alertsApiAlerts.find { alertType -> alertType.type == type.key }
       AlertType(
         type = type.key,
         description = alertType?.description ?: type.key,

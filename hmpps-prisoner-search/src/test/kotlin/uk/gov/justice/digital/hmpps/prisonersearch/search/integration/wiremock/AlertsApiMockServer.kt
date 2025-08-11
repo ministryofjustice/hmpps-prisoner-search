@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-class PrisonApiMockServer : WireMockServer(8093) {
+class AlertsApiMockServer : WireMockServer(8093) {
   fun stubHealthPing(status: Int) {
     stubFor(
       get("/health/ping").willReturn(
@@ -22,7 +22,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
 
   fun stubGetAlertTypes(response: String) {
     stubFor(
-      get("/api/reference-domains/alertTypes").willReturn(
+      get("/alert-types?includeInactive=true").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
@@ -32,16 +32,16 @@ class PrisonApiMockServer : WireMockServer(8093) {
   }
 }
 
-class PrisonApiExtension :
+class AlertsApiExtension :
   BeforeAllCallback,
   AfterAllCallback,
   BeforeEachCallback {
   companion object {
     @JvmField
-    val prisonApi = PrisonApiMockServer()
+    val alertsApi = AlertsApiMockServer()
   }
 
-  override fun beforeAll(context: ExtensionContext): Unit = prisonApi.start()
-  override fun beforeEach(context: ExtensionContext): Unit = prisonApi.resetAll()
-  override fun afterAll(context: ExtensionContext): Unit = prisonApi.stop()
+  override fun beforeAll(context: ExtensionContext): Unit = alertsApi.start()
+  override fun beforeEach(context: ExtensionContext): Unit = alertsApi.resetAll()
+  override fun afterAll(context: ExtensionContext): Unit = alertsApi.stop()
 }

@@ -14,16 +14,16 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
+import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.AlertsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonApiService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.AlertsApiService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchService
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
-@ExtendWith(HmppsAuthApiExtension::class, PrisonApiExtension::class)
+@ExtendWith(HmppsAuthApiExtension::class, AlertsApiExtension::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
@@ -67,13 +67,11 @@ abstract class IntegrationTestBase {
   internal lateinit var context: ApplicationContext
 
   @Autowired
-  internal lateinit var prisonApiService: PrisonApiService
+  internal lateinit var alertsApiService: AlertsApiService
 
   init {
     // Resolves an issue where Wiremock keeps previous sockets open from other tests causing connection resets
     System.setProperty("http.keepAlive", "false")
   }
-  internal fun Any.asJson() = gson.toJson(this)
-
   internal fun setAuthorisation(user: String = "prisoner-search-client", roles: List<String> = listOf()): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = user, clientId = "prisoner-search-client", roles = roles)
 }

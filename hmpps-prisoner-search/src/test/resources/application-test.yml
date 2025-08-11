@@ -7,7 +7,7 @@ management.endpoint:
 
 api.base.url:
   hmpps-auth: http://localhost:8090/auth
-  prison-api: http://localhost:8093
+  alerts-api: http://localhost:8093
 
 opensearch:
   uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566

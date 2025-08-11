@@ -5,34 +5,31 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 
 @Component
-class PrisonApiService(val prisonApiWebClient: WebClient) {
+class AlertsApiService(val alertsApiWebClient: WebClient) {
 
   fun getAllAlerts(): List<PrisonAlertType> = getAlertTypes().map { type ->
     PrisonAlertType(
       type = type.code,
       description = type.description,
-      active = type.activeFlag == "Y",
-      alertCodes = type.subCodes.map {
-        PrisonAlertCode(it.code, it.description, it.activeFlag == "Y")
-      },
+      active = type.isActive,
+      alertCodes = type.alertCodes?.map {
+        PrisonAlertCode(it.code, it.description, it.isActive)
+      } ?: emptyList(),
     )
   }
 
-  private fun getAlertTypes() = prisonApiWebClient.get()
-    .uri("/api/reference-domains/alertTypes")
-    .header("Page-Limit", "1000")
+  private fun getAlertTypes() = alertsApiWebClient.get()
+    .uri("/alert-types?includeInactive=true")
     .retrieve()
     .bodyToMono<List<ReferenceCode>>()
     .block()!!
 }
 
 private data class ReferenceCode(
-  val domain: String,
   val code: String,
   val description: String,
-  val activeFlag: String,
-  val parentCode: String?,
-  val subCodes: List<ReferenceCode>,
+  val isActive: Boolean,
+  val alertCodes: List<ReferenceCode>?,
 )
 
 data class PrisonAlertType(
