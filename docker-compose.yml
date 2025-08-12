@@ -1,6 +1,6 @@
 services:
   hmpps-prisoner-search:
-    image: quay.io/hmpps/hmpps-prisoner-search:latest
+    image: ghcr.io/ministryofjustice/hmpps-prisoner-search:latest
     networks:
       - hmpps
     container_name: hmpps-prisoner-search
@@ -25,7 +25,7 @@ services:
       - DB_PASS=pos
 
   hmpps-prisoner-search-indexer:
-    image: quay.io/hmpps/hmpps-prisoner-search-indexer:latest
+    image: ghcr.io/ministryofjustice/hmpps-prisoner-search-indexer:latest
     networks:
       - hmpps
     container_name: hmpps-prisoner-search-indexer
@@ -81,7 +81,7 @@ services:
       - SMOKE_TEST_AWARE=true
 
   restricted-patients-api:
-    image: quay.io/hmpps/hmpps-restricted-patients-api:latest
+    image: ghcr.io/ministryofjustice/hmpps-restricted-patients-api:latest
     networks:
       - hmpps
     container_name: restricted-patients-api
@@ -115,7 +115,7 @@ services:
       - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
 
   hmpps-incentives-api:
-    image: quay.io/hmpps/hmpps-incentives-api:latest
+    image: ghcr.io/ministryofjustice/hmpps-incentives-api:latest
     networks:
       - hmpps
     container_name: hmpps-incentives-api
