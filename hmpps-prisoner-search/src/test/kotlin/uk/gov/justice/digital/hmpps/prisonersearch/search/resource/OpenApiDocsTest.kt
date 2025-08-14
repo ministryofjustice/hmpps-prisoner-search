@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator
-import com.atlassian.oai.validator.model.Request
 import com.atlassian.oai.validator.model.SimpleRequest
-import com.atlassian.oai.validator.model.SimpleResponse
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.swagger.v3.parser.OpenAPIV3Parser
 import net.minidev.json.JSONArray
@@ -66,260 +64,21 @@ class OpenApiDocsTest : IntegrationTestBase() {
     val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
     assertThat(result.messages).isEmpty()
     assertThat(result.openAPI.paths).isNotEmpty
+  }
 
+  @Test
+  fun `atlassian request validator reports no validation errors on valid attribute search request`() {
+    val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
+
+    // needed so that swagger schema uses the types array instead - see https://github.com/swagger-api/swagger-parser/issues/1821
     System.setProperty("bind-type", "true")
-
     val validator = OpenApiInteractionValidator.createFor(result.openAPI).build()
+    System.setProperty("bind-type", "false")
+
     val report = validator.validateRequest(
       SimpleRequest.Builder
-        .get("/prisoner/A12345")
-        .withAccept(MediaType.APPLICATION_JSON_VALUE)
-        .withContentType(MediaType.APPLICATION_JSON_VALUE)
-        .withAuthorization("Bearer 12345")
-        .build(),
-    )
-    assertThat(report.messages).isEmpty()
-    assertThat(report.hasErrors()).isFalse
-
-    val response = validator.validateResponse(
-      "/attribute-search",
-      Request.Method.POST,
-      SimpleResponse.Builder
-        .ok()
-        .withBody(
-          """
-      {
-        "totalElements": 0,
-        "totalPages": 0,
-        "first": true,
-        "last": true,
-        "size": 0,
-        "content": [
-          {
-            "prisonerNumber": "A1234AA",
-            "pncNumber": "12/394773H",
-            "pncNumberCanonicalShort": "12/394773H",
-            "pncNumberCanonicalLong": "2012/394773H",
-            "croNumber": "29906/12J",
-            "bookingId": "0001200924",
-            "bookNumber": "38412A",
-            "title": "Ms",
-            "firstName": "Robert",
-            "middleNames": "John James",
-            "lastName": "Larsen",
-            "dateOfBirth": "1975-04-02",
-            "gender": "Female",
-            "ethnicity": "White: Eng./Welsh/Scot./N.Irish/British",
-            "raceCode": "W1",
-            "youthOffender": true,
-            "maritalStatus": "Widowed",
-            "religion": "Church of England (Anglican)",
-            "nationality": "Egyptian",
-            "smoker": "Y",
-            "personalCareNeeds": [
-              {
-                "problemType": "MATSTAT",
-                "problemCode": "ACCU9",
-                "problemStatus": "ON",
-                "problemDescription": "string",
-                "commentText": "string",
-                "startDate": "2020-06-21",
-                "endDate": "2025-05-11"
-              }
-            ],
-            "languages": [
-              {
-                "type": "PRIM",
-                "code": "ENG",
-                "readSkill": "Y",
-                "writeSkill": "Y",
-                "speakSkill": "Y",
-                "interpreterRequested": true
-              }
-            ],
-            "currentFacialImageId": 2122100,
-            "status": "ACTIVE IN",
-            "lastMovementTypeCode": "CRT",
-            "lastMovementReasonCode": "CA",
-            "inOutStatus": "IN",
-            "prisonId": "MDI",
-            "lastPrisonId": "MDI",
-            "prisonName": "HMP Leeds",
-            "cellLocation": "A-1-002",
-            "aliases": [
-              {
-                "title": "Ms",
-                "firstName": "Robert",
-                "middleNames": "Trevor",
-                "lastName": "Lorsen",
-                "dateOfBirth": "1975-04-02",
-                "gender": "Male",
-                "ethnicity": "White : Irish",
-                "raceCode": "W1"
-              }
-            ],
-            "alerts": [
-              {
-                "alertType": "H",
-                "alertCode": "HA",
-                "active": true,
-                "expired": true
-              }
-            ],
-            "csra": "HIGH",
-            "category": "C",
-            "complexityOfNeedLevel": "low",
-            "legalStatus": "SENTENCED",
-            "imprisonmentStatus": "LIFE",
-            "imprisonmentStatusDescription": "Serving Life Imprisonment",
-            "convictedStatus": "Convicted",
-            "mostSeriousOffence": "Robbery",
-            "recall": false,
-            "indeterminateSentence": true,
-            "sentenceStartDate": "2020-04-03",
-            "releaseDate": "2023-05-02",
-            "confirmedReleaseDate": "2023-05-01",
-            "sentenceExpiryDate": "2023-05-01",
-            "licenceExpiryDate": "2023-05-01",
-            "homeDetentionCurfewEligibilityDate": "2023-05-01",
-            "homeDetentionCurfewActualDate": "2023-05-01",
-            "homeDetentionCurfewEndDate": "2023-05-02",
-            "topupSupervisionStartDate": "2023-04-29",
-            "topupSupervisionExpiryDate": "2023-05-01",
-            "additionalDaysAwarded": 10,
-            "nonDtoReleaseDate": "2023-05-01",
-            "nonDtoReleaseDateType": "ARD",
-            "receptionDate": "2023-05-01",
-            "lastAdmissionDate": "2023-05-01",
-            "paroleEligibilityDate": "2023-05-01",
-            "automaticReleaseDate": "2023-05-01",
-            "postRecallReleaseDate": "2023-05-01",
-            "conditionalReleaseDate": "2023-05-01",
-            "actualParoleDate": "2023-05-01",
-            "tariffDate": "2023-05-01",
-            "releaseOnTemporaryLicenceDate": "2023-05-01",
-            "locationDescription": "Outside - released from Leeds",
-            "restrictedPatient": true,
-            "supportingPrisonId": "LEI",
-            "dischargedHospitalId": "HAZLWD",
-            "dischargedHospitalDescription": "Hazelwood House",
-            "dischargeDate": "2020-05-01",
-            "dischargeDetails": "Psychiatric Hospital Discharge to Hazelwood House",
-            "currentIncentive": {
-              "level": {
-                "code": "STD",
-                "description": "Standard"
-              },
-              "dateTime": "2022-11-10T15:47:24Z",
-              "nextReviewDate": "2022-11-10"
-            },
-            "heightCentimetres": 200,
-            "weightKilograms": 102,
-            "hairColour": "Blonde",
-            "rightEyeColour": "Green",
-            "leftEyeColour": "Hazel",
-            "facialHair": "Clean Shaven",
-            "shapeOfFace": "Round",
-            "build": "Muscular",
-            "shoeSize": 10,
-            "tattoos": [
-              {
-                "bodyPart": "Head",
-                "comment": "Skull and crossbones covering chest"
-              }
-            ],
-            "scars": [
-              {
-                "bodyPart": "Head",
-                "comment": "Skull and crossbones covering chest"
-              }
-            ],
-            "marks": [
-              {
-                "bodyPart": "Head",
-                "comment": "Skull and crossbones covering chest"
-              }
-            ],
-            "addresses": [
-              {
-                "fullAddress": "1",
-                "postalCode": "S10 1BP",
-                "startDate": "2020-07-17",
-                "primaryAddress": true,
-                "noFixedAddress": true,
-                "phoneNumbers": [
-                  {
-                    "type": "HOME, MOB",
-                    "number": "01141234567"
-                  }
-                ]
-              }
-            ],
-            "emailAddresses": [
-              {
-                "email": "john.smith@gmail.com"
-              }
-            ],
-            "phoneNumbers": [
-              {
-                "type": "HOME, MOB",
-                "number": "01141234567"
-              }
-            ],
-            "identifiers": [
-              {
-                "type": "PNC, CRO, DL, NINO",
-                "value": "12/394773H",
-                "issuedDate": "2020-07-17",
-                "issuedAuthorityText": "string",
-                "createdDateTime": "2020-07-17T12:34:56.833Z"
-              }
-            ],
-            "allConvictedOffences": [
-              {
-                "statuteCode": "TH68",
-                "offenceCode": "TH68010",
-                "offenceDescription": "Theft from a shop",
-                "offenceDate": "2024-05-23",
-                "latestBooking": true,
-                "sentenceStartDate": "2018-03-10",
-                "primarySentence": true
-              }
-            ]
-          }
-        ],
-        "number": 0,
-        "sort": {
-          "empty": true,
-          "sorted": true,
-          "unsorted": true
-        },
-        "numberOfElements": 0,
-        "pageable": {
-          "offset": 0,
-          "sort": {
-            "empty": true,
-            "sorted": true,
-            "unsorted": true
-          },
-          "pageSize": 0,
-          "pageNumber": 0,
-          "paged": true,
-          "unpaged": true
-        },
-        "empty": true
-      }
-          """.trimIndent(),
-        )
-        .withContentType(MediaType.APPLICATION_JSON_VALUE)
-        .build(),
-    )
-    assertThat(response.messages).isEmpty()
-    assertThat(response.hasErrors()).isFalse
-
-    val report2 = validator.validateRequest(
-      SimpleRequest.Builder
         .post("/attribute-search")
+        // needed so that the request json is validated
         .withAccept(MediaType.APPLICATION_JSON_VALUE)
         .withContentType(MediaType.APPLICATION_JSON_VALUE)
         .withBody(
@@ -355,8 +114,8 @@ class OpenApiDocsTest : IntegrationTestBase() {
         .withAuthorization("Bearer 12345")
         .build(),
     )
-    assertThat(report2.messages).isEmpty()
-    assertThat(report2.hasErrors()).isFalse
+    assertThat(report.messages).isEmpty()
+    assertThat(report.hasErrors()).isFalse
   }
 
   @Test

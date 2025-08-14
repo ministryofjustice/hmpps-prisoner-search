@@ -1,17 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.config
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.databind.JavaType
-import com.fasterxml.jackson.databind.ObjectMapper
-import io.swagger.v3.core.converter.AnnotatedType
-import io.swagger.v3.core.converter.ModelConverterContext
-import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
-import io.swagger.v3.oas.models.media.Discriminator
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
@@ -79,29 +71,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .addSecurityItem(SecurityRequirement().addList("global-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-in-prison-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-search--prisoner--ro", listOf("read")))
-
-  @Bean
-  fun myCustomModelResolver(objectMapper: ObjectMapper?): ModelResolver = object : ModelResolver(objectMapper) {
-    override fun resolveDiscriminator(
-      type: JavaType?,
-      context: ModelConverterContext?,
-    ): Discriminator? {
-      val discriminator = super.resolveDiscriminator(type, context)
-      if (context != null &&
-        type != null &&
-        discriminator != null &&
-        discriminator.propertyName != null &&
-        (discriminator.mapping == null || discriminator.mapping.isEmpty()) // don't override anything
-      ) {
-        val jsonSubTypes = type.rawClass.getDeclaredAnnotation(JsonSubTypes::class.java)
-        jsonSubTypes?.value?.forEach { subtype: JsonSubTypes.Type ->
-          val ref = RefUtils.constructRef(context.resolve(AnnotatedType(subtype.value.java)).name)
-          discriminator.mapping(subtype.name, ref) // add mapping
-        }
-      }
-      return discriminator
-    }
-  }
 }
 
 private fun SecurityScheme.addBearerJwtRequirement(role: String): SecurityScheme = type(SecurityScheme.Type.HTTP)
