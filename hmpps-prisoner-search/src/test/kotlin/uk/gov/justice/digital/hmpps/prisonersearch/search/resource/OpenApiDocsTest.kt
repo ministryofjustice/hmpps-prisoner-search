@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator
+import com.atlassian.oai.validator.model.Request
+import com.atlassian.oai.validator.model.SimpleRequest
+import com.atlassian.oai.validator.model.SimpleResponse
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.swagger.v3.parser.OpenAPIV3Parser
 import net.minidev.json.JSONArray
@@ -62,6 +66,50 @@ class OpenApiDocsTest : IntegrationTestBase() {
     val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
     assertThat(result.messages).isEmpty()
     assertThat(result.openAPI.paths).isNotEmpty
+
+    val validator = OpenApiInteractionValidator.createFor(result.openAPI).build()
+    val report = validator.validateRequest(SimpleRequest.Builder.get("/prisoner/A12345").withAuthorization("Bearer 12345").build())
+    assertThat(report.messages).isEmpty()
+    assertThat(report.hasErrors()).isFalse
+
+    val response = validator.validateResponse("/prisoner/A12345", Request.Method.GET, SimpleResponse.Builder.ok().withBody("[]").build())
+    assertThat(response.messages).isEmpty()
+    assertThat(response.hasErrors()).isFalse
+
+    val report2 = validator.validateRequest(
+      SimpleRequest.Builder
+        .post("/attribute-search")
+        .withBody(
+          """
+        {
+          "joinType": "AND",
+          "queries": [
+            {
+              "joinType": "AND",
+              "matchers": [
+                {
+                  "type": "String",
+                  "attribute": "prisonId",
+                  "condition": "IS",
+                  "searchTerm": "MDI"
+                },
+                {
+                  "type": "String",
+                  "attribute": "cellLocation",
+                  "condition": "IN",
+                  "searchTerm": "1-2-001,1-3-014,3-1-020"
+                }
+              ]
+            }
+          ]
+        }
+          """.trimIndent(),
+        )
+        .withAuthorization("Bearer 12345")
+        .build(),
+    )
+    assertThat(report2.messages).isEmpty()
+    assertThat(report2.hasErrors()).isFalse
   }
 
   @Test
