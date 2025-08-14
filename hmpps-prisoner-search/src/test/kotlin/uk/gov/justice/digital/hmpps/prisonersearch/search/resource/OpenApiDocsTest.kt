@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator
+import com.atlassian.oai.validator.model.SimpleRequest
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.swagger.v3.parser.OpenAPIV3Parser
 import net.minidev.json.JSONArray
@@ -62,6 +64,58 @@ class OpenApiDocsTest : IntegrationTestBase() {
     val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
     assertThat(result.messages).isEmpty()
     assertThat(result.openAPI.paths).isNotEmpty
+  }
+
+  @Test
+  fun `atlassian request validator reports no validation errors on valid attribute search request`() {
+    val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
+
+    // needed so that swagger schema uses the types array instead - see https://github.com/swagger-api/swagger-parser/issues/1821
+    System.setProperty("bind-type", "true")
+    val validator = OpenApiInteractionValidator.createFor(result.openAPI).build()
+    System.setProperty("bind-type", "false")
+
+    val report = validator.validateRequest(
+      SimpleRequest.Builder
+        .post("/attribute-search")
+        // needed so that the request json is validated
+        .withAccept(MediaType.APPLICATION_JSON_VALUE)
+        .withContentType(MediaType.APPLICATION_JSON_VALUE)
+        .withBody(
+          """
+            {
+              "joinType": "AND",
+              "queries": [
+                {
+                  "joinType": "AND",
+                  "matchers": [
+                    {
+                      "type": "String",
+                      "attribute": "prisonId",
+                      "condition": "IS",
+                      "searchTerm": "MDI"
+                    },
+                    {
+                      "type": "String",
+                      "attribute": "cellLocation",
+                      "condition": "IS",
+                      "searchTerm": "A-1-002"
+                    }
+                  ]
+                }
+              ],
+              "pagination": {
+                "page": 0,
+                "size": 10
+              }
+            }
+          """.trimIndent(),
+        )
+        .withAuthorization("Bearer 12345")
+        .build(),
+    )
+    assertThat(report.messages).isEmpty()
+    assertThat(report.hasErrors()).isFalse
   }
 
   @Test
