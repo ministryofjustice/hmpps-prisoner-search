@@ -16,7 +16,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   id("org.openapi.generator") version "7.14.0"
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "2.2.0"
+  kotlin("plugin.jpa") version "2.2.10"
 }
 
 configurations {
@@ -46,7 +46,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
-  implementation("org.springframework.data:spring-data-elasticsearch:5.5.2")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.5.3")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 

@@ -33,7 +33,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.data:spring-data-elasticsearch:5.5.2")
+  implementation("org.springframework.data:spring-data-elasticsearch:5.5.3")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
