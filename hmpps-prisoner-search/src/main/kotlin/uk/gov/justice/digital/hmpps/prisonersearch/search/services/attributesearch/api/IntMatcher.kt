@@ -29,9 +29,6 @@ data class IntMatcher(
   @Schema(description = "Whether the maximum value is inclusive", defaultValue = "true")
   val maxInclusive: Boolean = true,
 ) : TypeMatcher<Int> {
-  @Schema(description = "Must be Int", example = "Int")
-  override val type: String = "Int"
-
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")

@@ -31,9 +31,6 @@ data class DateMatcher(
   @Schema(description = "Whether the maximum value is inclusive or exclusive", defaultValue = "true")
   val maxInclusive: Boolean = true,
 ) : TypeMatcher<LocalDate> {
-  @Schema(description = "Must be Date", example = "Date")
-  override val type: String = "Date"
-
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have a min or max value")

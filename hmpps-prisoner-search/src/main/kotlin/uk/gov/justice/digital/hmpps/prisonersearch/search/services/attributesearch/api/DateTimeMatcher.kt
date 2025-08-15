@@ -27,9 +27,6 @@ data class DateTimeMatcher(
   @Schema(description = "The maximum value to match", example = "2024-01-31T21:00:00Z")
   val maxValue: LocalDateTime? = null,
 ) : TypeMatcher<LocalDateTime> {
-  @Schema(description = "Must be DateTime", example = "DateTime")
-  override val type: String = "DateTime"
-
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")
