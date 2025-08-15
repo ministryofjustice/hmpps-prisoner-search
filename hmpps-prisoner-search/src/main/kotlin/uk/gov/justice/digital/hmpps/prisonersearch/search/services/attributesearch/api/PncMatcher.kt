@@ -20,9 +20,6 @@ data class PncMatcher(
   @Schema(description = "The PNC number match", example = "24/123456H")
   val pncNumber: String,
 ) : Matcher {
-  @Schema(description = "Must be PNC", example = "PNC")
-  override val type: String = "PNC"
-
   override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> {
     val searchTerm = if (pncNumber.isPNCNumber()) pncNumber.canonicalPNCNumberShort() else pncNumber
     return QueryBuilders.nestedQuery(

@@ -21,9 +21,6 @@ data class StringMatcher(
   @Schema(description = "The search term to apply to the attribute. Search terms are not case-sensitive.", example = "Smith")
   val searchTerm: String,
 ) : TypeMatcher<String> {
-  @Schema(description = "Must be String", example = "String")
-  override val type: String = "String"
-
   private val listSearchTerms: List<String> = searchTerm.split(",").map { it.trim() }.filterNot { it.isEmpty() }
 
   override fun validate() {

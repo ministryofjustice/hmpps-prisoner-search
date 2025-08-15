@@ -13,9 +13,6 @@ data class BooleanMatcher(
   @Schema(description = "Whether the attribute must be true or false", example = "true")
   val condition: Boolean,
 ) : TypeMatcher<Boolean> {
-  @Schema(description = "Must be Boolean", example = "Boolean")
-  override val type: String = "Boolean"
-
   override fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> = attributes[attribute]?.let {
     QueryBuilders.termQuery(it.openSearchName, condition)
   } ?: throw AttributeSearchException("Attribute $attribute not recognised")
