@@ -54,6 +54,16 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.31") {
     exclude(group = "io.swagger.core.v3")
   }
+  testImplementation("com.atlassian.oai:swagger-request-validator-wiremock:2.45.1") {
+    // Exclude WireMock artifacts
+    exclude(group = "com.github.tomakehurst", module = "wiremock")
+    exclude(group = "com.github.tomakehurst", module = "wiremock-jre8")
+    exclude(group = "com.github.tomakehurst", module = "wiremock-standalone")
+
+    // Exclude Jetty components to prevent the validator from pulling in conflicting versions
+    exclude(group = "org.eclipse.jetty")
+    exclude(group = "javax.servlet")
+  }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.31")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")

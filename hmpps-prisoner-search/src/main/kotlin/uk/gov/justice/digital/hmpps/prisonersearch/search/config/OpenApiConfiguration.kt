@@ -4,14 +4,10 @@ import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
-import io.swagger.v3.oas.models.media.DateTimeSchema
-import io.swagger.v3.oas.models.media.Schema
-import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
 import io.swagger.v3.oas.models.tags.Tag
-import org.springdoc.core.customizers.OpenApiCustomizer
 import org.springframework.boot.info.BuildProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -76,25 +72,28 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .addSecurityItem(SecurityRequirement().addList("prisoner-in-prison-search-role", listOf("read")))
     .addSecurityItem(SecurityRequirement().addList("prisoner-search--prisoner--ro", listOf("read")))
 
-  @Bean
-  fun openAPICustomiser(): OpenApiCustomizer = OpenApiCustomizer {
-    it.components.schemas.forEach { (_, schema: Schema<*>) ->
-      val properties = schema.properties ?: mutableMapOf()
-      for (propertyName in properties.keys) {
-        val propertySchema = properties[propertyName]!!
-        if (propertySchema is DateTimeSchema) {
-          properties.replace(
-            propertyName,
-            StringSchema()
-              .example("2021-07-05T10:35:17")
-              .pattern("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$")
-              .description(propertySchema.description)
-              .required(propertySchema.required),
-          )
-        }
-      }
-    }
-  }
+//  @Bean
+//  fun myCustomModelResolver(objectMapper: ObjectMapper?): ModelResolver = object : ModelResolver(objectMapper) {
+//    override fun resolveDiscriminator(
+//      type: JavaType?,
+//      context: ModelConverterContext?,
+//    ): Discriminator? {
+//      val discriminator = super.resolveDiscriminator(type, context)
+//      if (context != null &&
+//        type != null &&
+//        discriminator != null &&
+//        discriminator.propertyName != null &&
+//        (discriminator.mapping == null || discriminator.mapping.isEmpty()) // don't override anything
+//      ) {
+//        val jsonSubTypes = type.rawClass.getDeclaredAnnotation(JsonSubTypes::class.java)
+//        jsonSubTypes?.value?.forEach { subtype: JsonSubTypes.Type ->
+//          val ref = RefUtils.constructRef(context.resolve(AnnotatedType(subtype.value.java)).name)
+//          discriminator.mapping(subtype.name, ref) // add mapping
+//        }
+//      }
+//      return discriminator
+//    }
+//  }
 }
 
 private fun SecurityScheme.addBearerJwtRequirement(role: String): SecurityScheme = type(SecurityScheme.Type.HTTP)
