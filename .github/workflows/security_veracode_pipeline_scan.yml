@@ -54,7 +54,3 @@ jobs:
       veracode_artifact_name: 'hmpps-prisoner-search-indexer-veracode.jar'
     secrets: inherit
     needs: create-artifact-indexer
-  create-artifact:
-    permissions:
-      contents: read
-      actions: read
