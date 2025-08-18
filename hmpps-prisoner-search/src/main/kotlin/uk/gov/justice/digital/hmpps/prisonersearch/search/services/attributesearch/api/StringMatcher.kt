@@ -12,7 +12,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS_NOT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.STARTSWITH
 
-@Schema(description = "A matcher for a string attribute from the prisoner record")
+@Schema(
+  description = """A matcher for a string attribute from the prisoner record.
+
+  The type must be set to String for this matcher.
+""",
+)
 data class StringMatcher(
   @Schema(description = "The attribute to match on", example = "aliases.lastName")
   override val attribute: String,

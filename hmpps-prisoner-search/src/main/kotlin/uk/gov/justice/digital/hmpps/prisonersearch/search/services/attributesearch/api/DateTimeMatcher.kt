@@ -17,6 +17,8 @@ import java.time.temporal.ChronoUnit.SECONDS
   For < enter only the max value.
   
   For > enter only the min value.
+
+  The type must be set to DateTime for this matcher.
 """,
 )
 data class DateTimeMatcher(

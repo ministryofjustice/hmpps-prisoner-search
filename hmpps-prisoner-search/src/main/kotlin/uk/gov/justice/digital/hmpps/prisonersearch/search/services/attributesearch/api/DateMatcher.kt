@@ -17,6 +17,8 @@ import java.time.LocalDate
   For >= enter only a min value, and for > set min inclusive to false.
   
   For equals enter the same date in both the min value and max value and leave min/max inclusive as true.
+
+  The type must be set to Date for this matcher.
   """,
 )
 data class DateMatcher(

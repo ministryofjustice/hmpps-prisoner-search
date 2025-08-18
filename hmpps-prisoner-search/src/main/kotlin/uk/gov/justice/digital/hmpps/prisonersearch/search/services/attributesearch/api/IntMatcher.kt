@@ -14,7 +14,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
    
   For >= enter only a min value, and for > set min inclusive to false.
   
-  For equals enter the same integer in both the min value and max value and leave min/max inclusive as true.
+  For equals enter the same integer in both the min value and max value and leave min/max inclusive as true..
+
+  The type must be set to Int for this matcher.
   """,
 )
 data class IntMatcher(

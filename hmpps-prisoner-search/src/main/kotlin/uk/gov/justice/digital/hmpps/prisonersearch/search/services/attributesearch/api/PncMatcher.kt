@@ -13,7 +13,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
   
     This is required because PNC numbers come in various formats with 2/4 long years and with/without leading zeroes.
      
-    This matcher will find the matching PNC regardless of which format is used. 
+    This matcher will find the matching PNC regardless of which format is used.
+
+  The type must be set to PNC for this matcher.
   """,
 )
 data class PncMatcher(

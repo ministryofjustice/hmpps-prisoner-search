@@ -6,7 +6,12 @@ import org.opensearch.index.query.QueryBuilders
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
 
-@Schema(description = "A matcher for a boolean attribute from the Prisoner record")
+@Schema(
+  description = """A matcher for a boolean attribute from the Prisoner.
+
+  The type must be set to Boolean for this matcher.
+""",
+)
 data class BooleanMatcher(
   @Schema(description = "The attribute to match", example = "recall")
   override val attribute: String,
