@@ -12,7 +12,12 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.IS_NOT
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.StringCondition.STARTSWITH
 
-@Schema(description = "A matcher for a string attribute from the prisoner record")
+@Schema(
+  description = """A matcher for a string attribute from the prisoner record.
+
+  The type must be set to String for this matcher.
+""",
+)
 data class StringMatcher(
   @Schema(description = "The attribute to match on", example = "aliases.lastName")
   override val attribute: String,
@@ -21,9 +26,6 @@ data class StringMatcher(
   @Schema(description = "The search term to apply to the attribute. Search terms are not case-sensitive.", example = "Smith")
   val searchTerm: String,
 ) : TypeMatcher<String> {
-  @Schema(description = "Must be String", example = "String")
-  override val type: String = "String"
-
   private val listSearchTerms: List<String> = searchTerm.split(",").map { it.trim() }.filterNot { it.isEmpty() }
 
   override fun validate() {

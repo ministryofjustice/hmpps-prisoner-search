@@ -17,6 +17,8 @@ import java.time.temporal.ChronoUnit.SECONDS
   For < enter only the max value.
   
   For > enter only the min value.
+
+  The type must be set to DateTime for this matcher.
 """,
 )
 data class DateTimeMatcher(
@@ -27,9 +29,6 @@ data class DateTimeMatcher(
   @Schema(description = "The maximum value to match", example = "2024-01-31T21:00:00Z")
   val maxValue: LocalDateTime? = null,
 ) : TypeMatcher<LocalDateTime> {
-  @Schema(description = "Must be DateTime", example = "DateTime")
-  override val type: String = "DateTime"
-
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have at least 1 min or max value")

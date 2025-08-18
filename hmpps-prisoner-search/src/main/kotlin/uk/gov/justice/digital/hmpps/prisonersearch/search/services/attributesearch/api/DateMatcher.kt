@@ -17,6 +17,8 @@ import java.time.LocalDate
   For >= enter only a min value, and for > set min inclusive to false.
   
   For equals enter the same date in both the min value and max value and leave min/max inclusive as true.
+
+  The type must be set to Date for this matcher.
   """,
 )
 data class DateMatcher(
@@ -31,9 +33,6 @@ data class DateMatcher(
   @Schema(description = "Whether the maximum value is inclusive or exclusive", defaultValue = "true")
   val maxInclusive: Boolean = true,
 ) : TypeMatcher<LocalDate> {
-  @Schema(description = "Must be Date", example = "Date")
-  override val type: String = "Date"
-
   override fun validate() {
     if (minValue == null && maxValue == null) {
       throw AttributeSearchException("Attribute $attribute must have a min or max value")

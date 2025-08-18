@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesea
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import io.swagger.v3.oas.annotations.media.DiscriminatorMapping
+import io.swagger.v3.oas.annotations.media.Schema
 import org.opensearch.index.query.AbstractQueryBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.AttributeSearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.Attributes
@@ -9,6 +11,17 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 /**
  * A matcher provides a way to search for a specific type of data in OpenSearch.
  */
+@Schema(
+  description = "Matchers that will be applied to this query",
+  discriminatorMapping = [
+    DiscriminatorMapping(value = "Boolean", schema = BooleanMatcher::class),
+    DiscriminatorMapping(value = "Date", schema = DateMatcher::class),
+    DiscriminatorMapping(value = "DateTime", schema = DateTimeMatcher::class),
+    DiscriminatorMapping(value = "Int", schema = IntMatcher::class),
+    DiscriminatorMapping(value = "PNC", schema = PncMatcher::class),
+    DiscriminatorMapping(value = "String", schema = StringMatcher::class),
+  ],
+)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
   JsonSubTypes.Type(value = BooleanMatcher::class, name = "Boolean"),
@@ -19,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
   JsonSubTypes.Type(value = PncMatcher::class, name = "PNC"),
 )
 interface Matcher {
-  val type: String
   fun buildQuery(attributes: Attributes): AbstractQueryBuilder<*> = throw NotImplementedError("buildQuery not implemented for ${this::class.simpleName}")
 }
 
