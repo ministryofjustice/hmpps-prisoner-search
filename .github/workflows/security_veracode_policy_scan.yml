@@ -55,7 +55,3 @@ jobs:
       application_name: 'hmpps-prisoner-search-indexer'
     secrets: inherit
     needs: create-artifact-indexer
-  create-artifact:
-    permissions:
-      contents: read
-      actions: read
