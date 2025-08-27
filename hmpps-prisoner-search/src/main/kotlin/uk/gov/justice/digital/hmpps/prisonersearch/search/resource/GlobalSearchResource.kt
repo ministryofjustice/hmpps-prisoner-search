@@ -55,7 +55,7 @@ class GlobalSearchResource(
     responseFields: List<String>? = null,
   ) = globalSearchService.findByGlobalSearchCriteria(globalSearchCriteria, pageable, responseFields)
 
-  @GetMapping("/prisoner/{id}")
+  @GetMapping("/prisoner/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize("hasAnyRole('ROLE_VIEW_PRISONER_DATA', 'ROLE_PRISONER_SEARCH', 'PRISONER_SEARCH__PRISONER__RO')")
   @Operation(
     summary = "Get prisoner by prisoner number (AKA NOMS number)",

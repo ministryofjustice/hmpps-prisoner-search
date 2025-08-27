@@ -2,10 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springdoc.core.annotations.ParameterObject
-import org.springframework.data.domain.Pageable
-import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 
 @RestController
 @Validated
@@ -38,7 +37,11 @@ class RestrictedPatientSearchResource(private val restrictedPatientSearchService
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
-    @ParameterObject @PageableDefault
-    pageable: Pageable,
-  ) = restrictedPatientSearchService.findBySearchCriteria(searchCriteria, pageable, responseFields)
+    @RequestParam(value = "page", defaultValue = "0")
+    @Parameter(description = "Zero-based page index (0..N). Will default to 0 if not supplied or invalid.", schema = Schema(defaultValue = "0", minimum = "0", type = "integer"))
+    page: Int,
+    @RequestParam(value = "size", defaultValue = "10")
+    @Parameter(description = "The size of the page to be returned. Will default to 10 if not supplied or invalid.", schema = Schema(defaultValue = "10", minimum = "1", type = "integer"))
+    size: Int,
+  ) = restrictedPatientSearchService.findBySearchCriteria(searchCriteria, PaginationRequest(page = page, size = size), responseFields)
 }

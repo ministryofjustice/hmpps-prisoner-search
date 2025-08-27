@@ -347,6 +347,72 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
         "/results/restrictedPatientsSearch/search_results_hosp_pagination2.json",
       )
     }
+
+    @Test
+    fun `will default the page size`() {
+      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
+        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
+    }
+
+    @Test
+    fun `will default the page size if empty parameter provided`() {
+      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=")
+        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
+    }
+
+    @Test
+    fun `will default the page size if invalid size provided`() {
+      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=0&page=1")
+        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
+    }
+
+    @Test
+    fun `will default the page number`() {
+      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
+        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
+    }
+
+    @Test
+    fun `will default the page number if empty parameter provided`() {
+      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?page=")
+        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
+    }
+
+    @Test
+    fun `will default the page number if invalid value provided`() {
+      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=1&page=-1")
+        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
+    }
   }
 
   @Test

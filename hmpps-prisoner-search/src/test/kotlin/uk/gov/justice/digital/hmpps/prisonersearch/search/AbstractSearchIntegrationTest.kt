@@ -230,7 +230,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     fileAssert: String,
   ) {
     webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=$size&page=$page")
-      .body(BodyInserters.fromValue(gson.toJson(restrictedPatientSearchCriteria)))
+      .body(BodyInserters.fromValue(restrictedPatientSearchCriteria))
       .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
       .header("Content-Type", "application/json")
       .exchange()

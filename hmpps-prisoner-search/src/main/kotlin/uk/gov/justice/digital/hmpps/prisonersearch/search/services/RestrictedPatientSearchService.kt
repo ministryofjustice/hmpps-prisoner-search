@@ -12,11 +12,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 
 @Service
@@ -31,21 +31,22 @@ class RestrictedPatientSearchService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun findBySearchCriteria(searchCriteria: RestrictedPatientSearchCriteria, pageable: Pageable, responseFields: List<String>? = null): Page<Prisoner> {
+  fun findBySearchCriteria(searchCriteria: RestrictedPatientSearchCriteria, pageAndSize: PaginationRequest, responseFields: List<String>? = null): Page<Prisoner> {
+    val pageable = pageAndSize.toPageable()
     if (searchCriteria.isEmpty()) {
-      queryBy(searchCriteria, pageable, responseFields) { anyMatch() } onMatch {
+      queryBy(searchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { anyMatch() } onMatch {
         customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
         return PageImpl(it.matches, pageable, it.totalHits)
       }
     } else {
       if (searchCriteria.prisonerIdentifier != null) {
-        queryBy(searchCriteria, pageable, responseFields) { idMatch(it) } onMatch {
+        queryBy(searchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { idMatch(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
         }
       }
       if (!(searchCriteria.firstName.isNullOrBlank() && searchCriteria.lastName.isNullOrBlank())) {
-        queryBy(searchCriteria, pageable, responseFields) { nameMatchWithAliases(it) } onMatch {
+        queryBy(searchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { nameMatchWithAliases(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
         }
@@ -57,7 +58,8 @@ class RestrictedPatientSearchService(
 
   private fun queryBy(
     searchCriteria: RestrictedPatientSearchCriteria,
-    pageable: Pageable,
+    pageSize: Int,
+    pageOffset: Int,
     responseFields: List<String>? = null,
     queryBuilder: (searchCriteria: RestrictedPatientSearchCriteria) -> BoolQueryBuilder?,
   ): RestrictedPatientResult {
@@ -66,8 +68,8 @@ class RestrictedPatientSearchService(
     return query?.let {
       val searchSourceBuilder = SearchSourceBuilder().apply {
         query(query.withDefaults(searchCriteria))
-        size(pageable.pageSize)
-        from(pageable.offset.toInt())
+        size(pageSize)
+        from(pageOffset)
         sort("prisonerNumber")
         responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
       }

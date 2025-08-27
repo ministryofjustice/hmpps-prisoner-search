@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
@@ -66,7 +65,7 @@ class PrisonerDetailService(
 
   private fun createSourceBuilder(detailRequest: PrisonerDetailRequest, responseFields: List<String>? = null): SearchSourceBuilder {
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
-    val pageable = PageRequest.of(detailRequest.pagination.page, detailRequest.pagination.size)
+    val pageable = detailRequest.pagination.toPageable()
     return SearchSourceBuilder().apply {
       timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
       size(pageable.pageSize.coerceAtMost(maxSearchResults))
@@ -167,7 +166,7 @@ class PrisonerDetailService(
   }
 
   private fun createDetailResponse(paginationRequest: PaginationRequest, searchResponse: SearchResponse): Page<Prisoner> {
-    val pageable = PageRequest.of(paginationRequest.page, paginationRequest.size)
+    val pageable = paginationRequest.toPageable()
     val prisoners = getSearchResult(searchResponse)
     return if (prisoners.isEmpty()) {
       log.info("Prisoner detail search: No prisoner matched this request. Returning empty response.")
@@ -182,7 +181,7 @@ class PrisonerDetailService(
   }
 
   private fun createEmptyDetailResponse(paginationRequest: PaginationRequest): Page<Prisoner> {
-    val pageable = PageRequest.of(paginationRequest.page, paginationRequest.size)
+    val pageable = paginationRequest.toPageable()
     return PageImpl(emptyList(), pageable, 0L)
   }
 

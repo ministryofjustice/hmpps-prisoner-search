@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
@@ -82,13 +81,13 @@ class PhysicalDetailService(
       createDetailResponse(detailRequest.pagination, searchResponse)
     } catch (e: Throwable) {
       log.error("Elastic search exception", e)
-      val pageable = PageRequest.of(detailRequest.pagination.page, detailRequest.pagination.size)
+      val pageable = detailRequest.pagination.toPageable()
       return PageImpl(emptyList(), pageable, 0L)
     }
   }
 
   private fun createSourceBuilder(detailRequest: PhysicalDetailRequest, responseFields: List<String>? = null): SearchSourceBuilder {
-    val pageable = PageRequest.of(detailRequest.pagination.page, detailRequest.pagination.size)
+    val pageable = detailRequest.pagination.toPageable()
     return SearchSourceBuilder().apply {
       timeout(TimeValue(searchTimeoutSeconds, TimeUnit.SECONDS))
       size(pageable.pageSize.coerceAtMost(maxSearchResults))
@@ -185,7 +184,7 @@ class PhysicalDetailService(
     paginationRequest: PaginationRequest,
     searchResponse: SearchResponse,
   ): Page<Prisoner> {
-    val pageable = PageRequest.of(paginationRequest.page, paginationRequest.size)
+    val pageable = paginationRequest.toPageable()
     val prisoners = getSearchResult(searchResponse)
     return if (prisoners.isEmpty()) {
       log.info("Physical detail search: No prisoner matched this request. Returning empty response.")
