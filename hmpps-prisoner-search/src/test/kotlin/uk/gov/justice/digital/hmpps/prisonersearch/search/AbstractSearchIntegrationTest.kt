@@ -19,10 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.toPrisoner
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonSearch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReleaseDateSearch
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.KeywordRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.MatchRequest
@@ -139,25 +137,6 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     .expectStatus().isOk
     .expectBody()
 
-  fun globalSearch(globalSearchCriteria: GlobalSearchCriteria, fileAssert: String) {
-    webTestClient.post().uri("/global-search")
-      .body(BodyInserters.fromValue(gson.toJson(globalSearchCriteria)))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-      .expectBody().json(fileAssert.readResourceAsText())
-  }
-  fun globalSearchPagination(globalSearchCriteria: GlobalSearchCriteria, size: Long, page: Long, fileAssert: String) {
-    webTestClient.post().uri("/global-search?size=$size&page=$page")
-      .body(BodyInserters.fromValue(gson.toJson(globalSearchCriteria)))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-      .expectBody().json(fileAssert.readResourceAsText())
-  }
-
   fun searchByReleaseDate(searchCriteria: ReleaseDateSearch, fileAssert: String) {
     webTestClient.post().uri("/prisoner-search/release-date-by-prison")
       .body(BodyInserters.fromValue(gson.toJson(searchCriteria)))
@@ -207,31 +186,6 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
   fun getPrisonerSearchCorePerson(id: String, fileAssert: String) {
     webTestClient.get().uri("/prisoner/$id")
       .headers(setAuthorisation(roles = listOf("PRISONER_SEARCH__PRISONER__RO")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-      .expectBody().json(fileAssert.readResourceAsText())
-  }
-
-  fun restrictedPatientSearch(restrictedPatientSearchCriteria: RestrictedPatientSearchCriteria, fileAssert: String) {
-    webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-      .body(BodyInserters.fromValue(gson.toJson(restrictedPatientSearchCriteria)))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-      .expectBody().json(fileAssert.readResourceAsText())
-  }
-
-  fun restrictedPatientSearchPagination(
-    restrictedPatientSearchCriteria: RestrictedPatientSearchCriteria,
-    size: Long,
-    page: Long,
-    fileAssert: String,
-  ) {
-    webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=$size&page=$page")
-      .body(BodyInserters.fromValue(restrictedPatientSearchCriteria))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isOk

@@ -9,8 +9,8 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
 
 class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest() {
@@ -27,7 +27,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
     @Test
     fun `access forbidden when no role`() {
       webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-        .body(BodyInserters.fromValue(gson.toJson(RestrictedPatientSearchCriteria(null, null, null))))
+        .bodyValue(RestrictedPatientSearchCriteria(null, null, null))
         .headers(setAuthorisation())
         .header("Content-Type", "application/json")
         .exchange()
@@ -37,7 +37,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
     @Test
     fun `can perform a match for ROLE_GLOBAL_SEARCH role`() {
       webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-        .body(BodyInserters.fromValue(gson.toJson(RestrictedPatientSearchCriteria(null, null, null))))
+        .bodyValue(RestrictedPatientSearchCriteria(null, null, null))
         .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
         .header("Content-Type", "application/json")
         .exchange()
@@ -47,7 +47,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
     @Test
     fun `can perform a match for ROLE_PRISONER_SEARCH role`() {
       webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-        .body(BodyInserters.fromValue(gson.toJson(RestrictedPatientSearchCriteria(null, null, null))))
+        .bodyValue(RestrictedPatientSearchCriteria(null, null, null))
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
         .header("Content-Type", "application/json")
         .exchange()
@@ -57,7 +57,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
     @Test
     fun `can perform a match for ROLE_GLOBAL_SEARCH and ROLE_PRISONER_SEARCH role`() {
       webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-        .body(BodyInserters.fromValue(gson.toJson(RestrictedPatientSearchCriteria(null, null, null))))
+        .bodyValue(RestrictedPatientSearchCriteria(null, null, null))
         .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH")))
         .header("Content-Type", "application/json")
         .exchange()
@@ -156,7 +156,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
           .queryParam("responseFields", responseFields)
           .build()
       }
-      .body(BodyInserters.fromValue(gson.toJson(criteria)))
+      .bodyValue(criteria)
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
       .header("Content-Type", "application/json")
       .exchange()
@@ -350,79 +350,44 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
 
     @Test
     fun `will default the page size`() {
-      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
-        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      restrictedPatientSearch()
         .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
     }
 
     @Test
     fun `will default the page size if empty parameter provided`() {
-      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=")
-        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
-        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      restrictedPatientSearch(queryParams = "?size=")
         .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
     }
 
     @Test
     fun `will default the page size if invalid size provided`() {
-      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=0&page=1")
-        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
-        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      restrictedPatientSearch(queryParams = "?size=0&page=1")
         .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
     }
 
     @Test
     fun `will default the page number`() {
-      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
-        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      restrictedPatientSearch()
         .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
     }
 
     @Test
     fun `will default the page number if empty parameter provided`() {
-      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?page=")
-        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
-        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      restrictedPatientSearch(queryParams = "?page=")
         .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
     }
 
     @Test
     fun `will default the page number if invalid value provided`() {
-      webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=1&page=-1")
-        .body(BodyInserters.fromValue(RestrictedPatientSearchCriteria(null, "HOSP", null)))
-        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      restrictedPatientSearch(queryParams = "?size=1&page=-1")
         .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
     }
   }
 
   @Test
   fun `telemetry is recorded`() {
-    webTestClient.post().uri("/restricted-patient-search/match-restricted-patients")
-      .body(BodyInserters.fromValue(gson.toJson(RestrictedPatientSearchCriteria(null, null, null))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
+    restrictedPatientSearch()
 
     verify(telemetryClient).trackEvent(
       eq("POSFindRestrictedPatientsByCriteria"),
@@ -431,5 +396,32 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
         assertThat(it["numberOfResults"]).isCloseTo(4.0, withinPercentage(1))
       },
     )
+  }
+
+  fun restrictedPatientSearch(
+    criteria: RestrictedPatientSearchCriteria = RestrictedPatientSearchCriteria(null, null, null),
+    fileAssert: String? = null,
+    queryParams: String? = "",
+  ): WebTestClient.ResponseSpec = webTestClient.post().uri("/restricted-patient-search/match-restricted-patients$queryParams")
+    .bodyValue(criteria)
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
+    .expectStatus().isOk
+    .also { if (fileAssert != null) it.expectBody().json(fileAssert.readResourceAsText()) }
+
+  fun restrictedPatientSearchPagination(
+    restrictedPatientSearchCriteria: RestrictedPatientSearchCriteria,
+    size: Long,
+    page: Long,
+    fileAssert: String,
+  ) {
+    webTestClient.post().uri("/restricted-patient-search/match-restricted-patients?size=$size&page=$page")
+      .bodyValue(restrictedPatientSearchCriteria)
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().json(fileAssert.readResourceAsText())
   }
 }
