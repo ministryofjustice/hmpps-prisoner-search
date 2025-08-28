@@ -401,7 +401,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
   fun restrictedPatientSearch(
     criteria: RestrictedPatientSearchCriteria = RestrictedPatientSearchCriteria(null, null, null),
     fileAssert: String? = null,
-    queryParams: String? = "",
+    queryParams: String = "",
   ): WebTestClient.ResponseSpec = webTestClient.post().uri("/restricted-patient-search/match-restricted-patients$queryParams")
     .bodyValue(criteria)
     .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))

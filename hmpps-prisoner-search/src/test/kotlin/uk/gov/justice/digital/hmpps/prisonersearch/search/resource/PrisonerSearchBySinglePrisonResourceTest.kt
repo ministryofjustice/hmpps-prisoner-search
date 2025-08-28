@@ -186,7 +186,7 @@ class PrisonerSearchBySinglePrisonResourceTest : AbstractSearchDataIntegrationTe
 
   @Test
   fun `can perform a match on prisonId with restrictive patients`() {
-    prisonSearch("MDI", "/results/search_results_mdi.json", true)
+    prisonSearch("MDI", "/results/search_results_mdi.json", "?include-restricted-patients=true")
   }
 
   @Test
