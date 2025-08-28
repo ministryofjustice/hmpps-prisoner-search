@@ -80,6 +80,11 @@ class PrisonersInPrisonResource(
       "/prison/WWI/prisoners?alerts=TACT&alerts=PEEP"
       This will return all people in HMP Wandsworth. With the alerts TACT or PEEP.
 
+      There have been issues raised with OpenSearch sorting in that it sometimes doesn't produce stable sorting results,
+      especially with higher page numbers.
+
+      It is thus recommended not to use paging and instead request a large page size, together with setting the
+      responseFields to limit the returned response byte size (otherwise you risk hitting memory / webclient limits).
       """,
     security = [SecurityRequirement(name = "prisoner-in-prison-search-role"), SecurityRequirement(name = "prisoner-search-role")],
 
