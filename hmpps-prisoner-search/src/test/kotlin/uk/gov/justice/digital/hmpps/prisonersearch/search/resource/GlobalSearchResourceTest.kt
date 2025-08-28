@@ -1,544 +1,595 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.readResourceAsText
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.Gender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.GlobalSearchCriteria
 import java.time.LocalDate
 
 class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
-
-  @Test
-  fun `access forbidden when no authority`() {
-    webTestClient.post().uri("/global-search")
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
-
-  @Test
-  fun `access forbidden when no role`() {
-    webTestClient.post().uri("/global-search")
-      .body(BodyInserters.fromValue(gson.toJson(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))))
-      .headers(setAuthorisation())
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isForbidden
-  }
-
-  @Test
-  fun `bad request when no criteria provided`() {
-    webTestClient.post().uri("/global-search")
-      .body(BodyInserters.fromValue(gson.toJson(GlobalSearchCriteria(null, null, null, null, null, null))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isBadRequest
-  }
-
-  @Test
-  fun `can perform a match for ROLE_GLOBAL_SEARCH role`() {
-    webTestClient.post().uri("/global-search")
-      .body(BodyInserters.fromValue(gson.toJson(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-  }
-
-  @Test
-  fun `can perform a match for ROLE_PRISONER_SEARCH role`() {
-    webTestClient.post().uri("/global-search")
-      .body(BodyInserters.fromValue(gson.toJson(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))))
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-  }
-
-  @Test
-  fun `can perform a match for ROLE_GLOBAL_SEARCH and ROLE_PRISONER_SEARCH role`() {
-    webTestClient.post().uri("/global-search")
-      .body(BodyInserters.fromValue(gson.toJson(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isOk
-  }
-
-  @Test
-  fun `can perform a match on prisoner number`() {
-    globalSearch(
-      GlobalSearchCriteria("A7089EY", null, null, null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a get on prisoner number`() {
-    getPrisoner("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
-  }
-
-  @Test
-  fun `can perform a get on prisoner number for role PRISONER_SEARCH__PRISONER__RO`() {
-    getPrisonerSearchCorePerson("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
-  }
-
-  @Test
-  fun `should return bad request for get prisoner with invalid response fields`() {
-    webTestClient.getPrisoner("A7089EY", listOf("prisonerNumber", "doesNotExist"))
-      .expectStatus().isBadRequest
-      .expectBody().jsonPath("userMessage").value<String> {
-        assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+  @Nested
+  @DisplayName("GET /global-search")
+  inner class GlobalSearch {
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no authority`() {
+        webTestClient.post().uri("/global-search")
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus().isUnauthorized
       }
+
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/global-search")
+          .bodyValue(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))
+          .headers(setAuthorisation())
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `can perform a match for ROLE_GLOBAL_SEARCH role`() {
+        webTestClient.post().uri("/global-search")
+          .bodyValue(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))
+          .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `can perform a match for ROLE_PRISONER_SEARCH role`() {
+        webTestClient.post().uri("/global-search")
+          .bodyValue(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `can perform a match for ROLE_GLOBAL_SEARCH and ROLE_PRISONER_SEARCH role`() {
+        webTestClient.post().uri("/global-search")
+          .bodyValue(GlobalSearchCriteria("A7089EY", "john", "smith", null, null, null))
+          .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH", "ROLE_PRISONER_SEARCH")))
+          .header("Content-Type", "application/json")
+          .exchange()
+          .expectStatus().isOk
+      }
+    }
+
+    @Test
+    fun `bad request when no criteria provided`() {
+      webTestClient.post().uri("/global-search")
+        .bodyValue(GlobalSearchCriteria(null, null, null, null, null, null))
+        .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `can perform a match on prisoner number`() {
+      globalSearch(
+        GlobalSearchCriteria("A7089EY", null, null, null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on prisoner number lowercase prisoner number uppercased before search`() {
+      globalSearch(
+        GlobalSearchCriteria("a7089ey", null, null, null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match wrong prisoner number but correct name`() {
+      globalSearch(
+        GlobalSearchCriteria("X7089EY", "JOHN", "SMITH", null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number`() {
+      globalSearch(
+        GlobalSearchCriteria("12/394773H", null, null, null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number short year`() {
+      globalSearch(
+        GlobalSearchCriteria("15/1234S", null, null, null, null, null),
+        "/results/globalSearch/search_results_pnc.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number long year`() {
+      globalSearch(
+        GlobalSearchCriteria("2015/1234S", null, null, null, null, null),
+        "/results/globalSearch/search_results_pnc.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number long year extra zeros`() {
+      globalSearch(
+        GlobalSearchCriteria("2015/001234S", null, null, null, null, null),
+        "/results/globalSearch/search_results_pnc.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number short year 19 century`() {
+      globalSearch(
+        GlobalSearchCriteria("89/4444S", null, null, null, null, null),
+        "/results/globalSearch/search_results_pnc2.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number long year 19 century`() {
+      globalSearch(
+        GlobalSearchCriteria("1989/4444S", null, null, null, null, null),
+        "/results/globalSearch/search_results_pnc2.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on PNC number long year 19 century extra zeros`() {
+      globalSearch(
+        GlobalSearchCriteria("1989/0004444S", null, null, null, null, null),
+        "/results/globalSearch/search_results_pnc2.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on CRO number`() {
+      globalSearch(
+        GlobalSearchCriteria("29906/12J", null, null, null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on book number`() {
+      globalSearch(
+        GlobalSearchCriteria("V61585", null, null, null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on booking Id`() {
+      globalSearch(
+        GlobalSearchCriteria("1900836", null, null, null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can not match when name is mis-spelt`() {
+      globalSearch(GlobalSearchCriteria(null, "jon", "smith", null, null, null), "/results/globalSearch/empty.json")
+    }
+
+    @Test
+    fun `can not match when name is mis-spelt and wrong location`() {
+      globalSearch(GlobalSearchCriteria(null, "jon", "smith", null, "OUT", null), "/results/globalSearch/empty.json")
+    }
+
+    @Test
+    fun `can not match when name of prisoner not exists`() {
+      globalSearch(GlobalSearchCriteria(null, "trevor", "willis", null, null, null), "/results/globalSearch/empty.json")
+    }
+
+    @Test
+    fun `can perform a match on a first name only`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "john", null, null, null, null),
+        "/results/globalSearch/search_results_john.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a last name only`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "smith", null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name only single hit`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "john", "smith", null, null, null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first and last name only multiple hits`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", null, null, null),
+        "/results/globalSearch/search_results_sams.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first and last name only multiple hits include aliases`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", null, null, null, true),
+        "/results/globalSearch/search_results_sams_aliases.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first name,last name and gender as male`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", Gender.F, null, null),
+        "/results/globalSearch/search_results_sam1.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first name,last name and gender as female`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", Gender.F, null, null),
+        "/results/globalSearch/search_results_sam2.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first name,last name and gender as Not Known`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", Gender.NK, null, null),
+        "/results/globalSearch/search_results_sam4.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first name,last name and gender as not specified`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", Gender.NS, null, null),
+        "/results/globalSearch/search_results_sam3.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first name,last name and all genders`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", Gender.ALL, null, null),
+        "/results/globalSearch/search_results_sams.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first, last name and date of birth`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "sam", "jones", null, null, LocalDate.of(1975, 5, 15)),
+        "/results/globalSearch/search_results_sam4.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name only in wrong date of birth`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "john", "smith", null, null, LocalDate.of(1970, 12, 25)),
+        "/results/globalSearch/empty.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a first name only filter by all locations`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "john", null, null, "ALL", null),
+        "/results/globalSearch/search_results_johns_in.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name only in specific location`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "john", "smith", null, "IN", null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name only in wrong location`() {
+      globalSearch(GlobalSearchCriteria(null, "john", "smith", null, "OUT", null), "/results/globalSearch/empty.json")
+    }
+
+    @Test
+    fun `can perform a match on first and last name in alias`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "master", "cordian", null, null, null, true),
+        "/results/globalSearch/search_results_smyth.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name in alias but they must be from the same record`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "master", "stark", null, null, null, true),
+        "/results/globalSearch/empty.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name in alias but they must be from the same record matches`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "tony", "stark", null, null, null, true),
+        "/results/globalSearch/search_results_smyth.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on firstname only in alias`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "master", null, null, null, null, true),
+        "/results/globalSearch/search_results_smyth.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on last name only in alias`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "cordian", null, null, null, true),
+        "/results/globalSearch/search_results_smyth.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on last name and gender in alias`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "orange", Gender.F, null, null, true),
+        "/results/globalSearch/search_results_sam5.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on last name and ALL genders in alias`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "Colin", Gender.ALL, null, null, true),
+        "/results/globalSearch/search_results_sam5.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on last name and date of birth in alias`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "orange", null, null, LocalDate.of(1991, 7, 5), true),
+        "/results/globalSearch/search_results_sam5.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first and last name in alias but with alias search off`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "master", "cordian", null, null, null, false),
+        "/results/globalSearch/empty.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on first name only in alias but with alias search off`() {
+      globalSearch(
+        GlobalSearchCriteria(null, "master", null, null, null, null, false),
+        "/results/globalSearch/empty.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on last name only in alias but with alias search off`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "cordian", null, null, null, false),
+        "/results/globalSearch/empty.json",
+      )
+    }
+
+    @Test
+    fun `can perform a match on a last name and specific location`() {
+      globalSearch(
+        GlobalSearchCriteria(null, null, "smyth", null, "IN", null),
+        "/results/globalSearch/search_results_smyth.json",
+      )
+    }
+
+    @Test
+    fun `can perform a which returns no results as not in that location`() {
+      globalSearch(GlobalSearchCriteria(null, null, "smyth", null, "OUT", null), "/results/globalSearch/empty.json")
+    }
+
+    @Test
+    fun `can perform a which returns result for ID search as in correct location`() {
+      globalSearch(
+        GlobalSearchCriteria("A7089EY", null, null, null, "IN", null),
+        "/results/globalSearch/search_results_smith.json",
+      )
+    }
+
+    @Test
+    fun `can perform a which returns no results as not in that prison by id`() {
+      globalSearch(GlobalSearchCriteria("A7089EY", null, null, null, "OUT", null), "/results/globalSearch/empty.json")
+    }
+
+    @Nested
+    inner class GlobalSearchPagination {
+      @Test
+      fun `can perform search which returns 6 result from first page`() {
+        globalSearchPagination(
+          GlobalSearchCriteria(null, "sam", "jones", null, null, null, true),
+          100,
+          0,
+          "/results/globalSearch/search_results_sam_pagination1.json",
+        )
+      }
+
+      @Test
+      fun `can perform search which returns 1 result from second page`() {
+        globalSearchPagination(
+          GlobalSearchCriteria(null, "sam", "jones", null, null, null),
+          1,
+          1,
+          "/results/globalSearch/search_results_sam_pagination2.json",
+        )
+      }
+
+      @Test
+      fun `can perform search which returns 2 result from third page`() {
+        globalSearchPagination(
+          GlobalSearchCriteria(null, "sam", "jones", null, null, null),
+          2,
+          2,
+          "/results/globalSearch/search_results_sam_pagination3.json",
+        )
+      }
+
+      @Test
+      fun `will default the page size`() {
+        globalSearch()
+          .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
+      }
+
+      @Test
+      fun `will default the page size if empty parameter provided`() {
+        globalSearch(queryParams = "?size=")
+          .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
+      }
+
+      @Test
+      fun `will default the page size if invalid size provided`() {
+        globalSearch(queryParams = "?size=0&page=1")
+          .expectBody().jsonPath("pageable.pageSize").isEqualTo("10")
+      }
+
+      @Test
+      fun `will default the page number`() {
+        globalSearch()
+          .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
+      }
+
+      @Test
+      fun `will default the page number if empty parameter provided`() {
+        globalSearch(queryParams = "?page=")
+          .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
+      }
+
+      @Test
+      fun `will default the page number if invalid value provided`() {
+        globalSearch(queryParams = "?size=1&page=-1")
+          .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
+      }
+    }
+
+    @Test
+    fun `should return bad request for invalid response fields`() {
+      val search = GlobalSearchCriteria("A7089EY", null, null, null, null, null)
+      webTestClient.globalSearch(search, listOf("prisonerNumber", "doesNotExist"))
+        .expectStatus().isBadRequest
+        .expectBody()
+        .jsonPath("developerMessage").isEqualTo("Invalid response fields requested: [doesNotExist]")
+    }
+
+    @Test
+    fun `should only return requested response fields - by prisoner number`() {
+      val search = GlobalSearchCriteria("A7089EY", null, null, null, null, null)
+      webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content.length()").isEqualTo(1)
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+        .jsonPath("content[0].lastName").isEqualTo("SMITH")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields - by first and last name`() {
+      val search = GlobalSearchCriteria(null, "john", "smith", null, null, null)
+      webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content.length()").isEqualTo(1)
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+        .jsonPath("content[0].lastName").isEqualTo("SMITH")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields - include aliases`() {
+      val search = GlobalSearchCriteria(null, "master", "cordian", null, null, null, true)
+      webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content.length()").isEqualTo(1)
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EZ")
+        .jsonPath("content[0].lastName").isEqualTo("SMYTH")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
   }
 
-  @Test
-  fun `should only return requested response fields`() {
-    webTestClient.getPrisoner("A7089EY", listOf("prisonerNumber", "lastName"))
-      .expectStatus().isOk
-      .expectBody()
-      .jsonPath("prisonerNumber").isEqualTo("A7089EY")
-      .jsonPath("lastName").isEqualTo("SMITH")
-      .jsonPath("firstName").doesNotExist()
-  }
+  @Nested
+  @DisplayName("GET /prisoner/{id}")
+  inner class GetPrisoner {
+    @Test
+    fun `can perform a get on prisoner number`() {
+      getPrisoner("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
+    }
 
-  @Test
-  fun `access forbidden when wrong role`() {
-    webTestClient.get().uri("/prisoner/A7089EY")
-      .headers(setAuthorisation(roles = listOf("ROLE_DUMMY")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isForbidden
-  }
+    @Test
+    fun `can perform a get on prisoner number for role PRISONER_SEARCH__PRISONER__RO`() {
+      getPrisonerSearchCorePerson("A7089EY", "/results/globalSearch/get_prisoner_A7089EY.json")
+    }
 
-  @Test
-  fun `not found when missing prisoner`() {
-    webTestClient.get().uri("/prisoner/DUMMY")
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isNotFound
-  }
+    @Test
+    fun `should return bad request for get prisoner with invalid response fields`() {
+      webTestClient.getPrisoner("A7089EY", listOf("prisonerNumber", "doesNotExist"))
+        .expectStatus().isBadRequest
+        .expectBody().jsonPath("userMessage").value<String> {
+          assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+        }
+    }
 
-  @Test
-  fun `can perform a match on prisoner number lowercase prisoner number uppercased before search`() {
-    globalSearch(
-      GlobalSearchCriteria("a7089ey", null, null, null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
+    @Test
+    fun `should only return requested response fields`() {
+      webTestClient.getPrisoner("A7089EY", listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("prisonerNumber").isEqualTo("A7089EY")
+        .jsonPath("lastName").isEqualTo("SMITH")
+        .jsonPath("firstName").doesNotExist()
+    }
 
-  @Test
-  fun `can perform a match wrong prisoner number but correct name`() {
-    globalSearch(
-      GlobalSearchCriteria("X7089EY", "JOHN", "SMITH", null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
+    @Test
+    fun `access forbidden when wrong role`() {
+      webTestClient.get().uri("/prisoner/A7089EY")
+        .headers(setAuthorisation(roles = listOf("ROLE_DUMMY")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isForbidden
+    }
 
-  @Test
-  fun `can perform a match on PNC number`() {
-    globalSearch(
-      GlobalSearchCriteria("12/394773H", null, null, null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on PNC number short year`() {
-    globalSearch(
-      GlobalSearchCriteria("15/1234S", null, null, null, null, null),
-      "/results/globalSearch/search_results_pnc.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on PNC number long year`() {
-    globalSearch(
-      GlobalSearchCriteria("2015/1234S", null, null, null, null, null),
-      "/results/globalSearch/search_results_pnc.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on PNC number long year extra zeros`() {
-    globalSearch(
-      GlobalSearchCriteria("2015/001234S", null, null, null, null, null),
-      "/results/globalSearch/search_results_pnc.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on PNC number short year 19 century`() {
-    globalSearch(
-      GlobalSearchCriteria("89/4444S", null, null, null, null, null),
-      "/results/globalSearch/search_results_pnc2.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on PNC number long year 19 century`() {
-    globalSearch(
-      GlobalSearchCriteria("1989/4444S", null, null, null, null, null),
-      "/results/globalSearch/search_results_pnc2.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on PNC number long year 19 century extra zeros`() {
-    globalSearch(
-      GlobalSearchCriteria("1989/0004444S", null, null, null, null, null),
-      "/results/globalSearch/search_results_pnc2.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on CRO number`() {
-    globalSearch(
-      GlobalSearchCriteria("29906/12J", null, null, null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on book number`() {
-    globalSearch(
-      GlobalSearchCriteria("V61585", null, null, null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on booking Id`() {
-    globalSearch(
-      GlobalSearchCriteria("1900836", null, null, null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can not match when name is mis-spelt`() {
-    globalSearch(GlobalSearchCriteria(null, "jon", "smith", null, null, null), "/results/globalSearch/empty.json")
-  }
-
-  @Test
-  fun `can not match when name is mis-spelt and wrong location`() {
-    globalSearch(GlobalSearchCriteria(null, "jon", "smith", null, "OUT", null), "/results/globalSearch/empty.json")
-  }
-
-  @Test
-  fun `can not match when name of prisoner not exists`() {
-    globalSearch(GlobalSearchCriteria(null, "trevor", "willis", null, null, null), "/results/globalSearch/empty.json")
-  }
-
-  @Test
-  fun `can perform a match on a first name only`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "john", null, null, null, null),
-      "/results/globalSearch/search_results_john.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a last name only`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "smith", null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name only single hit`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "john", "smith", null, null, null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first and last name only multiple hits`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", null, null, null),
-      "/results/globalSearch/search_results_sams.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first and last name only multiple hits include aliases`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", null, null, null, true),
-      "/results/globalSearch/search_results_sams_aliases.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first name,last name and gender as male`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", Gender.F, null, null),
-      "/results/globalSearch/search_results_sam1.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first name,last name and gender as female`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", Gender.F, null, null),
-      "/results/globalSearch/search_results_sam2.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first name,last name and gender as Not Known`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", Gender.NK, null, null),
-      "/results/globalSearch/search_results_sam4.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first name,last name and gender as not specified`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", Gender.NS, null, null),
-      "/results/globalSearch/search_results_sam3.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first name,last name and all genders`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", Gender.ALL, null, null),
-      "/results/globalSearch/search_results_sams.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first, last name and date of birth`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "sam", "jones", null, null, LocalDate.of(1975, 5, 15)),
-      "/results/globalSearch/search_results_sam4.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name only in wrong date of birth`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "john", "smith", null, null, LocalDate.of(1970, 12, 25)),
-      "/results/globalSearch/empty.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a first name only filter by all locations`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "john", null, null, "ALL", null),
-      "/results/globalSearch/search_results_johns_in.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name only in specific location`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "john", "smith", null, "IN", null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name only in wrong location`() {
-    globalSearch(GlobalSearchCriteria(null, "john", "smith", null, "OUT", null), "/results/globalSearch/empty.json")
-  }
-
-  @Test
-  fun `can perform a match on first and last name in alias`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "master", "cordian", null, null, null, true),
-      "/results/globalSearch/search_results_smyth.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name in alias but they must be from the same record`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "master", "stark", null, null, null, true),
-      "/results/globalSearch/empty.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name in alias but they must be from the same record matches`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "tony", "stark", null, null, null, true),
-      "/results/globalSearch/search_results_smyth.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on firstname only in alias`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "master", null, null, null, null, true),
-      "/results/globalSearch/search_results_smyth.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on last name only in alias`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "cordian", null, null, null, true),
-      "/results/globalSearch/search_results_smyth.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on last name and gender in alias`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "orange", Gender.F, null, null, true),
-      "/results/globalSearch/search_results_sam5.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on last name and ALL genders in alias`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "Colin", Gender.ALL, null, null, true),
-      "/results/globalSearch/search_results_sam5.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on last name and date of birth in alias`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "orange", null, null, LocalDate.of(1991, 7, 5), true),
-      "/results/globalSearch/search_results_sam5.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first and last name in alias but with alias search off`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "master", "cordian", null, null, null, false),
-      "/results/globalSearch/empty.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on first name only in alias but with alias search off`() {
-    globalSearch(
-      GlobalSearchCriteria(null, "master", null, null, null, null, false),
-      "/results/globalSearch/empty.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on last name only in alias but with alias search off`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "cordian", null, null, null, false),
-      "/results/globalSearch/empty.json",
-    )
-  }
-
-  @Test
-  fun `can perform a match on a last name and specific location`() {
-    globalSearch(
-      GlobalSearchCriteria(null, null, "smyth", null, "IN", null),
-      "/results/globalSearch/search_results_smyth.json",
-    )
-  }
-
-  @Test
-  fun `can perform a which returns no results as not in that location`() {
-    globalSearch(GlobalSearchCriteria(null, null, "smyth", null, "OUT", null), "/results/globalSearch/empty.json")
-  }
-
-  @Test
-  fun `can perform a which returns result for ID search as in correct location`() {
-    globalSearch(
-      GlobalSearchCriteria("A7089EY", null, null, null, "IN", null),
-      "/results/globalSearch/search_results_smith.json",
-    )
-  }
-
-  @Test
-  fun `can perform a which returns no results as not in that prison by id`() {
-    globalSearch(GlobalSearchCriteria("A7089EY", null, null, null, "OUT", null), "/results/globalSearch/empty.json")
-  }
-
-  @Test
-  fun `can perform search which returns 6 result from first page`() {
-    globalSearchPagination(
-      GlobalSearchCriteria(null, "sam", "jones", null, null, null, true),
-      100,
-      0,
-      "/results/globalSearch/search_results_sam_pagination1.json",
-    )
-  }
-
-  @Test
-  fun `can perform search which returns 1 result from second page`() {
-    globalSearchPagination(
-      GlobalSearchCriteria(null, "sam", "jones", null, null, null),
-      1,
-      1,
-      "/results/globalSearch/search_results_sam_pagination2.json",
-    )
-  }
-
-  @Test
-  fun `can perform search which returns 2 result from third page`() {
-    globalSearchPagination(
-      GlobalSearchCriteria(null, "sam", "jones", null, null, null),
-      2,
-      2,
-      "/results/globalSearch/search_results_sam_pagination3.json",
-    )
-  }
-
-  @Test
-  fun `should return bad request for invalid response fields`() {
-    val search = GlobalSearchCriteria("A7089EY", null, null, null, null, null)
-    webTestClient.globalSearch(search, listOf("prisonerNumber", "doesNotExist"))
-      .expectStatus().isBadRequest
-      .expectBody()
-      .jsonPath("developerMessage").isEqualTo("Invalid response fields requested: [doesNotExist]")
-  }
-
-  @Test
-  fun `should only return requested response fields - by prisoner number`() {
-    val search = GlobalSearchCriteria("A7089EY", null, null, null, null, null)
-    webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
-      .expectStatus().isOk
-      .expectBody()
-      .jsonPath("content.length()").isEqualTo(1)
-      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
-      .jsonPath("content[0].lastName").isEqualTo("SMITH")
-      .jsonPath("content[0].firstName").doesNotExist()
-  }
-
-  @Test
-  fun `should only return requested response fields - by first and last name`() {
-    val search = GlobalSearchCriteria(null, "john", "smith", null, null, null)
-    webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
-      .expectStatus().isOk
-      .expectBody()
-      .jsonPath("content.length()").isEqualTo(1)
-      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
-      .jsonPath("content[0].lastName").isEqualTo("SMITH")
-      .jsonPath("content[0].firstName").doesNotExist()
-  }
-
-  @Test
-  fun `should only return requested response fields - include aliases`() {
-    val search = GlobalSearchCriteria(null, "master", "cordian", null, null, null, true)
-    webTestClient.globalSearch(search, listOf("prisonerNumber", "lastName"))
-      .expectStatus().isOk
-      .expectBody()
-      .jsonPath("content.length()").isEqualTo(1)
-      .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EZ")
-      .jsonPath("content[0].lastName").isEqualTo("SMYTH")
-      .jsonPath("content[0].firstName").doesNotExist()
+    @Test
+    fun `not found when missing prisoner`() {
+      webTestClient.get().uri("/prisoner/DUMMY")
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isNotFound
+    }
   }
 
   private fun WebTestClient.globalSearch(search: GlobalSearchCriteria, responseFields: List<String>) = post()
@@ -547,7 +598,7 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
         .queryParam("responseFields", responseFields)
         .build()
     }
-    .body(BodyInserters.fromValue(gson.toJson(search)))
+    .bodyValue(search)
     .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
     .header("Content-Type", "application/json")
     .exchange()
@@ -561,4 +612,26 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
     .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
     .header("Content-Type", "application/json")
     .exchange()
+
+  fun globalSearch(
+    globalSearchCriteria: GlobalSearchCriteria = GlobalSearchCriteria(null, "sam", "jones", null, null, null),
+    fileAssert: String? = null,
+    queryParams: String? = "",
+  ): WebTestClient.ResponseSpec = webTestClient.post().uri("/global-search$queryParams")
+    .bodyValue(globalSearchCriteria)
+    .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+    .header("Content-Type", "application/json")
+    .exchange()
+    .expectStatus().isOk
+    .also { if (fileAssert != null) it.expectBody().json(fileAssert.readResourceAsText()) }
+
+  fun globalSearchPagination(globalSearchCriteria: GlobalSearchCriteria, size: Long, page: Long, fileAssert: String) {
+    webTestClient.post().uri("/global-search?size=$size&page=$page")
+      .bodyValue(globalSearchCriteria)
+      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().json(fileAssert.readResourceAsText())
+  }
 }
