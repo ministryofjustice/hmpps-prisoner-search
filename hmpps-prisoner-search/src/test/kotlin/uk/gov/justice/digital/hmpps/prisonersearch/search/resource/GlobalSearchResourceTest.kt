@@ -616,7 +616,7 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
   fun globalSearch(
     globalSearchCriteria: GlobalSearchCriteria = GlobalSearchCriteria(null, "sam", "jones", null, null, null),
     fileAssert: String? = null,
-    queryParams: String? = "",
+    queryParams: String = "",
   ): WebTestClient.ResponseSpec = webTestClient.post().uri("/global-search$queryParams")
     .bodyValue(globalSearchCriteria)
     .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
