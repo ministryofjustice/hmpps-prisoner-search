@@ -27,7 +27,13 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Paginatio
 class RestrictedPatientSearchResource(private val restrictedPatientSearchService: RestrictedPatientSearchService) {
 
   @PostMapping("/match-restricted-patients")
-  @Operation(summary = "Match prisoners by criteria", description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role")
+  @Operation(
+    summary = "Match prisoners by criteria",
+    description = """This endpoint sorts by prisonerNumber.  This means that calling this endpoint to retrieve
+       subsequent pages *should* return the next page of results, but this is not guaranteed.
+
+       Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role""",
+  )
   @Tag(name = "Specific use case")
   fun findByCriteria(
     @Parameter(required = true) @RequestBody searchCriteria: RestrictedPatientSearchCriteria,
