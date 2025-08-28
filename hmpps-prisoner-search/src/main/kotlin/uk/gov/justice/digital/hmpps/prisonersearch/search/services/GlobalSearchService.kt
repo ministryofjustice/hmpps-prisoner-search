@@ -12,11 +12,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 
@@ -32,23 +32,24 @@ class GlobalSearchService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun findByGlobalSearchCriteria(globalSearchCriteria: GlobalSearchCriteria, pageable: Pageable, responseFields: List<String>? = null): Page<Prisoner> {
+  fun findByGlobalSearchCriteria(globalSearchCriteria: GlobalSearchCriteria, paginationRequest: PaginationRequest, responseFields: List<String>? = null): Page<Prisoner> {
+    val pageable = paginationRequest.toPageable()
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
     validateSearchForm(globalSearchCriteria)
     if (globalSearchCriteria.prisonerIdentifier != null) {
-      queryBy(globalSearchCriteria, pageable, responseFields) { idMatch(it) } onMatch {
+      queryBy(globalSearchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { idMatch(it) } onMatch {
         customEventForFindBySearchCriteria(globalSearchCriteria, it.matches.size)
         return PageImpl(it.matches, pageable, it.totalHits)
       }
     }
     if (!(globalSearchCriteria.firstName.isNullOrBlank() && globalSearchCriteria.lastName.isNullOrBlank())) {
       if (globalSearchCriteria.includeAliases) {
-        queryBy(globalSearchCriteria, pageable, responseFields) { nameMatchWithAliases(it) } onMatch {
+        queryBy(globalSearchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { nameMatchWithAliases(it) } onMatch {
           customEventForFindBySearchCriteria(globalSearchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
         }
       } else {
-        queryBy(globalSearchCriteria, pageable, responseFields) { nameMatch(it) } onMatch {
+        queryBy(globalSearchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { nameMatch(it) } onMatch {
           customEventForFindBySearchCriteria(globalSearchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
         }
@@ -66,7 +67,8 @@ class GlobalSearchService(
 
   private fun queryBy(
     globalSearchCriteria: GlobalSearchCriteria,
-    pageable: Pageable,
+    pageSize: Int,
+    pageOffset: Int,
     responseFields: List<String>? = null,
     queryBuilder: (globalSearchCriteria: GlobalSearchCriteria) -> BoolQueryBuilder?,
   ): GlobalResult {
@@ -74,8 +76,8 @@ class GlobalSearchService(
     return query?.let {
       val searchSourceBuilder = SearchSourceBuilder().apply {
         query(query.withDefaults(globalSearchCriteria))
-        size(pageable.pageSize)
-        from(pageable.offset.toInt())
+        size(pageSize)
+        from(pageOffset)
         sort("_score")
         sort("prisonerNumber")
         trackTotalHits(true)
