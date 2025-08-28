@@ -2,12 +2,10 @@ package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
-import org.springframework.data.web.PageableDefault
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -25,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListC
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReleaseDateSearch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
 
 @RestController
@@ -124,7 +123,15 @@ class PrisonerSearchResource(
   @PostMapping("/release-date-by-prison")
   @Operation(
     summary = "Match prisoners who have a release date within a range, and optionally by prison",
-    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+    description = """This endpoint sorts by OpenSearch score and then by prisonerNumber. The score is an indication of
+      how close the query matches a prisoner record, thus closest matches to the query will be returned first.
+      Unfortunately sorting by score is problematic as different shards might provide different scores, thus breaking
+      the paged results. Also it gives inconsistent results the higher the page number. 
+      
+      It is thus recommended not to use paging and instead request a large page size, together with setting the
+      responseFields to limit the returned response byte size (otherwise you risk hitting memory / webclient limits).
+
+      Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role""",
   )
   @Tag(name = "Batch")
   @Tag(name = "Specific use case")
@@ -136,14 +143,26 @@ class PrisonerSearchResource(
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
-    @ParameterObject @PageableDefault
-    pageable: Pageable,
-  ) = prisonerSearchService.findByReleaseDate(criteria, pageable, responseFields)
+    @RequestParam(value = "page", defaultValue = "0")
+    @Parameter(description = "Zero-based page index (0..N). Will default to 0 if not supplied or invalid.", schema = Schema(defaultValue = "0", minimum = "0", type = "integer"))
+    page: Int,
+    @RequestParam(value = "size", defaultValue = "10")
+    @Parameter(description = "The size of the page to be returned. Will default to 10 if not supplied or invalid.", schema = Schema(defaultValue = "10", minimum = "1", type = "integer"))
+    size: Int,
+  ) = prisonerSearchService.findByReleaseDate(criteria, PaginationRequest(page = page, size = size), responseFields)
 
   @GetMapping("/prison/{prisonId}")
   @Operation(
     summary = "Get all prisoners in a prison, including restricted patients supported by a POM",
-    description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
+    description = """This endpoint sorts by OpenSearch score and then by prisonerNumber. The score is an indication of
+      how close the query matches a prisoner record, thus closest matches to the query will be returned first.
+      Unfortunately sorting by score is problematic as different shards might provide different scores, thus breaking
+      the paged results. Also it gives inconsistent results the higher the page number. 
+      
+      It is thus recommended not to use paging and instead request a large page size, together with setting the
+      responseFields to limit the returned response byte size (otherwise you risk hitting memory / webclient limits).
+
+      Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role""",
   )
   @Tag(name = "Batch")
   @Tag(name = "Popular")
@@ -161,7 +180,11 @@ class PrisonerSearchResource(
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
-    @ParameterObject @PageableDefault
-    pageable: Pageable,
-  ): Page<Prisoner> = prisonerSearchService.findByPrison(prisonId.uppercase(), pageable, includeRestrictedPatients, responseFields)
+    @RequestParam(value = "page", defaultValue = "0")
+    @Parameter(description = "Zero-based page index (0..N). Will default to 0 if not supplied or invalid.", schema = Schema(defaultValue = "0", minimum = "0", type = "integer"))
+    page: Int,
+    @RequestParam(value = "size", defaultValue = "10")
+    @Parameter(description = "The size of the page to be returned. Will default to 10 if not supplied or invalid.", schema = Schema(defaultValue = "10", minimum = "1", type = "integer"))
+    size: Int,
+  ): Page<Prisoner> = prisonerSearchService.findByPrison(prisonId.uppercase(), PaginationRequest(page = page, size = size), includeRestrictedPatients, responseFields)
 }

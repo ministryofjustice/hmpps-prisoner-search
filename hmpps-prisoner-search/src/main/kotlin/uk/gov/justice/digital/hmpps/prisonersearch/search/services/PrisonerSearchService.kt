@@ -12,7 +12,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumber
@@ -20,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.BookingIds
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListCriteria.PrisonerNumbers
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsValidator
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
@@ -84,10 +84,17 @@ class PrisonerSearchService(
     return result.distinctBy { it.prisonerNumber }
   }
 
-  fun findByReleaseDate(searchCriteria: ReleaseDateSearch, pageable: Pageable, responseFields: List<String>? = null): Page<Prisoner> {
+  fun findByReleaseDate(searchCriteria: ReleaseDateSearch, paginationRequest: PaginationRequest, responseFields: List<String>? = null): Page<Prisoner> {
     searchCriteria.validate()
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
-    queryBy(searchCriteria, pageable, responseFields) { releaseDateMatch(it) } onMatch {
+    val pageable = paginationRequest.toPageable()
+
+    queryBy(
+      searchCriteria = searchCriteria,
+      pageSize = pageable.pageSize,
+      pageOffset = pageable.offset.toInt(),
+      responseFields = responseFields,
+    ) { releaseDateMatch(it) } onMatch {
       customEventForFindByReleaseDate(searchCriteria, it.matches.size)
       return PageImpl(it.matches, pageable, it.totalHits)
     }
@@ -96,16 +103,18 @@ class PrisonerSearchService(
 
   fun findByPrison(
     prisonId: String,
-    pageable: Pageable,
+    paginationRequest: PaginationRequest,
     includeRestrictedPatients: Boolean = false,
     responseFields: List<String>? = null,
   ): Page<Prisoner> {
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
+    val pageable = paginationRequest.toPageable()
 
     queryBy(
-      prisonId,
-      pageable,
-      responseFields,
+      prisonId = prisonId,
+      pageSize = pageable.pageSize,
+      pageOffset = pageable.offset.toInt(),
+      responseFields = responseFields,
     ) { if (includeRestrictedPatients) includeRestricted(it) else locationMatch(it) } onMatch {
       customEventForFindByPrisonId(prisonId, it.matches.size)
       return PageImpl(it.matches, pageable, it.totalHits)
@@ -125,11 +134,10 @@ class PrisonerSearchService(
   private fun queryBy(
     searchCriteria: SearchCriteria,
     responseFields: List<String>? = null,
-    queryBuilder: (searchCriteria: SearchCriteria) -> BoolQueryBuilder?,
+    queryBuilder: (searchCriteria: SearchCriteria) -> BoolQueryBuilder,
   ): Result {
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
-    val query = queryBuilder(searchCriteria)
-    return query?.let {
+    return queryBuilder(searchCriteria).let { query ->
       val searchSourceBuilder = SearchSourceBuilder().apply {
         query(query.withDefaults(searchCriteria))
         responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
@@ -137,88 +145,81 @@ class PrisonerSearchService(
       }
       val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
       val prisonerMatches = getSearchResult(searchClient.search(searchRequest))
-      return if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)
-    } ?: Result.NoMatch
+      if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)
+    }
   }
 
   private fun <T> queryBy(
     searchCriteria: T,
     responseFields: List<String>? = null,
-    queryBuilder: (searchCriteria: T) -> BoolQueryBuilder?,
-  ): Result {
-    val query = queryBuilder(searchCriteria)
-    return query?.let {
-      val searchSourceBuilder = SearchSourceBuilder().apply {
-        size(RESULT_HITS_MAX)
-        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
-        query(it)
-      }
-      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
-      val prisonerMatches = getSearchResult(searchClient.search(searchRequest))
-      return if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)
-    } ?: Result.NoMatch
+    queryBuilder: (searchCriteria: T) -> BoolQueryBuilder,
+  ): Result = queryBuilder(searchCriteria).let { query ->
+    val searchSourceBuilder = SearchSourceBuilder().apply {
+      size(RESULT_HITS_MAX)
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
+      query(query)
+    }
+    val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
+    val prisonerMatches = getSearchResult(searchClient.search(searchRequest))
+    if (prisonerMatches.isEmpty()) Result.NoMatch else Result.Match(prisonerMatches)
   }
 
   private fun queryBy(
     searchCriteria: ReleaseDateSearch,
-    pageable: Pageable,
+    pageSize: Int,
+    pageOffset: Int,
     responseFields: List<String>? = null,
-    queryBuilder: (searchCriteria: ReleaseDateSearch) -> BoolQueryBuilder?,
-  ): GlobalResult {
-    val query = queryBuilder(searchCriteria)
-    return query?.let {
-      val searchSourceBuilder = SearchSourceBuilder().apply {
-        query(query)
-        size(pageable.pageSize)
-        from(pageable.offset.toInt())
-        sort("_score")
-        sort("prisonerNumber")
-        trackTotalHits(true)
-        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
-      }
-      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
-      val searchResults = searchClient.search(searchRequest)
-      val prisonerMatches = getSearchResult(searchResults)
-      return if (prisonerMatches.isEmpty()) {
-        GlobalResult.NoMatch
-      } else {
-        GlobalResult.Match(
-          prisonerMatches,
-          searchResults.hits.totalHits?.value ?: 0,
-        )
-      }
-    } ?: GlobalResult.NoMatch
+    queryBuilder: (searchCriteria: ReleaseDateSearch) -> BoolQueryBuilder,
+  ): GlobalResult = queryBuilder(searchCriteria).let { query ->
+    val searchSourceBuilder = SearchSourceBuilder().apply {
+      query(query)
+      size(pageSize)
+      from(pageOffset)
+      sort("_score")
+      sort("prisonerNumber")
+      trackTotalHits(true)
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
+    }
+    val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
+    val searchResults = searchClient.search(searchRequest)
+    val prisonerMatches = getSearchResult(searchResults)
+    if (prisonerMatches.isEmpty()) {
+      GlobalResult.NoMatch
+    } else {
+      GlobalResult.Match(
+        prisonerMatches,
+        searchResults.hits.totalHits?.value ?: 0,
+      )
+    }
   }
 
   private fun queryBy(
     prisonId: String,
-    pageable: Pageable,
+    pageSize: Int,
+    pageOffset: Int,
     responseFields: List<String>? = null,
-    queryBuilder: (prisonId: String) -> BoolQueryBuilder?,
-  ): GlobalResult {
-    val query = queryBuilder(prisonId)
-    return query?.let {
-      val searchSourceBuilder = SearchSourceBuilder().apply {
-        query(query)
-        size(pageable.pageSize)
-        from(pageable.offset.toInt())
-        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
-        sort("_score")
-        sort("prisonerNumber")
-        trackTotalHits(true)
-      }
-      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
-      val searchResults = searchClient.search(searchRequest)
-      val prisonerMatches = getSearchResult(searchResults)
-      return if (prisonerMatches.isEmpty()) {
-        GlobalResult.NoMatch
-      } else {
-        GlobalResult.Match(
-          prisonerMatches,
-          searchResults.hits.totalHits?.value ?: 0,
-        )
-      }
-    } ?: GlobalResult.NoMatch
+    queryBuilder: (prisonId: String) -> BoolQueryBuilder,
+  ): GlobalResult = queryBuilder(prisonId).let { query ->
+    val searchSourceBuilder = SearchSourceBuilder().apply {
+      query(query)
+      size(pageSize)
+      from(pageOffset)
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
+      sort("_score")
+      sort("prisonerNumber")
+      trackTotalHits(true)
+    }
+    val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
+    val searchResults = searchClient.search(searchRequest)
+    val prisonerMatches = getSearchResult(searchResults)
+    if (prisonerMatches.isEmpty()) {
+      GlobalResult.NoMatch
+    } else {
+      GlobalResult.Match(
+        prisonerMatches,
+        searchResults.hits.totalHits?.value ?: 0,
+      )
+    }
   }
 
   private fun matchByIds(criteria: PrisonerListCriteria<Any>): BoolQueryBuilder = when (criteria) {
@@ -271,7 +272,7 @@ class PrisonerSearchService(
 
   private fun locationMatch(prisonId: String): BoolQueryBuilder = QueryBuilders.boolQuery().must("prisonId", prisonId)
 
-  private fun nameMatch(searchCriteria: SearchCriteria): BoolQueryBuilder? {
+  private fun nameMatch(searchCriteria: SearchCriteria): BoolQueryBuilder {
     with(searchCriteria) {
       return QueryBuilders.boolQuery()
         .must(
@@ -285,7 +286,7 @@ class PrisonerSearchService(
     }
   }
 
-  private fun nameMatchWithAliases(searchCriteria: SearchCriteria): BoolQueryBuilder? {
+  private fun nameMatchWithAliases(searchCriteria: SearchCriteria): BoolQueryBuilder {
     with(searchCriteria) {
       return QueryBuilders.boolQuery()
         .must(
@@ -311,7 +312,7 @@ class PrisonerSearchService(
     }
   }
 
-  private fun nameMatchWithAliasesAndDob(searchCriteria: PossibleMatchCriteria): BoolQueryBuilder? {
+  private fun nameMatchWithAliasesAndDob(searchCriteria: PossibleMatchCriteria): BoolQueryBuilder {
     with(searchCriteria) {
       return QueryBuilders.boolQuery()
         .must(
