@@ -109,57 +109,6 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
         "/results/restrictedPatientsSearch/search_results_hosp_patient_one.json",
       )
     }
-
-    @Test
-    fun `should return bad request for invalid response fields`() {
-      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria("A9999RB", null, null), listOf("prisonerNumber", "doesNotExist"))
-        .expectStatus().isBadRequest
-        .expectBody().jsonPath("userMessage").value<String> {
-          assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
-        }
-    }
-
-    @Test
-    fun `should only return requested response fields - by empty search criteria`() {
-      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, null, null), listOf("prisonerNumber", "lastName"))
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("content.length()").isEqualTo(4)
-        .jsonPath("content[0].prisonerNumber").isEqualTo("A7090BF")
-        .jsonPath("content[0].lastName").isEqualTo("FELLOWS")
-        .jsonPath("content[0].firstName").doesNotExist()
-    }
-
-    @Test
-    fun `should only return requested response fields - by prisoner identifier`() {
-      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria("A9999RB", null, null), listOf("prisonerNumber", "lastName"))
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RB")
-        .jsonPath("content[0].lastName").isEqualTo("PATIENTONE")
-        .jsonPath("content[0].firstName").doesNotExist()
-    }
-
-    @Test
-    fun `should only return requested response fields - by name`() {
-      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, "hosp", "patienttwo"), listOf("prisonerNumber", "lastName"))
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RC")
-        .jsonPath("content[0].lastName").isEqualTo("PATIENTTWO")
-        .jsonPath("content[0].firstName").doesNotExist()
-    }
-
-    private fun WebTestClient.matchRestrictedPatients(criteria: RestrictedPatientSearchCriteria, responseFields: List<String>) = post()
-      .uri {
-        it.path("/restricted-patient-search/match-restricted-patients")
-          .queryParam("responseFields", responseFields)
-          .build()
-      }
-      .bodyValue(criteria)
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
   }
 
   @Nested
@@ -383,6 +332,85 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
       restrictedPatientSearch(queryParams = "?size=1&page=-1")
         .expectBody().jsonPath("pageable.pageNumber").isEqualTo("0")
     }
+  }
+
+  @Nested
+  inner class ResponseFields {
+    @Test
+    fun `should return bad request for invalid response fields`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria("A9999RB", null, null), listOf("prisonerNumber", "doesNotExist"))
+        .expectStatus().isBadRequest
+        .expectBody().jsonPath("userMessage").value<String> {
+          assertThat(it).contains("Invalid response fields requested: [doesNotExist]")
+        }
+    }
+
+    @Test
+    fun `should only return requested response fields - by empty search criteria`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, null, null), listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content.length()").isEqualTo(4)
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A7090BF")
+        .jsonPath("content[0].lastName").isEqualTo("FELLOWS")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields - by prisoner identifier`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria("A9999RB", null, null), listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RB")
+        .jsonPath("content[0].lastName").isEqualTo("PATIENTONE")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields - by name`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, "hosp", "patienttwo"), listOf("prisonerNumber", "lastName"))
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RC")
+        .jsonPath("content[0].lastName").isEqualTo("PATIENTTWO")
+        .jsonPath("content[0].firstName").doesNotExist()
+    }
+
+    @Test
+    fun `should only return requested response fields from the client - by name`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, "hosp", "patienttwo"), responseFields = null, responseFieldsClient = "restricted-patients")
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RC")
+        .jsonPath("content[0].lastName").isEqualTo("PATIENTTWO")
+        .jsonPath("content[0].pncNumber").doesNotExist()
+    }
+
+    @Test
+    fun `should combine response fields from the client with response fields - by name`() {
+      webTestClient.matchRestrictedPatients(RestrictedPatientSearchCriteria(null, "hosp", "patienttwo"), responseFields = listOf("pncNumber"), responseFieldsClient = "restricted-patients")
+        .expectStatus().isOk
+        .expectBody()
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A9999RC")
+        .jsonPath("content[0].lastName").isEqualTo("PATIENTTWO")
+        .jsonPath("content[0].pncNumber").isEqualTo("12/394773W")
+    }
+
+    private fun WebTestClient.matchRestrictedPatients(
+      criteria: RestrictedPatientSearchCriteria,
+      responseFields: List<String>? = null,
+      responseFieldsClient: String? = null,
+    ) = post()
+      .uri {
+        it.path("/restricted-patient-search/match-restricted-patients")
+          .also { b -> if (responseFields != null) b.queryParam("responseFields", responseFields) }
+          .also { b -> if (responseFieldsClient != null) b.queryParam("responseFieldsClient", responseFieldsClient) }
+          .build()
+      }
+      .bodyValue(criteria)
+      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
+      .header("Content-Type", "application/json")
+      .exchange()
   }
 
   @Test

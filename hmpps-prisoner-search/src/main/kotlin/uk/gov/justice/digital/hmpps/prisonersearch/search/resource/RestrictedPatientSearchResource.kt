@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchCriteria
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.RestrictedPatientSearchService
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 
 @RestController
@@ -24,7 +25,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.Paginatio
   produces = [MediaType.APPLICATION_JSON_VALUE],
   consumes = [MediaType.APPLICATION_JSON_VALUE],
 )
-class RestrictedPatientSearchResource(private val restrictedPatientSearchService: RestrictedPatientSearchService) {
+class RestrictedPatientSearchResource(
+  private val restrictedPatientSearchService: RestrictedPatientSearchService,
+  private val responseFieldsMapper: ResponseFieldsMapper,
+) {
 
   @PostMapping("/match-restricted-patients")
   @Operation(
@@ -43,11 +47,23 @@ class RestrictedPatientSearchResource(private val restrictedPatientSearchService
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
+    @RequestParam(value = "responseFieldsClient", required = false)
+    @Parameter(
+      description = """The name of a default list of response fields. The list can be defined for a client and
+        then referenced here. This saves passing a big list of fields to prisoner search on each request.
+        """,
+      example = "restricted-patients",
+    )
+    responseFieldsClient: String? = null,
     @RequestParam(value = "page", defaultValue = "0")
     @Parameter(description = "Zero-based page index (0..N). Will default to 0 if not supplied or invalid.", schema = Schema(defaultValue = "0", minimum = "0", type = "integer"))
     page: Int,
     @RequestParam(value = "size", defaultValue = "10")
     @Parameter(description = "The size of the page to be returned. Will default to 10 if not supplied or invalid.", schema = Schema(defaultValue = "10", minimum = "1", type = "integer"))
     size: Int,
-  ) = restrictedPatientSearchService.findBySearchCriteria(searchCriteria, PaginationRequest(page = page, size = size), responseFields)
+  ) = restrictedPatientSearchService.findBySearchCriteria(
+    searchCriteria = searchCriteria,
+    pageAndSize = PaginationRequest(page = page, size = size),
+    responseFields = responseFieldsMapper.translate(responseFields, responseFieldsClient),
+  )
 }
