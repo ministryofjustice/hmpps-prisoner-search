@@ -45,7 +45,8 @@ class RestrictedPatientSearchService(
           return PageImpl(it.matches, pageable, it.totalHits)
         }
       }
-      if (!(searchCriteria.firstName.isNullOrBlank() && searchCriteria.lastName.isNullOrBlank())) {
+      // second attempt - if prisoner identifier not specified or no matches found then try with name match
+      if (!searchCriteria.isNameEmpty()) {
         queryBy(searchCriteria, pageable.pageSize, pageable.offset.toInt(), responseFields) { nameMatchWithAliases(it) } onMatch {
           customEventForFindBySearchCriteria(searchCriteria, it.matches.size)
           return PageImpl(it.matches, pageable, it.totalHits)
@@ -61,30 +62,28 @@ class RestrictedPatientSearchService(
     pageSize: Int,
     pageOffset: Int,
     responseFields: List<String>? = null,
-    queryBuilder: (searchCriteria: RestrictedPatientSearchCriteria) -> BoolQueryBuilder?,
+    queryBuilder: (searchCriteria: RestrictedPatientSearchCriteria) -> BoolQueryBuilder,
   ): RestrictedPatientResult {
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
     val query = queryBuilder(searchCriteria)
-    return query?.let {
-      val searchSourceBuilder = SearchSourceBuilder().apply {
-        query(query.withDefaults(searchCriteria))
-        size(pageSize)
-        from(pageOffset)
-        sort("prisonerNumber")
-        responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
-      }
-      val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
-      val searchResults = searchClient.search(searchRequest)
-      val prisonerMatches = getSearchResult(searchResults)
-      return if (prisonerMatches.isEmpty()) {
-        RestrictedPatientResult.NoMatch
-      } else {
-        RestrictedPatientResult.Match(
-          prisonerMatches,
-          searchResults.hits.totalHits?.value ?: 0,
-        )
-      }
-    } ?: RestrictedPatientResult.NoMatch
+    val searchSourceBuilder = SearchSourceBuilder().apply {
+      query(query.withDefaults(searchCriteria))
+      size(pageSize)
+      from(pageOffset)
+      sort("prisonerNumber")
+      responseFields?.run { fetchSource(toTypedArray(), emptyArray()) }
+    }
+    val searchRequest = SearchRequest(searchClient.getAlias(), searchSourceBuilder)
+    val searchResults = searchClient.search(searchRequest)
+    val prisonerMatches = getSearchResult(searchResults)
+    return if (prisonerMatches.isEmpty()) {
+      RestrictedPatientResult.NoMatch
+    } else {
+      RestrictedPatientResult.Match(
+        prisonerMatches,
+        searchResults.hits.totalHits?.value ?: 0,
+      )
+    }
   }
 
   private fun idMatch(searchCriteria: RestrictedPatientSearchCriteria): BoolQueryBuilder {
@@ -103,7 +102,7 @@ class RestrictedPatientSearchService(
     }
   }
 
-  private fun nameMatchWithAliases(searchCriteria: RestrictedPatientSearchCriteria): BoolQueryBuilder? {
+  private fun nameMatchWithAliases(searchCriteria: RestrictedPatientSearchCriteria): BoolQueryBuilder {
     with(searchCriteria) {
       return QueryBuilders.boolQuery()
         .must(
@@ -160,10 +159,9 @@ sealed class RestrictedPatientResult {
   data class Match(val matches: List<Prisoner>, val totalHits: Long) : RestrictedPatientResult()
 }
 
-inline infix fun RestrictedPatientResult.onMatch(block: (RestrictedPatientResult.Match) -> Nothing) = when (this) {
-  is RestrictedPatientResult.NoMatch -> {
-  }
-  is RestrictedPatientResult.Match -> block(this)
+inline infix fun RestrictedPatientResult.onMatch(matchFunction: (RestrictedPatientResult.Match) -> Nothing) = when (this) {
+  is RestrictedPatientResult.NoMatch -> {}
+  is RestrictedPatientResult.Match -> matchFunction(this)
 }
 
 private fun BoolQueryBuilder.withDefaults(searchCriteria: RestrictedPatientSearchCriteria): BoolQueryBuilder = this.must("restrictedPatient", true)
