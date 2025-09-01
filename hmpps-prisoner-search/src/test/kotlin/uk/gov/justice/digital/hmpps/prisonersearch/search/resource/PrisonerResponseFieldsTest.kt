@@ -520,7 +520,33 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
       }
     }
 
-    private fun searchOk(searchCriteria: SearchCriteria, responseFields: List<String>? = null): List<Prisoner> = search(searchCriteria, responseFields)
+    @Test
+    fun `should only return requested response fields from the client`() {
+      val searchCriteria = SearchCriteria(prisonerIdentifier = null, firstName = "SMITH", lastName = "JONES", includeAliases = true)
+
+      with(searchOk(searchCriteria, responseFields = null, responseFieldsClient = "restricted-patients")) {
+        assertThat(this[0].prisonerNumber).isEqualTo("A1234AA")
+        assertThat(this[0].lastName).isEqualTo("JONES")
+        assertThat(this[0].pncNumber).isNull()
+      }
+    }
+
+    @Test
+    fun `should combine response fields from the client with response fields`() {
+      val searchCriteria = SearchCriteria(prisonerIdentifier = null, firstName = "SMITH", lastName = "JONES", includeAliases = true)
+
+      with(searchOk(searchCriteria, responseFields = listOf("prisonerNumber", "pncNumber"), responseFieldsClient = "restricted-patients")) {
+        assertThat(this[0].prisonerNumber).isEqualTo("A1234AA")
+        assertThat(this[0].lastName).isEqualTo("JONES")
+        assertThat(this[0].pncNumber).isEqualTo("25/123456R")
+      }
+    }
+
+    private fun searchOk(
+      searchCriteria: SearchCriteria,
+      responseFields: List<String>? = null,
+      responseFieldsClient: String? = null,
+    ): List<Prisoner> = search(searchCriteria, responseFields, responseFieldsClient)
       .expectStatus().isOk
       .expectBody(object : ParameterizedTypeReference<List<Prisoner>>() {})
       .returnResult().responseBody!!
@@ -530,10 +556,15 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
       .expectBody(ErrorResponse::class.java)
       .returnResult().responseBody!!
 
-    private fun search(searchCriteria: SearchCriteria, responseFields: List<String>? = null) = webTestClient.post()
+    private fun search(
+      searchCriteria: SearchCriteria,
+      responseFields: List<String>? = null,
+      responseFieldsClient: String? = null,
+    ) = webTestClient.post()
       .uri {
         it.path("/prisoner-search/match-prisoners")
-          .queryParam("responseFields", responseFields)
+          .also { b -> if (responseFields != null) b.queryParam("responseFields", responseFields) }
+          .also { b -> if (responseFieldsClient != null) b.queryParam("responseFieldsClient", responseFieldsClient) }
           .build()
       }
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerListC
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonerSearchService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.ReleaseDateSearch
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.SearchCriteria
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.ResponseFieldsMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleMatchCriteria
 
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PossibleM
 )
 class PrisonerSearchResource(
   private val prisonerSearchService: PrisonerSearchService,
+  private val responseFieldsMapper: ResponseFieldsMapper,
 ) {
 
   @Deprecated(message = "Use the /match-prisoners endpoint")
@@ -65,7 +67,15 @@ class PrisonerSearchResource(
       example = "[prisonerNumber,firstName,aliases.firstName,currentIncentive.level.code]",
     )
     responseFields: List<String>? = null,
-  ) = prisonerSearchService.findBySearchCriteria(searchCriteria, responseFields)
+    @RequestParam(value = "responseFieldsClient", required = false)
+    @Parameter(
+      description = """The name of a default list of response fields. The list can be defined for a client and
+        then referenced here. This saves passing a big list of fields to prisoner search on each request.
+        """,
+      example = "restricted-patients",
+    )
+    responseFieldsClient: String? = null,
+  ) = prisonerSearchService.findBySearchCriteria(searchCriteria, responseFieldsMapper.translate(responseFields, responseFieldsClient))
 
   @PostMapping("/possible-matches")
   @Operation(
