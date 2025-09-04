@@ -27,15 +27,15 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.5.0")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:2.0.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.6.0-beta4")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:2.0.1")
   implementation("com.google.code.gson:gson:2.13.1")
   implementation("org.springframework.boot:spring-boot-starter-cache")
 
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.data:spring-data-elasticsearch:5.5.3")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.12")
 
   // Leaving at version 2.9.0 to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L16
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.18.1")
@@ -49,9 +49,9 @@ dependencies {
 
   implementation(project(":common"))
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.5.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.6.0-beta4")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.32") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.33") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.36")
