@@ -48,7 +48,7 @@ dependencies {
 
   implementation("org.springframework.data:spring-data-elasticsearch:5.5.3")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.12")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
   // Leaving at version 2.9.0 to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L16
