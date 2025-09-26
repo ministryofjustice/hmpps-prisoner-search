@@ -4,10 +4,21 @@ on:
   schedule:
     - cron: "54 4 * * MON-FRI" # Every weekday at 04:54 UTC
 jobs:
-  cancel-waiting-workflows:
+  cancel-waiting-workflows-search:
     permissions:
       contents: read
       actions: write
-    name: Cancel outdated waiting workflows
+    name: Cancel outdated waiting workflows for search
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/cancel_outdated_waiting_workflows.yml@v2 # WORKFLOW_VERSION
+    with:
+      pipeline: 'Pipeline search [test -> build -> deploy]'
+    secrets: inherit
+  cancel-waiting-workflows-indexer:
+    permissions:
+      contents: read
+      actions: write
+    name: Cancel outdated waiting workflows for indexer
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/cancel_outdated_waiting_workflows.yml@v2 # WORKFLOW_VERSION
+    with:
+      pipeline: 'Pipeline indexer [test -> build -> deploy]'
     secrets: inherit
