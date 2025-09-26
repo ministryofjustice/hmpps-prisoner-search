@@ -197,6 +197,7 @@ private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) = this.l
 private fun Prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
   previousPrisonerSnapshot?.bookingId != null &&
   this.bookingId != previousPrisonerSnapshot.bookingId &&
+  // TODO SDIT-3065 Comparing booking numbers is not good enough to tell us if this is a readmission. See JIRA ticket for edge case details.
   this.bookingId.isBookingBefore(previousPrisonerSnapshot.bookingId) &&
   this.status == "ACTIVE IN" &&
   previousPrisonerSnapshot.status == "INACTIVE OUT"
