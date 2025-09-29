@@ -41,6 +41,8 @@ data class OffenderBooking(
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
+  var previousPrisonId: String? = null,
+  var previousPrisonLeavingDate: LocalDate? = null,
   val addresses: List<Address>? = null,
   val emailAddresses: List<EmailAddress>? = null,
   val phones: List<Telephone>? = null,
@@ -48,6 +50,7 @@ data class OffenderBooking(
   val languages: List<OffenderLanguageDto>? = null,
   val personalCareNeeds: List<PersonalCareNeedDto>? = null,
   val imageId: Long? = null,
+  val militaryRecord: Boolean? = null,
 ) {
   fun latestIdentifier(type: String) = allIdentifiers
     ?.filter { it.type == type }

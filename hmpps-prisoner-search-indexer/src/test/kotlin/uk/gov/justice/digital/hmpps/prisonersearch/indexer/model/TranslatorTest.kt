@@ -364,12 +364,18 @@ class TranslatorTest {
   }
 
   @Test
-  fun `should map last prison ID`() {
+  fun `should map last and previous prisons`() {
     val prisoner = Prisoner().translate(
-      ob = aBooking().copy(latestLocationId = "LEI"),
+      ob = aBooking().copy(
+        latestLocationId = "LEI",
+        previousPrisonId = "SWI",
+        previousPrisonLeavingDate = LocalDate.parse("2025-09-01"),
+      ),
     )
 
     assertThat(prisoner.lastPrisonId).isEqualTo("LEI")
+    assertThat(prisoner.previousPrisonId).isEqualTo("SWI")
+    assertThat(prisoner.previousPrisonLeavingDate).isEqualTo(LocalDate.parse("2025-09-01"))
   }
 
   @Nested
