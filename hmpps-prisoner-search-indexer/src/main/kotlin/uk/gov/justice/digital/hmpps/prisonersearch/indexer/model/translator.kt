@@ -49,6 +49,8 @@ fun Prisoner.translate(
   this.prisonName = ob.assignedLivingUnit?.agencyName
   this.prisonId = ob.agencyId
   this.lastPrisonId = ob.latestLocationId
+  this.previousPrisonId = ob.previousPrisonId
+  this.previousPrisonLeavingDate = ob.previousPrisonLeavingDate
   this.status = ob.status
   this.inOutStatus = ob.inOutStatus
   this.lastMovementTypeCode = ob.lastMovementTypeCode
@@ -150,6 +152,7 @@ fun Prisoner.translate(
   }
 
   this.currentFacialImageId = ob.imageId
+  this.militaryRecord = ob.militaryRecord
 
   this.sentenceStartDate = ob.sentenceDetail?.sentenceStartDate
   this.confirmedReleaseDate = ob.sentenceDetail?.confirmedReleaseDate

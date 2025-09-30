@@ -125,6 +125,10 @@ class Prisoner : Diffable<Prisoner> {
   @Schema(description = "The prisoner's current facial image can be retrieved by plugging this id into the prison-api endpoint /app/images/{prisonerNumber}/data?imageId={imageId}", example = "2122100")
   var currentFacialImageId: Long? = null
 
+  // @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @Schema(description = "True if prisoner has been recorded as being in the military.")
+  var militaryRecord: Boolean? = null
+
   @Field(type = FieldType.Keyword)
   @Schema(required = true, description = "Status of the prisoner", example = "ACTIVE IN")
   @DiffableProperty(DiffCategory.STATUS)
@@ -148,9 +152,18 @@ class Prisoner : Diffable<Prisoner> {
   var prisonId: String? = null
 
   @Field(type = FieldType.Keyword)
-  @Schema(description = "The last prison for the prisoner (which is the same as the prisonId if they are still inside prison)", example = "MDI")
+  @Schema(description = "The last i.e. final prison for the prisoner (which is the same as the prisonId if they are still inside prison)", example = "MDI")
   @DiffableProperty(DiffCategory.LOCATION)
   var lastPrisonId: String? = null
+
+  // @DiffableProperty(DiffCategory.LOCATION)
+  @Schema(description = "The previous prison for the prisoner within the current term", example = "MDI")
+  var previousPrisonId: String? = null
+
+  // @DiffableProperty(DiffCategory.LOCATION)
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  @Schema(description = "The date they left the previous prison", example = "MDI")
+  var previousPrisonLeavingDate: LocalDate? = null
 
   @Schema(description = "Prison Name", example = "HMP Leeds")
   @DiffableProperty(DiffCategory.LOCATION)
