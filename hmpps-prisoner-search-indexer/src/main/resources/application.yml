@@ -109,6 +109,10 @@ aws:
 
 hmpps.sqs:
   queueAdminRole: ROLE_PRISONER_INDEX
+  defaultErrorVisibilityTimeout: 1, 10, 60, 600
+  queues:
+    publish:
+      errorVisibilityTimeout: 0
 
 index-build:
   page-size: 1000
