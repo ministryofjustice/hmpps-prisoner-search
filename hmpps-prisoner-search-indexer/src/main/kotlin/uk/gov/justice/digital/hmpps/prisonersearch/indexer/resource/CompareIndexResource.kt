@@ -23,17 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndex
 @RequestMapping("/compare-index", produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "OpenSearch index comparison")
 class CompareIndexResource(private val compareIndexService: CompareIndexService) {
-  @GetMapping("/size")
-  @Operation(
-    summary = "Simple OpenSearch index size comparison.",
-    description = """Comparison of the number of prisoners in NOMIS and the number of prisoners in the index.
-        Results sent to a custom event called COMPARE_INDEX_SIZE.
-        It is an internal service which isn't exposed to the outside world and is called from a
-        Kubernetes CronJob named `compare-index-size-cronjob`
-      """,
-  )
-  fun compareIndexSizes() = compareIndexService.doIndexSizeCheck()
-
   @GetMapping("/ids")
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @ResponseStatus(HttpStatus.ACCEPTED)

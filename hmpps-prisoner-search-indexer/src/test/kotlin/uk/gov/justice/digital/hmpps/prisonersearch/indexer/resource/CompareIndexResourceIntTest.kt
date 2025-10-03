@@ -13,28 +13,23 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.AliasBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
-class CompareIndexResourceIntTest : IntegrationTestBase() {
+class CompareIndexResourceIntTest(
+  @Autowired private val compareIndexService: CompareIndexService,
+) : IntegrationTestBase() {
 
   @Nested
   inner class compareTestsNoData {
     @BeforeEach
     fun beforeEach() = prisonApi.stubOffenders()
-
-    @Test
-    @DisplayName("/compare-index/size endpoint is unsecured")
-    fun `size endpoint is unsecured`() {
-      webTestClient.get().uri("/compare-index/size")
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
-    }
 
     @Test
     @DisplayName("/compare-index/ids access forbidden when no authority")
@@ -122,12 +117,9 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    @DisplayName("/compare-index/size telemetry is recorded")
+    @DisplayName("COMPARE_INDEX_SIZE batch job telemetry is recorded")
     fun `size endpoint telemetry is recorded`() {
-      webTestClient.get().uri("/compare-index/size")
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
+      compareIndexService.doIndexSizeCheck()
 
       verify(telemetryClient, atLeastOnce()).trackEvent(
         eq("COMPARE_INDEX_SIZE"),
@@ -138,19 +130,6 @@ class CompareIndexResourceIntTest : IntegrationTestBase() {
         },
         isNull(),
       )
-    }
-
-    @Test
-    @DisplayName("/compare-index/size returns correct data")
-    fun `size endpoint returns differences`() {
-      webTestClient.get().uri("/compare-index/size")
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("timeMs").value<Int> { assertThat(it).isGreaterThan(0) }
-        .jsonPath("totalNomis").value<Int> { assertThat(it).isEqualTo(6) }
-        .jsonPath("totalIndex").value<Int> { assertThat(it).isEqualTo(9) }
     }
 
     @Test

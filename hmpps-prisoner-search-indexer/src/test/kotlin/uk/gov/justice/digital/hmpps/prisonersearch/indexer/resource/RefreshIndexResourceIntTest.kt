@@ -6,7 +6,6 @@ import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -66,20 +65,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_VIEW")))
       .exchange()
       .expectStatus().isForbidden
-  }
-
-  @Test
-  fun `Automated reconciliation - endpoint unprotected`() {
-    webTestClient.put().uri("/refresh-index/automated")
-      .exchange()
-      .expectStatus().isAccepted
-
-    await untilAsserted {
-      verify(indexQueueService).sendRefreshPrisonerMessage("A9999AA")
-      verify(indexQueueService).sendRefreshPrisonerMessage("A7089EY")
-    }
-
-    await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it == 0 }
   }
 
   @Test

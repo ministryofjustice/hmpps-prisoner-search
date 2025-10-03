@@ -22,7 +22,7 @@ class PopulateIndexListener(
   private val objectMapper: ObjectMapper,
   private val populateIndexService: PopulateIndexService,
   private val refreshIndexService: RefreshIndexService,
-) {
+) : EventListener {
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
   fun processIndexRequest(requestJson: String) {
     val indexRequest = try {
