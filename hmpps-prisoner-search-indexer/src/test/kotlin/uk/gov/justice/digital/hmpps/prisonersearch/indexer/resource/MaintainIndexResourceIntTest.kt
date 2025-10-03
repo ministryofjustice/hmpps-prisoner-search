@@ -268,42 +268,4 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
       verify(maintainIndexService).indexPrisoner("A1234BC")
     }
   }
-
-  @Nested
-  inner class IndexHouseKeeping {
-
-    @BeforeEach
-    fun mockService() {
-      doReturn(IndexStatus("any_id")).whenever(maintainIndexService).markIndexingComplete()
-    }
-
-    @Test
-    fun `endpoint is not secured`() {
-      webTestClient.put()
-        .uri("/maintain-index/check-complete")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isOk
-    }
-
-    @Test
-    fun `attempts to mark the build as complete`() {
-      webTestClient.put()
-        .uri("/maintain-index/check-complete")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-
-      verify(maintainIndexService).markIndexingComplete()
-    }
-
-    @Test
-    fun `returns build status information`() {
-      webTestClient.put()
-        .uri("/maintain-index/check-complete")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectBody()
-        .jsonPath("currentIndexState").isEqualTo("COMPLETED")
-    }
-  }
 }

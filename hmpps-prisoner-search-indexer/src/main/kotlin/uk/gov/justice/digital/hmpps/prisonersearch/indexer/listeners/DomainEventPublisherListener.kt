@@ -11,7 +11,7 @@ import uk.gov.justice.hmpps.sqs.publish
 class DomainEventPublisherListener(
   private val objectMapper: ObjectMapper,
   private val hmppsQueueService: HmppsQueueService,
-) {
+) : EventListener {
   private inline fun <reified T> fromJson(message: String?): T = objectMapper.readValue(message, T::class.java)
 
   private val hmppsDomainTopic by lazy {

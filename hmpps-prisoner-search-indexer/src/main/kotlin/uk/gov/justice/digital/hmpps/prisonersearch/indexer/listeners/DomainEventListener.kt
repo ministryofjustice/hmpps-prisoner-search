@@ -18,7 +18,7 @@ class DomainEventListener(
   private val objectMapper: ObjectMapper,
   private val indexListenerService: IndexListenerService,
   private val offenderEventQueueService: OffenderEventQueueService,
-) {
+) : EventListener {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 

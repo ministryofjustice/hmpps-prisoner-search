@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
-import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
@@ -30,14 +29,4 @@ class RefreshIndexResource(private val refreshIndexService: RefreshIndexService)
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @ResponseStatus(HttpStatus.ACCEPTED)
   fun startIndexRefresh() = refreshIndexService.startIndexRefresh()
-
-  @Hidden
-  @PutMapping("/automated")
-  @Operation(
-    summary = "Automated full refresh of the index.",
-    description = """Same as /refresh-index, but this is an internal only endpoint called from the
-      full-index-comparison cronjob.""",
-  )
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  fun automatedIndexRefresh() = refreshIndexService.startIndexRefresh()
 }

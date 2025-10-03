@@ -23,6 +23,20 @@ generic-service:
     startup: '43 6 * * 1-5' # Start at 6.43am UTC Monday-Friday
     shutdown: '47 21 * * 1-5' # Stop at 9.47pm UTC Monday-Friday
 
+  batchjobs:
+    - name: check-index-complete
+      type: CHECK_INDEX_COMPLETE
+      schedule: "*/15 7-20 * * 1-5"
+    - name: compare-index-size
+      type: COMPARE_INDEX_SIZE
+      schedule: "*/10 7-20 * * 1-5"
+    - name: full-index-refresh
+      type: FULL_INDEX_REFRESH
+      schedule: "05 18 * * 1-5"
+    - name: remove-old-differences
+      type: REMOVE_OLD_DIFFERENCES
+      schedule: "55 17 * * 1-5"
+
 generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
@@ -38,10 +52,6 @@ generic-prometheus-alerts:
 
 cron:
   retry_dlqs_schedule: "*/10 7-20 * * 1-5"
-  index_size_schedule: "*/10 7-20 * * 1-5"
-  check_index_schedule: "*/15 7-20 * * 1-5"
-  index_refresh_schedule: "05 18 * * 1-5"
-  remove_differences_schedule: "55 17 * * 1-5"
   snapshot_schedule: "49 1 * * *"
 
 indexQueueNames:

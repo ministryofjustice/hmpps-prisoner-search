@@ -90,6 +90,23 @@ generic-service:
     groups:
       - internal
 
+  # The name has max length of 22 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-search-indexer-")
+  # The type must exist in enum BatchType
+  batchjobs:
+    - name: check-index-complete
+      type: CHECK_INDEX_COMPLETE
+      schedule: "*/15 * * * *"
+    - name: compare-index-size
+      type: COMPARE_INDEX_SIZE
+      schedule: "*/10 * * * *"
+    - name: full-index-refresh
+      type: FULL_INDEX_REFRESH
+      schedule: "05 21 * * *"
+    # remove_differences_schedule should be a short period before the full-index-refresh schedule:
+    - name: remove-old-differences
+      type: REMOVE_OLD_DIFFERENCES
+      schedule: "55 20 * * *"
+
 generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-search-indexer
   alertSeverity: syscon
@@ -97,11 +114,6 @@ generic-prometheus-alerts:
 
 cron:
   retry_dlqs_schedule: "*/10 * * * *"
-  index_size_schedule: "*/10 * * * *"
-  check_index_schedule: "*/15 * * * *"
-  index_refresh_schedule: "05 21 * * *"
-  # remove_differences_schedule should be a short period before the index_refresh_schedule:
-  remove_differences_schedule: "55 20 * * *"
   snapshot_schedule: "42 1 * * *"
 
   # default is to suspend the restore - only want it happening on preprod

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
-import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -12,7 +11,6 @@ import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -65,12 +63,4 @@ class PrisonerDifferencesResource(private val prisonerDifferencesService: Prison
     @Parameter(description = "Report on differences that have been generated. Defaults to the last one day", example = "2023-01-02T02:23:45Z")
     to: Instant?,
   ): List<PrisonerDifferences> = prisonerDifferencesService.retrieveDifferences(from ?: Instant.now().minus(1, ChronoUnit.DAYS), to ?: Instant.now())
-
-  @Hidden
-  @DeleteMapping("/delete")
-  @Operation(
-    summary = "Deletes differences data that is over a month old",
-    description = "This is an internal service which isn't exposed to the outside world. It is called from a Kubernetes CronJob named `remove-old-differences`",
-  )
-  fun deleteOldData(): Int = prisonerDifferencesService.deleteOldData()
 }

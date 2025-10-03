@@ -11,12 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferences
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDifferencesRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferencesService
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var repository: PrisonerDifferencesRepository
+class PrisonerDifferencesResourceIntTest(
+  @Autowired private val repository: PrisonerDifferencesRepository,
+  @Autowired private val prisonerDifferencesService: PrisonerDifferencesService,
+) : IntegrationTestBase() {
 
   @BeforeEach
   fun clearPrisonerDifferences() {
@@ -62,7 +64,7 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("DELETE /prisoner-differences/delete")
+  @DisplayName("REMOVE_OLD_DIFFERENCES batch job")
   inner class DeletePrisonerDifferences {
     @Test
     fun `endpoint deletes old data`() {
@@ -71,12 +73,7 @@ class PrisonerDifferencesResourceIntTest : IntegrationTestBase() {
       repository.save(PrisonerDifferences(nomsNumber = "A1111AB", differences = "[second]", dateTime = overAMonth))
       repository.save(PrisonerDifferences(nomsNumber = "A1111AA", differences = "[recent]"))
 
-      // note no roles required by the endpoint - protected by ingress config instead
-      webTestClient.delete().uri("/prisoner-differences/delete")
-        .header("Content-Type", "application/json")
-        .exchange()
-        .expectStatus().isOk
-        .expectBody().json("2")
+      prisonerDifferencesService.deleteOldData()
 
       assertThat(repository.findByNomsNumber("A1111AA"))
         .hasSize(1)

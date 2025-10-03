@@ -93,16 +93,4 @@ class MaintainIndexResource(private val maintainIndexService: MaintainIndexServi
     @PathVariable("prisonerNumber")
     prisonerNumber: String,
   ) = maintainIndexService.indexPrisoner(prisonerNumber)
-
-  @PutMapping("/check-complete")
-  @Operation(
-    summary = "Checks to see if the index has finished building",
-    description = """This job checks to see if there are no more messages on the index queue and therefore indexing is
-      complete.  If the index isn't currently building then no action will be taken.
-      It also has a safety check to ensure that we have a minimum number of messages in the index.
-      It is an internal service which isn't exposed to the outside world and is called from a Kubernetes CronJob named
-      `check-indexing-complete`
-      """,
-  )
-  fun checkIfComplete() = maintainIndexService.markIndexingComplete()
 }
