@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.ConfigurableApplicationContext
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPA
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.REMOVE_OLD_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndexService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferencesService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
@@ -41,12 +43,25 @@ class BatchManager(
   @WithSpan
   fun runBatchJob(@SpanAttribute batchType: BatchType) = runBlocking {
     when (batchType) {
-      CHECK_INDEX_COMPLETE -> maintainIndexService.markIndexingComplete()
+      CHECK_INDEX_COMPLETE -> ignoreFailure<IndexException> { maintainIndexService.markIndexingComplete() }
       COMPARE_INDEX_SIZE -> compareIndexService.doIndexSizeCheck()
-      FULL_INDEX_REFRESH -> refreshIndexService.startIndexRefresh()
+      FULL_INDEX_REFRESH -> ignoreFailure<IndexException> { refreshIndexService.startIndexRefresh() }
       REMOVE_OLD_DIFFERENCES -> prisonerDifferencesService.deleteOldData()
     }
   }
 
   private fun ContextRefreshedEvent.closeApplication() = (this.applicationContext as ConfigurableApplicationContext).close()
+
+  private inline fun <reified T> ignoreFailure(block: () -> Unit) = runCatching(block)
+    .onFailure {
+      if (it is T) {
+        log.warn("Ignoring failure: ${it.message}")
+      } else {
+        throw it
+      }
+    }
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 }
