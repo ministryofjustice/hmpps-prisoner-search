@@ -10,16 +10,14 @@ import org.mockito.kotlin.whenever
 import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextRefreshedEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.CHECK_INDEX_COMPLETE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPARE_INDEX_SIZE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.REMOVE_OLD_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferencesService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchManager
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CHECK_INDEX_COMPLETE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COMPARE_INDEX_SIZE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.FULL_INDEX_REFRESH
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.REMOVE_OLD_DIFFERENCES
 
 @ExtendWith(OutputCaptureExtension::class)
 class BatchManagerTest {
