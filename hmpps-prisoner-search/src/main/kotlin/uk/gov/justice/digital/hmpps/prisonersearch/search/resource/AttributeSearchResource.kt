@@ -198,12 +198,12 @@ class AttributeSearchResource(private val attributeSearchService: AttributeSearc
           ]
         }
       </pre>
-
-      There have been issues raised with OpenSearch sorting in that it sometimes doesn't produce stable sorting results,
+      <p>There have been issues raised with OpenSearch sorting in that it sometimes doesn't produce stable sorting results,
       especially with higher page numbers.
-
-      It is thus recommended not to use paging and instead request a large page size, together with setting the
+      </p>
+      <p>It is thus recommended not to use paging and instead request a large page size, together with setting the
       responseFields to limit the returned response byte size (otherwise you risk hitting memory / webclient limits).
+      </p>
     """,
     security = [SecurityRequirement(name = "global-search-role"), SecurityRequirement(name = "prisoner-search-role")],
     responses = [
