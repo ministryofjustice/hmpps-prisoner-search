@@ -581,6 +581,7 @@ internal class PrisonerSynchroniserServiceTest {
             alertTypeDescription = "Alert type description",
             code = "NEW",
             description = "Alert code description",
+            canBeAdministered = false,
           ),
           description = "Alert description",
           authorisedBy = "A. Nurse, An Agency",

@@ -282,7 +282,13 @@ class TranslatorTest {
       val alert = Alert(
         alertUuid = UUID.fromString("8cdadcf3-b003-4116-9956-c99bd8df6a00"),
         prisonNumber = "A1234AA",
-        alertCode = AlertCodeSummary("x-type", "type-description", code, "x-description"),
+        alertCode = AlertCodeSummary(
+          alertTypeCode = "x-type",
+          alertTypeDescription = "type-description",
+          code = code,
+          description = "x-description",
+          canBeAdministered = false,
+        ),
         description = null,
         authorisedBy = null,
         activeFrom = LocalDate.parse("2021-09-27"),
