@@ -15,6 +15,7 @@ jobs:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
       subproject: hmpps-prisoner-search
       nvd_feed_version: "2"
+      java_version: "25"
     secrets: inherit
   security-kotlin-owasp-check-indexer:
     permissions:
@@ -27,4 +28,5 @@ jobs:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
       subproject: hmpps-prisoner-search-indexer
       nvd_feed_version: "2"
+      java_version: "25"
     secrets: inherit
