@@ -52,7 +52,7 @@ jobs:
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
-      chart_name : 'hmpps-prisoner-search'
+      chart_name: 'hmpps-prisoner-search'
       helm_dir: 'hmpps-prisoner-search/helm_deploy'
     needs: changes
   app_version:
@@ -78,6 +78,7 @@ jobs:
       build-dir: 'hmpps-prisoner-search/build'
       artifact-name: 'hmpps-prisoner-search'
       upload-build-artifacts: ${{ github.ref == 'refs/heads/main' }}
+      java-version: "25"
     needs:
       - app_version
       - changes
@@ -90,8 +91,9 @@ jobs:
       gradle-command: ./gradlew :common:check
       build-dir: 'common/build'
       artifact-name: 'common'
+      java-version: "25"
     needs: changes
-  check:  # This job does nothing and is only used for the branch protection
+  check: # This job does nothing and is only used for the branch protection
     name: Checks for search
     if: always()
     needs:

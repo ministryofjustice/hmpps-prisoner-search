@@ -16,6 +16,7 @@ jobs:
       upload-build-artifacts: true
       build-artifact-name: 'build-search'
       upload-test-artifacts: false
+      java-version: "25"
   create-artifact-indexer:
     permissions:
       contents: read
@@ -28,6 +29,7 @@ jobs:
       upload-build-artifacts: true
       build-artifact-name: 'build-indexer'
       upload-test-artifacts: false
+      java-version: "25"
   security-veracode-pipeline-scan-search:
     permissions:
       contents: read
