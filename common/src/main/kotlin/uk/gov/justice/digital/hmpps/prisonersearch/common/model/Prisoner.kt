@@ -125,7 +125,7 @@ class Prisoner : Diffable<Prisoner> {
   @Schema(description = "The prisoner's current facial image can be retrieved by plugging this id into the prison-api endpoint /app/images/{prisonerNumber}/data?imageId={imageId}", example = "2122100")
   var currentFacialImageId: Long? = null
 
-  // @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
+  @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   @Schema(description = "True if prisoner has been recorded as being in the military.")
   var militaryRecord: Boolean? = null
 
@@ -147,27 +147,27 @@ class Prisoner : Diffable<Prisoner> {
   var inOutStatus: String? = null
 
   @Field(type = FieldType.Keyword)
-  @Schema(description = "Prison ID", example = "MDI")
+  @Schema(description = "Current Prison ID (or OUT)", example = "MDI")
   @DiffableProperty(DiffCategory.LOCATION)
   var prisonId: String? = null
+
+  @Schema(description = "Current Prison Name", example = "HMP Leeds")
+  @DiffableProperty(DiffCategory.LOCATION)
+  var prisonName: String? = null
 
   @Field(type = FieldType.Keyword)
   @Schema(description = "The last i.e. final prison for the prisoner (which is the same as the prisonId if they are still inside prison)", example = "MDI")
   @DiffableProperty(DiffCategory.LOCATION)
   var lastPrisonId: String? = null
 
-  // @DiffableProperty(DiffCategory.LOCATION)
+  @DiffableProperty(DiffCategory.LOCATION)
   @Schema(description = "The previous prison for the prisoner within the current term", example = "MDI")
   var previousPrisonId: String? = null
 
-  // @DiffableProperty(DiffCategory.LOCATION)
-  @Field(type = FieldType.Date, format = [DateFormat.date])
-  @Schema(description = "The date they left the previous prison", example = "MDI")
-  var previousPrisonLeavingDate: LocalDate? = null
-
-  @Schema(description = "Prison Name", example = "HMP Leeds")
   @DiffableProperty(DiffCategory.LOCATION)
-  var prisonName: String? = null
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  @Schema(description = "The date they left the previous prison", example = "2025-09-15")
+  var previousPrisonLeavingDate: LocalDate? = null
 
   @Schema(description = "In prison cell location", example = "A-1-002")
   @DiffableProperty(DiffCategory.LOCATION)
