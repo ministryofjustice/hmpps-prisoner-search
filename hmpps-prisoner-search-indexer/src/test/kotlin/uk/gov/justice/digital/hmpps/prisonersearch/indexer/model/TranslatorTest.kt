@@ -100,10 +100,24 @@ class TranslatorTest {
   }
 
   @Test
-  fun `when a prisoner has a sentence with dateOverride for conditionalRelease, automaticRelease and postRecallRelease then corresponding overrideDate is used`() {
+  fun `nonParoleDate is present`() {
+    val date = LocalDate.of(2021, 5, 16)
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        sentenceDetail = SentenceDetail(nonParoleDate = date),
+      ),
+    )
+    assertThat(prisoner.nonParoleDate).isEqualTo(date)
+  }
+
+  @Test
+  fun `when a prisoner has a sentence with dateOverride for nonParoleDate, conditionalRelease, automaticRelease and postRecallRelease then corresponding overrideDate is used`() {
     val conditionalReleaseOverrideDate = LocalDate.now().plusMonths(3)
     val automaticReleaseOverrideDate = LocalDate.now().plusMonths(2)
     val postRecallReleaseOverrideDate = LocalDate.now().plusMonths(1)
+    val nonParoleOverrideDate = LocalDate.now().plusMonths(4)
     val releaseDate = LocalDate.now().plusMonths(5)
     val prisoner = Prisoner().translate(
       ob = OffenderBooking(
@@ -116,12 +130,15 @@ class TranslatorTest {
           automaticReleaseOverrideDate = automaticReleaseOverrideDate,
           postRecallReleaseDate = releaseDate,
           postRecallReleaseOverrideDate = postRecallReleaseOverrideDate,
+          nonParoleDate = releaseDate,
+          nonParoleOverrideDate = nonParoleOverrideDate,
         ),
       ),
     )
     assertThat(prisoner.conditionalReleaseDate).isEqualTo(conditionalReleaseOverrideDate)
     assertThat(prisoner.automaticReleaseDate).isEqualTo(automaticReleaseOverrideDate)
     assertThat(prisoner.postRecallReleaseDate).isEqualTo(postRecallReleaseOverrideDate)
+    assertThat(prisoner.nonParoleDate).isEqualTo(nonParoleOverrideDate)
   }
 
   @Test
