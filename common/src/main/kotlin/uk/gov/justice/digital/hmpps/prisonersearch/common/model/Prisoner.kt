@@ -327,6 +327,11 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.SENTENCE)
   var conditionalReleaseDate: LocalDate? = null
 
+  // @DiffableProperty(DiffCategory.SENTENCE)
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  @Schema(description = "Non-parole date. If nonParoleOverrideDate date is available then it will be set as nonParoleDate", example = "2023-05-01")
+  var nonParoleDate: LocalDate? = null
+
   @Field(type = FieldType.Date, format = [DateFormat.date])
   @Schema(description = "Actual Parole Date", example = "2023-05-01")
   @DiffableProperty(DiffCategory.SENTENCE)

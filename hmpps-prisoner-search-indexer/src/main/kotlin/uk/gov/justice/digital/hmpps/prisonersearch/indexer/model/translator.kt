@@ -179,6 +179,7 @@ fun Prisoner.translate(
     ob.sentenceDetail?.postRecallReleaseOverrideDate ?: ob.sentenceDetail?.postRecallReleaseDate
   this.conditionalReleaseDate =
     ob.sentenceDetail?.conditionalReleaseOverrideDate ?: ob.sentenceDetail?.conditionalReleaseDate
+  this.nonParoleDate = ob.sentenceDetail?.nonParoleOverrideDate ?: ob.sentenceDetail?.nonParoleDate
   this.actualParoleDate = ob.sentenceDetail?.actualParoleDate
 
   this.mostSeriousOffence = ob.mostSeriousOffence
