@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.CHECK_INDEX_COMPLETE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPARE_INDEX_SIZE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.REMOVE_OLD_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildAlreadyInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndexService
@@ -101,12 +100,13 @@ class BatchManagerTest {
   }
 
   @Test
-  fun `should call the refresh index service`() = runTest {
+  fun `should call the refresh index service and remove old differences`() = runTest {
     val batchManager = batchManager(FULL_INDEX_REFRESH)
 
     batchManager.onApplicationEvent(event)
 
     verify(refreshIndexService).startIndexRefresh()
+    verify(prisonerDifferencesService).deleteOldData()
     verify(context).close()
   }
 
@@ -135,29 +135,6 @@ class BatchManagerTest {
     }
 
     verify(refreshIndexService).startIndexRefresh()
-    verify(context, never()).close()
-  }
-
-  @Test
-  fun `should call the remove old differences service`() = runTest {
-    val batchManager = batchManager(REMOVE_OLD_DIFFERENCES)
-
-    batchManager.onApplicationEvent(event)
-
-    verify(prisonerDifferencesService).deleteOldData()
-    verify(context).close()
-  }
-
-  @Test
-  fun `should not ignore errors in the remove old differences service`() = runTest {
-    whenever(prisonerDifferencesService.deleteOldData()).thenThrow(RuntimeException("error"))
-    val batchManager = batchManager(REMOVE_OLD_DIFFERENCES)
-
-    assertThrows<RuntimeException> {
-      batchManager.onApplicationEvent(event)
-    }
-
-    verify(prisonerDifferencesService).deleteOldData()
     verify(context, never()).close()
   }
 
