@@ -86,10 +86,6 @@ generic-service:
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
       schedule: "05 21 * * *"
-    # remove_differences_schedule should be a short period before the full-index-refresh schedule:
-    - name: remove-old-differences
-      type: REMOVE_OLD_DIFFERENCES
-      schedule: "55 20 * * *"
 
 generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-search-indexer

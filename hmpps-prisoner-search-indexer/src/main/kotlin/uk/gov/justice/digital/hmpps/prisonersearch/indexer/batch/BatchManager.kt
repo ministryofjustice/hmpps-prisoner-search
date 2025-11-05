@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.CHECK_INDEX_COMPLETE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPARE_INDEX_SIZE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.REMOVE_OLD_DIFFERENCES
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
@@ -24,7 +23,6 @@ enum class BatchType {
   CHECK_INDEX_COMPLETE,
   COMPARE_INDEX_SIZE,
   FULL_INDEX_REFRESH,
-  REMOVE_OLD_DIFFERENCES,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -45,8 +43,10 @@ class BatchManager(
     when (batchType) {
       CHECK_INDEX_COMPLETE -> ignoreFailure<IndexException> { maintainIndexService.markIndexingComplete() }
       COMPARE_INDEX_SIZE -> compareIndexService.doIndexSizeCheck()
-      FULL_INDEX_REFRESH -> ignoreFailure<IndexException> { refreshIndexService.startIndexRefresh() }
-      REMOVE_OLD_DIFFERENCES -> prisonerDifferencesService.deleteOldData()
+      FULL_INDEX_REFRESH -> {
+        prisonerDifferencesService.deleteOldData()
+        ignoreFailure<IndexException> { refreshIndexService.startIndexRefresh() }
+      }
     }
   }
 
