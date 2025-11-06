@@ -5,13 +5,12 @@ on:
     - cron: "10 8 * * MON-FRI" # Every weekday at 08:10 UTC
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
-  checks: read
-
 jobs:
   check-prs:
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
     runs-on: ubuntu-latest
 
     steps:
@@ -34,6 +33,7 @@ jobs:
         with:
           branch_prefix: api-docs-
           pr_title: Combined update of api docs
+          labels: combined-pr
           github_token: ${{ steps.generate-token.outputs.token }}
 
       - name: Check status of PRs
@@ -67,6 +67,8 @@ jobs:
                     text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
                   - type: mrkdwn
                     text: "*Repository:*\n${{ github.repository }}"
+                  - type: mrkdwn
+                    text: "*Failing branches:*\n${{ steps.check-prs.outputs.failures }}"
 
       - name: Slack message to review combined PR
         if: steps.check-prs.outputs.combined_pr
