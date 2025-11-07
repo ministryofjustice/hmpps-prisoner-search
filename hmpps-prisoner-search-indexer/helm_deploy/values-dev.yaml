@@ -32,10 +32,7 @@ generic-service:
       schedule: "*/10 7-20 * * 1-5"
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
-      schedule: "05 18 * * 1-5"
-    - name: remove-old-differences
-      type: REMOVE_OLD_DIFFERENCES
-      schedule: "55 17 * * 1-5"
+      schedule: "05 17 * * 1,4"
 
 generic-prometheus-alerts:
   businessHoursOnly: true

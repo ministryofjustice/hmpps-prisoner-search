@@ -447,6 +447,31 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val ob
     }
 
     @Test
+    internal fun `will identify merge if last movement was a TAP`() {
+      val prisoner = prisonerInWithBooking("BXI").apply {
+        lastMovementTypeCode = "TAP"
+      }
+      val identifiers = listOf(
+        OffenderIdentifier(
+          whenCreated = LocalDateTime.now().minusMinutes(45),
+          type = "MERGED",
+          value = "1234",
+          issuedAuthorityText = null,
+          issuedDate = null,
+          offenderId = 1L,
+        ),
+      )
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking(identifiers))
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = POST_MERGE_ADMISSION,
+        prisonId = "BXI",
+      )
+    }
+
+    @Test
     internal fun `will handle no identifiers provided`() {
       val prisoner = prisonerInWithBooking("BXI")
 
