@@ -39,11 +39,11 @@ data class KeywordRequest(
   val fuzzyMatch: Boolean? = false,
 
   @Schema(
-    description = "List of prison codes to filter results",
+    description = "List of prison codes to filter results, null means all",
     example = "[\"LEI\", \"MDI\"]",
-    required = true,
+    required = false,
   )
-  val prisonIds: List<String>? = emptyList(),
+  val prisonIds: List<String>? = null,
 
   @Schema(
     description = "Pagination options. Will default to the first page if omitted.",

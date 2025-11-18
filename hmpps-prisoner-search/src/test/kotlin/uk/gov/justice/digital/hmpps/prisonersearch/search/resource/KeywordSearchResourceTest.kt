@@ -58,16 +58,6 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   @Test
-  fun `bad request when no filtering prison IDs provided`() {
-    webTestClient.post().uri("/keyword")
-      .body(BodyInserters.fromValue(gson.toJson(KeywordRequest(orWords = "smith jones", prisonIds = emptyList()))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isBadRequest
-  }
-
-  @Test
   fun `can perform a keyword search for prisoner number`() {
     keywordSearch(
       keywordRequest = KeywordRequest(orWords = "A7089EY", prisonIds = listOf("MDI")),
@@ -82,6 +72,15 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
       keywordRequest = KeywordRequest(orWords = "X7089EY john smith", prisonIds = listOf("MDI")),
       expectedCount = 1,
       expectedPrisoners = listOf("A7089EY"),
+    )
+  }
+
+  @Test
+  fun `can perform a match with OR words on incorrect prisoner number but correct name for all prisons`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(orWords = "X7089EY john smith"),
+      expectedCount = 2,
+      expectedPrisoners = listOf("A7089EY", "A7089EZ"),
     )
   }
 
