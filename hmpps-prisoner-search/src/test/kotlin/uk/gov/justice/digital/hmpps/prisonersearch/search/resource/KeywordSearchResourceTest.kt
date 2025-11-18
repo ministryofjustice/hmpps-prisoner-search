@@ -76,6 +76,15 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   @Test
+  fun `can perform a match with OR words on incorrect prisoner number but correct name for all prisons`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(orWords = "X7089EY john smith"),
+      expectedCount = 1,
+      expectedPrisoners = listOf("A7089EY"),
+    )
+  }
+
+  @Test
   fun `can perform a keyword AND search on exact PNC number`() {
     keywordSearch(
       keywordRequest = KeywordRequest(andWords = "12/394773H", prisonIds = listOf("MDI")),
