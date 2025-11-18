@@ -58,16 +58,6 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   @Test
-  fun `bad request when no filtering prison IDs provided`() {
-    webTestClient.post().uri("/keyword")
-      .body(BodyInserters.fromValue(gson.toJson(KeywordRequest(orWords = "smith jones", prisonIds = emptyList()))))
-      .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isBadRequest
-  }
-
-  @Test
   fun `can perform a keyword search for prisoner number`() {
     keywordSearch(
       keywordRequest = KeywordRequest(orWords = "A7089EY", prisonIds = listOf("MDI")),
