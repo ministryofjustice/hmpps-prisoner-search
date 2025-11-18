@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesear
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.KeywordRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.PaginationRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.SearchType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.services.exceptions.BadRequestException
 import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 import java.util.concurrent.TimeUnit
 
@@ -41,18 +40,10 @@ class KeywordService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  private fun validateKeywordRequest(keywordRequest: KeywordRequest) {
-    if (keywordRequest.prisonIds.isNullOrEmpty()) {
-      log.warn("Invalid keyword search  - no prisonIds specified to filter by")
-      throw BadRequestException("Invalid keyword search  - please provide prison locations to filter by")
-    }
-  }
-
   fun findByKeyword(keywordRequest: KeywordRequest, responseFields: List<String>? = null): Page<Prisoner> {
     log.info("Received keyword request ${gson.toJson(keywordRequest)}")
 
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
-    validateKeywordRequest(keywordRequest)
     val searchSourceBuilder = createSourceBuilder(keywordRequest, responseFields)
     val searchRequest = SearchRequest(elasticsearchClient.getAlias(), searchSourceBuilder)
 
