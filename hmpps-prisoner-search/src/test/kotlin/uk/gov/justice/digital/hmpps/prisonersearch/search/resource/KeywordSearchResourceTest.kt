@@ -80,7 +80,7 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
     keywordSearch(
       keywordRequest = KeywordRequest(orWords = "X7089EY john smith"),
       expectedCount = 2,
-      expectedPrisoners = listOf("A7089EY", "A1111AA"),
+      expectedPrisoners = listOf("A7089EY", "A7089EZ"),
     )
   }
 
