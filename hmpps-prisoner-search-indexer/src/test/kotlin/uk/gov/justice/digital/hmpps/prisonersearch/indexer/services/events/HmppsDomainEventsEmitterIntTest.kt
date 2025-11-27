@@ -21,9 +21,11 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.doThrow
 import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -41,6 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.validAlertsMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiMockServer
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.Duration
 
@@ -69,6 +72,7 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
 
   @BeforeEach
   fun init() {
+    PrisonRegisterApiExtension.prisonRegisterApi.stubGetPrisons()
     purgeDomainEventsQueue()
     prisonApi.stubOffenders(PrisonerBuilder())
     buildAndSwitchIndex(1)
@@ -480,6 +484,32 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
     await untilAsserted {
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(1)
     }
+  }
+
+  @Test
+  fun `send failure is retried`() {
+    doThrow(RuntimeException::class.java)
+      .doCallRealMethod()
+      .whenever(publishQueueSqsClient).sendMessage(any<SendMessageRequest>())
+
+    hmppsDomainEventEmitter.emitPrisonerRemovedEvent("some_offender")
+
+    await atLeast Duration.ofSeconds(1) untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 1 }
+
+    val result = hmppsEventsQueue.sqsClient.receiveFirstMessage()
+    hmppsEventsQueue.sqsClient.deleteLastMessage(result)
+
+    assertThat(result.messageId()).isNotNull()
+    verify(publishQueueSqsClient, times(2)).sendMessage(any<SendMessageRequest>())
+
+//    val message: MsgBody = objectMapper.readValue(result.body())
+//
+//    assertThatJson(message.Message).node("eventType").isEqualTo("test.prisoner-offender-search.prisoner.removed")
+//    assertThatJson(message.Message).node("version").isEqualTo(1)
+//    assertThatJson(message.Message).node("occurredAt").isEqualTo("2022-09-16T11:40:34+01:00")
+//    assertThatJson(message.Message).node("detailUrl").isEqualTo("http://localhost:8080/prisoner/some_offender")
+//    assertThatJson(message.Message).node("additionalInformation.nomsNumber").isEqualTo("some_offender")
+//    assertThatJson(message.Message).node("personReference.identifiers").isEqualTo("[{\"type\":\"NOMS\",\"value\":\"some_offender\"}]")
   }
 
   fun recreatePrisoner(builder: PrisonerBuilder) {
