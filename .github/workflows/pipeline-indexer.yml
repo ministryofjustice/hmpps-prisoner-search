@@ -75,7 +75,7 @@ jobs:
       gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew :hmpps-prisoner-search-indexer:assemble :hmpps-prisoner-search-indexer:check'
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
-      postgres-tag: "17"
+      postgres-tag: "18"
       postgres-db: "pos"
       postgres-username: "pos"
       postgres-password: "pos"
