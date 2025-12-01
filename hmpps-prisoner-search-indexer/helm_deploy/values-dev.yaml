@@ -32,7 +32,7 @@ generic-service:
       schedule: "*/10 7-20 * * 1-5"
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
-      schedule: "05 17 * * 1,4"
+      schedule: "05 08 * * MON"
 
 generic-prometheus-alerts:
   businessHoursOnly: true
