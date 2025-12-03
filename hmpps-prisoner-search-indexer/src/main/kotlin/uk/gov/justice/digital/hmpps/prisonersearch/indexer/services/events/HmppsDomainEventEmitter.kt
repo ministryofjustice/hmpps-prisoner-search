@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_SEND_FAILURE
@@ -26,7 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.Hmpps
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PersonReference.Companion.withNomsNumber
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
-import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
+import uk.gov.justice.hmpps.sqs.sendMessage
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -41,11 +40,9 @@ class HmppsDomainEventEmitter(
   private val diffProperties: DiffProperties,
   private val clock: Clock?,
   private val telemetryClient: TelemetryClient,
-  @Value("\${publish.delayInSeconds}") private val publishDelayInSeconds: Int,
+  @Value($$"${publish.delayInSeconds}") private val publishDelayInSeconds: Int,
 ) {
   private val publishQueue by lazy { hmppsQueueService.findByQueueId("publish") as HmppsQueue }
-  private val publishSqsClient by lazy { publishQueue.sqsClient }
-  private val publishQueueUrl by lazy { publishQueue.queueUrl }
 
   private fun <T : PrisonerAdditionalInformation> defaultFailureHandler(
     event: PrisonerDomainEvent<T>,
@@ -58,9 +55,10 @@ class HmppsDomainEventEmitter(
       exception,
     )
     telemetryClient.trackEvent(EVENTS_SEND_FAILURE, event.asMap())
+    // Cannot throw exception and try again because the index has been updated: retry would be a no-op
   }
 
-  fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.publish(
+  private fun <T : PrisonerAdditionalInformation> PrisonerDomainEvent<T>.publish(
     onFailure: (error: Throwable) -> Unit = { defaultFailureHandler(this, it) },
   ) {
     val event = PrisonerDomainEvent(
@@ -74,14 +72,13 @@ class HmppsDomainEventEmitter(
 
     val domainEvent = DomainEvent(eventType = event.eventType, body = objectMapper.writeValueAsString(event))
 
-    val request = SendMessageRequest.builder().queueUrl(publishQueueUrl)
-      .messageBody(objectMapper.writeValueAsString(domainEvent))
-      .eventTypeMessageAttributes(event.eventType)
-      .delaySeconds(publishDelayInSeconds)
-      .build()
-
     runCatching {
-      publishSqsClient.sendMessage(request).get()
+      publishQueue.sendMessage(
+        event.eventType,
+        objectMapper.writeValueAsString(domainEvent),
+        publishDelayInSeconds,
+      )
+
       telemetryClient.trackEvent(event.eventType, event.asMap(), null)
     }.onFailure(onFailure)
   }

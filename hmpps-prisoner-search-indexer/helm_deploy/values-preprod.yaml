@@ -20,13 +20,13 @@ generic-service:
   batchjobs:
     - name: check-index-complete
       type: CHECK_INDEX_COMPLETE
-      schedule: "*/15 * * * 1-5"
+      schedule: "*/15 7-20 * * 1-5"
     - name: compare-index-size
       type: COMPARE_INDEX_SIZE
       schedule: "*/10 7-20 * * 1-5"
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
-      schedule: "05 17 * * 1,4"
+      schedule: "05 08 * * MON"
 
 generic-prometheus-alerts:
   businessHoursOnly: true
