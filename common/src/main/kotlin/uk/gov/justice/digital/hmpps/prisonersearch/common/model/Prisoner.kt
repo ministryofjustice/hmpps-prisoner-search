@@ -39,7 +39,7 @@ class Prisoner : Diffable<Prisoner> {
   var croNumber: String? = null
 
   @Field(type = FieldType.Keyword)
-  @Schema(description = "Booking No.", example = "0001200924")
+  @Schema(description = "Booking Id", example = "2900924")
   @DiffableProperty(DiffCategory.IDENTIFIERS)
   var bookingId: String? = null
 

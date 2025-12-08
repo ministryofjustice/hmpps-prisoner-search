@@ -759,7 +759,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will save ComplexityOfNeed level to current index`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
-      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, null, "event")
 
       verify(prisonerRepository).updateComplexityOfNeed(
         eq(prisonerNumber),
@@ -772,7 +772,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will create telemetry`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
       whenever(prisonerRepository.updateComplexityOfNeed(eq("A1234AA"), any(), any())).thenReturn(true)
-      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, null, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.COMPLEXITY_OF_NEED_UPDATED.name),
@@ -791,7 +791,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will not save prisoner if no changes`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
       whenever(prisonerRepository.updateComplexityOfNeed(eq(prisonerNumber), any(), any())).thenReturn(false)
-      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, null, "event")
 
       verify(telemetryClient).trackEvent(
         eq(TelemetryEvents.COMPLEXITY_OF_NEED_OPENSEARCH_NO_CHANGE.name),
@@ -810,7 +810,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will do nothing if prisoner not found`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(null)
 
-      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, null, "event")
 
       verify(prisonerRepository, never()).updateComplexityOfNeed(any(), any(), any())
     }
@@ -819,7 +819,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `Updates ok when no data`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(null)
 
-      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, null, "event")
 
       verify(prisonerRepository).updateComplexityOfNeed(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
     }
@@ -828,21 +828,32 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will NOT call prisoner difference to handle differences`() {
       whenever(complexityOfNeedService.getComplexityOfNeedForPrisoner(prisonerNumber)).thenReturn(newComplexityOfNeed)
       whenever(prisonerRepository.updateComplexityOfNeed(eq("A1234AA"), any(), any())).thenReturn(true)
-      service.reindexComplexityOfNeedWithGet(femaleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking, null, "event")
 
       verifyNoInteractions(prisonerDifferenceService)
     }
 
     @Test
     fun `will not call complexity of need for male prison`() {
-      service.reindexComplexityOfNeedWithGet(maleBooking, "event")
+      service.reindexComplexityOfNeedWithGet(maleBooking, null, "event")
 
       verifyNoInteractions(complexityOfNeedService)
     }
 
     @Test
+    fun `will call complexity of need for RP`() {
+      service.reindexComplexityOfNeedWithGet(
+        maleBooking,
+        RestrictedPatientDto(maleBooking.offenderNo, LocalDateTime.now()),
+        "event",
+      )
+
+      verify(complexityOfNeedService).getComplexityOfNeedForPrisoner(maleBooking.offenderNo)
+    }
+
+    @Test
     fun `will not call complexity of need for prisoner who is OUT`() {
-      service.reindexComplexityOfNeedWithGet(femaleBooking.copy(agencyId = "OUT"), "event")
+      service.reindexComplexityOfNeedWithGet(femaleBooking.copy(agencyId = "OUT"), null, "event")
 
       verifyNoInteractions(complexityOfNeedService)
     }
