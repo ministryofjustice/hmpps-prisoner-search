@@ -150,12 +150,18 @@ class IndexListenerService(
   private fun sync(prisonerNumber: String, eventType: String): Prisoner? = nomisService
     .getOffender(prisonerNumber)?.run {
       prisonerSynchroniserService.reindexUpdate(ob = this, eventType = eventType)
-    } ?: null.also { log.warn("Sync requested for prisoner {} not found", prisonerNumber) }
+    } ?: null.also { log.warn("sync() Sync requested for prisoner {} not found", prisonerNumber) }
 
   private fun sync(bookingId: Long, eventType: String): Prisoner? = nomisService
     .getNomsNumberForBooking(bookingId)?.run {
       sync(prisonerNumber = this, eventType)
-    } ?: null.also { log.warn("Sync requested for prisoner (by booking id) {} not found", bookingId) }
+        .also {
+          val fromNomisBookingId = it?.bookingId?.toLong()
+          if (bookingId != fromNomisBookingId) {
+            log.warn("sync() Booking id does not match: event = {}, from Nomis seq 1 = {}", bookingId, fromNomisBookingId)
+          }
+        }
+    } ?: null.also { log.warn("sync() Sync requested for prisoner (by booking id) {} not found", bookingId) }
 
   private fun customEventForMissingOffenderIdDisplay(
     eventType: String,

@@ -282,7 +282,7 @@ class MaintainIndexServiceTest {
 
       verify(prisonerSynchroniserService).reindexUpdate(booking, "MAINTAIN")
       verify(prisonerSynchroniserService).reindexIncentive(booking.offenderNo, "MAINTAIN")
-      verify(prisonerSynchroniserService).reindexRestrictedPatient(booking.offenderNo, booking, "MAINTAIN")
+      verify(prisonerSynchroniserService).reindexRestrictedPatient(booking.offenderNo, booking, null, "MAINTAIN")
     }
 
     @Test

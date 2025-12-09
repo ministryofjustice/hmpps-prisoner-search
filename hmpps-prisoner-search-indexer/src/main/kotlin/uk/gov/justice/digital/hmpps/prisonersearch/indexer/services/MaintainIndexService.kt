@@ -111,10 +111,11 @@ class MaintainIndexService(
     val offenderBooking = nomisService.getOffender(prisonerNumber)
     return offenderBooking
       ?.also {
+        val restrictedPatient = prisonerSynchroniserService.getRestrictedPatient(offenderBooking)
         prisonerSynchroniserService.reindexIncentive(prisonerNumber, "MAINTAIN")
-        prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, "MAINTAIN")
+        prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, restrictedPatient, "MAINTAIN")
         prisonerSynchroniserService.reindexAlerts(prisonerNumber, "MAINTAIN")
-        prisonerSynchroniserService.reindexComplexityOfNeedWithGet(offenderBooking, "MAINTAIN")
+        prisonerSynchroniserService.reindexComplexityOfNeedWithGet(offenderBooking, restrictedPatient, "MAINTAIN")
       }
       ?.let {
         prisonerSynchroniserService.reindexUpdate(offenderBooking, "MAINTAIN")

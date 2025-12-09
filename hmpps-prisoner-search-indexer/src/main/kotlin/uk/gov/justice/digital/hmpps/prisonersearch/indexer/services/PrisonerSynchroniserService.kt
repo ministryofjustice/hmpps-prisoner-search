@@ -102,13 +102,14 @@ class PrisonerSynchroniserService(
       // NOTE if multiple messages are received for the same prisoner at the same time
       // the create operation could be attempted multiple times
 
+      val restrictedPatient = runCatching { getRestrictedPatient(ob) }
       val prisoner = Prisoner().translate(
         existingPrisoner = null,
         ob = ob,
         incentiveLevel = runCatching { getIncentive(ob) },
-        restrictedPatientData = runCatching { getRestrictedPatient(ob) },
+        restrictedPatientData = restrictedPatient,
         alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
-        complexityOfNeed = runCatching { getComplexityOfNeed(ob) },
+        complexityOfNeed = runCatching { getComplexityOfNeed(ob, restrictedPatient.getOrNull() != null) },
       )
       prisonerRepository.createPrisoner(prisoner)
       // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
@@ -156,11 +157,15 @@ class PrisonerSynchroniserService(
         }
     }
 
-  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, eventType: String) = prisonerRepository.getSummary(prisonerNo)
+  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, eventType: String): Boolean? {
+    val restrictedPatient = getRestrictedPatient(ob)
+    return reindexRestrictedPatient(prisonerNo, ob, restrictedPatient, eventType)
+  }
+
+  internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, restrictedPatient: RestrictedPatientDto?, eventType: String) = prisonerRepository.getSummary(prisonerNo)
     ?.run {
       assertPrisonerNo(prisonerNo)
       val existingPrisoner = prisonerRepository.copyPrisoner(this.prisoner!!)
-      val restrictedPatient = getRestrictedPatient(ob)
       this.prisoner.setLocationDescription(restrictedPatient, ob)
       this.prisoner.setRestrictedPatientFields(restrictedPatient)
 
@@ -244,8 +249,8 @@ class PrisonerSynchroniserService(
         }
     }
 
-  internal fun reindexComplexityOfNeedWithGet(ob: OffenderBooking, eventType: String) {
-    val level = getComplexityOfNeed(ob)?.level?.value
+  internal fun reindexComplexityOfNeedWithGet(ob: OffenderBooking, restrictedPatient: RestrictedPatientDto?, eventType: String) {
+    val level = getComplexityOfNeed(ob, restrictedPatient != null)?.level?.value
     reindexComplexityOfNeed(ob.offenderNo, level, eventType)
   }
 
@@ -290,22 +295,26 @@ class PrisonerSynchroniserService(
   }
 
   fun refresh(ob: OffenderBooking) {
+    val restrictedPatient = getRestrictedPatient(ob)
     compareAndMaybeIndex(
       ob,
       Result.success(getIncentive(ob)),
-      Result.success(getRestrictedPatient(ob)),
+      Result.success(restrictedPatient),
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-      Result.success(getComplexityOfNeed(ob)),
+      Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
     )
   }
 
-  internal fun translate(ob: OffenderBooking): Prisoner = Prisoner().translate(
-    ob = ob,
-    incentiveLevel = Result.success(getIncentive(ob)),
-    restrictedPatientData = Result.success(getRestrictedPatient(ob)),
-    alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-    complexityOfNeed = Result.success(getComplexityOfNeed(ob)),
-  )
+  internal fun translate(ob: OffenderBooking): Prisoner {
+    val restrictedPatient = getRestrictedPatient(ob)
+    return Prisoner().translate(
+      ob = ob,
+      incentiveLevel = Result.success(getIncentive(ob)),
+      restrictedPatientData = Result.success(restrictedPatient),
+      alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
+      complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
+    )
+  }
 
   fun delete(prisonerNumber: String): Boolean {
     val deleted = prisonerRepository.delete(prisonerNumber)
@@ -320,13 +329,17 @@ class PrisonerSynchroniserService(
     return deleted
   }
 
-  private fun getRestrictedPatient(ob: OffenderBooking) = ob.takeIf { it.assignedLivingUnit?.agencyId == "OUT" }?.let {
+  internal fun getRestrictedPatient(ob: OffenderBooking) = ob.takeIf { it.assignedLivingUnit?.agencyId == "OUT" }?.let {
     restrictedPatientService.getRestrictedPatient(it.offenderNo)
   }
 
   private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }
 
-  private fun getComplexityOfNeed(ob: OffenderBooking): ComplexityOfNeed? = if (isInFemalePrison(ob)) {
+  private fun getComplexityOfNeed(ob: OffenderBooking, isRestrictedPatient: Boolean): ComplexityOfNeed? = if (
+    isRestrictedPatient || isInFemalePrison(ob)
+    // Need to include female prisoners not in prison but in a hospital.
+    // Note this will result in calls for male RPs too but that is harmless as a male prisoner will just get a 404 and turn up null
+  ) {
     complexityOfNeedService.getComplexityOfNeedForPrisoner(ob.offenderNo)
   } else {
     null
