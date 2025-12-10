@@ -361,7 +361,7 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
     keywordSearch(
       keywordRequest = KeywordRequest(location = "OUT"),
       expectedCount = 5,
-      expectedPrisoners = listOf("A7090BF", "A9999RA", "A9999RB", "A9999RC"),
+      expectedPrisoners = listOf("A7090BF", "A9999RA", "A9999RB", "A9999RC", "A7090AE"),
     )
   }
 
@@ -369,8 +369,8 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   fun `can perform a search prisoners with a specific date of birth`() {
     keywordSearch(
       keywordRequest = KeywordRequest(dateOfBirth = LocalDate.of(1985, 5, 15)),
-      expectedCount = 1,
-      expectedPrisoners = listOf("A7090AC"),
+      expectedCount = 2,
+      expectedPrisoners = listOf("A7090AC", "A7090BE"),
     )
   }
 
