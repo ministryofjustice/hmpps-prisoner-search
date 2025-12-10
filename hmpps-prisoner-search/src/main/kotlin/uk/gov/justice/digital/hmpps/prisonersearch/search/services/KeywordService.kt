@@ -140,12 +140,12 @@ class KeywordService(
         keywordQuery.filterWhenPresent("prisonId", it)
       }
 
-      dateOfBirth.takeIf { it != null }?.let {
+      dateOfBirth?.let {
         // Filter to return only those documents that match the date of birth specified by the client
         keywordQuery.mustMatchOneOf("dateOfBirth", allLenientDateVariations(it))
       }
 
-      gender.takeIf { it != null }?.let {
+      gender?.let {
         // Filter to return only those documents that match the gender specified by the client
         keywordQuery.mustWhenPresentGender("gender", it.value)
       }
