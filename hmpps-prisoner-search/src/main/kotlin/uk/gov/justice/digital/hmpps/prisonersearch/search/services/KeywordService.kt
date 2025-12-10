@@ -33,8 +33,8 @@ class KeywordService(
   private val telemetryClient: TelemetryClient,
   private val authenticationHolder: HmppsAuthenticationHolder,
   private val responseFieldsValidator: ResponseFieldsValidator,
-  @Value("\${search.keyword.max-results}") private val maxSearchResults: Int = 200,
-  @Value("\${search.keyword.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
+  @Value($$"${search.keyword.max-results}") private val maxSearchResults: Int = 200,
+  @Value($$"${search.keyword.timeout-seconds}") private val searchTimeoutSeconds: Long = 10L,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -98,11 +98,14 @@ class KeywordService(
       prisonIds = keywordRequest.prisonIds,
       fuzzyMatch = keywordRequest.fuzzyMatch ?: false,
       pagination = keywordRequest.pagination,
+      gender = keywordRequest.gender,
+      location = keywordRequest.location,
+      dateOfBirth = keywordRequest.dateOfBirth,
     )
 
     with(sanitisedKeywordRequest) {
       andWords.takeIf { !it.isNullOrBlank() }?.let {
-        // Will include the prisoner document if all of the words specified match in any of the fields
+        // Will include the prisoner document if all the words specified match in any of the fields
         keywordQuery.must().add(
           generateMatchQuery(it, fuzzyMatch!!, Operator.AND, MultiMatchQueryBuilder.Type.CROSS_FIELDS, keywordRequest.type),
         )
@@ -116,7 +119,7 @@ class KeywordService(
       }
 
       notWords.takeIf { !it.isNullOrBlank() }?.let {
-        // Will exclude the prisoners with any of these words matching anywhere in document
+        // Will exclude the prisoners with any of these words matching anywhere in the document
         keywordQuery.mustNot(
           QueryBuilders.multiMatchQuery(it, "*", "aliases.*", "alerts.*")
             .lenient(true)
@@ -132,9 +135,27 @@ class KeywordService(
         )
       }
 
-      prisonIds.takeIf { it != null && it.isNotEmpty() && it[0].isNotBlank() }?.let {
+      prisonIds.takeIf { !it.isNullOrEmpty() && it[0].isNotBlank() }?.let {
         // Filter to return only those documents that contain the prison locations specified by the client
         keywordQuery.filterWhenPresent("prisonId", it)
+      }
+
+      dateOfBirth.takeIf { it != null }?.let {
+        // Filter to return only those documents that match the date of birth specified by the client
+        keywordQuery.filterWhenPresent("dateOfBirth", it)
+      }
+
+      gender.takeIf { it != null }?.let {
+        // Filter to return only those documents that match the gender specified by the client
+        keywordQuery.filterWhenPresent("gender", it.value)
+      }
+
+      location.takeIf { !it.isNullOrEmpty() }?.let {
+        // Filter to return only those documents that match the location specified by the client
+        when (it) {
+          "IN" -> keywordQuery.mustNotWhenPresent("prisonId", "OUT")
+          "OUT" -> keywordQuery.filterWhenPresent("prisonId", "OUT")
+        }
       }
     }
 

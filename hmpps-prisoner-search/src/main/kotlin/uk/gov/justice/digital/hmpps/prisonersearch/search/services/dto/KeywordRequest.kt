@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.Gender
+import java.time.LocalDate
 
 data class KeywordRequest(
   @Schema(
@@ -57,6 +59,15 @@ data class KeywordRequest(
   )
   val type: SearchType = SearchType.DEFAULT,
 
+  @Schema(
+    description = "Gender, F - Female, M - Male, NK - Not Known / Not Recorded or NS - Not Specified (Indeterminate)",
+    example = "M",
+  )
+  val gender: Gender? = null,
+  @Schema(description = "Location, Inside or Outside", example = "IN")
+  val location: String? = null,
+  @Schema(description = "Date of birth", example = "1970-02-28")
+  val dateOfBirth: LocalDate? = null,
 )
 
 enum class SearchType {

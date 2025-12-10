@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
+import uk.gov.justice.digital.hmpps.prisonersearch.search.services.Gender
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.KeywordRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.dto.SearchType
+import java.time.LocalDate
 
 class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   @Test
@@ -332,6 +334,50 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   fun `can perform a keyword AND search on first name, last name and gender as female`() {
     keywordSearch(
       keywordRequest = KeywordRequest(andWords = "sam jones female", prisonIds = listOf("AGI")),
+      expectedCount = 2,
+      expectedPrisoners = listOf("A7090AC", "A7090BC"),
+    )
+  }
+
+  @Test
+  fun `can perform a search for all prisons IN`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(location = "IN", orWords = "A7089EY", prisonIds = listOf("MDI")),
+      expectedCount = 1,
+      expectedPrisoners = listOf("A7089EY"),
+    )
+  }
+
+  @Test
+  fun `can perform a search for all prisons OUT for prisons only IN`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(location = "OUT", orWords = "A7089EY", prisonIds = listOf("MDI")),
+      expectedCount = 0,
+    )
+  }
+
+  @Test
+  fun `can perform a search for all prisons OUT`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(location = "OUT"),
+      expectedCount = 4,
+      expectedPrisoners = listOf("A7090BF", "A9999RA", "A9999RB", "A9999RC"),
+    )
+  }
+
+  @Test
+  fun `can perform a search prisoners with a specific date of birth`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(dateOfBirth = LocalDate.of(1980, 5, 15)),
+      expectedCount = 1,
+      expectedPrisoners = listOf("A7090AC"),
+    )
+  }
+
+  @Test
+  fun `can perform a keyword AND search on first name, last name and explicit gender as female`() {
+    keywordSearch(
+      keywordRequest = KeywordRequest(andWords = "sam jones", prisonIds = listOf("AGI"), gender = Gender.F),
       expectedCount = 2,
       expectedPrisoners = listOf("A7090AC", "A7090BC"),
     )
