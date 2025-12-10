@@ -368,7 +368,7 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   @Test
   fun `can perform a search prisoners with a specific date of birth`() {
     keywordSearch(
-      keywordRequest = KeywordRequest(dateOfBirth = LocalDate.of(1980, 5, 15)),
+      keywordRequest = KeywordRequest(dateOfBirth = LocalDate.of(1985, 5, 15)),
       expectedCount = 1,
       expectedPrisoners = listOf("A7090AC"),
     )
