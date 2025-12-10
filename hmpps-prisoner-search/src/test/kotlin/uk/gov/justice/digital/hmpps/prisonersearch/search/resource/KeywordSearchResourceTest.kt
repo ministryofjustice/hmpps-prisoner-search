@@ -360,7 +360,7 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   fun `can perform a search for all prisons OUT`() {
     keywordSearch(
       keywordRequest = KeywordRequest(location = "OUT"),
-      expectedCount = 4,
+      expectedCount = 5,
       expectedPrisoners = listOf("A7090BF", "A9999RA", "A9999RB", "A9999RC"),
     )
   }
