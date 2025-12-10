@@ -116,16 +116,12 @@ class MatchService(
     }
   }
 
-  private fun nameMatch(matchRequest: MatchRequest): BoolQueryBuilder? {
-    with(matchRequest) {
-      return QueryBuilders.boolQuery()
-        .must(
-          QueryBuilders.boolQuery()
-            .should(nameQuery(matchRequest))
-            .should(aliasQuery(matchRequest)),
-        )
-    }
-  }
+  private fun nameMatch(matchRequest: MatchRequest): BoolQueryBuilder? = QueryBuilders.boolQuery()
+    .must(
+      QueryBuilders.boolQuery()
+        .should(nameQuery(matchRequest))
+        .should(aliasQuery(matchRequest)),
+    )
 
   private fun nameQuery(matchRequest: MatchRequest): BoolQueryBuilder? {
     with(matchRequest) {
@@ -174,24 +170,6 @@ class MatchService(
     }
   }
 
-  private fun allLenientDateVariations(date: LocalDate): List<LocalDate> = swapMonthDay(date) + everyOtherValidMonth(date) + aroundDateInSameMonth(date)
-
-  private fun aroundDateInSameMonth(date: LocalDate) = listOf(date.minusDays(1), date.minusDays(-1), date).filter { it.month == date.month }
-
-  private fun everyOtherValidMonth(date: LocalDate): List<LocalDate> = (1..12).filterNot { date.monthValue == it }.mapNotNull { setMonthDay(date, it) }
-
-  private fun swapMonthDay(date: LocalDate): List<LocalDate> = try {
-    listOf(LocalDate.of(date.year, date.dayOfMonth, date.monthValue))
-  } catch (e: DateTimeException) {
-    listOf()
-  }
-
-  private fun setMonthDay(date: LocalDate, monthValue: Int): LocalDate? = try {
-    LocalDate.of(date.year, monthValue, date.dayOfMonth)
-  } catch (e: DateTimeException) {
-    null
-  }
-
   private fun matchBy(matchRequest: MatchRequest, queryBuilder: (matchRequest: MatchRequest) -> BoolQueryBuilder?): PrisonerResult {
     val matchQuery = queryBuilder(matchRequest)
     return matchQuery?.let {
@@ -225,3 +203,21 @@ inline infix fun PrisonerResult.onPrisonerMatch(block: (PrisonerResult.Match) ->
 }
 
 private fun BoolQueryBuilder.withDefaults(matchRequest: MatchRequest): BoolQueryBuilder = this
+
+fun allLenientDateVariations(date: LocalDate): List<LocalDate> = swapMonthDay(date) + everyOtherValidMonth(date) + aroundDateInSameMonth(date)
+
+private fun aroundDateInSameMonth(date: LocalDate) = listOf(date.minusDays(1), date.minusDays(-1), date).filter { it.month == date.month }
+
+private fun everyOtherValidMonth(date: LocalDate): List<LocalDate> = (1..12).filterNot { date.monthValue == it }.mapNotNull { setMonthDay(date, it) }
+
+private fun swapMonthDay(date: LocalDate): List<LocalDate> = try {
+  listOf(LocalDate.of(date.year, date.dayOfMonth, date.monthValue))
+} catch (_: DateTimeException) {
+  listOf()
+}
+
+private fun setMonthDay(date: LocalDate, monthValue: Int): LocalDate? = try {
+  LocalDate.of(date.year, monthValue, date.dayOfMonth)
+} catch (_: DateTimeException) {
+  null
+}
