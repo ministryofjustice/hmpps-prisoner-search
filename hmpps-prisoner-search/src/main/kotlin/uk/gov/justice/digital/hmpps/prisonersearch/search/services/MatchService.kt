@@ -116,14 +116,12 @@ class MatchService(
     }
   }
 
-  private fun nameMatch(matchRequest: MatchRequest): BoolQueryBuilder? {
-    return QueryBuilders.boolQuery()
-      .must(
-        QueryBuilders.boolQuery()
-          .should(nameQuery(matchRequest))
-          .should(aliasQuery(matchRequest)),
-      )
-  }
+  private fun nameMatch(matchRequest: MatchRequest): BoolQueryBuilder? = QueryBuilders.boolQuery()
+    .must(
+      QueryBuilders.boolQuery()
+        .should(nameQuery(matchRequest))
+        .should(aliasQuery(matchRequest)),
+    )
 
   private fun nameQuery(matchRequest: MatchRequest): BoolQueryBuilder? {
     with(matchRequest) {
@@ -172,8 +170,6 @@ class MatchService(
     }
   }
 
-
-
   private fun matchBy(matchRequest: MatchRequest, queryBuilder: (matchRequest: MatchRequest) -> BoolQueryBuilder?): PrisonerResult {
     val matchQuery = queryBuilder(matchRequest)
     return matchQuery?.let {
@@ -207,7 +203,6 @@ inline infix fun PrisonerResult.onPrisonerMatch(block: (PrisonerResult.Match) ->
 }
 
 private fun BoolQueryBuilder.withDefaults(matchRequest: MatchRequest): BoolQueryBuilder = this
-
 
 fun allLenientDateVariations(date: LocalDate): List<LocalDate> = swapMonthDay(date) + everyOtherValidMonth(date) + aroundDateInSameMonth(date)
 
