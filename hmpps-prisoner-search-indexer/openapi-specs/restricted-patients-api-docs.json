@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-30.47.8a049d8"
+    "version" : "2025-12-09.133.0794f7c"
   },
   "servers" : [ {
     "url" : "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/",
@@ -383,8 +383,7 @@
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "messagesFoundCount" ]
+        }
       },
       "PurgeQueueResult" : {
         "type" : "object",
@@ -393,8 +392,7 @@
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "messagesFoundCount" ]
+        }
       },
       "MigrateInRequest" : {
         "type" : "object",
@@ -405,8 +403,7 @@
           "hospitalLocationCode" : {
             "type" : "string"
           }
-        },
-        "required" : [ "hospitalLocationCode", "offenderNo" ]
+        }
       },
       "Agency" : {
         "type" : "object",
@@ -426,8 +423,7 @@
           "active" : {
             "type" : "boolean"
           }
-        },
-        "required" : [ "agencyId" ]
+        }
       },
       "RestrictedPatientDto" : {
         "type" : "object",
@@ -471,8 +467,7 @@
             "type" : "string",
             "description" : "The user id of the person who created the record"
           }
-        },
-        "required" : [ "dischargeTime", "prisonerNumber" ]
+        }
       },
       "DischargeToHospitalRequest" : {
         "type" : "object",
@@ -496,8 +491,7 @@
             "type" : "string",
             "format" : "date-time"
           }
-        },
-        "required" : [ "fromLocationId", "hospitalLocationCode", "offenderNo" ]
+        }
       },
       "SupportingPrisonRequest" : {
         "type" : "object",
@@ -508,17 +502,53 @@
           "supportingPrisonId" : {
             "type" : "string"
           }
-        },
-        "required" : [ "offenderNo", "supportingPrisonId" ]
+        }
+      },
+      "Attachment" : {
+        "type" : "object",
+        "properties" : {
+          "attachmentNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name or description of the attachment which will be included in the report"
+          },
+          "contentType" : {
+            "type" : "string",
+            "description" : "The content type of the attachment"
+          },
+          "url" : {
+            "type" : "string",
+            "description" : "The url to be used to download the attachment file"
+          },
+          "filesize" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The size of the attachment file in bytes"
+          },
+          "filename" : {
+            "type" : "string",
+            "description" : "The filename of attachment file"
+          }
+        }
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
         "properties" : {
           "content" : {
             "description" : "The content of the subject access request response"
+          },
+          "attachments" : {
+            "type" : "array",
+            "description" : "The details of any attachments for the subject access request response",
+            "items" : {
+              "$ref" : "#/components/schemas/Attachment"
+            }
           }
-        },
-        "required" : [ "content" ]
+        }
       },
       "ErrorResponse" : {
         "type" : "object",
@@ -539,8 +569,7 @@
           "moreInfo" : {
             "type" : "string"
           }
-        },
-        "required" : [ "status" ]
+        }
       },
       "DlqMessage" : {
         "type" : "object",
@@ -552,8 +581,7 @@
           "messageId" : {
             "type" : "string"
           }
-        },
-        "required" : [ "body", "messageId" ]
+        }
       },
       "GetDlqResult" : {
         "type" : "object",
@@ -572,8 +600,7 @@
               "$ref" : "#/components/schemas/DlqMessage"
             }
           }
-        },
-        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+        }
       },
       "RestrictedPatient" : {
         "type" : "object",
@@ -604,8 +631,7 @@
           "createUserId" : {
             "type" : "string"
           }
-        },
-        "required" : [ "dischargeTime", "fromLocationId", "hospitalLocationCode", "prisonerNumber", "supportingPrisonId" ]
+        }
       }
     },
     "securitySchemes" : {
