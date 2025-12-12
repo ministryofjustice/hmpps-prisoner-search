@@ -101,7 +101,7 @@ services:
       - OAUTH_ENDPOINT_URL=http://hmpps-auth:8080/auth
 
   hmpps-auth:
-    image: quay.io/hmpps/hmpps-auth:latest
+    image: ghcr.io/ministryofjustice/hmpps-auth:latest
     networks:
       - hmpps
     container_name: hmpps-auth
