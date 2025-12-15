@@ -21,7 +21,9 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveCh
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientAdditionalInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
+import java.time.LocalDateTime
 
 internal class IndexListenerServiceTest {
 
@@ -81,14 +83,31 @@ internal class IndexListenerServiceTest {
     @Test
     fun `will reindex on restricted patient change`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      val prisonerNumber = booking.offenderNo
+      val restrictedPatientDto = RestrictedPatientDto(prisonerNumber, LocalDateTime.now())
+
+      whenever(nomisService.getOffender(prisonerNumber)).thenReturn(booking)
+      whenever(prisonerSynchroniserService.getRestrictedPatient(booking)).thenReturn(restrictedPatientDto)
+
       indexListenerService.restrictedPatientChange(
         RestrictedPatientMessage(
-          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
-          eventType = "some.iep.update",
+          additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber),
+          eventType = "some.rp.update",
           description = "some desc",
         ),
-        "some.iep.update",
+        "some.rp.update",
+      )
+
+      verify(prisonerSynchroniserService).reindexRestrictedPatient(
+        prisonerNumber,
+        booking,
+        restrictedPatientDto,
+        "some.rp.update",
+      )
+      verify(prisonerSynchroniserService).reindexComplexityOfNeedWithGet(
+        booking,
+        restrictedPatientDto,
+        "some.rp.update",
       )
     }
 
@@ -97,10 +116,10 @@ internal class IndexListenerServiceTest {
       indexListenerService.restrictedPatientChange(
         RestrictedPatientMessage(
           additionalInformation = RestrictedPatientAdditionalInformation(prisonerNumber = "A7089FD"),
-          eventType = "some.iep.update",
+          eventType = "some.rp.update",
           description = "some desc",
         ),
-        "some.iep.update",
+        "some.rp.update",
       )
 
       verifyNoInteractions(prisonerSynchroniserService)

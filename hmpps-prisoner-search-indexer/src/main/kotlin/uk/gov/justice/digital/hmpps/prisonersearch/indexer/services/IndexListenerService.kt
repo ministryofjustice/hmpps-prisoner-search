@@ -143,7 +143,10 @@ class IndexListenerService(
 
   private fun reindexRestrictedPatient(prisonerNumber: String, eventType: String) {
     nomisService.getOffender(prisonerNumber)?.let { ob ->
-      prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, eventType)
+      val restrictedPatient = prisonerSynchroniserService.getRestrictedPatient(ob)
+      prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, ob, restrictedPatient, eventType)
+      // Need to null the CNL if prisoner is released from a hospital
+      prisonerSynchroniserService.reindexComplexityOfNeedWithGet(ob, restrictedPatient, eventType)
     }
   }
 
