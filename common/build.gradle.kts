@@ -17,14 +17,10 @@ dependencies {
 }
 
 kotlin {
+  jvmToolchain(25)
   compilerOptions {
     freeCompilerArgs.addAll("-Xjvm-default=all", "-Xwhen-guards", "-Xannotation-default-target=param-property")
   }
-}
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_24
-  targetCompatibility = JavaVersion.VERSION_24
 }
 
 configure<com.gorylenko.GitPropertiesPluginExtension> {
@@ -37,6 +33,6 @@ tasks {
   copyAgent { enabled = false }
 
   withType<KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
 }
