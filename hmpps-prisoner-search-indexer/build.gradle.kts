@@ -16,7 +16,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   id("org.openapi.generator") version "7.17.0"
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "2.2.21"
+  kotlin("plugin.jpa") version "2.3.0"
 }
 
 configurations {
@@ -66,10 +66,10 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.35") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.40")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.41")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
@@ -85,8 +85,8 @@ kotlin {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_24
-  targetCompatibility = JavaVersion.VERSION_24
+  sourceCompatibility = JavaVersion.VERSION_25
+  targetCompatibility = JavaVersion.VERSION_25
 }
 
 configure<com.gorylenko.GitPropertiesPluginExtension> {
@@ -95,7 +95,7 @@ configure<com.gorylenko.GitPropertiesPluginExtension> {
 
 tasks {
   withType<KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
 }
 
@@ -154,7 +154,7 @@ val models = listOf(
 tasks {
   withType<KotlinCompile> {
     dependsOn(models.map { it.toBuildModelTaskName() })
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
   withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
