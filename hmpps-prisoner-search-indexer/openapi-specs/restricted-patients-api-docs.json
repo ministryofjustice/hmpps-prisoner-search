@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-30.47.8a049d8"
+    "version" : "2025-12-19.140.55ae6f9"
   },
   "servers" : [ {
     "url" : "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/",
@@ -400,10 +400,14 @@
         "type" : "object",
         "properties" : {
           "offenderNo" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Offender number",
+            "example" : "A1234AA"
           },
           "hospitalLocationCode" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Hospital location code",
+            "example" : "MDI"
           }
         },
         "required" : [ "hospitalLocationCode", "offenderNo" ]
@@ -412,7 +416,9 @@
         "type" : "object",
         "properties" : {
           "agencyId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Agency id",
+            "example" : "MDI"
           },
           "description" : {
             "type" : "string"
@@ -478,16 +484,22 @@
         "type" : "object",
         "properties" : {
           "offenderNo" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The prisoner number (Nomis ID)",
+            "example" : "A1234AA"
           },
           "commentText" : {
             "type" : "string"
           },
           "fromLocationId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "From location id",
+            "example" : "MDI"
           },
           "hospitalLocationCode" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Hospital location code",
+            "example" : "HAZLWD"
           },
           "supportingPrisonId" : {
             "type" : "string"
@@ -503,19 +515,62 @@
         "type" : "object",
         "properties" : {
           "offenderNo" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The prison number",
+            "example" : "A1234AA"
           },
           "supportingPrisonId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The supporting prison id",
+            "example" : "MDI"
           }
         },
         "required" : [ "offenderNo", "supportingPrisonId" ]
+      },
+      "Attachment" : {
+        "type" : "object",
+        "properties" : {
+          "attachmentNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name or description of the attachment which will be included in the report"
+          },
+          "contentType" : {
+            "type" : "string",
+            "description" : "The content type of the attachment"
+          },
+          "url" : {
+            "type" : "string",
+            "description" : "The url to be used to download the attachment file"
+          },
+          "filesize" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The size of the attachment file in bytes"
+          },
+          "filename" : {
+            "type" : "string",
+            "description" : "The filename of attachment file"
+          }
+        },
+        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
         "properties" : {
           "content" : {
             "description" : "The content of the subject access request response"
+          },
+          "attachments" : {
+            "type" : "array",
+            "description" : "The details of any attachments for the subject access request response",
+            "items" : {
+              "$ref" : "#/components/schemas/Attachment"
+            }
           }
         },
         "required" : [ "content" ]
@@ -579,20 +634,29 @@
         "type" : "object",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The NOMS Id of the restricted patient",
+            "example" : "G1072GT"
           },
           "fromLocationId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "From location id",
+            "example" : "MDI"
           },
           "hospitalLocationCode" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Hospital location code",
+            "example" : "HAZLWD"
           },
           "supportingPrisonId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Supporting prison id",
+            "example" : "LEI"
           },
           "dischargeTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "Date and time the prisoner was discharged to hospital"
           },
           "commentText" : {
             "type" : "string"
