@@ -89,6 +89,7 @@ class PrisonApiMockServer : WireMockServer(8093) {
     {
       "bookingId": $bookingId,
       "bookingNo": "V61587",
+      "offenderId": 5,
       "offenderNo": "$prisonerNumber",
       "firstName": "DAVID",
       "lastName": "WALLIS",

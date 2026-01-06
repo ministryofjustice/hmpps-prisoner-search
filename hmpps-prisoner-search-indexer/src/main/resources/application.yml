@@ -6,6 +6,8 @@ spring:
   application:
     name: hmpps-prisoner-search-indexer
   http:
+    converters:
+      preferred-json-mapper: jackson2
     codecs:
       max-in-memory-size: 10MB
 

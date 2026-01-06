@@ -77,7 +77,6 @@ class PrisonersInPrisonService(
           when (sort.direction) {
             Sort.Direction.DESC -> SortOrder.DESC
             Sort.Direction.ASC -> SortOrder.ASC
-            else -> throw IllegalArgumentException("Invalid sort direction: ${sort.direction}")
           },
         )
       }

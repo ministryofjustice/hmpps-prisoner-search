@@ -147,8 +147,8 @@ class PrisonerRepository(
     val response = openSearchRestTemplate.update(
       UpdateQuery.builder(prisonerNumber)
         .withDocument(Document.from(prisonerMap))
-        .withIfSeqNo(summary.sequenceNumber.toInt())
-        .withIfPrimaryTerm(summary.primaryTerm.toInt())
+        .withIfSeqNo(summary.sequenceNumber)
+        .withIfPrimaryTerm(summary.primaryTerm)
         .build(),
       IndexCoordinates.of(PRISONER_INDEX),
     )
