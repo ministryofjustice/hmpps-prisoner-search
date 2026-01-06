@@ -147,8 +147,8 @@ class PrisonerRepository(
     val response = openSearchRestTemplate.update(
       UpdateQuery.builder(prisonerNumber)
         .withDocument(Document.from(prisonerMap))
-        .withIfSeqNo(summary.sequenceNumber)
-        .withIfPrimaryTerm(summary.primaryTerm)
+        .withIfSeqNo(summary.sequenceNumber.toInt())
+        .withIfPrimaryTerm(summary.primaryTerm.toInt())
         .build(),
       IndexCoordinates.of(PRISONER_INDEX),
     )
@@ -213,8 +213,8 @@ class PrisonerRepository(
     PrisonerDocumentSummary(
       prisonerNumber,
       objectMapper.convertValue(source, Prisoner::class.java),
-      seqNo.toInt(),
-      primaryTerm.toInt(),
+      seqNo,
+      primaryTerm,
     )
   }
 }
@@ -242,6 +242,6 @@ private fun removeDomainFields(
 data class PrisonerDocumentSummary(
   val prisonerNumber: String?,
   val prisoner: Prisoner?,
-  val sequenceNumber: Int,
-  val primaryTerm: Int,
+  val sequenceNumber: Long,
+  val primaryTerm: Long,
 )

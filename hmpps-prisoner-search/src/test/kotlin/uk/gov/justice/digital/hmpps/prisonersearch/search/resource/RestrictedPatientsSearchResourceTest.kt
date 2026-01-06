@@ -403,7 +403,7 @@ class RestrictedPatientsSearchResourceTest : AbstractSearchDataIntegrationTest()
     ) = post()
       .uri {
         it.path("/restricted-patient-search/match-restricted-patients")
-          .also { b -> if (responseFields != null) b.queryParam("responseFields", responseFields) }
+          .apply { responseFields?.forEach { queryParam("responseFields", it) } }
           .also { b -> if (responseFieldsClient != null) b.queryParam("responseFieldsClient", responseFieldsClient) }
           .build()
       }

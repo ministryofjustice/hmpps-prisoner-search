@@ -170,7 +170,7 @@ class PrisonerSearchByReleaseDateResourceTest : AbstractSearchDataIntegrationTes
     webTestClient.post()
       .uri {
         it.path("/prisoner-search/release-date-by-prison")
-          .queryParam("responseFields", listOf("prisonerNumber", "doesNotExist"))
+          .queryParam("responseFields", "prisonerNumber", "doesNotExist")
           .build()
       }
       .bodyValue(ReleaseDateSearch(latestReleaseDate = LocalDate.now()))
@@ -188,7 +188,7 @@ class PrisonerSearchByReleaseDateResourceTest : AbstractSearchDataIntegrationTes
     webTestClient.post()
       .uri {
         it.path("/prisoner-search/release-date-by-prison")
-          .queryParam("responseFields", listOf("prisonerNumber", "lastName"))
+          .queryParam("responseFields", "prisonerNumber", "lastName")
           .build()
       }
       .bodyValue(search)

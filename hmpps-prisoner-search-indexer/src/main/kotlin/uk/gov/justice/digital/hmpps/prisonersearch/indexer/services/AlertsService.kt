@@ -49,7 +49,7 @@ class AlertsService(
     }
 }
 
-class RestResponsePage<T> : PageImpl<T> {
+class RestResponsePage<T : Any> : PageImpl<T> {
   @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
   constructor(
     @JsonProperty("content") content: List<T>,

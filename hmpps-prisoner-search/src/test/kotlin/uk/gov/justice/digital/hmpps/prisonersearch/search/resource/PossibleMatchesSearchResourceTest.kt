@@ -185,7 +185,7 @@ class PossibleMatchesSearchResourceTest : AbstractSearchDataIntegrationTest() {
   private fun WebTestClient.possibleMatch(search: PossibleMatchCriteria, responseFields: List<String>) = post()
     .uri {
       it.path("/prisoner-search/possible-matches")
-        .queryParam("responseFields", responseFields)
+        .apply { responseFields.forEach { queryParam("responseFields", it) } }
         .build()
     }
     .body(BodyInserters.fromValue(gson.toJson(search)))

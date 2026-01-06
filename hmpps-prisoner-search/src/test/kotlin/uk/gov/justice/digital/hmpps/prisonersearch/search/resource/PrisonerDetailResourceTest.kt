@@ -91,7 +91,7 @@ class PrisonerDetailResourceTest : AbstractSearchDataIntegrationTest() {
   private fun WebTestClient.prisonerDetailSearch(request: PrisonerDetailRequest, responseFields: List<String>) = post()
     .uri {
       it.path("/prisoner-detail")
-        .queryParam("responseFields", responseFields)
+        .apply { responseFields.forEach { queryParam("responseFields", it) } }
         .build()
     }
     .body(BodyInserters.fromValue(gson.toJson(request)))
@@ -358,7 +358,7 @@ class PrisonerDetailResourceTest : AbstractSearchDataIntegrationTest() {
       .exchange()
       .expectStatus().isOk
       .expectBody(RestResponsePage::class.java)
-      .returnResult().responseBody
+      .returnResult().responseBody!!
 
     assertThat(response.content).extracting("prisonerNumber").containsExactlyElementsOf(expectedPrisoners)
     assertThat(response.content).size().isEqualTo(expectedPrisoners.size)

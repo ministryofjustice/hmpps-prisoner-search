@@ -512,7 +512,7 @@ class KeywordSearchResourceTest : AbstractSearchDataIntegrationTest() {
   }
 
   private fun WebTestClient.keywordSearch(request: KeywordRequest, responseFields: List<String>) = post()
-    .uri { it.path("/keyword").queryParam("responseFields", responseFields).build() }
+    .uri { it.path("/keyword").apply { responseFields.forEach { queryParam("responseFields", it) } }.build() }
     .body(BodyInserters.fromValue(gson.toJson(request)))
     .headers(setAuthorisation(roles = listOf("ROLE_GLOBAL_SEARCH")))
     .header("Content-Type", "application/json")

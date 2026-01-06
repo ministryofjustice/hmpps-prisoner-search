@@ -13,14 +13,10 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot")
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.0"
   id("org.openapi.generator") version "7.17.0"
   kotlin("plugin.spring")
   kotlin("plugin.jpa") version "2.3.0"
-}
-
-configurations {
-  testImplementation { exclude(group = "org.junit.vintage") }
 }
 
 dependencyCheck {
@@ -66,10 +62,10 @@ dependencies {
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.35") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.41")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.40")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
@@ -79,7 +75,6 @@ dependencies {
 }
 
 kotlin {
-  jvmToolchain(25)
   compilerOptions {
     freeCompilerArgs.addAll("-Xwhen-guards", "-Xannotation-default-target=param-property")
   }
@@ -150,7 +145,7 @@ val models = listOf(
 tasks {
   withType<KotlinCompile> {
     dependsOn(models.map { it.toBuildModelTaskName() })
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
   }
   withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model

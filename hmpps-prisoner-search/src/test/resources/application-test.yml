@@ -16,3 +16,9 @@ search:
   location:
     scroll-timeout-minutes: 1
     scroll-results: 10
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

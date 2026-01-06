@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.opensearch.client.RestHighLevelClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.cache.CacheManager
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpHeaders
@@ -26,6 +27,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 @ExtendWith(HmppsAuthApiExtension::class, AlertsApiExtension::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
   @Autowired
   internal lateinit var jwtAuthHelper: JwtAuthorisationHelper

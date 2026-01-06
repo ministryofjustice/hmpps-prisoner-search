@@ -209,7 +209,7 @@ class PrisonersInPrisonService(
       "alertCodes" to searchRequest.alertCodes.joinToString(","),
       "fromDob" to (searchRequest.fromDob?.toString() ?: ""),
       "toDob" to (searchRequest.toDob?.toString() ?: ""),
-      "incentiveLevelCode" to (searchRequest.incentiveLevelCode?.toString() ?: ""),
+      "incentiveLevelCode" to (searchRequest.incentiveLevelCode ?: ""),
       "sort" to searchRequest.sort.toString(),
       "page" to searchRequest.pagination.page.toString(),
       "size" to searchRequest.pagination.size.toString(),

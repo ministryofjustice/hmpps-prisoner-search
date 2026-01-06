@@ -595,7 +595,7 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
   private fun WebTestClient.globalSearch(search: GlobalSearchCriteria, responseFields: List<String>) = post()
     .uri {
       it.path("/global-search")
-        .queryParam("responseFields", responseFields)
+        .apply { responseFields.forEach { queryParam("responseFields", it) } }
         .build()
     }
     .bodyValue(search)
@@ -606,7 +606,7 @@ class GlobalSearchResourceTest : AbstractSearchDataIntegrationTest() {
   private fun WebTestClient.getPrisoner(prisonNumber: String, responseFields: List<String>) = get()
     .uri {
       it.path("/prisoner/{id}")
-        .queryParam("responseFields", responseFields)
+        .apply { responseFields.forEach { queryParam("responseFields", it) } }
         .build(prisonNumber)
     }
     .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))

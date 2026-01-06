@@ -392,7 +392,7 @@ class AttributeSearchPagingIntegrationTest : AbstractSearchIntegrationTest() {
       it.path("/attribute-search")
         .queryParam("page", page)
         .queryParam("size", size)
-        .apply { sortBy.also { sortAttributes -> queryParam("sort", sortAttributes) } }
+        .apply { sortBy.forEach { sortAttributes -> queryParam("sort", sortAttributes) } }
         .build()
     }
     .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))

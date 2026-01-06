@@ -10,9 +10,11 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.slf4j.LoggerFactory
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.test.json.JsonCompareMode
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
+import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
@@ -86,7 +88,7 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody(RestResponsePage::class.java)
-      .returnResult().responseBody
+      .returnResult().responseBody!!
 
     assertThat(response.numberOfElements).isEqualTo(expectedCount)
     assertThat(response.content).size().isEqualTo(expectedPrisoners.size)
@@ -163,6 +165,10 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
 
   protected fun forceElasticError() {
     doThrow(RuntimeException("gone wrong")).whenever(elasticsearchClient).search(any())
+  }
+
+  fun UriBuilder.queryParamIfPresent(name: String, value: String?): UriBuilder = apply {
+    if (value != null) queryParam(name, value)
   }
 
   private companion object {
