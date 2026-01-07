@@ -5,6 +5,10 @@ info.app:
 spring:
   application:
     name: hmpps-prisoner-search
+  data:
+    web:
+      pageable:
+        max-page-size: 3000
   http:
     converters:
       preferred-json-mapper: jackson2
@@ -13,6 +17,7 @@ spring:
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
+    default-property-inclusion: non_null
   jackson2:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:
@@ -44,10 +49,6 @@ spring:
   web:
     error:
       include-message: always
-  data:
-    web:
-      pageable:
-        max-page-size: 3000
 
 server:
   port: 8080
