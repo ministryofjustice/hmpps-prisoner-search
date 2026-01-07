@@ -2,26 +2,18 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
   <suppress>
     <notes><![CDATA[
-     Suppression for protobuf vulnerability as we don't parse untrusted messages (only used for communication with OpenSearch)
-     file name: protobuf-java-3.22.3.jar
-    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf\-java@.*$</packageUrl>
-    <vulnerabilityName>CVE-2024-7254</vulnerabilityName>
+   Suppressed as affects elasticsearch directly rather than java clients
+   file name: elasticsearch-java-9.2.2.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/co\.elastic\.clients/elasticsearch-java@.*$</packageUrl>
+    <cve>CVE-2025-68384</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
-    Suppressed as we don't create index templates with a dynamic field mapping of “passthrough” type
-   file name: elasticsearch-java-8.13.4.jar
+   Suppressed as affects elasticsearch directly rather than java clients
+   file name: elasticsearch-rest5-client-9.2.2.jar
    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/co\.elastic\.clients/elasticsearch\-java@.*$</packageUrl>
-    <cve>CVE-2024-37280</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
-    Suppressed as only affects the deprecated org.apache.lucene.replicator.http package.
-   file name: lucene-analysis-common-9.11.1.jar
-   ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.apache\.lucene/lucene\-.*@.*$</packageUrl>
-    <cve>CVE-2024-45772</cve>
+    <packageUrl regex="true">^pkg:maven/co\.elastic\.clients/elasticsearch-rest5-client@.*$</packageUrl>
+    <cve>CVE-2025-68384</cve>
   </suppress>
 </suppressions>
