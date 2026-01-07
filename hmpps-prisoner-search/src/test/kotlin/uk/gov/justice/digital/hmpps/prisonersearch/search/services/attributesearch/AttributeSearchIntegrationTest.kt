@@ -1966,7 +1966,7 @@ class AttributeSearchIntegrationTest : AbstractSearchIntegrationTest() {
   private fun WebTestClient.attributeSearch(request: AttributeSearchRequest, responseFields: List<String>) = post()
     .uri {
       it.path("/attribute-search")
-        .queryParam("responseFields", responseFields)
+        .apply { responseFields.forEach { queryParam("responseFields", it) } }
         .build()
     }
     .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))

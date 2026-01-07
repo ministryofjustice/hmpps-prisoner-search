@@ -7,13 +7,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.WebClientConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.Agency
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
 import java.time.LocalDateTime
 
 @SpringAPIServiceTest
-@Import(RestrictedPatientService::class, WebClientConfiguration::class)
+@Import(RestrictedPatientService::class)
 internal class RestrictedPatientsServiceTest {
   @Autowired
   private lateinit var restrictedPatientService: RestrictedPatientService

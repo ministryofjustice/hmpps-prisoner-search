@@ -263,7 +263,7 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
     webTestClient.post()
       .uri {
         it.path("/physical-detail")
-          .queryParam("responseFields", listOf("prisonerNumber", "doesNotExist"))
+          .queryParam("responseFields", "prisonerNumber", "doesNotExist")
           .build()
       }
       .bodyValue(
@@ -283,7 +283,7 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
     webTestClient.post()
       .uri {
         it.path("/physical-detail")
-          .queryParam("responseFields", listOf("prisonerNumber", "lastName"))
+          .queryParam("responseFields", "prisonerNumber", "lastName")
           .build()
       }
       .bodyValue(PhysicalDetailRequest(minHeight = 100, prisonIds = listOf("MDI"), cellLocationPrefix = "MDI-A"))
@@ -815,7 +815,7 @@ class PhysicalDetailResourceTest : AbstractSearchIntegrationTest() {
       .exchange()
       .expectStatus().isOk
       .expectBody(RestResponsePage::class.java)
-      .returnResult().responseBody
+      .returnResult().responseBody!!
 
     assertThat(response.content).extracting("prisonerNumber").containsExactlyElementsOf(expectedPrisoners)
     assertThat(response.content).size().isEqualTo(expectedPrisoners.size)

@@ -7,3 +7,9 @@ api.base.url:
 
 opensearch:
   uris: http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
+import tools.jackson.databind.JsonNode
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 
 @Service
@@ -49,7 +49,7 @@ class AlertsService(
     }
 }
 
-class RestResponsePage<T> : PageImpl<T> {
+class RestResponsePage<T : Any> : PageImpl<T> {
   @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
   constructor(
     @JsonProperty("content") content: List<T>,

@@ -73,7 +73,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isEqualTo("1975-07-20")
         assertThat(recall).isEqualTo(true)
@@ -87,7 +87,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
       val request = PrisonersInPrisonRequest(term = "A1234AA")
       val response = webTestClient.get().uri {
         it.path("/prison/MDI/prisoners")
-          .queryParam("term", request.term)
+          .queryParam("term", request.term!!)
           .queryParam("page", request.pagination.page)
           .queryParam("size", request.pagination.size)
           .queryParam("responseFields", "prisonerNumber,dateOfBirth,recall,heightCentimetres,currentIncentive.level.description")
@@ -99,7 +99,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         .expectBody(object : ParameterizedTypeReference<RestResponsePage<Prisoner>>() {})
         .returnResult().responseBody!!
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isEqualTo("1975-07-20")
         assertThat(recall).isEqualTo(true)
@@ -117,7 +117,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         responseFields = listOf(),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isEqualTo("1975-07-20")
         assertThat(recall).isEqualTo(true)
@@ -137,7 +137,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isNull()
         assertThat(recall).isNull()
@@ -158,7 +158,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(currentIncentive?.level?.description).isEqualTo("Standard")
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
@@ -177,7 +177,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(currentIncentive?.level?.description).isEqualTo("Standard")
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
@@ -196,7 +196,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(identifiers).extracting("type", "value", "createdDateTime").containsExactlyInAnyOrder(
           tuple("CRO", "345678/12T", LocalDateTime.parse("2022-01-01T12:00:00")),
@@ -217,7 +217,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(identifiers).extracting("type", "value", "createdDateTime").containsExactlyInAnyOrder(
           tuple("CRO", "345678/12T", null),
@@ -236,10 +236,10 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
 
       return webTestClient.get().uri {
         it.path("/prison/$prisonId/prisoners")
-          .queryParam("term", request.term)
+          .queryParamIfPresent("term", request.term)
           .queryParam("page", request.pagination.page)
           .queryParam("size", request.pagination.size)
-          .queryParam("sort", sort)
+          .queryParamIfPresent("sort", sort)
           .apply { responseFields?.forEach { queryParam("responseFields", it) } }
           .build()
       }
@@ -261,10 +261,10 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
 
       return webTestClient.get().uri {
         it.path("/prison/$prisonId/prisoners")
-          .queryParam("term", request.term)
+          .queryParam("term", request.term!!)
           .queryParam("page", request.pagination.page)
           .queryParam("size", request.pagination.size)
-          .queryParam("sort", sort)
+          .queryParamIfPresent("sort", sort)
           .apply { responseFields?.forEach { queryParam("responseFields", it) } }
           .build()
       }
@@ -304,7 +304,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isEqualTo("1975-07-20")
         assertThat(recall).isEqualTo(true)
@@ -320,7 +320,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         responseFields = listOf(),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isEqualTo("1975-07-20")
         assertThat(recall).isEqualTo(true)
@@ -339,7 +339,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(dateOfBirth).isNull()
         assertThat(recall).isNull()
@@ -359,7 +359,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(currentIncentive?.level?.description).isEqualTo("Standard")
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
@@ -377,7 +377,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(currentIncentive?.level?.description).isEqualTo("Standard")
         assertThat(currentIncentive?.level?.code).isEqualTo("STD")
@@ -395,7 +395,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(identifiers).extracting("type", "value", "createdDateTime").containsExactlyInAnyOrder(
           tuple("CRO", "345678/12T", LocalDateTime.parse("2022-01-01T12:00:00")),
@@ -415,7 +415,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
         ),
       )
 
-      with(response.content.first()!!) {
+      with(response.content.first()) {
         assertThat(prisonerNumber).isEqualTo("A1234AA")
         assertThat(identifiers).extracting("type", "value", "createdDateTime").containsExactlyInAnyOrder(
           tuple("CRO", "345678/12T", null),
@@ -563,7 +563,7 @@ class PrisonerResponseFieldsTest : AbstractSearchIntegrationTest() {
     ) = webTestClient.post()
       .uri {
         it.path("/prisoner-search/match-prisoners")
-          .also { b -> if (responseFields != null) b.queryParam("responseFields", responseFields) }
+          .also { b -> if (responseFields != null) b.queryParam("responseFields", *responseFields.toTypedArray()) }
           .also { b -> if (responseFieldsClient != null) b.queryParam("responseFieldsClient", responseFieldsClient) }
           .build()
       }

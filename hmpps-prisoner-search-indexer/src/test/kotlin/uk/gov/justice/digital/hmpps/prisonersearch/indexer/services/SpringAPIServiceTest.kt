@@ -1,12 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
+import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration
+import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTestContextBootstrapper
+import org.springframework.boot.webclient.autoconfigure.WebClientAutoConfiguration
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.BootstrapWith
 import org.springframework.web.reactive.config.EnableWebFlux
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExt
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
+import uk.gov.justice.hmpps.kotlin.auth.HmppsWebClientConfiguration
 import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.ANNOTATION_CLASS
 import kotlin.annotation.AnnotationTarget.CLASS
@@ -38,6 +40,16 @@ import kotlin.annotation.AnnotationTarget.CLASS
 )
 @ActiveProfiles("test")
 @EnableWebFlux
-@SpringBootTest(classes = [WebClientConfiguration::class, WebClientAutoConfiguration::class, OAuth2ClientAutoConfiguration::class, SecurityAutoConfiguration::class, OAuth2ClientWebSecurityAutoConfiguration::class])
+@SpringBootTest(
+  classes = [
+    WebClientAutoConfiguration::class,
+    WebClientConfiguration::class,
+    OAuth2ClientAutoConfiguration::class,
+    ServletWebSecurityAutoConfiguration::class,
+    SecurityAutoConfiguration::class,
+    OAuth2ClientWebSecurityAutoConfiguration::class,
+    HmppsWebClientConfiguration::class,
+  ],
+)
 @BootstrapWith(SpringBootTestContextBootstrapper::class)
 annotation class SpringAPIServiceTest

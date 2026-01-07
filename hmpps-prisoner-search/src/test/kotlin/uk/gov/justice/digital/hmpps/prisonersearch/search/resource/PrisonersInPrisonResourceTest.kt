@@ -981,15 +981,15 @@ class PrisonersInPrisonResourceTest : AbstractSearchIntegrationTest() {
     val response =
       webTestClient.get().uri {
         it.path("/prison/$prisonId/prisoners")
-          .queryParam("term", request.term)
+          .queryParamIfPresent("term", request.term)
           .queryParam("page", request.pagination.page)
           .queryParam("size", request.pagination.size)
-          .queryParam("sort", sort)
-          .queryParam("alerts", request.alertCodes)
+          .queryParamIfPresent("sort", sort)
+          .apply { request.alertCodes.forEach { queryParam("alerts", it) } }
           .queryParam("fromDob", request.fromDob?.format(DateTimeFormatter.ISO_DATE) ?: "")
           .queryParam("toDob", request.toDob?.format(DateTimeFormatter.ISO_DATE) ?: "")
-          .queryParam("cellLocationPrefix", request.cellLocationPrefix)
-          .queryParam("incentiveLevelCode", request.incentiveLevelCode)
+          .queryParamIfPresent("cellLocationPrefix", request.cellLocationPrefix)
+          .queryParamIfPresent("incentiveLevelCode", request.incentiveLevelCode)
           .build()
       }
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_IN_PRISON_SEARCH"))).header("Content-Type", "application/json")

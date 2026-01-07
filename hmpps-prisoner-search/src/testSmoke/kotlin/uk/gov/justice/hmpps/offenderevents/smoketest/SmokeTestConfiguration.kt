@@ -2,8 +2,8 @@ package uk.gov.justice.hmpps.offenderevents.smoketest
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration
+import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity

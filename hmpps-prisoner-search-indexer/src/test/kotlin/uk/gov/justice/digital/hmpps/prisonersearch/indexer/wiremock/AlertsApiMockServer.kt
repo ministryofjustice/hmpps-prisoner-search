@@ -49,7 +49,8 @@ class AlertsApiMockServer : WireMockServer(8097) {
           "alertTypeCode": "$type",
           "alertTypeDescription": "Type Description for $type",
           "code": "$code",
-          "description": "Code description for $code"
+          "description": "Code description for $code",
+          "canBeAdministered": true
         },
         "description": "Alert description",
         "authorisedBy": "A. Nurse, An Agency",

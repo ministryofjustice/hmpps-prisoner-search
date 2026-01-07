@@ -100,7 +100,7 @@ class HmppsPrisonerSearchExceptionHandler {
     .body(ErrorResponse(status = HttpStatus.NOT_FOUND, developerMessage = e.message))
 
   @ExceptionHandler(Exception::class)
-  fun handleException(e: Exception): ResponseEntity<ErrorResponse?>? = ResponseEntity
+  fun handleException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(INTERNAL_SERVER_ERROR)
     .body(
       ErrorResponse(
