@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.EVENTS_SEND_FAILURE
@@ -35,7 +35,7 @@ import kotlin.reflect.full.memberProperties
 
 @Service
 class HmppsDomainEventEmitter(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val hmppsQueueService: HmppsQueueService,
   private val diffProperties: DiffProperties,
   private val clock: Clock?,
@@ -70,12 +70,12 @@ class HmppsDomainEventEmitter(
       detailUrl = this.detailUrl,
     )
 
-    val domainEvent = DomainEvent(eventType = event.eventType, body = objectMapper.writeValueAsString(event))
+    val domainEvent = DomainEvent(eventType = event.eventType, body = jsonMapper.writeValueAsString(event))
 
     runCatching {
       publishQueue.sendMessage(
         event.eventType,
-        objectMapper.writeValueAsString(domainEvent),
+        jsonMapper.writeValueAsString(domainEvent),
         publishDelayInSeconds,
       )
 

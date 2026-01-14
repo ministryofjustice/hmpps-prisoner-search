@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -9,6 +8,7 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
@@ -29,7 +29,7 @@ data class IndexQueueStatus(val messagesOnQueue: Int, val messagesOnDlq: Int, va
 @Service
 class IndexQueueService(
   private val hmppsQueueService: HmppsQueueService,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
   private val indexQueue by lazy { hmppsQueueService.findByQueueId("index") as HmppsQueue }
   private val indexSqsClient by lazy { indexQueue.sqsClient }
@@ -51,7 +51,7 @@ class IndexQueueService(
 
   private fun sendMessage(request: IndexMessageRequest, noTracing: Boolean = false): SendMessageResponse = indexSqsClient.sendMessage(
     SendMessageRequest.builder().queueUrl(indexQueueUrl)
-      .messageBody(objectMapper.writeValueAsString(request))
+      .messageBody(jsonMapper.writeValueAsString(request))
       .eventTypeMessageAttributes("hmpps-prisoner-search-indexer-${request.type?.name?.lowercase()}", noTracing = noTracing)
       .build(),
   ).get()

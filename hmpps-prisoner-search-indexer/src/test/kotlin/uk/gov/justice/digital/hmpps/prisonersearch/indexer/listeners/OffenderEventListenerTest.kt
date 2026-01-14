@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import ch.qos.logback.classic.Level
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -18,6 +16,8 @@ import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.dao.OptimisticLockingFailureException
+import tools.jackson.core.JacksonException
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BookingDeletedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.ExternalPrisonerMovementMessage
@@ -30,11 +30,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEven
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerLocationChangedMessage
 
 @JsonTest
-internal class OffenderEventListenerTest(@Autowired private val objectMapper: ObjectMapper) {
+internal class OffenderEventListenerTest(@Autowired jsonMapper: JsonMapper) {
   private val indexListenerService = mock<IndexListenerService>()
   private val offenderEventQueueService = mock<OffenderEventQueueService>()
 
-  private val listener = OffenderEventListener(objectMapper, indexListenerService, offenderEventQueueService)
+  private val listener = OffenderEventListener(jsonMapper, indexListenerService, offenderEventQueueService)
 
   private val logAppender = findLogAppender(OffenderEventListener::class.java)
 
@@ -177,7 +177,7 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
         """
         {
           "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
-          "Message": "{\"eventType\":\"EXTERNAL_MOVEMENT-CHANGED\", \"description\": \"some desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
+          "Message": "{\"eventType\":\"EXTERNAL_MOVEMENT-CHANGED\", \"description\": \"some desc\", \"bookingId\": 2345612, \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}",
           "MessageAttributes": {
             "eventType": {
               "Type": "String",
@@ -244,20 +244,20 @@ internal class OffenderEventListenerTest(@Autowired private val objectMapper: Ob
   inner class BadMessages {
     @Test
     fun `will fail for bad json`() {
-      whenever(offenderEventQueueService.handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any()))
+      whenever(offenderEventQueueService.handleLockingFailureOrThrow(isA<JacksonException>(), any(), any()))
         .thenThrow(RuntimeException("JsonParseException re-thrown"))
 
       assertThatThrownBy { listener.processOffenderEvent("this is bad json") }
         .isInstanceOf(RuntimeException::class.java)
 
-      verify(offenderEventQueueService).handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any())
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(isA<JacksonException>(), any(), any())
     }
 
     @Test
     fun `will requeue for version number clash`() {
       val event = "ADDRESSES_OFFENDER-INSERTED"
       val message =
-        """{\"eventType\":\"$event\", \"description\": \"desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
+        """{\"eventType\":\"$event\", \"description\": \"desc\", \"offenderId\": 2345612, \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
       val expectedException =
         OptimisticLockingFailureException("stack trace ... Cannot index a document due to seq_no+primary_term conflict ..")
       whenever(indexListenerService.offenderChange(any(), any()))

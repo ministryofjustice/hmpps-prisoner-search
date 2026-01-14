@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -26,12 +25,13 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
 
 @JsonTest
-internal class IndexQueueServiceTest(@Autowired private val objectMapper: ObjectMapper) {
+internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapper) {
 
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val indexSqsClient = mock<SqsAsyncClient>()
@@ -43,7 +43,7 @@ internal class IndexQueueServiceTest(@Autowired private val objectMapper: Object
     whenever(hmppsQueueService.findByQueueId("index")).thenReturn(HmppsQueue("index", indexSqsClient, "index-queue", indexSqsDlqClient, "index-dlq"))
     whenever(indexSqsClient.getQueueUrl(any<GetQueueUrlRequest>())).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:index-queue").build()))
     whenever(indexSqsDlqClient.getQueueUrl(any<GetQueueUrlRequest>())).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:index-dlq").build()))
-    indexQueueService = IndexQueueService(hmppsQueueService, objectMapper)
+    indexQueueService = IndexQueueService(hmppsQueueService, jsonMapper)
   }
 
   @Nested

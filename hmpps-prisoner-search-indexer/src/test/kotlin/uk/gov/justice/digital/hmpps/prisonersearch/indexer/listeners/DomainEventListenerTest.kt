@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import ch.qos.logback.classic.Level
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -17,16 +15,18 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.core.JacksonException
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 
 @JsonTest
-internal class DomainEventListenerTest(@Autowired private val objectMapper: ObjectMapper) {
+internal class DomainEventListenerTest(@Autowired jsonMapper: JsonMapper) {
   private val indexListenerService = mock<IndexListenerService>()
   private val offenderEventQueueService: OffenderEventQueueService = mock()
 
-  private val listener = DomainEventListener(objectMapper, indexListenerService, offenderEventQueueService)
+  private val listener = DomainEventListener(jsonMapper, indexListenerService, offenderEventQueueService)
 
   private val logAppender = findLogAppender(DomainEventListener::class.java)
 
@@ -164,13 +164,13 @@ internal class DomainEventListenerTest(@Autowired private val objectMapper: Obje
   inner class BadMessages {
     @Test
     internal fun `will fail for bad json`() {
-      whenever(offenderEventQueueService.handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any()))
+      whenever(offenderEventQueueService.handleLockingFailureOrThrow(isA<JacksonException>(), any(), any()))
         .thenThrow(RuntimeException("JsonParseException re-thrown"))
 
       assertThatThrownBy { listener.processDomainEvent("this is bad json") }
         .isInstanceOf(RuntimeException::class.java)
 
-      verify(offenderEventQueueService).handleLockingFailureOrThrow(isA<JsonParseException>(), any(), any())
+      verify(offenderEventQueueService).handleLockingFailureOrThrow(isA<JacksonException>(), any(), any())
     }
 
     @Test

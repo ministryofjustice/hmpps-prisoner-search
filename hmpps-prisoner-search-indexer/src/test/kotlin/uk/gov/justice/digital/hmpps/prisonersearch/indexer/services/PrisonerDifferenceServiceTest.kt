@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -18,6 +17,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
@@ -37,14 +37,14 @@ class PrisonerDifferenceServiceTest {
   private val telemetryClient = mock<TelemetryClient>()
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
   private val diffProperties = mock<DiffProperties>()
-  private val objectMapper = mock<ObjectMapper>()
+  private val jsonMapper = mock<JsonMapper>()
   private val prisonerDifferencesRepository = mock<PrisonerDifferencesRepository>()
 
   private val prisonerDifferenceService = PrisonerDifferenceService(
     telemetryClient,
     domainEventsEmitter,
     diffProperties,
-    objectMapper,
+    jsonMapper,
     prisonerDifferencesRepository,
   )
 

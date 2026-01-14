@@ -1,10 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
@@ -19,14 +20,14 @@ import java.lang.IllegalArgumentException
 
 @Service
 class PopulateIndexListener(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val populateIndexService: PopulateIndexService,
   private val refreshIndexService: RefreshIndexService,
 ) : EventListener {
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
   fun processIndexRequest(requestJson: String) {
-    val indexRequest = try {
-      objectMapper.readValue(requestJson, IndexMessageRequest::class.java)
+    val indexRequest: IndexMessageRequest = try {
+      jsonMapper.readValue(requestJson)
     } catch (e: Exception) {
       log.error("Failed to process message {}", requestJson, e)
       throw e
