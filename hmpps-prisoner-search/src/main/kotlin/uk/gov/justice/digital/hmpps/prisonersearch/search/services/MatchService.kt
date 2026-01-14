@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.lucene.search.join.ScoreMode
 import org.opensearch.action.search.SearchRequest
 import org.opensearch.action.search.SearchResponse
@@ -10,6 +9,8 @@ import org.opensearch.search.builder.SearchSourceBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
@@ -23,7 +24,7 @@ import java.time.LocalDate
 @Service
 class MatchService(
   private val elasticsearchClient: SearchClient,
-  private val mapper: ObjectMapper,
+  private val mapper: JsonMapper,
 ) {
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -92,7 +93,7 @@ class MatchService(
     }
   }
 
-  private fun fullMatch(matchRequest: MatchRequest): BoolQueryBuilder? {
+  private fun fullMatch(matchRequest: MatchRequest): BoolQueryBuilder {
     with(matchRequest) {
       return QueryBuilders.boolQuery()
         .mustKeyword(croNumber?.uppercase(), "croNumber")
@@ -104,7 +105,7 @@ class MatchService(
     }
   }
 
-  private fun fullMatchAlias(matchRequest: MatchRequest): BoolQueryBuilder? {
+  private fun fullMatchAlias(matchRequest: MatchRequest): BoolQueryBuilder {
     with(matchRequest) {
       return QueryBuilders.boolQuery()
         .mustKeyword(croNumber?.uppercase(), "croNumber")
@@ -151,7 +152,7 @@ class MatchService(
     }
   }
 
-  private fun partialNameMatch(matchRequest: MatchRequest): BoolQueryBuilder? {
+  private fun partialNameMatch(matchRequest: MatchRequest): BoolQueryBuilder {
     with(matchRequest) {
       return QueryBuilders.boolQuery()
         .mustWhenPresent("lastName", lastName)
@@ -188,7 +189,7 @@ class MatchService(
     return searchHits.map { PrisonerMatch(toPrisonerDetail(it.sourceAsString)) }
   }
 
-  private fun toPrisonerDetail(src: String) = mapper.readValue(src, Prisoner::class.java)
+  private fun toPrisonerDetail(src: String): Prisoner = mapper.readValue(src)
 }
 
 sealed class PrisonerResult {

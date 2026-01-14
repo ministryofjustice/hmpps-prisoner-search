@@ -383,7 +383,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     }
     .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_SEARCH")))
     .header("Content-Type", "application/json")
-    .bodyValue(objectMapper.writeValueAsString(request))
+    .bodyValue(jsonMapper.writeValueAsString(request))
     .exchange()
     .expectStatus().isOk
 

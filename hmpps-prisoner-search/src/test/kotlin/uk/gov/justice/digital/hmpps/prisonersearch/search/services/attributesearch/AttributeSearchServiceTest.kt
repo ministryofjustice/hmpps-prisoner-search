@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -17,6 +16,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.opensearch.action.search.SearchResponse
 import org.opensearch.search.SearchHits
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
@@ -38,7 +38,7 @@ class AttributeSearchServiceTest {
 
   private val telemetryClient = mock<TelemetryClient>()
   private val elasticsearchClient = mock<SearchClient>()
-  private val mapper = mock<ObjectMapper>()
+  private val mapper = mock<JsonMapper>()
   private val responseFieldsValidator = mock<ResponseFieldsValidator>()
 
   private val service = AttributeSearchService(getAttributes(Prisoner::class), elasticsearchClient, mapper, responseFieldsValidator, telemetryClient)
