@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.search.resource
+package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
 import io.swagger.v3.parser.OpenAPIV3Parser
 import net.minidev.json.JSONArray
@@ -9,7 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.text.contains
@@ -75,24 +75,16 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.example").isEqualTo("2020-07-17T12:34:56.833Z")
-      .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.description")
-      .isEqualTo("The date/time the identifier was created in the system. Will never be null.")
-      .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.type").isEqualTo("string")
-      .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.format").isEqualTo("date-time")
+      .jsonPath("$.components.schemas.PrisonerReceivedEventDetails.properties.occurredAt.example").isEqualTo("2023-02-28T12:34:56")
+      .jsonPath("$.components.schemas.PrisonerReceivedEventDetails.properties.occurredAt.description")
+      .isEqualTo("local date time movement happened")
+      .jsonPath("$.components.schemas.PrisonerReceivedEventDetails.properties.occurredAt.type").isEqualTo("string")
+      .jsonPath("$.components.schemas.PrisonerReceivedEventDetails.properties.occurredAt.format").isEqualTo("date-time")
   }
 
   @ParameterizedTest
-  @CsvSource(
-    value = [
-      "0, view-prisoner-data-role, ROLE_VIEW_PRISONER_DATA",
-      "1, prisoner-search-role, ROLE_PRISONER_SEARCH",
-      "2, global-search-role, ROLE_GLOBAL_SEARCH",
-      "3, prisoner-in-prison-search-role, ROLE_PRISONER_IN_PRISON_SEARCH",
-      "4, prisoner-search--prisoner--ro, PRISONER_SEARCH__PRISONER__RO",
-    ],
-  )
-  fun `the security scheme is setup for bearer tokens`(index: Int, key: String, role: String) {
+  @CsvSource(value = ["prisoner-index-role, ROLE_PRISONER_INDEX"])
+  fun `the security scheme is setup for bearer tokens`(key: String, role: String) {
     webTestClient.get()
       .uri("/v3/api-docs")
       .accept(MediaType.APPLICATION_JSON)
@@ -105,7 +97,7 @@ class OpenApiDocsTest : IntegrationTestBase() {
         assertThat(it).contains(role)
       }
       .jsonPath("$.components.securitySchemes.$key.bearerFormat").isEqualTo("JWT")
-      .jsonPath("$.security[$index].$key").isEqualTo(JSONArray().apply { add("read") })
+      .jsonPath("$.security[0].$key").isEqualTo(JSONArray().apply { addAll(listOf("read", "write")) })
   }
 
   @Test
@@ -128,7 +120,7 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .expectStatus().isOk
       .expectBody()
       .jsonPath("$.components.schemas.ErrorResponse.required").value<List<String>> {
-        assertThat(it).containsExactlyInAnyOrder("status", "errorCode", "userMessage")
+        assertThat(it).containsExactly("status")
       }
   }
 }
