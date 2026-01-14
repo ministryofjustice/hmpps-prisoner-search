@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.extension.ExtendWith
@@ -14,6 +13,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.AlertsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
@@ -42,7 +42,7 @@ abstract class IntegrationTestBase {
   internal lateinit var gson: Gson
 
   @Autowired
-  internal lateinit var objectMapper: ObjectMapper
+  internal lateinit var jsonMapper: JsonMapper
 
   @Autowired
   internal lateinit var webTestClient: WebTestClient

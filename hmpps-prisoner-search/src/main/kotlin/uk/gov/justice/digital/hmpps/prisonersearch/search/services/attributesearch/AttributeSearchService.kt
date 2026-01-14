@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.opensearch.action.search.SearchRequest
@@ -16,6 +15,8 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.Attribute
@@ -28,7 +29,7 @@ import kotlin.reflect.KClass
 class AttributeSearchService(
   private val attributes: Attributes,
   private val elasticsearchClient: SearchClient,
-  private val mapper: ObjectMapper,
+  private val mapper: JsonMapper,
   private val responseFieldsValidator: ResponseFieldsValidator,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -73,7 +74,7 @@ class AttributeSearchService(
 
   private fun String.extractInt() = "\\d+".toRegex().find(this)?.value?.toIntOrNull()?.toString()
 
-  private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> = hits.hits.asList().map { mapper.readValue(it.sourceAsString, Prisoner::class.java) }
+  private fun SearchResponse.respond(pageable: Pageable): Page<Prisoner> = hits.hits.asList().map { mapper.readValue<Prisoner>(it.sourceAsString) }
     .let { PageImpl(it, pageable, hits.totalHits?.value ?: 0) }
 
   private fun Pageable.searchSourceBuilder(queryBuilder: BoolQueryBuilder, responseFields: List<String>? = null): SearchSourceBuilder {

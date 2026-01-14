@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.dto
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.AttributeSearchRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.BooleanMatcher
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.attributesearch.api.DateMatcher
@@ -24,11 +24,11 @@ import java.time.LocalDate
  * examples of what the request object looks like in JSON format.
  */
 @JsonTest
-class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) {
+class AttributeSearchRequestJsonTest(@Autowired val jsonMapper: JsonMapper) {
 
   @Test
   fun `firstName is John`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -66,7 +66,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND lastName is Smith`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -117,7 +117,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND (lastName is Smith OR lastName is Jones)`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -193,7 +193,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `(firstName is John AND lastName is Smith) OR (firstName is Jack AND lastName is not Jones)`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "joinType": "OR",
@@ -278,7 +278,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND recall is true`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -327,7 +327,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND heightCentimetres GTE 150`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -377,7 +377,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND shoeSize between 11 and 12`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -430,7 +430,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND receptionDate after 2023-01-01 AND releaseDate before 2024-01-01`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -490,7 +490,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND currentIncentive dateTime after 2023-01-01`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -539,7 +539,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND receptionDate is 2023-01-01`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -592,7 +592,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND tattoo on shoulder contains dragon`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [
@@ -654,7 +654,7 @@ class AttributeSearchRequestJsonTest(@Autowired val objectMapper: ObjectMapper) 
 
   @Test
   fun `firstName is John AND (scar on face OR scar on head)`() {
-    val request = objectMapper.readValue<AttributeSearchRequest>(
+    val request = jsonMapper.readValue<AttributeSearchRequest>(
       """
         {
           "queries": [

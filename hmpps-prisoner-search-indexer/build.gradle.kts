@@ -1,6 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -8,6 +7,7 @@ import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+import tools.jackson.databind.json.JsonMapper
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -180,7 +180,7 @@ models.forEach {
     description = "Write JSON for ${it.name}"
     doLast {
       val json = URI.create(it.url).toURL().readText()
-      val formattedJson = ObjectMapper().let { mapper ->
+      val formattedJson = JsonMapper().let { mapper ->
         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(json))
       }
       Files.write(Paths.get(it.input), formattedJson.toByteArray())
@@ -194,7 +194,7 @@ models.forEach {
         .replace("dev.".toRegex(), "")
         .replace("/v3/api-docs".toRegex(), "/info")
       val json = URI.create(productionUrl).toURL().readText()
-      val version = ObjectMapper().readTree(json).at("/build/version").asText()
+      val version = JsonMapper().readTree(json).at("/build/version").asString()
       println(version)
     }
   }
