@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang3.builder.Diff
@@ -9,6 +8,7 @@ import org.apache.commons.lang3.builder.Diffable
 import org.apache.commons.lang3.builder.ToStringStyle
 import org.springframework.stereotype.Service
 import org.springframework.util.DigestUtils
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffableProperty
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -28,7 +28,7 @@ class PrisonerDifferenceService(
   private val telemetryClient: TelemetryClient,
   private val domainEventEmitter: HmppsDomainEventEmitter,
   private val diffProperties: DiffProperties,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val prisonerDifferencesRepository: PrisonerDifferencesRepository,
 ) {
   private companion object {
@@ -55,7 +55,7 @@ class PrisonerDifferenceService(
   fun hasChanged(previousSnapshot: Any?, current: Any): Boolean = hash(previousSnapshot) != hash(current)
 
   fun hash(value: Any?) = value?.run {
-    objectMapper.writeValueAsString(this)
+    jsonMapper.writeValueAsString(this)
       .toByteArray()
       .let {
         Base64.encodeBase64String(DigestUtils.md5Digest(it))

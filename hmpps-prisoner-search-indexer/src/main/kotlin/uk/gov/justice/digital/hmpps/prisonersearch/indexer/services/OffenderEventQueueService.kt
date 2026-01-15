@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -8,6 +7,7 @@ import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.Message
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
@@ -15,7 +15,7 @@ import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
 
 @Service
 class OffenderEventQueueService(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${republish.delayInSeconds}") private val republishDelayInSeconds: Int,
 ) {
@@ -75,7 +75,7 @@ class OffenderEventQueueService(
       (ex is UncategorizedElasticsearchException && ex.message?.contains("version conflict, document already exists") == true)
     ) {
       // This is not an error, and so we want to avoid exceptions being logged
-      val (message, _, messageAttributes) = objectMapper.readValue(requestJson, Message::class.java)
+      val (message, _, messageAttributes) = jsonMapper.readValue(requestJson, Message::class.java)
       log.info("Detected a seq_no+primary_term conflict and trying again for $destination message:\n{}", message)
       requeueMessageWithDelay(
         requestJson!!,

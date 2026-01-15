@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import ch.qos.logback.classic.Level
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -14,6 +11,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.databind.exc.InvalidFormatException
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
@@ -23,11 +23,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
 
 @JsonTest
-internal class PopulateIndexListenerTest(@Autowired private val objectMapper: ObjectMapper) {
+internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   private val populateIndexService = mock<PopulateIndexService>()
   private val refreshIndexService = mock<RefreshIndexService>()
 
-  private val listener = PopulateIndexListener(objectMapper, populateIndexService, refreshIndexService)
+  private val listener = PopulateIndexListener(jsonMapper, populateIndexService, refreshIndexService)
   private val logAppender = findLogAppender(PopulateIndexListener::class.java)
 
   @Nested
@@ -123,7 +123,7 @@ internal class PopulateIndexListenerTest(@Autowired private val objectMapper: Ob
     @Test
     internal fun `will fail for bad json`() {
       assertThatThrownBy { listener.processIndexRequest("this is bad json") }
-        .isInstanceOf(JsonParseException::class.java)
+        .isInstanceOf(StreamReadException::class.java)
 
       assertThat(logAppender.list).anyMatch { it.message.contains("Failed to process message") && it.level == Level.ERROR }
     }

@@ -3,7 +3,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 
 import ch.qos.logback.classic.Level
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -24,6 +23,7 @@ import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -32,7 +32,7 @@ import java.util.concurrent.CompletableFuture
 
 @JsonTest
 internal class OffenderEventQueueServiceTest(
-  @Autowired val objectMapper: ObjectMapper,
+  @Autowired private val jsonMapper: JsonMapper,
 ) {
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val offenderEventSqsClient = mock<SqsAsyncClient>()
@@ -54,7 +54,7 @@ internal class OffenderEventQueueServiceTest(
     whenever(offenderEventSqsClient.getQueueUrl(eq(offenderDlqRequest))).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:offender-dlq").build()))
     whenever(domainEventSqsClient.getQueueUrl(eq(domainQueueRequest))).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:domain-queue").build()))
     whenever(domainEventSqsClient.getQueueUrl(eq(domainDlqRequest))).thenReturn(CompletableFuture.completedFuture(GetQueueUrlResponse.builder().queueUrl("arn:eu-west-1:domain-dlq").build()))
-    offenderEventQueueService = OffenderEventQueueService(objectMapper, hmppsQueueService, republishDelayInSeconds = 10)
+    offenderEventQueueService = OffenderEventQueueService(jsonMapper, hmppsQueueService, republishDelayInSeconds = 10)
   }
 
   @Nested

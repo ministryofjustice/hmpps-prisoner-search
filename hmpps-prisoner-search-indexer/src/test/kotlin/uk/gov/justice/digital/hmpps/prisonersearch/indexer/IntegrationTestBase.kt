@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.lang3.RandomStringUtils
@@ -33,6 +31,8 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageResponse
 import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
@@ -125,7 +125,7 @@ abstract class IntegrationTestBase {
   lateinit var clock: Clock
 
   @Autowired
-  protected lateinit var objectMapper: ObjectMapper
+  protected lateinit var objectMapper: JsonMapper
 
   protected val indexQueue by lazy { hmppsQueueService.findByQueueId("index") ?: throw MissingQueueException("HmppsQueue indexqueue not found") }
   protected val hmppsDomainQueue by lazy { hmppsQueueService.findByQueueId("hmppsdomainqueue") ?: throw MissingQueueException("HmppsQueue hmppsdomainqueue not found") }

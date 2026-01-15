@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -9,6 +8,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
@@ -30,7 +30,7 @@ import java.time.LocalDateTime
 private const val OFFENDER_NO = "A9460DY"
 
 @JsonTest
-internal class PrisonerMovementsEventServiceTest(@param:Autowired private val objectMapper: ObjectMapper) {
+internal class PrisonerMovementsEventServiceTest(@param:Autowired private val jsonMapper: JsonMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
   private val telemetryClient = mock<TelemetryClient>()
 
@@ -588,7 +588,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val ob
   private fun prisonerReturnFromTAPSamePrison() = prisoner("/receive-state-changes/tap-in-same-prison.json")
   private fun prisonerReturnFromTAPDifferentPrison(prisonId: String = "NMI") = prisoner("/receive-state-changes/tap-in-different-prison.json").apply { this.prisonId = prisonId }
 
-  private fun prisoner(resource: String): Prisoner = objectMapper.readValue(resource.readResourceAsText(), Prisoner::class.java)
+  private fun prisoner(resource: String): Prisoner = jsonMapper.readValue(resource.readResourceAsText(), Prisoner::class.java)
 
   private fun offenderBooking(identifiers: List<OffenderIdentifier>? = null) = OffenderBooking(
     "A9460DY",

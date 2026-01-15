@@ -2,11 +2,11 @@
 
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.Companion.REPUBLISH_SUFFIX
@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEven
 
 @Service
 class OffenderEventListener(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val indexListenerService: IndexListenerService,
   private val offenderEventQueueService: OffenderEventQueueService,
 ) : EventListener {
@@ -106,5 +106,5 @@ class OffenderEventListener(
     }
   }
 
-  private inline fun <reified T> fromJson(message: String?): T = objectMapper.readValue(message, T::class.java)
+  private inline fun <reified T> fromJson(message: String?): T = jsonMapper.readValue(message, T::class.java)
 }

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -14,11 +13,14 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.LOCATION
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.DiffCategory.PERSONAL_DETAILS
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.DiffProperties
@@ -34,15 +36,14 @@ import java.util.concurrent.CompletableFuture
 /*
  * Most test scenarios are covered by the integration tests in HmppsDomainEventsEmitterIntTest
  */
-class HmppsDomainEventsEmitterTest {
-
-  private val objectMapper = ObjectMapper()
+@JsonTest
+class HmppsDomainEventsEmitterTest(@Autowired private val jsonMapper: JsonMapper) {
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val diffProperties = DiffProperties(prefix = "test.", host = "some_host", events = true)
   private val clock = mock<Clock>()
   private val telemetryClient = mock<TelemetryClient>()
   private val hmppsDomainEventEmitter =
-    HmppsDomainEventEmitter(objectMapper, hmppsQueueService, diffProperties, clock, telemetryClient, 0)
+    HmppsDomainEventEmitter(jsonMapper, hmppsQueueService, diffProperties, clock, telemetryClient, 0)
   private val publishSqsClient = mock<SqsAsyncClient>()
   private val publishQueue = HmppsQueue("publish", queueName = "some_queue", sqsClient = publishSqsClient)
 

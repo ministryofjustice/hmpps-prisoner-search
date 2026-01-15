@@ -1,20 +1,20 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 
 private const val BOOKING_ID = "1203208"
 private const val OFFENDER_NO = "A9460DY"
 
 @JsonTest
-internal class ConvictedStatusChangedEventServiceTest(@Autowired private val objectMapper: ObjectMapper) {
+internal class ConvictedStatusChangedEventServiceTest(@Autowired private val jsonMapper: JsonMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
 
   private val convictedStatusEventService = ConvictedStatusEventService(domainEventsEmitter)
@@ -78,7 +78,7 @@ internal class ConvictedStatusChangedEventServiceTest(@Autowired private val obj
     )
   }
 
-  private fun prisoner(): Prisoner = objectMapper.readValue(
+  private fun prisoner(): Prisoner = jsonMapper.readValue(
     ConvictedStatusEventService::class.java.getResource("/receive-state-changes/first-new-booking.json")!!.readText(),
   )
 }
