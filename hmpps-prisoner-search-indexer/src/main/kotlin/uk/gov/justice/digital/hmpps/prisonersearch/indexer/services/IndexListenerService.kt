@@ -84,7 +84,7 @@ class IndexListenerService(
 
   fun offenderChange(message: OffenderChangedMessage, eventType: String) = message.offenderIdDisplay?.run {
     sync(prisonerNumber = this, eventType)
-  } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
+  } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId ?: 0)
 
   fun maybeDeleteOffender(message: OffenderChangedMessage, eventType: String) {
     message.offenderIdDisplay?.run {
@@ -99,7 +99,7 @@ class IndexListenerService(
         log.debug("Delete check: offender ID {} still exists, so assuming an alias deletion", this)
         prisonerSynchroniserService.reindexUpdate(offender, eventType)
       }
-    } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId)
+    } ?: customEventForMissingOffenderIdDisplay(eventType, message.offenderId ?: 0)
   }
 
   fun bookingDeleted(message: BookingDeletedMessage, eventType: String) {
@@ -192,7 +192,7 @@ data class BookingDeletedMessage(val offenderIdDisplay: String, val bookingId: L
 
 data class OffenderChangedMessage(
   val eventType: String,
-  val offenderId: Long,
+  val offenderId: Long?,
   val offenderIdDisplay: String?,
 )
 
