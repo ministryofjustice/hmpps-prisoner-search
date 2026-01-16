@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-22.5853.d53117b"
+    "version" : "2026-01-15.78.2503e97"
   },
   "servers" : [ {
     "url" : "https://prison-register-dev.hmpps.service.justice.gov.uk",
@@ -1033,6 +1033,7 @@
           },
           "emailAddress" : {
             "type" : "string",
+            "format" : "email",
             "description" : "email address",
             "example" : "example@example.com"
           },
@@ -1124,7 +1125,7 @@
             "description" : "Set of categories for this prison",
             "items" : {
               "type" : "string",
-              "enum" : [ "A", "B", "C", "D" ]
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
             },
             "uniqueItems" : true
           }
@@ -1249,7 +1250,7 @@
             "description" : "List of the categories for this prison",
             "items" : {
               "type" : "string",
-              "enum" : [ "A", "B", "C", "D" ]
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
             },
             "uniqueItems" : true
           },
@@ -1469,7 +1470,7 @@
             "description" : "Set of categories for this prison",
             "items" : {
               "type" : "string",
-              "enum" : [ "A", "B", "C", "D" ]
+              "enum" : [ "A", "B", "C", "D", "OPEN", "CLOSED" ]
             },
             "uniqueItems" : true
           }
