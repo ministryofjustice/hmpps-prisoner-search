@@ -257,7 +257,7 @@ internal class OffenderEventListenerTest(@Autowired jsonMapper: JsonMapper) {
     fun `will requeue for version number clash`() {
       val event = "ADDRESSES_OFFENDER-INSERTED"
       val message =
-        """{\"eventType\":\"$event\", \"description\": \"desc\", \"offenderId\": 2345612, \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
+        """{\"eventType\":\"$event\", \"description\": \"desc\", \"additionalInformation\": {\"id\":\"12345\", \"nomsNumber\":\"A7089FD\"}}"""
       val expectedException =
         OptimisticLockingFailureException("stack trace ... Cannot index a document due to seq_no+primary_term conflict ..")
       whenever(indexListenerService.offenderChange(any(), any()))
