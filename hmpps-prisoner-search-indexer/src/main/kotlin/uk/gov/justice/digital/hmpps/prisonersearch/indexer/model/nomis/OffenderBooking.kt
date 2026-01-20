@@ -41,6 +41,7 @@ data class OffenderBooking(
   val receptionDate: LocalDate? = null,
   val locationDescription: String? = null,
   val latestLocationId: String? = null,
+  val lastPrisonId: String? = null,
   var previousPrisonId: String? = null,
   var previousPrisonLeavingDate: LocalDate? = null,
   val addresses: List<Address>? = null,
