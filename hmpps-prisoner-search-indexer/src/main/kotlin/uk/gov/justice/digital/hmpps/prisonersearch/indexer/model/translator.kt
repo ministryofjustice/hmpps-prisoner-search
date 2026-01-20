@@ -48,7 +48,7 @@ fun Prisoner.translate(
   this.cellLocation = ob.assignedLivingUnit?.description
   this.prisonName = ob.assignedLivingUnit?.agencyName
   this.prisonId = ob.agencyId
-  this.lastPrisonId = ob.latestLocationId
+  this.lastPrisonId = ob.lastPrisonId
   this.previousPrisonId = ob.previousPrisonId
   this.previousPrisonLeavingDate = ob.previousPrisonLeavingDate
   this.status = ob.status

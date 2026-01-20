@@ -390,7 +390,8 @@ class TranslatorTest {
   fun `should map last and previous prisons`() {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(
-        latestLocationId = "LEI",
+        latestLocationId = "Ignored",
+        lastPrisonId = "LEI",
         previousPrisonId = "SWI",
         previousPrisonLeavingDate = LocalDate.parse("2025-09-01"),
       ),
