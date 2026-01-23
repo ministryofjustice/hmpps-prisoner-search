@@ -10,7 +10,7 @@ dependencyCheck {
 }
 
 dependencies {
-  implementation("org.springframework.data:spring-data-elasticsearch:6.0.1")
+  implementation("org.springframework.data:spring-data-elasticsearch:6.0.2")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.0")
