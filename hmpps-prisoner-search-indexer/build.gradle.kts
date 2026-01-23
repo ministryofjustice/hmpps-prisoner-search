@@ -14,7 +14,7 @@ import java.nio.file.Paths
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
-  id("org.openapi.generator") version "7.18.0"
+  id("org.openapi.generator") version "7.19.0"
   kotlin("plugin.spring")
   kotlin("plugin.jpa") version "2.3.0"
 }
@@ -59,7 +59,7 @@ dependencies {
 
   implementation(project(":common"))
 
-  runtimeOnly("org.postgresql:postgresql:42.7.8")
+  runtimeOnly("org.postgresql:postgresql:42.7.9")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
