@@ -24,7 +24,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.1")
   implementation("com.google.code.gson:gson:2.13.2")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-webflux")

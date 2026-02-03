@@ -30,7 +30,7 @@ docker compose up localstack hmpps-auth prison-api restricted-patients hmpps-inc
 
 Once localstack has started then, in another terminal, run the following command to start prisoner search too:
 ```shell
-docker-compose up hmpps-prisoner-search --detach
+docker compose up hmpps-prisoner-search --detach
 ```
   To check that it has all started correctly use `docker ps`.
 
