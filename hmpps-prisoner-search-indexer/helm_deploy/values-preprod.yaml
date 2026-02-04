@@ -42,6 +42,7 @@ generic-prometheus-alerts:
     - "syscon-devs-preprod-hmpps_prisoner_search_publish_queue"
   openSearchAlertsDomainNames:
     cloud-platform-d78e194d: "prisoner search indexer"
+  openSearchAlertsFreeStorageSpaceThresholdGB: 5
 
 cron:
   snapshot_namespace: hmpps-prisoner-search-prod
