@@ -24,6 +24,8 @@ generic-prometheus-alerts:
     - "syscon-devs-prod-hmpps_prisoner_search_offender_queue"
     - "syscon-devs-prod-hmpps_prisoner_search_publish_queue_dl"
     - "syscon-devs-prod-hmpps_prisoner_search_publish_queue"
+  openSearchAlertsDomainNames:
+    cloud-platform-7f79edab: "prisoner search indexer"
 
 indexQueueNames:
   - "syscon-devs-prod-hmpps_prisoner_search_index_queue_dl"
