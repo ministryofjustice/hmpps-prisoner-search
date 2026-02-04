@@ -50,6 +50,7 @@ generic-prometheus-alerts:
     - "syscon-devs-dev-hmpps_prisoner_search_publish_queue"
   openSearchAlertsDomainNames:
     cloud-platform-317cfc89: "prisoner search indexer"
+  openSearchAlertsFreeStorageSpaceThresholdGB: 5
 
 cron:
   retry_dlqs_schedule: "*/10 7-20 * * 1-5"
