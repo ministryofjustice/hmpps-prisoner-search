@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch
 
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -14,6 +15,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextRefreshedEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.ACTIVE_INDEX_REFRESH
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.CHECK_INDEX_COMPLETE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPARE_INDEX_SIZE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
@@ -39,103 +41,156 @@ class BatchManagerTest {
     whenever(event.applicationContext).thenReturn(context)
   }
 
-  @Test
-  fun `should call the check index complete service`() = runTest {
-    val batchManager = batchManager(CHECK_INDEX_COMPLETE)
+  @Nested
+  inner class CheckIndexComplete {
+    @Test
+    fun `should call the check index complete service`() = runTest {
+      val batchManager = batchManager(CHECK_INDEX_COMPLETE)
 
-    batchManager.onApplicationEvent(event)
-
-    verify(maintainIndexService).markIndexingComplete()
-    verify(context).close()
-  }
-
-  @Test
-  fun `should ignore expected errors in the check index complete service`() = runTest {
-    whenever(maintainIndexService.markIndexingComplete())
-      .thenThrow(BuildNotInProgressException(IndexStatus("some-id").toBuildInProgress()))
-    val batchManager = batchManager(CHECK_INDEX_COMPLETE)
-
-    assertDoesNotThrow {
       batchManager.onApplicationEvent(event)
+
+      verify(maintainIndexService).markIndexingComplete()
+      verify(context).close()
     }
 
-    verify(maintainIndexService).markIndexingComplete()
-    verify(context).close()
-  }
+    @Test
+    fun `should ignore expected errors in the check index complete service`() = runTest {
+      whenever(maintainIndexService.markIndexingComplete())
+        .thenThrow(BuildNotInProgressException(IndexStatus("some-id").toBuildInProgress()))
+      val batchManager = batchManager(CHECK_INDEX_COMPLETE)
 
-  @Test
-  fun `should not ignore unexpected error in the check index complete service`() = runTest {
-    whenever(maintainIndexService.markIndexingComplete()).thenThrow(RuntimeException("error"))
-    val batchManager = batchManager(CHECK_INDEX_COMPLETE)
+      assertDoesNotThrow {
+        batchManager.onApplicationEvent(event)
+      }
 
-    assertThrows<RuntimeException> {
-      batchManager.onApplicationEvent(event)
+      verify(maintainIndexService).markIndexingComplete()
+      verify(context).close()
     }
 
-    verify(maintainIndexService).markIndexingComplete()
-    verify(context, never()).close()
+    @Test
+    fun `should not ignore unexpected error in the check index complete service`() = runTest {
+      whenever(maintainIndexService.markIndexingComplete()).thenThrow(RuntimeException("error"))
+      val batchManager = batchManager(CHECK_INDEX_COMPLETE)
+
+      assertThrows<RuntimeException> {
+        batchManager.onApplicationEvent(event)
+      }
+
+      verify(maintainIndexService).markIndexingComplete()
+      verify(context, never()).close()
+    }
   }
 
-  @Test
-  fun `should call the compare index size service`() = runTest {
-    val batchManager = batchManager(COMPARE_INDEX_SIZE)
+  @Nested
+  inner class CompareIndexSize {
+    @Test
+    fun `should call the compare index size service`() = runTest {
+      val batchManager = batchManager(COMPARE_INDEX_SIZE)
 
-    batchManager.onApplicationEvent(event)
-
-    verify(compareIndexService).doIndexSizeCheck()
-    verify(context).close()
-  }
-
-  @Test
-  fun `should not ignore errors in the compare index size service`() = runTest {
-    whenever(compareIndexService.doIndexSizeCheck()).thenThrow(RuntimeException("error"))
-    val batchManager = batchManager(COMPARE_INDEX_SIZE)
-
-    assertThrows<RuntimeException> {
       batchManager.onApplicationEvent(event)
+
+      verify(compareIndexService).doIndexSizeCheck()
+      verify(context).close()
     }
 
-    verify(compareIndexService).doIndexSizeCheck()
-    verify(context, never()).close()
+    @Test
+    fun `should not ignore errors in the compare index size service`() = runTest {
+      whenever(compareIndexService.doIndexSizeCheck()).thenThrow(RuntimeException("error"))
+      val batchManager = batchManager(COMPARE_INDEX_SIZE)
+
+      assertThrows<RuntimeException> {
+        batchManager.onApplicationEvent(event)
+      }
+
+      verify(compareIndexService).doIndexSizeCheck()
+      verify(context, never()).close()
+    }
   }
 
-  @Test
-  fun `should call the refresh index service and remove old differences`() = runTest {
-    val batchManager = batchManager(FULL_INDEX_REFRESH)
+  @Nested
+  inner class FullRefreshIndex {
 
-    batchManager.onApplicationEvent(event)
+    @Test
+    fun `should call the refresh index service and remove old differences`() = runTest {
+      val batchManager = batchManager(FULL_INDEX_REFRESH)
 
-    verify(refreshIndexService).startIndexRefresh()
-    verify(prisonerDifferencesService).deleteOldData()
-    verify(context).close()
-  }
-
-  @Test
-  fun `should ignore expected errors in the refresh index service`() = runTest {
-    whenever(refreshIndexService.startIndexRefresh())
-      .thenThrow(BuildAlreadyInProgressException(IndexStatus("some-id").toBuildInProgress()))
-    val batchManager = batchManager(FULL_INDEX_REFRESH)
-
-    assertDoesNotThrow {
       batchManager.onApplicationEvent(event)
+
+      verify(refreshIndexService).startFullIndexRefresh()
+      verify(prisonerDifferencesService).deleteOldData()
+      verify(context).close()
     }
 
-    verify(refreshIndexService).startIndexRefresh()
-    verify(context).close()
-  }
+    @Test
+    fun `should ignore expected errors in the refresh index service`() = runTest {
+      whenever(refreshIndexService.startFullIndexRefresh())
+        .thenThrow(BuildAlreadyInProgressException(IndexStatus("some-id").toBuildInProgress()))
+      val batchManager = batchManager(FULL_INDEX_REFRESH)
 
-  @Test
-  fun `should not ignore unexpected errors in the refresh index service`() = runTest {
-    whenever(refreshIndexService.startIndexRefresh())
-      .thenThrow(RuntimeException("error"))
-    val batchManager = batchManager(FULL_INDEX_REFRESH)
+      assertDoesNotThrow {
+        batchManager.onApplicationEvent(event)
+      }
 
-    assertThrows<RuntimeException> {
-      batchManager.onApplicationEvent(event)
+      verify(refreshIndexService).startFullIndexRefresh()
+      verify(context).close()
     }
 
-    verify(refreshIndexService).startIndexRefresh()
-    verify(context, never()).close()
+    @Test
+    fun `should not ignore unexpected errors in the refresh index service`() = runTest {
+      whenever(refreshIndexService.startFullIndexRefresh())
+        .thenThrow(RuntimeException("error"))
+      val batchManager = batchManager(FULL_INDEX_REFRESH)
+
+      assertThrows<RuntimeException> {
+        batchManager.onApplicationEvent(event)
+      }
+
+      verify(refreshIndexService).startFullIndexRefresh()
+      verify(context, never()).close()
+    }
+  }
+
+  @Nested
+  inner class ActiveRefreshIndex {
+
+    @Test
+    fun `should call the refresh index service and remove old differences`() = runTest {
+      val batchManager = batchManager(ACTIVE_INDEX_REFRESH)
+
+      batchManager.onApplicationEvent(event)
+
+      verify(refreshIndexService).startActiveIndexRefresh()
+      verify(prisonerDifferencesService).deleteOldData()
+      verify(context).close()
+    }
+
+    @Test
+    fun `should ignore expected errors in the refresh index service`() = runTest {
+      whenever(refreshIndexService.startActiveIndexRefresh())
+        .thenThrow(BuildAlreadyInProgressException(IndexStatus("some-id").toBuildInProgress()))
+      val batchManager = batchManager(ACTIVE_INDEX_REFRESH)
+
+      assertDoesNotThrow {
+        batchManager.onApplicationEvent(event)
+      }
+
+      verify(refreshIndexService).startActiveIndexRefresh()
+      verify(context).close()
+    }
+
+    @Test
+    fun `should not ignore unexpected errors in the refresh index service`() = runTest {
+      whenever(refreshIndexService.startActiveIndexRefresh())
+        .thenThrow(RuntimeException("error"))
+      val batchManager = batchManager(ACTIVE_INDEX_REFRESH)
+
+      assertThrows<RuntimeException> {
+        batchManager.onApplicationEvent(event)
+      }
+
+      verify(refreshIndexService).startActiveIndexRefresh()
+      verify(context, never()).close()
+    }
   }
 
   private fun batchManager(batchType: BatchType) = BatchManager(

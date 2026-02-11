@@ -42,7 +42,9 @@ class CompareIndexService(
     val end = System.currentTimeMillis()
 
     return SizeCheck(timeMs = end - start, totalNomis = totalNomisNumber, totalIndex = totalIndexNumber).also {
-      telemetryClient.trackEvent(TelemetryEvents.COMPARE_INDEX_SIZE, it.toMap())
+      val results = it.toMap()
+      telemetryClient.trackEvent(TelemetryEvents.COMPARE_INDEX_SIZE, results)
+      log.info("Compare index size results: $results")
     }
   }
 
