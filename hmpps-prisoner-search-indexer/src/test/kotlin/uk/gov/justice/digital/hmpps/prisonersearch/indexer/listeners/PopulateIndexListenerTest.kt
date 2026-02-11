@@ -80,6 +80,22 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   }
 
   @Nested
+  inner class RefreshActiveIndex {
+    @Test
+    internal fun `will call service with index name`() {
+      listener.processIndexRequest(
+        """
+      {
+        "type": "REFRESH_ACTIVE_INDEX"
+      }
+        """.trimIndent(),
+      )
+
+      verify(refreshIndexService).refreshActiveIndex()
+    }
+  }
+
+  @Nested
   inner class PopulatePrisonerPage {
     @Test
     internal fun `will call service with page details`() {
@@ -96,6 +112,46 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       verify(populateIndexService).populateIndexWithPrisonerPage(PrisonerPage(1, 1000))
+    }
+  }
+
+  @Nested
+  inner class RefreshPrisonerPage {
+    @Test
+    internal fun `will call service with page details`() {
+      listener.processIndexRequest(
+        """
+      {
+        "type": "REFRESH_PRISONER_PAGE",
+        "prisonerPage": {
+          "page": 1,
+          "pageSize": 1000
+        }
+      }
+        """.trimIndent(),
+      )
+
+      verify(refreshIndexService).refreshIndexWithPrisonerPage(PrisonerPage(1, 1000))
+    }
+  }
+
+  @Nested
+  inner class RefreshActivePrisonerPage {
+    @Test
+    internal fun `will call service with page details`() {
+      listener.processIndexRequest(
+        """
+      {
+        "type": "REFRESH_ACTIVE_PRISONER_PAGE",
+        "prisonerPage": {
+          "page": 1,
+          "pageSize": 1000
+        }
+      }
+        """.trimIndent(),
+      )
+
+      verify(refreshIndexService).refreshActiveIndexWithPrisonerPage(PrisonerPage(1, 1000))
     }
   }
 

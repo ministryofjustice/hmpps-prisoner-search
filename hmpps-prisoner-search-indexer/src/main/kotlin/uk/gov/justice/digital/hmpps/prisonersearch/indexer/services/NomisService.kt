@@ -27,9 +27,27 @@ class NomisService(
     .bodyToMono(PrisonerNumberPage::class.java)
     .block()!!
 
+  private fun getActiveOffendersIds(page: Int = 0, size: Int = 10) = prisonApiWebClient.get()
+    .uri {
+      it.path("/api/prisoners/prisoner-numbers/active")
+        .queryParam("page", page)
+        .queryParam("size", size)
+        .build()
+    }
+    .httpRequest {
+      it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(2))
+    }
+    .retrieve()
+    .bodyToMono(PrisonerNumberPage::class.java)
+    .block()!!
+
   fun getTotalNumberOfPrisoners(): Long = getOffendersIds(0, 1).totalElements
 
+  fun getTotalNumberOfActivePrisoners(): Long = getActiveOffendersIds(0, 1).totalElements
+
   fun getPrisonerNumbers(page: Int, pageSize: Int): List<String> = getOffendersIds(page, pageSize).content
+
+  fun getActivePrisonerNumbers(page: Int, pageSize: Int): List<String> = getActiveOffendersIds(page, pageSize).content
 
   fun getNomsNumberForBooking(bookingId: Long): String? = prisonApiWebClient.get()
     .uri("/api/bookings/{bookingId}?basicInfo=true", bookingId)

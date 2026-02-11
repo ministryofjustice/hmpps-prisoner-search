@@ -40,6 +40,18 @@ class PrisonApiMockServer : WireMockServer(8093) {
     }
   }
 
+  fun stubActiveOffenders(vararg prisoners: PrisonerBuilder) {
+    val prisonerNumbers = prisoners.map { it.prisonerNumber }
+    stubFor(
+      WireMock.get(WireMock.urlPathEqualTo("/api/prisoners/prisoner-numbers/active"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(Gson().toJson(PrisonerNumberPage(prisonerNumbers, prisonerNumbers.size.toLong()))),
+        ),
+    )
+  }
+
   fun stubGetOffender(prisonerBuilder: PrisonerBuilder) {
     stubFor(
       WireMock.get(urlEqualTo("/api/prisoner-search/offenders/${prisonerBuilder.prisonerNumber}"))

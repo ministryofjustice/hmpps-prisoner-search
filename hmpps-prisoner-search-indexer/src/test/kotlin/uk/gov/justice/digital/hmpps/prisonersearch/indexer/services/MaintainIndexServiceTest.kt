@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPL
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -98,7 +99,7 @@ class MaintainIndexServiceTest {
 
       maintainIndexService.prepareIndexForRebuild()
 
-      verify(indexQueueService).sendPopulateIndexMessage()
+      verify(indexQueueService).sendIndexMessage(POPULATE_INDEX)
     }
 
     @Test
