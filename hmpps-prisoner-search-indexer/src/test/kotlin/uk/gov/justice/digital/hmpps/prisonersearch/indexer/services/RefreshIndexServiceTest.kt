@@ -40,7 +40,7 @@ class RefreshIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      assertThatThrownBy { refreshIndexService.startIndexRefresh() }
+      assertThatThrownBy { refreshIndexService.startFullIndexRefresh() }
         .isInstanceOf(BuildAlreadyInProgressException::class.java)
         .hasMessageContaining("The build is already BUILDING")
 
@@ -55,7 +55,7 @@ class RefreshIndexServiceTest {
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
-      assertThatThrownBy { refreshIndexService.startIndexRefresh() }
+      assertThatThrownBy { refreshIndexService.startFullIndexRefresh() }
         .isInstanceOf(ActiveMessagesExistException::class.java)
         .hasMessageContaining("The index has active messages")
     }
@@ -67,7 +67,7 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndexState = COMPLETED))
 
-      refreshIndexService.startIndexRefresh()
+      refreshIndexService.startFullIndexRefresh()
 
       verify(indexQueueService).sendRefreshIndexMessage()
     }

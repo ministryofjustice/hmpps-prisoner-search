@@ -16,7 +16,7 @@ class RefreshIndexService(
 ) {
   private val pageSize = indexBuildProperties.pageSize
 
-  fun startIndexRefresh() {
+  fun startFullIndexRefresh() {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
     return indexStatusService.getIndexStatus()
       // no point refreshing index if we're already building the other one
@@ -27,6 +27,20 @@ class RefreshIndexService(
       }
       .run {
         log.info("Sending index refresh request")
+        indexQueueService.sendRefreshIndexMessage()
+      }
+  }
+  fun startActiveIndexRefresh() {
+    val indexQueueStatus = indexQueueService.getIndexQueueStatus()
+    return indexStatusService.getIndexStatus()
+      // no point refreshing index if we're already building the other one
+      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
+      // don't want to run two refreshes at the same time
+      .failIf({ indexQueueStatus.active }) {
+        ActiveMessagesExistException(indexQueueStatus, "build index")
+      }
+      .run {
+        log.info("Sending active index refresh request")
         indexQueueService.sendRefreshIndexMessage()
       }
   }

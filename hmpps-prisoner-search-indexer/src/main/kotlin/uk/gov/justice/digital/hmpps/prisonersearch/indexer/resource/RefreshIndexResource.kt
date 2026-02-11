@@ -28,5 +28,18 @@ class RefreshIndexResource(private val refreshIndexService: RefreshIndexService)
   )
   @PreAuthorize("hasRole('PRISONER_INDEX')")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  fun startIndexRefresh() = refreshIndexService.startIndexRefresh()
+  fun startFullIndexRefresh() = refreshIndexService.startFullIndexRefresh()
+
+  @PutMapping("/active")
+  @Operation(
+    summary = "Start an active only refresh of the index.",
+    description = """The active booking only prisoners are compared in detail with current Nomis data, requires ROLE_PRISONER_INDEX.
+      Results are written as <code>customEvents</code>. When a prisoner's data matches no event is generated and no data is changed.
+      If the prisoner data is different then DIFFERENCE_REPORTED or DIFFERENCE_MISSING event is generated and the
+      prisoner data is then refreshed from Nomis.  This will also cause domain events to be generated.
+      """,
+  )
+  @PreAuthorize("hasRole('PRISONER_INDEX')")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  fun startActiveIndexRefresh() = refreshIndexService.startActiveIndexRefresh()
 }

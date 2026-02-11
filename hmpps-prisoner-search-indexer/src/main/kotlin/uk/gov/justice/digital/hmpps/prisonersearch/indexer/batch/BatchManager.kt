@@ -10,6 +10,7 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.ACTIVE_INDEX_REFRESH
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.CHECK_INDEX_COMPLETE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPARE_INDEX_SIZE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
@@ -23,6 +24,7 @@ enum class BatchType {
   CHECK_INDEX_COMPLETE,
   COMPARE_INDEX_SIZE,
   FULL_INDEX_REFRESH,
+  ACTIVE_INDEX_REFRESH,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -45,7 +47,11 @@ class BatchManager(
       COMPARE_INDEX_SIZE -> compareIndexService.doIndexSizeCheck()
       FULL_INDEX_REFRESH -> {
         prisonerDifferencesService.deleteOldData()
-        ignoreFailure<IndexException> { refreshIndexService.startIndexRefresh() }
+        ignoreFailure<IndexException> { refreshIndexService.startFullIndexRefresh() }
+      }
+      ACTIVE_INDEX_REFRESH -> {
+        prisonerDifferencesService.deleteOldData()
+        ignoreFailure<IndexException> { refreshIndexService.startActiveIndexRefresh() }
       }
     }
   }
