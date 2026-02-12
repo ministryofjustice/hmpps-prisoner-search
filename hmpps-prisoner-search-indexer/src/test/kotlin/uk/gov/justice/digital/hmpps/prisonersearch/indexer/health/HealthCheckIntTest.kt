@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExt
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension.Companion.prisonRegisterApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension.Companion.restrictedPatientsApi
@@ -155,6 +156,7 @@ class HealthCheckIntTest : IntegrationTestBase() {
   private fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
     restrictedPatientsApi.stubHealthPing(status)
+    nomisApi.stubHealthPing(status)
     prisonApi.stubHealthPing(status)
     incentivesApi.stubHealthPing(status)
     alertsApi.stubHealthPing(status)

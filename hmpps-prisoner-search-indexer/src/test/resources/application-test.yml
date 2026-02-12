@@ -15,6 +15,7 @@ api:
   base:
     url:
       oauth: http://localhost:8090/auth
+      nomis-api: http://localhost:8094
       prison-api: http://localhost:8093
       restricted-patients: http://localhost:8095
       incentives: http://localhost:8096

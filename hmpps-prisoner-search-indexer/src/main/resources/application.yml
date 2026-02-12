@@ -34,6 +34,12 @@ spring:
             client-secret: ${prison-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
+          nomis-api:
+            provider: hmpps-auth
+            client-id: ${nomis-api.client.id}
+            client-secret: ${nomis-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
           restricted-patients-api:
             provider: hmpps-auth
             client-id: ${restricted-patients.client.id}

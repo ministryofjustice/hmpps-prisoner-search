@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExt
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.RestrictedPatientsApiExtension
@@ -76,6 +77,7 @@ import kotlin.random.Random
 
 @ExtendWith(
   IncentivesApiExtension::class,
+  NomisApiExtension::class,
   PrisonApiExtension::class,
   RestrictedPatientsApiExtension::class,
   AlertsApiExtension::class,
