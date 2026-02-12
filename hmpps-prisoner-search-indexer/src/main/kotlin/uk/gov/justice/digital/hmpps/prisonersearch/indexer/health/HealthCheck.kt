@@ -8,6 +8,9 @@ import uk.gov.justice.hmpps.kotlin.health.HealthPingCheck
 @Component("hmppsAuth")
 class AuthHealth(@Qualifier("hmppsAuthHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)
 
+@Component("nomisApi")
+class NomisApiHealth(@Qualifier("nomisApiHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)
+
 @Component("prisonApi")
 class PrisonApiHealth(@Qualifier("prisonApiHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)
 

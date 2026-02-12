@@ -16,6 +16,7 @@ import java.time.Duration
 @EnableRetry
 class WebClientConfiguration(
   @Value("\${api.base.url.prison-api}") val prisonApiBaseUri: String,
+  @Value("\${api.base.url.nomis-api}") val nomisApiBaseUri: String,
   @Value("\${api.base.url.incentives}") val incentivesBaseUri: String,
   @Value("\${api.base.url.restricted-patients}") val restrictedPatientBaseUrl: String,
   @Value("\${api.base.url.alerts}") val alertsBaseUri: String,
@@ -27,6 +28,12 @@ class WebClientConfiguration(
 ) {
   @Bean
   fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthBaseUri, healthTimeout)
+
+  @Bean
+  fun nomisApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(nomisApiBaseUri, healthTimeout)
+
+  @Bean
+  fun nomisApiWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "nomis-api", url = nomisApiBaseUri, timeout)
 
   @Bean
   fun prisonApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(prisonApiBaseUri, healthTimeout)
