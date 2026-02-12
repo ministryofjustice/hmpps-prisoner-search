@@ -9,6 +9,8 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
@@ -40,6 +42,8 @@ class PopulateIndexListener(
         REFRESH_INDEX -> refreshIndexService.refreshIndex()
         REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(indexRequest.prisonerNumber!!)
+        REFRESH_ACTIVE_INDEX -> refreshIndexService.refreshActiveIndex()
+        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         else -> {
           "Unknown request type for message $requestJson"
             .let {
@@ -71,4 +75,6 @@ enum class IndexRequestType {
   REFRESH_INDEX,
   REFRESH_PRISONER_PAGE,
   REFRESH_PRISONER,
+  REFRESH_ACTIVE_INDEX,
+  REFRESH_ACTIVE_PRISONER_PAGE,
 }

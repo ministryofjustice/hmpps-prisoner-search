@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents.BUILD_PRISONER_NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackPrisonerEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
 
 @Service
 class PopulateIndexService(
@@ -50,7 +51,7 @@ class PopulateIndexService(
     log.info("Splitting $totalNumberOfPrisoners in to pages each of size $pageSize")
     return (1..totalNumberOfPrisoners step pageSize.toLong()).toList()
       .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
-      .onEach { indexQueueService.sendPrisonerPageMessage(it) }
+      .onEach { indexQueueService.sendPrisonerPageMessage(it, POPULATE_PRISONER_PAGE) }
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.POPULATE_PRISONER_PAGES,

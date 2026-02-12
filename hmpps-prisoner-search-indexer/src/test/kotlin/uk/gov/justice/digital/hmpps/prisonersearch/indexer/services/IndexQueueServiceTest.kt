@@ -26,6 +26,11 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName.APPROXIMATE_
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
@@ -47,7 +52,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
   }
 
   @Nested
-  inner class SendIndexRequestMessage {
+  inner class SendPopulateIndexRequestMessage {
     @BeforeEach
     internal fun setUp() {
       whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
@@ -55,7 +60,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send populate message`() {
-      indexQueueService.sendPopulateIndexMessage()
+      indexQueueService.sendIndexMessage(POPULATE_INDEX)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -70,7 +75,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendPopulateIndexMessage()
+      indexQueueService.sendIndexMessage(POPULATE_INDEX)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
@@ -88,7 +93,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send refresh message`() {
-      indexQueueService.sendRefreshIndexMessage()
+      indexQueueService.sendIndexMessage(REFRESH_INDEX)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -103,7 +108,40 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendRefreshIndexMessage()
+      indexQueueService.sendIndexMessage(REFRESH_INDEX)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
+        },
+      )
+    }
+  }
+
+  @Nested
+  inner class SendRefreshActiveIndexMessage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
+    }
+
+    @Test
+    fun `will send refresh message`() {
+      indexQueueService.sendIndexMessage(REFRESH_ACTIVE_INDEX)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "REFRESH_ACTIVE_INDEX"
+          }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to index queue`() {
+      indexQueueService.sendIndexMessage(REFRESH_ACTIVE_INDEX)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
@@ -121,7 +159,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send populate message with index name`() {
-      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000))
+      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), POPULATE_PRISONER_PAGE)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -140,7 +178,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000))
+      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), POPULATE_PRISONER_PAGE)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
@@ -158,7 +196,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send populate message with index name`() {
-      indexQueueService.sendRefreshPrisonerPageMessage(PrisonerPage(1, 1000))
+      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), REFRESH_PRISONER_PAGE)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -177,7 +215,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send compare message with index name`() {
-      indexQueueService.sendRefreshPrisonerPageMessage(PrisonerPage(1, 1000))
+      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), REFRESH_PRISONER_PAGE)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -196,7 +234,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendRefreshPrisonerPageMessage(PrisonerPage(1, 1000))
+      indexQueueService.sendPrisonerPageMessage(PrisonerPage(1, 1000), REFRESH_PRISONER_PAGE)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")

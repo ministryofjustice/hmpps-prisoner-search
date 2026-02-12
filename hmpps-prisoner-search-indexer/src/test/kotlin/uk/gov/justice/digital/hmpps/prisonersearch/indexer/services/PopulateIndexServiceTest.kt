@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -105,9 +107,9 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10))
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
     }
 
     @Test
@@ -116,9 +118,9 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10))
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
     }
 
     @Test
@@ -127,10 +129,10 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(3, 10))
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(3, 10), POPULATE_PRISONER_PAGE)
       verifyNoMoreInteractions(indexQueueService)
     }
 
@@ -139,9 +141,9 @@ class PopulateIndexServiceTest {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(29)
 
       populateIndexService.populateIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10))
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10))
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
       verifyNoMoreInteractions(indexQueueService)
     }
 
@@ -150,7 +152,7 @@ class PopulateIndexServiceTest {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(20001)
 
       populateIndexService.populateIndex()
-      verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any())
+      verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any(), eq(POPULATE_PRISONER_PAGE))
     }
 
     @Test
@@ -158,7 +160,7 @@ class PopulateIndexServiceTest {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
 
       populateIndexService.populateIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10))
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
       verifyNoMoreInteractions(indexQueueService)
     }
 
