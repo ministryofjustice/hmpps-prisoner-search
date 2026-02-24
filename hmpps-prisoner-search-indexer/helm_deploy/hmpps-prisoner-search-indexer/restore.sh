@@ -38,6 +38,7 @@ SNAPSHOT_NAMESPACE="${NAMESPACE_OVERRIDE:-${NAMESPACE}}"
 ENDPOINT_SNAPSHOT_NAMESPACE="$OPENSEARCH_PROXY_URL/_snapshot/$SNAPSHOT_NAMESPACE"
 ENDPOINT_LATEST="$ENDPOINT_SNAPSHOT_NAMESPACE/latest"
 INDICES="prisoner-search,prisoner-index-status"
+DELETED_INDEX_COUNT=$(echo "$INDICES" | tr "," " " | wc -w)
 
 # Register restore snapshot repo if not already
 if ! check_http GET "$ENDPOINT_SNAPSHOT_NAMESPACE" &>/dev/null; then
@@ -62,7 +63,7 @@ fi
 
 # Get the original count of indices
 INDEX_COUNT=$(check_http GET "$OPENSEARCH_PROXY_URL/_cat/indices?format=json" | jq length)
-EXPECTED_INDEX_COUNT=$((INDEX_COUNT - 4)) # we're deleting 4 indices
+EXPECTED_INDEX_COUNT=$((INDEX_COUNT - DELETED_INDEX_COUNT))
 
 echo -e "\nDeleting indices"
 # the delete will return immediately with an acknowledged
@@ -77,8 +78,11 @@ while [[ $(check_http GET "$OPENSEARCH_PROXY_URL/_cat/indices?format=json" | jq 
   echo -n "."
   COUNT=$((COUNT+1))
   if [[ $COUNT -gt 20 ]]; then
-    echo "Timed out waiting for $EXPECTED_INDEX_COUNT to remain"
+    echo
     check_http --print=Hbh GET "$OPENSEARCH_PROXY_URL/_cat/indices"
+    echo -e "Expecting $EXPECTED_INDEX_COUNT indices to remain in OpenSearch."
+    echo "We have tried to delete \"$INDICES\", but the wrong number of indices remain."
+    echo "Check the above output to see if one hasn't been successfully deleted."
     exit 1
   fi
   sleep 10
