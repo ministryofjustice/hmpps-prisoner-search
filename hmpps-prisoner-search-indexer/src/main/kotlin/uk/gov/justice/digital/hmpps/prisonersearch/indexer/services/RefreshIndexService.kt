@@ -16,6 +16,7 @@ class RefreshIndexService(
   private val indexStatusService: IndexStatusService,
   private val indexQueueService: IndexQueueService,
   private val nomisService: NomisService,
+  private val nomisPrisonerService: NomisPrisonerService,
   private val prisonerSynchroniserService: PrisonerSynchroniserService,
   indexBuildProperties: IndexBuildProperties,
 ) {
@@ -62,21 +63,30 @@ class RefreshIndexService(
       .onEach { indexQueueService.sendPrisonerPageMessage(it, REFRESH_PRISONER_PAGE) }.size
   }
   private fun doRefreshActiveIndex(): Int {
-    val totalNumberOfActivePrisoners = nomisService.getTotalNumberOfActivePrisoners()
-    log.info("Splitting {} into active pages each of size {}", totalNumberOfActivePrisoners, pageSize)
-    return (1..totalNumberOfActivePrisoners step pageSize.toLong())
-      .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
-      .onEach { indexQueueService.sendPrisonerPageMessage(it, REFRESH_ACTIVE_PRISONER_PAGE) }.size
+    val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = true, size = pageSize)
+    log.info("Found {} pages each of size {}", ranges.size, pageSize)
+    return ranges
+      .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
+      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_ACTIVE_PRISONER_PAGE) }.size
   }
 
   fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit = nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
-    .forEach { indexQueueService.sendRefreshPrisonerMessage(it) }
+    .forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
 
-  fun refreshActiveIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit = nomisService.getActivePrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
-    .forEach { indexQueueService.sendRefreshPrisonerMessage(it) }
+  fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getAllPrisonersIds(
+    active = true,
+    fromRootOffenderId = page.fromRootOffenderId,
+    toRootOffenderId = page.toRootOffenderId,
+  )
+    .forEach { indexQueueService.sendRefreshPrisonerMessage(rootOffenderId = it) }
 
   fun refreshPrisoner(prisonerNumber: String) {
-    nomisService.getOffender(prisonerNumber)?.let { ob ->
+    nomisService.getOffender(offenderNo = prisonerNumber)?.let { ob ->
+      prisonerSynchroniserService.refresh(ob)
+    }
+  }
+  fun refreshPrisoner(rootOffenderId: Long) {
+    nomisService.getOffender(rootOffenderId = rootOffenderId)?.let { ob ->
       prisonerSynchroniserService.refresh(ob)
     }
   }

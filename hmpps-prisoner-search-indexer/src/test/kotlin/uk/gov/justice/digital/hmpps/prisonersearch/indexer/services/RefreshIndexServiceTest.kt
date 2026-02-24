@@ -22,18 +22,21 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.RootOffenderIdRange
 
 class RefreshIndexServiceTest {
 
   private val indexStatusService = mock<IndexStatusService>()
   private val indexQueueService = mock<IndexQueueService>()
   private val nomisService = mock<NomisService>()
+  private val nomisPrisonerService = mock<NomisPrisonerService>()
   private val prisonerSynchroniserService = mock<PrisonerSynchroniserService>()
   private val indexBuildProperties = IndexBuildProperties(10)
   private val refreshIndexService = RefreshIndexService(
     indexStatusService,
     indexQueueService,
     nomisService,
+    nomisPrisonerService,
     prisonerSynchroniserService,
     indexBuildProperties,
   )
@@ -238,77 +241,37 @@ class RefreshIndexServiceTest {
 
     @Test
     internal fun `will return the number of chunks sent for processing`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(25)
+      whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(true), any())).thenReturn(
+        listOf(
+          RootOffenderIdRange(1, 3),
+          RootOffenderIdRange(3, 5),
+          RootOffenderIdRange(5, 7),
+        ),
+      )
 
       assertThat(refreshIndexService.refreshActiveIndex()).isEqualTo(3)
     }
 
     @Test
     internal fun `For each chunk should send a process chunk message`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(25)
+      whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(true), any())).thenReturn(
+        listOf(
+          RootOffenderIdRange(1, 3),
+          RootOffenderIdRange(3, 5),
+          RootOffenderIdRange(5, 7),
+        ),
+      )
 
       refreshIndexService.refreshActiveIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-    }
-
-    @Test
-    internal fun `will split total list by our page size`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(30)
-
-      refreshIndexService.refreshActiveIndex()
-
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-    }
-
-    @Test
-    internal fun `will round up last page to page size when over`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(31)
-
-      refreshIndexService.refreshActiveIndex()
-
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(3, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verifyNoMoreInteractions(indexQueueService)
-    }
-
-    @Test
-    internal fun `will round up last page to page size when under`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(29)
-
-      refreshIndexService.refreshActiveIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verifyNoMoreInteractions(indexQueueService)
-    }
-
-    @Test
-    internal fun `will create a large number of pages for a large number of prisoners`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(20001)
-
-      refreshIndexService.refreshActiveIndex()
-      verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any(), eq(REFRESH_ACTIVE_PRISONER_PAGE))
-    }
-
-    @Test
-    internal fun `will create a single pages for a tiny number of prisoners`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(1)
-
-      refreshIndexService.refreshActiveIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_ACTIVE_PRISONER_PAGE)
-      verifyNoMoreInteractions(indexQueueService)
+      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 3), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(3, 5), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(5, 7), REFRESH_ACTIVE_PRISONER_PAGE)
     }
 
     @Test
     internal fun `will create no pages for no prisoners`() {
-      whenever(nomisService.getTotalNumberOfActivePrisoners()).thenReturn(0)
+      whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(true), any())).thenReturn(emptyList())
 
       refreshIndexService.refreshActiveIndex()
       verifyNoMoreInteractions(indexQueueService)
@@ -343,29 +306,30 @@ class RefreshIndexServiceTest {
   }
 
   @Nested
-  inner class RefreshActiveIndexWithPrisonerPage {
+  inner class RefreshActiveIndexWithRootOffenderIdPage {
     @BeforeEach
     internal fun setUp() {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndexState = COMPLETED),
       )
-      whenever(nomisService.getActivePrisonerNumbers(any(), any()))
-        .thenReturn(listOf("ABC123D", "A12345"))
+      whenever(nomisPrisonerService.getAllPrisonersIds(eq(true), any(), any()))
+        .thenReturn(listOf(5, 7, 10))
     }
 
     @Test
     internal fun `will get offenders in the supplied page`() {
-      refreshIndexService.refreshActiveIndexWithPrisonerPage(PrisonerPage(page = 99, pageSize = 1000))
+      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10))
 
-      verify(nomisService).getActivePrisonerNumbers(page = 99, pageSize = 1000)
+      verify(nomisPrisonerService).getAllPrisonersIds(active = true, fromRootOffenderId = 5, toRootOffenderId = 10)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
-      refreshIndexService.refreshActiveIndexWithPrisonerPage(PrisonerPage(page = 99, pageSize = 1000))
+      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10))
 
-      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
-      verify(indexQueueService).sendRefreshPrisonerMessage("A12345")
+      verify(indexQueueService).sendRefreshPrisonerMessage(5)
+      verify(indexQueueService).sendRefreshPrisonerMessage(7)
+      verify(indexQueueService).sendRefreshPrisonerMessage(10)
     }
   }
 
@@ -374,7 +338,7 @@ class RefreshIndexServiceTest {
     @Test
     internal fun `will synchronise offender to all active indices`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
 
       refreshIndexService.refreshPrisoner("ABC123D")
 
@@ -388,6 +352,30 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
       refreshIndexService.refreshPrisoner("ABC123D")
+
+      verifyNoInteractions(prisonerSynchroniserService)
+    }
+  }
+
+  @Nested
+  inner class RefreshPrisonerById {
+    @Test
+    internal fun `will synchronise offender to all active indices`() {
+      val booking = OffenderBookingBuilder().anOffenderBooking()
+      whenever(nomisService.getOffender(any<Long>())).thenReturn(booking)
+
+      refreshIndexService.refreshPrisoner(123)
+
+      verify(prisonerSynchroniserService).refresh(booking)
+      verify(nomisService).getOffender(123)
+    }
+
+    @Test
+    internal fun `will do nothing if prisoner not in NOMIS`() {
+      val indexStatus = IndexStatus(currentIndexState = COMPLETED)
+      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
+
+      refreshIndexService.refreshPrisoner(123)
 
       verifyNoInteractions(prisonerSynchroniserService)
     }

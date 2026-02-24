@@ -237,7 +237,7 @@ class PopulateIndexServiceTest {
       val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
 
       assertThat(populateIndexService.populateIndexWithPrisoner("ABC123D"))
         .extracting { it.prisonerNumber }.isEqualTo("ABC123D")
@@ -248,7 +248,7 @@ class PopulateIndexServiceTest {
       val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
 
       populateIndexService.populateIndexWithPrisoner("ABC123D")
 

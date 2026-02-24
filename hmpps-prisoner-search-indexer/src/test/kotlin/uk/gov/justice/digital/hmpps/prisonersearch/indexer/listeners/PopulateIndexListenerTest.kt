@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInPr
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
 
 @JsonTest
 internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
@@ -90,7 +91,6 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
       }
         """.trimIndent(),
       )
-
       verify(refreshIndexService).refreshActiveIndex()
     }
   }
@@ -143,15 +143,15 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """
       {
         "type": "REFRESH_ACTIVE_PRISONER_PAGE",
-        "prisonerPage": {
-          "page": 1,
-          "pageSize": 1000
+        "rootOffenderIdPage": {
+          "fromRootOffenderId": 1,
+          "toRootOffenderId": 1000
         }
       }
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshActiveIndexWithPrisonerPage(PrisonerPage(1, 1000))
+      verify(refreshIndexService).refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000))
     }
   }
 
@@ -171,6 +171,40 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       verify(populateIndexService).populateIndexWithPrisoner("X12345")
+    }
+  }
+
+  @Nested
+  inner class RefreshPrisoner {
+    @Test
+    internal fun `will call service with prisoner number to refresh`() {
+      listener.processIndexRequest(
+        """
+      {
+        "type": "REFRESH_PRISONER",
+        "prisonerNumber": "X12345"
+      }
+        """.trimIndent(),
+      )
+
+      verify(refreshIndexService).refreshPrisoner(prisonerNumber = "X12345")
+    }
+  }
+
+  @Nested
+  inner class RefreshPrisonerById {
+    @Test
+    internal fun `will call service with prisoner number to refresh`() {
+      listener.processIndexRequest(
+        """
+      {
+        "type": "REFRESH_PRISONER_BY_ID",
+        "rootOffenderId": 12345
+      }
+        """.trimIndent(),
+      )
+
+      verify(refreshIndexService).refreshPrisoner(rootOffenderId = 12345)
     }
   }
 

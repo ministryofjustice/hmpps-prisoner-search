@@ -306,139 +306,137 @@ data class PrisonerBuilder(
   val sentenceDetail: SentenceDetail? = null,
   val convictedStatus: String? = null,
   val allConvictedOffences: List<OffenceHistoryDetail>? = null,
+  val offenderId: Long = Random.nextLong(),
 ) {
-  fun toOffenderBooking(): String {
-    val offenderId = Random.nextLong()
-    return GsonConfig().gson().toJson(
-      OffenderBooking(
-        offenderNo = this.prisonerNumber,
-        bookingNo = "V61587",
-        bookingId = this.bookingId,
-        offenderId = offenderId,
-        firstName = this.firstName,
-        lastName = this.lastName,
+  fun toOffenderBooking(): String = GsonConfig().gson().toJson(
+    OffenderBooking(
+      offenderNo = this.prisonerNumber,
+      bookingNo = "V61587",
+      bookingId = this.bookingId,
+      offenderId = offenderId,
+      firstName = this.firstName,
+      lastName = this.lastName,
+      agencyId = this.agencyId,
+      dateOfBirth = LocalDate.parse(this.dateOfBirth),
+      physicalAttributes = PhysicalAttributes(
+        gender = this.gender,
+        raceCode = null,
+        ethnicity = this.ethnicity,
+        heightFeet = null,
+        heightInches = null,
+        heightMetres = null,
+        heightCentimetres = this.heightCentimetres,
+        weightPounds = null,
+        weightKilograms = this.weightKilograms,
+      ),
+      assignedLivingUnit = AssignedLivingUnit(
         agencyId = this.agencyId,
-        dateOfBirth = LocalDate.parse(this.dateOfBirth),
-        physicalAttributes = PhysicalAttributes(
-          gender = this.gender,
-          raceCode = null,
-          ethnicity = this.ethnicity,
-          heightFeet = null,
-          heightInches = null,
-          heightMetres = null,
-          heightCentimetres = this.heightCentimetres,
-          weightPounds = null,
-          weightKilograms = this.weightKilograms,
-        ),
-        assignedLivingUnit = AssignedLivingUnit(
-          agencyId = this.agencyId,
-          locationId = this.assignedLivingUnitLocationId,
-          description = this.cellLocation,
-          agencyName = "$agencyId (HMP)",
-        ),
-        aliases = this.aliases.map { a ->
-          Alias(
-            gender = a.gender,
-            ethnicity = a.ethnicity,
-            title = this.title,
-            firstName = this.firstName,
-            middleName = null,
-            lastName = this.lastName,
-            age = null,
-            dob = LocalDate.parse(this.dateOfBirth),
-            nameType = null,
-            createDate = LocalDate.now(),
-            offenderId = Random.nextLong(),
-          )
-        },
-        physicalCharacteristics = mutableListOf<PhysicalCharacteristic>().also { pcs ->
-          this.physicalCharacteristics?.hairColour?.let {
-            pcs.add(PhysicalCharacteristic("HAIR", "Hair Colour", it, null))
-          }
-          this.physicalCharacteristics?.rightEyeColour?.let {
-            pcs.add(PhysicalCharacteristic("R_EYE_C", "Right Eye Colour", it, null))
-          }
-          this.physicalCharacteristics?.leftEyeColour?.let {
-            pcs.add(PhysicalCharacteristic("L_EYE_C", "Left Eye Colour", it, null))
-          }
-          this.physicalCharacteristics?.facialHair?.let {
-            pcs.add(PhysicalCharacteristic("FACIAL_HAIR", "Facial Hair", it, null))
-          }
-          this.physicalCharacteristics?.shapeOfFace?.let {
-            pcs.add(PhysicalCharacteristic("FACE", "Shape of Face", it, null))
-          }
-          this.physicalCharacteristics?.build?.let {
-            pcs.add(PhysicalCharacteristic("BUILD", "Build", it, null))
-          }
-          this.physicalCharacteristics?.shoeSize?.let {
-            pcs.add(PhysicalCharacteristic("SHOESIZE", "Shoe Size", it.toString(), null))
-          }
-        },
-        physicalMarks = mutableListOf<PhysicalMark>().also { pms ->
-          this.physicalMarks?.tattoo?.forEach {
-            pms.add(PhysicalMark("Tattoo", null, it.bodyPart, null, it.comment, null))
-          }
-          this.physicalMarks?.mark?.forEach {
-            pms.add(PhysicalMark("Mark", null, it.bodyPart, null, it.comment, null))
-          }
-          this.physicalMarks?.other?.forEach {
-            pms.add(PhysicalMark("Other", null, it.bodyPart, null, it.comment, null))
-          }
-          this.physicalMarks?.scar?.forEach {
-            pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
-          }
-        },
-        profileInformation = listOf(
-          ProfileInformation("YOUTH", "Youth Offender?", "NO"),
-          ProfileInformation("RELF", "Religion", "Christian"),
-          ProfileInformation("NAT", "Nationality?", "British"),
-          ProfileInformation("SMOKE", "Smoker?", "V"),
-        ),
-        inOutStatus = "IN",
-        allIdentifiers = listOf(
-          OffenderIdentifier(
-            offenderId = offenderId,
-            type = "CRO",
-            value = "29906/12L",
-            issuedAuthorityText = null,
-            issuedDate = LocalDate.parse("2013-12-02"),
-            whenCreated = LocalDateTime.parse("2013-12-02T20:00"),
-          ),
-          OffenderIdentifier(
-            offenderId = offenderId,
-            type = "PNC",
-            value = "12/394773W",
-            issuedAuthorityText = null,
-            issuedDate = LocalDate.parse("2013-12-02"),
-            whenCreated = LocalDateTime.parse("2013-12-02T20:00"),
-          ),
-        ),
-        status = "ACTIVE IN",
-        legalStatus = "REMAND",
-        lastAdmissionTime = LocalDateTime.parse("2025-04-22T11:12:13"),
-        imprisonmentStatus = "LIFE",
-        imprisonmentStatusDescription = "Life imprisonment",
-        convictedStatus = convictedStatus,
-        latestLocationId = "WWI",
-        sentenceDetail = this.sentenceDetail,
-      ).let {
-        if (released) {
-          it.copy(
-            status = "INACTIVE OUT",
-            lastMovementTypeCode = "REL",
-            lastMovementReasonCode = "HP",
-            inOutStatus = "OUT",
-            agencyId = "OUT",
-          )
-        } else {
-          it.copy(
-            lastMovementTypeCode = "ADM",
-            lastMovementReasonCode = "I",
-          )
+        locationId = this.assignedLivingUnitLocationId,
+        description = this.cellLocation,
+        agencyName = "$agencyId (HMP)",
+      ),
+      aliases = this.aliases.map { a ->
+        Alias(
+          gender = a.gender,
+          ethnicity = a.ethnicity,
+          title = this.title,
+          firstName = this.firstName,
+          middleName = null,
+          lastName = this.lastName,
+          age = null,
+          dob = LocalDate.parse(this.dateOfBirth),
+          nameType = null,
+          createDate = LocalDate.now(),
+          offenderId = Random.nextLong(),
+        )
+      },
+      physicalCharacteristics = mutableListOf<PhysicalCharacteristic>().also { pcs ->
+        this.physicalCharacteristics?.hairColour?.let {
+          pcs.add(PhysicalCharacteristic("HAIR", "Hair Colour", it, null))
+        }
+        this.physicalCharacteristics?.rightEyeColour?.let {
+          pcs.add(PhysicalCharacteristic("R_EYE_C", "Right Eye Colour", it, null))
+        }
+        this.physicalCharacteristics?.leftEyeColour?.let {
+          pcs.add(PhysicalCharacteristic("L_EYE_C", "Left Eye Colour", it, null))
+        }
+        this.physicalCharacteristics?.facialHair?.let {
+          pcs.add(PhysicalCharacteristic("FACIAL_HAIR", "Facial Hair", it, null))
+        }
+        this.physicalCharacteristics?.shapeOfFace?.let {
+          pcs.add(PhysicalCharacteristic("FACE", "Shape of Face", it, null))
+        }
+        this.physicalCharacteristics?.build?.let {
+          pcs.add(PhysicalCharacteristic("BUILD", "Build", it, null))
+        }
+        this.physicalCharacteristics?.shoeSize?.let {
+          pcs.add(PhysicalCharacteristic("SHOESIZE", "Shoe Size", it.toString(), null))
         }
       },
-    )
-  }
+      physicalMarks = mutableListOf<PhysicalMark>().also { pms ->
+        this.physicalMarks?.tattoo?.forEach {
+          pms.add(PhysicalMark("Tattoo", null, it.bodyPart, null, it.comment, null))
+        }
+        this.physicalMarks?.mark?.forEach {
+          pms.add(PhysicalMark("Mark", null, it.bodyPart, null, it.comment, null))
+        }
+        this.physicalMarks?.other?.forEach {
+          pms.add(PhysicalMark("Other", null, it.bodyPart, null, it.comment, null))
+        }
+        this.physicalMarks?.scar?.forEach {
+          pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
+        }
+      },
+      profileInformation = listOf(
+        ProfileInformation("YOUTH", "Youth Offender?", "NO"),
+        ProfileInformation("RELF", "Religion", "Christian"),
+        ProfileInformation("NAT", "Nationality?", "British"),
+        ProfileInformation("SMOKE", "Smoker?", "V"),
+      ),
+      inOutStatus = "IN",
+      allIdentifiers = listOf(
+        OffenderIdentifier(
+          offenderId = offenderId,
+          type = "CRO",
+          value = "29906/12L",
+          issuedAuthorityText = null,
+          issuedDate = LocalDate.parse("2013-12-02"),
+          whenCreated = LocalDateTime.parse("2013-12-02T20:00"),
+        ),
+        OffenderIdentifier(
+          offenderId = offenderId,
+          type = "PNC",
+          value = "12/394773W",
+          issuedAuthorityText = null,
+          issuedDate = LocalDate.parse("2013-12-02"),
+          whenCreated = LocalDateTime.parse("2013-12-02T20:00"),
+        ),
+      ),
+      status = "ACTIVE IN",
+      legalStatus = "REMAND",
+      lastAdmissionTime = LocalDateTime.parse("2025-04-22T11:12:13"),
+      imprisonmentStatus = "LIFE",
+      imprisonmentStatusDescription = "Life imprisonment",
+      convictedStatus = convictedStatus,
+      latestLocationId = "WWI",
+      sentenceDetail = this.sentenceDetail,
+    ).let {
+      if (released) {
+        it.copy(
+          status = "INACTIVE OUT",
+          lastMovementTypeCode = "REL",
+          lastMovementReasonCode = "HP",
+          inOutStatus = "OUT",
+          agencyId = "OUT",
+        )
+      } else {
+        it.copy(
+          lastMovementTypeCode = "ADM",
+          lastMovementReasonCode = "I",
+        )
+      }
+    },
+  )
 }
 
 data class PhysicalCharacteristicBuilder(

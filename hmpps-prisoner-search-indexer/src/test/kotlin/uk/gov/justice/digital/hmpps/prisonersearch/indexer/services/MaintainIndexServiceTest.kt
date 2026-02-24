@@ -321,7 +321,7 @@ class MaintainIndexServiceTest {
     @Test
     fun `Offender is updated but prisoner not found`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any())).thenReturn(booking)
+      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
 
       assertThatThrownBy { maintainIndexService.indexPrisoner("SOME_CRN") }
         .isInstanceOf(PrisonerNotFoundException::class.java)

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonRegisterApiExtension.Companion.prisonRegisterApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
@@ -30,12 +31,14 @@ import java.time.Instant
 import java.time.LocalDate
 
 class RefreshIndexResourceIntTest : IntegrationTestBase() {
+  private val prisoners = listOf(
+    PrisonerBuilder("A9999AA"),
+    PrisonerBuilder("A7089EY", released = true, heightCentimetres = 200),
+  )
+
   @BeforeEach
   fun setUp() {
-    prisonApi.stubOffenders(
-      PrisonerBuilder("A9999AA"),
-      PrisonerBuilder("A7089EY", released = true, heightCentimetres = 200),
-    )
+    prisonApi.stubOffenders(*prisoners.toTypedArray())
     alertsApi.stubSuccess("A1239DD", listOf("P" to "PL1"))
     complexityOfNeedApi.stubSuccess("A9999AA", "low")
     complexityOfNeedApi.stubSuccess("A7089EY", "high")
@@ -183,10 +186,8 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
   inner class RefreshActiveIndex {
     @BeforeEach
     fun setUp() {
-      prisonApi.stubActiveOffenders(
-        PrisonerBuilder("A9999AA"),
-        PrisonerBuilder("A7089EY", released = true, heightCentimetres = 200),
-      )
+      nomisApi.stubActiveOffenders(*prisoners.toTypedArray())
+      prisoners.forEach { prisonApi.stubGetOffenderById(it) }
     }
 
     @Test

@@ -131,6 +131,7 @@ val models = listOf(
     name = "nomis-prisoner",
     packageName = "nomisprisoner",
     url = "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs",
+    models = "RootOffenderIdRange",
   ),
   //  ModelConfiguration(
   //    name = "prison-api",

@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessag
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_BY_ID
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -53,9 +54,17 @@ class IndexQueueService(
     }
   }
 
+  fun sendRootOffenderIdPageMessage(rootOffenderIdPage: RootOffenderIdPage, type: IndexRequestType) {
+    sendMessage(IndexMessageRequest(type = type, rootOffenderIdPage = rootOffenderIdPage)).also {
+      log.info("Sent {} root prisoner page message request {} for page {}", type, it.messageId(), rootOffenderIdPage)
+    }
+  }
+
   fun sendPopulatePrisonerMessage(prisonerNumber: String) = sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
 
   fun sendRefreshPrisonerMessage(prisonerNumber: String) = sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
+
+  fun sendRefreshPrisonerMessage(rootOffenderId: Long) = sendMessage(IndexMessageRequest(type = REFRESH_PRISONER_BY_ID, rootOffenderId = rootOffenderId), noTracing = true)
 
   fun getNumberOfMessagesCurrentlyOnIndexQueue(): Int = indexSqsClient.countMessagesOnQueue(indexQueueUrl).get()
 
