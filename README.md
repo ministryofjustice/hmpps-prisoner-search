@@ -68,14 +68,18 @@ NAMESPACE=hmpps-prisoner-search-dev && kubectl -n $NAMESPACE port-forward $(kube
 Then the following `http` command will return a list all indexes e.g.:
 
 ```
-http http://localhost:19200/_cat/indices
+> http http://localhost:19200/_cat/indices
 
-green open .opensearch-observability 5hpaFEsZQFCHKbK3MUs5ww 1 2       0      0    624b    208b
-green open .plugins-ml-config        PLZ29c0fTm-eZE3jbBDZ1g 5 1       1      0   9.5kb   4.7kb
-green open new-indexes               awlFmRltTUaODin8FAcV3g 5 1       0      0     2kb     1kb
-green open prisoner-search-blue      BJVwzaavQ1S8ZUBjh8m6AA 5 1 4884726 819333     2gb     1gb
-green open prisoner-search-green     ah_86gBrSNyuq_ZeOqADWQ 5 1   57188   6449 191.9mb 103.8mb
-green open .kibana_2                 pYe_1Di0RCyhfV-P0wbaIA 1 2       2      0  30.5kb  10.1kb
-green open .kibana_1                 VsvTD5S8Tv-u7Gu5Hn6Bpg 1 2       1      0  15.5kb   5.1kb
-green open prisoner-index-status     pHxkOKu9SgOKAxmZh0hJHQ 1 1       1      0  11.9kb   5.9kb
+health status index                          uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   prisoner-search                YkkARHiGQUCs5YxmSdHuKQ   5   1    8809747      1313777      4.1gb            2gb
+green  open   .plugins-ml-config             svijQTwKSlWlXCDoJzLWdA   5   1          1            0      9.4kb          4.7kb
+green  open   .opensearch-observability      oIoQwOloSiuaiXtEsTQVoA   1   1          0            0       416b           208b
+green  open   .plugins-ml-jobs               MMRPxYy3Ttq5yLPlSV2JmA   1   1          1            0     12.6kb          6.3kb
+green  open   .kibana_5                      D1fYHodiQLSHUD1LcwznHw   1   1          5            0     21.8kb         10.9kb
+green  open   .opendistro-job-scheduler-lock W1KwAIhtTIivmIshC1nRPw   1   1          1           19    161.9kb         88.5kb
+green  open   .kibana_2                      dacG4OAfSmWfKXSh1uLywg   1   1          2            0     20.3kb         10.1kb
+green  open   .kibana_1                      AJVWinlGTj6lo2WNbF7q1g   1   1          1            0     10.3kb          5.1kb
+green  open   .kibana_4                      aEPeGBDpTdCz6D3khj4rVg   1   1          4            0     21.1kb         10.5kb
+green  open   .kibana_3                      _HDhNftGT22jalMaAzttkQ   1   1          3            0     20.7kb         10.3kb
+green  open   prisoner-index-status          EUEkGVQYRGWFcZb9JNL5Jg   1   1          1            0      9.3kb          4.6kb
 ```

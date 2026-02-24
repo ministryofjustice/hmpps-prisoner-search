@@ -25,15 +25,18 @@ http http://localhost:19200/_cat/indices\?v
 ```
 gives:
 ```
-health status index                     uuid                   pri rep docs.count docs.deleted store.size pri.store.size
-green  open   .plugins-ml-config        i-QY7oI-Qey0RBoyHGYK4A   5   1          1            0      9.6kb          4.8kb
-green  open   .opensearch-observability Ngmv0-CFQR-IvXAKr_qrog   1   1          0            0       460b           230b
-green  open   restore-status            b0CYTCpMSnGu8ON2Z_2SrQ   5   1          1            0      8.3kb          4.1kb
-green  open   prisoner-search-blue      3mpojzxLRNyVgUKSJ7oIeA   5   1    4888409      1008293      2.1gb            1gb
-green  open   prisoner-search-green     MfvaqJLERTCBlrziTv3gMA   5   1    4888409       155072      1.8gb        959.4mb
-green  open   .kibana_2                 z1bL7hkhS_Cn-zyHqsH98w   1   1          2            0     20.3kb         10.1kb
-green  open   .kibana_1                 njK7fVWxQ7-7KEH5Yqz-JQ   1   1          1            0     10.3kb          5.1kb
-green  open   prisoner-index-status     ne_7sGyXQBmp95946r0PEA   1   1          1            0     11.9kb          5.9kb
+health status index                          uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   prisoner-search                YkkARHiGQUCs5YxmSdHuKQ   5   1    8809747      1313777      4.1gb            2gb
+green  open   .plugins-ml-config             svijQTwKSlWlXCDoJzLWdA   5   1          1            0      9.4kb          4.7kb
+green  open   .opensearch-observability      oIoQwOloSiuaiXtEsTQVoA   1   1          0            0       416b           208b
+green  open   .plugins-ml-jobs               MMRPxYy3Ttq5yLPlSV2JmA   1   1          1            0     12.6kb          6.3kb
+green  open   .kibana_5                      D1fYHodiQLSHUD1LcwznHw   1   1          5            0     21.8kb         10.9kb
+green  open   .opendistro-job-scheduler-lock W1KwAIhtTIivmIshC1nRPw   1   1          1           19    161.9kb         88.5kb
+green  open   .kibana_2                      dacG4OAfSmWfKXSh1uLywg   1   1          2            0     20.3kb         10.1kb
+green  open   .kibana_1                      AJVWinlGTj6lo2WNbF7q1g   1   1          1            0     10.3kb          5.1kb
+green  open   .kibana_4                      aEPeGBDpTdCz6D3khj4rVg   1   1          4            0     21.1kb         10.5kb
+green  open   .kibana_3                      _HDhNftGT22jalMaAzttkQ   1   1          3            0     20.7kb         10.3kb
+green  open   prisoner-index-status          EUEkGVQYRGWFcZb9JNL5Jg   1   1          1            0      9.3kb          4.6kb
 ```
 
 The full API references is available at https://opensearch.org/docs/2.11/api-reference/index/ - version might need to
