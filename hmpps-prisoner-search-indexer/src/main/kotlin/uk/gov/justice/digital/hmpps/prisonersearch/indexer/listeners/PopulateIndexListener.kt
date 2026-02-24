@@ -13,11 +13,13 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_BY_ID
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
 import java.lang.IllegalArgumentException
 
 @Service
@@ -41,9 +43,10 @@ class PopulateIndexListener(
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
         REFRESH_INDEX -> refreshIndexService.refreshIndex()
         REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithPrisonerPage(indexRequest.prisonerPage!!)
-        REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(indexRequest.prisonerNumber!!)
+        REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(prisonerNumber = indexRequest.prisonerNumber!!)
+        REFRESH_PRISONER_BY_ID -> refreshIndexService.refreshPrisoner(rootOffenderId = indexRequest.rootOffenderId!!)
         REFRESH_ACTIVE_INDEX -> refreshIndexService.refreshActiveIndex()
-        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithPrisonerPage(indexRequest.prisonerPage!!)
+        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!)
         else -> {
           "Unknown request type for message $requestJson"
             .let {
@@ -65,7 +68,9 @@ class PopulateIndexListener(
 data class IndexMessageRequest(
   val type: IndexRequestType?,
   val prisonerPage: PrisonerPage? = null,
+  val rootOffenderIdPage: RootOffenderIdPage? = null,
   val prisonerNumber: String? = null,
+  val rootOffenderId: Long? = null,
 )
 
 enum class IndexRequestType {
@@ -75,6 +80,7 @@ enum class IndexRequestType {
   REFRESH_INDEX,
   REFRESH_PRISONER_PAGE,
   REFRESH_PRISONER,
+  REFRESH_PRISONER_BY_ID,
   REFRESH_ACTIVE_INDEX,
   REFRESH_ACTIVE_PRISONER_PAGE,
 }

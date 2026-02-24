@@ -29,6 +29,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -244,6 +245,62 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
   }
 
   @Nested
+  inner class SendRootOffenderIdPageMessage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
+    }
+
+    @Test
+    fun `will send populate message with index name`() {
+      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "REFRESH_ACTIVE_PRISONER_PAGE",
+          "rootOffenderIdPage": {
+            "fromRootOffenderId": 1,
+            "toRootOffenderId": 1000
+          }
+        }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send compare message with index name`() {
+      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """{
+          "type": "REFRESH_ACTIVE_PRISONER_PAGE",
+          "rootOffenderIdPage": {
+            "fromRootOffenderId": 1,
+            "toRootOffenderId": 1000
+          }
+        }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to index queue`() {
+      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
+        },
+      )
+    }
+  }
+
+  @Nested
   inner class SendPrisonerMessage {
     @BeforeEach
     internal fun setUp() {
@@ -290,7 +347,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
     }
 
     @Test
-    fun `will send populate message with prisonerNumber`() {
+    fun `will send refresh message with prisonerNumber`() {
       indexQueueService.sendRefreshPrisonerMessage("X12345")
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
@@ -308,7 +365,44 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendPopulatePrisonerMessage("X12345")
+      indexQueueService.sendRefreshPrisonerMessage("X12345")
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
+        },
+      )
+    }
+  }
+
+  @Nested
+  inner class SendRefreshPrisonerByIdMessage {
+    @BeforeEach
+    internal fun setUp() {
+      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(
+        CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()),
+      )
+    }
+
+    @Test
+    fun `will send refresh message with prisonerNumber`() {
+      indexQueueService.sendRefreshPrisonerMessage(12345)
+      verify(indexSqsClient).sendMessage(
+        check<SendMessageRequest> {
+          assertThatJson(it.messageBody()).isEqualTo(
+            """
+        {
+          "type":"REFRESH_PRISONER_BY_ID",
+          "rootOffenderId": 12345
+        }
+            """.trimIndent(),
+          )
+        },
+      )
+    }
+
+    @Test
+    fun `will send message to index queue`() {
+      indexQueueService.sendRefreshPrisonerMessage(12345)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
