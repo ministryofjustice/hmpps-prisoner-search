@@ -37,7 +37,7 @@ fi
 SNAPSHOT_NAMESPACE="${NAMESPACE_OVERRIDE:-${NAMESPACE}}"
 ENDPOINT_SNAPSHOT_NAMESPACE="$OPENSEARCH_PROXY_URL/_snapshot/$SNAPSHOT_NAMESPACE"
 ENDPOINT_LATEST="$ENDPOINT_SNAPSHOT_NAMESPACE/latest"
-INDICES="prisoner-search-blue,prisoner-search-green,prisoner-search,prisoner-index-status"
+INDICES="prisoner-search,prisoner-index-status"
 
 # Register restore snapshot repo if not already
 if ! check_http GET "$ENDPOINT_SNAPSHOT_NAMESPACE" &>/dev/null; then
