@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-11.1059.f43b5c0"
+    "version" : "2026-02-23.1102.47e8429"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -8242,6 +8242,295 @@
         }
       }
     },
+    "/visits/configuration/time-slots/prison-id/{prisonId}/day-of-week/{dayOfWeek}" : {
+      "post" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Create a visit time slot",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createVisitTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dayOfWeek",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateVisitTimeSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Visit time slot created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitTimeSlotResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISITS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/configuration/time-slots/prison-id/{prisonId}/day-of-week/{dayOfWeek}/time-slot-sequence/{timeSlotSequence}" : {
+      "get" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Get visit time slot",
+        "description" : "Retrieves visit time slot along with visit slots. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getVisitTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dayOfWeek",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
+          }
+        }, {
+          "name" : "timeSlotSequence",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Time slot with visits slots",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitTimeSlotResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit time slot not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Create a visit slot",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createVisitSlot",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dayOfWeek",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
+          }
+        }, {
+          "name" : "timeSlotSequence",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateVisitSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Visit slot created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitSlotResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Parameters or internal location are not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISITS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Delete a visit time slot",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteVisitTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "dayOfWeek",
+          "in" : "path",
+          "description" : "Day of the week",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Day of the week",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "example" : "MON"
+          },
+          "example" : "MON"
+        }, {
+          "name" : "timeSlotSequence",
+          "in" : "path",
+          "description" : "Time slot sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Time slot sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Visit time slot deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{prisonNumber}/visit-balance-adjustments" : {
       "post" : {
         "tags" : [ "visit-balance-resource" ],
@@ -9193,6 +9482,26 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CsraCreateResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid agency or user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Booking does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -13014,80 +13323,6 @@
         }
       }
     },
-    "/visits/configuration/time-slots/prison-id/{prisonId}/day-of-week/{dayOfWeek}/time-slot-sequence/{timeSlotSequence}" : {
-      "get" : {
-        "tags" : [ "visits-configuration-resource" ],
-        "summary" : "Get visit time slot",
-        "description" : "Retrieves visit time slot along with visit slots. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getVisitTimeSlot",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "dayOfWeek",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
-          }
-        }, {
-          "name" : "timeSlotSequence",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Time slot with visits slots",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/VisitTimeSlotResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Visit time slot not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/visits/configuration/time-slots/ids" : {
       "get" : {
         "tags" : [ "visits-configuration-resource" ],
@@ -15167,6 +15402,16 @@
           "example" : "A3745XD"
         } ],
         "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerCsrasResponse"
+                }
+              }
+            }
+          },
           "404" : {
             "description" : "Prisoner does not exist",
             "content" : {
@@ -16332,6 +16577,16 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CsraGetDto"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "CSRA or booking does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -21682,6 +21937,52 @@
         }
       }
     },
+    "/visits/configuration/visit-slots/{visitSlotId}" : {
+      "delete" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Delete a visit slot",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteVisitSlot",
+        "parameters" : [ {
+          "name" : "visitSlotId",
+          "in" : "path",
+          "description" : "Visit slot id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Visit slot id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Visit slot deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/incident/adjudication-number/{adjudicationNumber}" : {
       "delete" : {
         "tags" : [ "adjudication-resource" ],
@@ -23130,7 +23431,7 @@
             "description" : "Application time"
           }
         },
-        "required" : [ "applicationDate", "escort", "eventDate", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime", "startTime", "toAddress" ]
+        "required" : [ "applicationDate", "eventDate", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime", "startTime", "toAddress" ]
       },
       "UpsertTemporaryAbsenceAddress" : {
         "type" : "object",
@@ -25422,6 +25723,159 @@
         },
         "required" : [ "courseActivityIds" ]
       },
+      "CreateVisitTimeSlotRequest" : {
+        "type" : "object",
+        "properties" : {
+          "startTime" : {
+            "type" : "string",
+            "description" : "Slot start time",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "Slot end time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can first be used",
+            "example" : "2022-09-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can no longer be used",
+            "example" : "2032-09-01"
+          }
+        },
+        "required" : [ "effectiveDate", "endTime", "startTime" ]
+      },
+      "VisitInternalLocationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id" ]
+      },
+      "VisitSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Slot ID",
+            "example" : 1
+          },
+          "internalLocation" : {
+            "$ref" : "#/components/schemas/VisitInternalLocationResponse",
+            "description" : "Room location of  visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max groups allowed in slot",
+            "example" : 1
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max adults allowed in slot",
+            "example" : 1
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "audit", "id", "internalLocation" ]
+      },
+      "VisitTimeSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          },
+          "dayOfWeek" : {
+            "type" : "string",
+            "description" : "Day of the week time slot is for",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "example" : "MON"
+          },
+          "timeSlotSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The time slot sequence",
+            "example" : 1
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Slot start time",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "Slot end time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can first be used",
+            "example" : "2022-09-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can no longer be used",
+            "example" : "2032-09-01"
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "List of slots at this time slot",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitSlotResponse"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "audit", "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
+      },
+      "CreateVisitSlotRequest" : {
+        "type" : "object",
+        "properties" : {
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Internal location room id",
+            "example" : 1913
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max groups allowed in slot",
+            "example" : 1
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max adults allowed in slot",
+            "example" : 1
+          }
+        },
+        "required" : [ "internalLocationId" ]
+      },
       "CreateVisitBalanceAdjustmentRequest" : {
         "type" : "object",
         "properties" : {
@@ -26695,6 +27149,24 @@
         },
         "required" : [ "authorisedStaffUsername", "effectiveDate", "enteredStaffUsername", "typeCode" ]
       },
+      "CsraCreateResponse" : {
+        "type" : "object",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id",
+            "example" : 2345678
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the assessment",
+            "example" : 2
+          }
+        },
+        "required" : [ "bookingId", "sequence" ]
+      },
       "CsraCreateDto" : {
         "type" : "object",
         "properties" : {
@@ -26800,24 +27272,6 @@
           }
         },
         "required" : [ "assessmentDate", "assessmentStaffId", "calculatedLevel", "createdBy", "createdDateTime", "score", "status", "type" ]
-      },
-      "CsraCreateResponse" : {
-        "type" : "object",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking id",
-            "example" : 2345678
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the assessment",
-            "example" : 2
-          }
-        },
-        "required" : [ "bookingId", "sequence" ]
       },
       "CreateSentenceResponse" : {
         "type" : "object",
@@ -29331,12 +29785,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -29369,51 +29823,6 @@
         },
         "required" : [ "visitId" ]
       },
-      "VisitInternalLocationResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "code" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "code", "id" ]
-      },
-      "VisitSlotResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Slot ID",
-            "example" : 1
-          },
-          "internalLocation" : {
-            "$ref" : "#/components/schemas/VisitInternalLocationResponse",
-            "description" : "Room location of  visit slot"
-          },
-          "maxGroups" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Optional max groups allowed in slot",
-            "example" : 1
-          },
-          "maxAdults" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Optional max adults allowed in slot",
-            "example" : 1
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "audit", "id", "internalLocation" ]
-      },
       "VisitTimeSlotForPrisonResponse" : {
         "type" : "object",
         "properties" : {
@@ -29431,62 +29840,6 @@
           }
         },
         "required" : [ "prisonId", "timeSlots" ]
-      },
-      "VisitTimeSlotResponse" : {
-        "type" : "object",
-        "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The prison id",
-            "example" : "MDI"
-          },
-          "dayOfWeek" : {
-            "type" : "string",
-            "description" : "Day of the week time slot is for",
-            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
-            "example" : "MON"
-          },
-          "timeSlotSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The time slot sequence",
-            "example" : 1
-          },
-          "startTime" : {
-            "type" : "string",
-            "description" : "Slot start time",
-            "example" : "10:00"
-          },
-          "endTime" : {
-            "type" : "string",
-            "description" : "Slot end time",
-            "example" : "11:00"
-          },
-          "effectiveDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date slot can first be used",
-            "example" : "2022-09-01"
-          },
-          "expiryDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date slot can no longer be used",
-            "example" : "2032-09-01"
-          },
-          "visitSlots" : {
-            "type" : "array",
-            "description" : "List of slots at this time slot",
-            "items" : {
-              "$ref" : "#/components/schemas/VisitSlotResponse"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "audit", "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
       },
       "PageMetadata" : {
         "type" : "object",
@@ -30563,6 +30916,202 @@
           }
         },
         "required" : [ "activeBookingId", "deletedOffenderNo", "previousBookingId", "requestDateTime", "retainedOffenderNo" ]
+      },
+      "CsraGetDto" : {
+        "type" : "object",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoners booking id",
+            "example" : 3222111
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The assessment sequence number within the booking",
+            "example" : 4
+          },
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The prisoner's prison",
+            "example" : "LEI"
+          },
+          "assessmentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the CSRA was created",
+            "example" : "2025-11-22"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "CSRA type as configured in the ASSESSMENTS table:\n    CSRF\t  CSR Full\n    CSRH\t  CSR Health\n    CSRDO\t  CSR Locate\n    CSR\t    CSR Rating\n    CSR1\t  CSR Reception\n    CSRREV\tCSR Review\n  ",
+            "enum" : [ "CSRF", "CSRH", "CSRDO", "CSR", "CSR1", "CSRREV" ]
+          },
+          "calculatedLevel" : {
+            "type" : "string",
+            "description" : "The calculated CSRA level",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
+            "example" : "STANDARD"
+          },
+          "score" : {
+            "type" : "number",
+            "description" : "Score",
+            "example" : 1000
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Status, active, inactive or provisional",
+            "enum" : [ "I", "A", "P" ]
+          },
+          "assessmentStaffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Staff id of user that created the CSRA",
+            "example" : 123456
+          },
+          "committeeCode" : {
+            "type" : "string",
+            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')",
+            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+          },
+          "nextReviewDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Next review date, defaults to current date + 6 months, if not provided"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "placementAgencyId" : {
+            "type" : "string",
+            "description" : "A prison to be transferred to",
+            "example" : "LEI"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp for when the CSRA was created",
+            "example" : "2025-12-06T12:34:56"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the CSRA",
+            "example" : "NQP56Y"
+          },
+          "reviewLevel" : {
+            "type" : "string",
+            "description" : "The review CSRA level",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+          },
+          "approvedLevel" : {
+            "type" : "string",
+            "description" : "The approval CSRA level",
+            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
+          },
+          "evaluationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Evaluation or approval date"
+          },
+          "evaluationResultCode" : {
+            "type" : "string",
+            "description" : "Approved or rejected indicator",
+            "enum" : [ "APP", "REJ" ]
+          },
+          "reviewCommitteeCode" : {
+            "type" : "string",
+            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')",
+            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
+          },
+          "reviewCommitteeComment" : {
+            "type" : "string",
+            "description" : "Approval Committee Comment text"
+          },
+          "reviewPlacementAgencyId" : {
+            "type" : "string",
+            "description" : "Approval Comment text"
+          },
+          "reviewComment" : {
+            "type" : "string",
+            "description" : "Approval Comment text"
+          },
+          "sections" : {
+            "type" : "array",
+            "description" : "Question and answer details by section",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraSectionDto"
+            }
+          }
+        },
+        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "score", "sections", "sequence", "status", "type" ]
+      },
+      "CsraQuestionDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "responses" : {
+            "type" : "array",
+            "description" : "Answers to this question",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraResponseDto"
+            }
+          }
+        },
+        "required" : [ "code", "responses" ]
+      },
+      "CsraResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "answer" : {
+            "type" : "string"
+          },
+          "comment" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code" ]
+      },
+      "CsraSectionDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "Questions and answers in this section",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraQuestionDto"
+            }
+          }
+        },
+        "required" : [ "code", "questions" ]
+      },
+      "PrisonerCsrasResponse" : {
+        "type" : "object",
+        "description" : "The list of CSRAs held against a prisoner",
+        "properties" : {
+          "csras" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraGetDto"
+            }
+          }
+        },
+        "required" : [ "csras" ]
       },
       "Actions" : {
         "type" : "object",
@@ -31830,189 +32379,6 @@
           }
         },
         "required" : [ "keyDateAdjustments", "sentenceAdjustments" ]
-      },
-      "CsraGetDto" : {
-        "type" : "object",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The prisoners booking id",
-            "example" : 3222111
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The assessment sequence number within the booking",
-            "example" : 4
-          },
-          "agencyId" : {
-            "type" : "string",
-            "description" : "The prisoner's prison",
-            "example" : "LEI"
-          },
-          "assessmentDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date the CSRA was created",
-            "example" : "2025-11-22"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "CSRA type as configured in the ASSESSMENTS table:\n    CSRF\t  CSR Full\n    CSRH\t  CSR Health\n    CSRDO\t  CSR Locate\n    CSR\t    CSR Rating\n    CSR1\t  CSR Reception\n    CSRREV\tCSR Review\n  ",
-            "enum" : [ "CSRF", "CSRH", "CSRDO", "CSR", "CSR1", "CSRREV" ]
-          },
-          "calculatedLevel" : {
-            "type" : "string",
-            "description" : "The calculated CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ],
-            "example" : "STANDARD"
-          },
-          "score" : {
-            "type" : "number",
-            "description" : "Score",
-            "example" : 1000
-          },
-          "status" : {
-            "type" : "string",
-            "description" : "Status, active, inactive or provisional",
-            "enum" : [ "I", "A", "P" ]
-          },
-          "assessmentStaffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Staff id of user that created the CSRA",
-            "example" : 123456
-          },
-          "committeeCode" : {
-            "type" : "string",
-            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')",
-            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
-          },
-          "nextReviewDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Next review date, defaults to current date + 6 months, if not provided"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment text"
-          },
-          "placementAgencyId" : {
-            "type" : "string",
-            "description" : "A prison to be transferred to",
-            "example" : "LEI"
-          },
-          "createdDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Timestamp for when the CSRA was created",
-            "example" : "2025-12-06T12:34:56"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the CSRA",
-            "example" : "NQP56Y"
-          },
-          "reviewLevel" : {
-            "type" : "string",
-            "description" : "The review CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
-          },
-          "approvedLevel" : {
-            "type" : "string",
-            "description" : "The approval CSRA level",
-            "enum" : [ "STANDARD", "PEND", "LOW", "MED", "HI" ]
-          },
-          "evaluationDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Evaluation or approval date"
-          },
-          "evaluationResultCode" : {
-            "type" : "string",
-            "description" : "Approved or rejected indicator",
-            "enum" : [ "APP", "REJ" ]
-          },
-          "reviewCommitteeCode" : {
-            "type" : "string",
-            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')",
-            "enum" : [ "GOV", "MED", "OCA", "RECP", "REVIEW", "SECSTATE", "SECUR" ]
-          },
-          "reviewCommitteeComment" : {
-            "type" : "string",
-            "description" : "Approval Committee Comment text"
-          },
-          "reviewPlacementAgencyId" : {
-            "type" : "string",
-            "description" : "Approval Comment text"
-          },
-          "reviewComment" : {
-            "type" : "string",
-            "description" : "Approval Comment text"
-          },
-          "sections" : {
-            "type" : "array",
-            "description" : "Question and answer details by section",
-            "items" : {
-              "$ref" : "#/components/schemas/CsraSectionDto"
-            }
-          }
-        },
-        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "score", "sections", "sequence", "status", "type" ]
-      },
-      "CsraQuestionDto" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "responses" : {
-            "type" : "array",
-            "description" : "Answers to this question",
-            "items" : {
-              "$ref" : "#/components/schemas/CsraResponseDto"
-            }
-          }
-        },
-        "required" : [ "code", "responses" ]
-      },
-      "CsraResponseDto" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "answer" : {
-            "type" : "string"
-          },
-          "comment" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "code" ]
-      },
-      "CsraSectionDto" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "questions" : {
-            "type" : "array",
-            "description" : "Questions and answers in this section",
-            "items" : {
-              "$ref" : "#/components/schemas/CsraQuestionDto"
-            }
-          }
-        },
-        "required" : [ "code", "questions" ]
       },
       "ADASummary" : {
         "type" : "object",
