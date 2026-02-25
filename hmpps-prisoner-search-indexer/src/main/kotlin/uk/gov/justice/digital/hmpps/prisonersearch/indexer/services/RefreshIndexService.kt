@@ -56,11 +56,11 @@ class RefreshIndexService(
     .run { doRefreshActiveIndex() }
 
   private fun doRefreshIndex(): Int {
-    val totalNumberOfPrisoners = nomisService.getTotalNumberOfPrisoners()
-    log.info("Splitting {} into pages each of size {}", totalNumberOfPrisoners, pageSize)
-    return (1..totalNumberOfPrisoners step pageSize.toLong())
-      .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
-      .onEach { indexQueueService.sendPrisonerPageMessage(it, REFRESH_PRISONER_PAGE) }.size
+    val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = false, size = pageSize)
+    log.info("Found {} pages each of size {}", ranges.size, pageSize)
+    return ranges
+      .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
+      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_PRISONER_PAGE) }.size
   }
   private fun doRefreshActiveIndex(): Int {
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = true, size = pageSize)
@@ -70,8 +70,11 @@ class RefreshIndexService(
       .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_ACTIVE_PRISONER_PAGE) }.size
   }
 
-  fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit = nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
-    .forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
+  fun refreshIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getPrisonNumbers(
+    active = false,
+    fromRootOffenderId = page.fromRootOffenderId,
+    toRootOffenderId = page.toRootOffenderId,
+  ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
 
   fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getPrisonNumbers(
     active = true,

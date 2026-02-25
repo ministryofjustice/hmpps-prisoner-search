@@ -41,7 +41,7 @@ class PopulateIndexListener(
         POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
         REFRESH_INDEX -> refreshIndexService.refreshIndex()
-        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithPrisonerPage(indexRequest.prisonerPage!!)
+        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!)
         REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(prisonerNumber = indexRequest.prisonerNumber!!)
         REFRESH_ACTIVE_INDEX -> refreshIndexService.refreshActiveIndex()
         REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!)

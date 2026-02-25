@@ -143,77 +143,37 @@ class RefreshIndexServiceTest {
 
     @Test
     internal fun `will return the number of chunks sent for processing`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
+      whenever(nomisPrisonerService.getAllPrisonersIdRanges(active = eq(false), size = any())).thenReturn(
+        listOf(
+          RootOffenderIdRange(1, 3),
+          RootOffenderIdRange(3, 5),
+          RootOffenderIdRange(5, 7),
+        ),
+      )
 
       assertThat(refreshIndexService.refreshIndex()).isEqualTo(3)
     }
 
     @Test
     internal fun `For each chunk should send a process chunk message`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(25)
+      whenever(nomisPrisonerService.getAllPrisonersIdRanges(active = eq(false), size = any())).thenReturn(
+        listOf(
+          RootOffenderIdRange(1, 3),
+          RootOffenderIdRange(3, 5),
+          RootOffenderIdRange(5, 7),
+        ),
+      )
 
       refreshIndexService.refreshIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_PRISONER_PAGE)
-    }
-
-    @Test
-    internal fun `will split total list by our page size`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(30)
-
-      refreshIndexService.refreshIndex()
-
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_PRISONER_PAGE)
-    }
-
-    @Test
-    internal fun `will round up last page to page size when over`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(31)
-
-      refreshIndexService.refreshIndex()
-
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(3, 10), REFRESH_PRISONER_PAGE)
-      verifyNoMoreInteractions(indexQueueService)
-    }
-
-    @Test
-    internal fun `will round up last page to page size when under`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(29)
-
-      refreshIndexService.refreshIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), REFRESH_PRISONER_PAGE)
-      verifyNoMoreInteractions(indexQueueService)
-    }
-
-    @Test
-    internal fun `will create a large number of pages for a large number of prisoners`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(20001)
-
-      refreshIndexService.refreshIndex()
-      verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any(), eq(REFRESH_PRISONER_PAGE))
-    }
-
-    @Test
-    internal fun `will create a single pages for a tiny number of prisoners`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
-
-      refreshIndexService.refreshIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), REFRESH_PRISONER_PAGE)
-      verifyNoMoreInteractions(indexQueueService)
+      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 3), REFRESH_PRISONER_PAGE)
+      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(3, 5), REFRESH_PRISONER_PAGE)
+      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(5, 7), REFRESH_PRISONER_PAGE)
     }
 
     @Test
     internal fun `will create no pages for no prisoners`() {
-      whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(0)
+      whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(false), any())).thenReturn(emptyList())
 
       refreshIndexService.refreshIndex()
       verifyNoMoreInteractions(indexQueueService)
@@ -285,20 +245,20 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndexState = COMPLETED),
       )
-      whenever(nomisService.getPrisonerNumbers(any(), any()))
+      whenever(nomisPrisonerService.getPrisonNumbers(eq(false), any(), any()))
         .thenReturn(listOf("ABC123D", "A12345"))
     }
 
     @Test
     internal fun `will get offenders in the supplied page`() {
-      refreshIndexService.refreshIndexWithPrisonerPage(PrisonerPage(page = 99, pageSize = 1000))
+      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000))
 
-      verify(nomisService).getPrisonerNumbers(page = 99, pageSize = 1000)
+      verify(nomisPrisonerService).getPrisonNumbers(active = false, fromRootOffenderId = 99, toRootOffenderId = 1000)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
-      refreshIndexService.refreshIndexWithPrisonerPage(PrisonerPage(page = 99, pageSize = 1000))
+      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000))
 
       verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
       verify(indexQueueService).sendRefreshPrisonerMessage("A12345")

@@ -49,6 +49,10 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
 
   @Nested
   inner class RefreshIndex {
+    @BeforeEach
+    fun setUp() {
+      nomisApi.stubOffenders(false, *prisoners.toTypedArray())
+    }
 
     @Test
     fun `Refresh index - no differences`() {
@@ -186,7 +190,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
   inner class RefreshActiveIndex {
     @BeforeEach
     fun setUp() {
-      nomisApi.stubActiveOffenders(*prisoners.toTypedArray())
+      nomisApi.stubOffenders(true, *prisoners.toTypedArray())
     }
 
     @Test
