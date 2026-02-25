@@ -11,6 +11,10 @@ import tools.jackson.databind.json.JsonMapper
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.apply
+import kotlin.io.path.exists
+import kotlin.io.path.pathString
+import kotlin.io.path.Path as KotlinPath
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
@@ -131,7 +135,6 @@ val models = listOf(
     name = "nomis-prisoner",
     packageName = "nomisprisoner",
     url = "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk/v3/api-docs",
-    models = "RootOffenderIdRange",
   ),
   //  ModelConfiguration(
   //    name = "prison-api",
@@ -171,13 +174,16 @@ models.forEach {
     group = "Generate model from API JSON definition"
     description = "Generate model from API JSON definition for ${it.name}"
     generatorName.set("kotlin")
+    library.set("jvm-spring-webclient")
     skipValidateSpec.set(true)
     inputSpec.set(it.input)
     outputDir.set("$buildDirectory/generated/${it.output}")
     modelPackage.set("uk.gov.justice.digital.hmpps.prisonersearch.indexer.${it.packageName}.model")
     apiPackage.set("uk.gov.justice.digital.hmpps.prisonersearch.indexer.${it.packageName}.api")
     configOptions.set(configValues)
-    globalProperties.set(mapOf("models" to it.models))
+    KotlinPath("$projectDir/openapi-generator-ignore-${it.name}")
+      .takeIf { p -> p.exists() }?.apply { ignoreFileOverride.set(this.pathString) }
+      ?: globalProperties.set(mapOf("models" to it.models))
     generateModelTests.set(false)
     generateModelDocumentation.set(false)
   }
@@ -211,6 +217,7 @@ val configValues = mapOf(
   "dateLibrary" to "java8-localdatetime",
   "serializationLibrary" to "jackson",
   "enumPropertyNaming" to "original",
+  "useSpringBoot3" to "true",
 )
 
 kotlin {

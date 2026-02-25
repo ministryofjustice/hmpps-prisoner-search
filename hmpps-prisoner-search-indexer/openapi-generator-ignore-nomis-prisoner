@@ -1,0 +1,15 @@
+**/build.gradle
+**/gradlew
+**/docs/
+**/gradle/
+**/gradlew.bat
+**/README.md
+**/settings.gradle
+**/.openapi-generator-ignore
+**/src/test/
+**/api/*
+**/model/*
+!**/ErrorResponse.kt
+!**/RootOffenderIdRange.kt
+!**/PrisonerSearchResourceApi.kt
+**/client/infrastructure/

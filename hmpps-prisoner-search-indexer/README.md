@@ -14,6 +14,7 @@ The purpose of this service is to:
   * [Running](./Running.md)
   * [Regression tests](./RegressionTests.md)
   * [Adding a new field to the index](./AddingNewField.md)
+  * [Generating the api client](./GeneratingApiClient.md)
 * Support
   * [Index maintenance](./IndexMaintenance.md)
   * [Prisoner differences](./PrisonerDifferences.md)
