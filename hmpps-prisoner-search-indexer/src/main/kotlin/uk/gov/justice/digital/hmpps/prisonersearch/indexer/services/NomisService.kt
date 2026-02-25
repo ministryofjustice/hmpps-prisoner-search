@@ -46,13 +46,6 @@ class NomisService(
     .onErrorResume(NotFound::class.java) { Mono.empty() }
     .block()
 
-  fun getOffender(rootOffenderId: Long): OffenderBooking? = prisonApiWebClient.get()
-    .uri("/api/prisoner-search/root-offender-id/{rootOffenderId}", rootOffenderId)
-    .retrieve()
-    .bodyToMono(OffenderBooking::class.java)
-    .onErrorResume(NotFound::class.java) { Mono.empty() }
-    .block()
-
   fun getMergedIdentifiersByBookingId(bookingId: Long): List<BookingIdentifier>? = prisonApiWebClient.get()
     .uri("/api/bookings/{bookingId}/identifiers?type=MERGED", bookingId)
     .retrieve()

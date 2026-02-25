@@ -73,20 +73,14 @@ class RefreshIndexService(
   fun refreshIndexWithPrisonerPage(prisonerPage: PrisonerPage): Unit = nomisService.getPrisonerNumbers(prisonerPage.page, prisonerPage.pageSize)
     .forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
 
-  fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getAllPrisonersIds(
+  fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getPrisonNumbers(
     active = true,
     fromRootOffenderId = page.fromRootOffenderId,
     toRootOffenderId = page.toRootOffenderId,
-  )
-    .forEach { indexQueueService.sendRefreshPrisonerMessage(rootOffenderId = it) }
+  ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
 
   fun refreshPrisoner(prisonerNumber: String) {
     nomisService.getOffender(offenderNo = prisonerNumber)?.let { ob ->
-      prisonerSynchroniserService.refresh(ob)
-    }
-  }
-  fun refreshPrisoner(rootOffenderId: Long) {
-    nomisService.getOffender(rootOffenderId = rootOffenderId)?.let { ob ->
       prisonerSynchroniserService.refresh(ob)
     }
   }

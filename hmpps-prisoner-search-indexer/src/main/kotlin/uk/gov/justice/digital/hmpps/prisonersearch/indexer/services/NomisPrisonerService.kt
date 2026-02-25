@@ -25,7 +25,7 @@ class NomisPrisonerService(
     .bodyToMono(object : ParameterizedTypeReference<List<RootOffenderIdRange>>() {})
     .block()!!
 
-  fun getAllPrisonersIds(active: Boolean, fromRootOffenderId: Long, toRootOffenderId: Long) = nomisApiWebClient.get()
+  fun getPrisonNumbers(active: Boolean, fromRootOffenderId: Long, toRootOffenderId: Long) = nomisApiWebClient.get()
     .uri {
       it.path("/search/prisoners/ids")
         .queryParam("active", active)
@@ -37,6 +37,6 @@ class NomisPrisonerService(
       it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
     }
     .retrieve()
-    .bodyToMono(object : ParameterizedTypeReference<List<Long>>() {})
+    .bodyToMono(object : ParameterizedTypeReference<List<String>>() {})
     .block()!!
 }

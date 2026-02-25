@@ -375,43 +375,6 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
   }
 
   @Nested
-  inner class SendRefreshPrisonerByIdMessage {
-    @BeforeEach
-    internal fun setUp() {
-      whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(
-        CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()),
-      )
-    }
-
-    @Test
-    fun `will send refresh message with prisonerNumber`() {
-      indexQueueService.sendRefreshPrisonerMessage(12345)
-      verify(indexSqsClient).sendMessage(
-        check<SendMessageRequest> {
-          assertThatJson(it.messageBody()).isEqualTo(
-            """
-        {
-          "type":"REFRESH_PRISONER_BY_ID",
-          "rootOffenderId": 12345
-        }
-            """.trimIndent(),
-          )
-        },
-      )
-    }
-
-    @Test
-    fun `will send message to index queue`() {
-      indexQueueService.sendRefreshPrisonerMessage(12345)
-      verify(indexSqsClient).sendMessage(
-        check<SendMessageRequest> {
-          assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
-        },
-      )
-    }
-  }
-
-  @Nested
   inner class QueueMessageAttributes {
     @Test
     internal fun `async calls for queue status successfully complete`() {

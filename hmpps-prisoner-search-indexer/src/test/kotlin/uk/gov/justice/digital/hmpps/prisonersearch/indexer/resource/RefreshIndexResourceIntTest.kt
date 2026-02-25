@@ -187,7 +187,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       nomisApi.stubActiveOffenders(*prisoners.toTypedArray())
-      prisoners.forEach { prisonApi.stubGetOffenderById(it) }
     }
 
     @Test
