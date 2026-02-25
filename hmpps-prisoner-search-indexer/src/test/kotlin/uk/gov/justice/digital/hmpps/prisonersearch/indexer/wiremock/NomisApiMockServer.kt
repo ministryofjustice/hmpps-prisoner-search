@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import com.google.gson.Gson
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -24,10 +25,11 @@ class NomisApiMockServer : WireMockServer(8094) {
     )
   }
 
-  fun stubActiveOffenders(vararg prisoners: PrisonerBuilder) {
+  fun stubOffenders(active: Boolean, vararg prisoners: PrisonerBuilder) {
     val prisonNumbers = prisoners.map { it.prisonerNumber }
     stubFor(
       WireMock.get(urlPathEqualTo("/search/prisoners/id-ranges"))
+        .withQueryParam("active", EqualToPattern(active.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -36,6 +38,7 @@ class NomisApiMockServer : WireMockServer(8094) {
     )
     stubFor(
       WireMock.get(urlPathEqualTo("/search/prisoners/ids"))
+        .withQueryParam("active", EqualToPattern(active.toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

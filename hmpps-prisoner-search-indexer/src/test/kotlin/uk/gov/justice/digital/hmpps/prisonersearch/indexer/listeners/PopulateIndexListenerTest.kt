@@ -123,15 +123,15 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """
       {
         "type": "REFRESH_PRISONER_PAGE",
-        "prisonerPage": {
-          "page": 1,
-          "pageSize": 1000
+        "rootOffenderIdPage": {
+          "fromRootOffenderId": 1,
+          "toRootOffenderId": 1000
         }
       }
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshIndexWithPrisonerPage(PrisonerPage(1, 1000))
+      verify(refreshIndexService).refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000))
     }
   }
 
