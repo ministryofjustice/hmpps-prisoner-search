@@ -86,7 +86,10 @@ generic-service:
       schedule: "*/10 * * * *"
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
-      schedule: "05 21 * * *"
+      schedule: "05 21 * * MON,THU"
+    - name: active-index-refresh
+      type: ACTIVE_INDEX_REFRESH
+      schedule: "05 21 * * SUN,TUE,WED,FRI,SAT"
 
 generic-prometheus-alerts:
   targetApplication: hmpps-prisoner-search-indexer

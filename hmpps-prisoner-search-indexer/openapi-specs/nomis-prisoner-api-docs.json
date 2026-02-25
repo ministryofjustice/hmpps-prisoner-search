@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-24.1117.b202f5d"
+    "version" : "2026-02-25.1123.74397f4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14418,9 +14418,9 @@
     "/search/prisoners/ids" : {
       "get" : {
         "tags" : [ "prisoner-search-resource" ],
-        "summary" : "Gets every prisoner root offender id between range for prisoner search.",
-        "description" : "Returns a list of root offender ids greater than the specified fromRootOffenderId and less than or\n      equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
-        "operationId" : "getAllPrisonersIds",
+        "summary" : "Gets every prison number between range for prisoner search.",
+        "description" : "Returns a list of prison numbers for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
+        "operationId" : "getAllPrisonersInRange",
         "parameters" : [ {
           "name" : "active",
           "in" : "query",
@@ -14450,14 +14450,13 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "list of root offender ids",
+            "description" : "list of prison numbers",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "type" : "integer",
-                    "format" : "int64"
+                    "type" : "string"
                   }
                 }
               }

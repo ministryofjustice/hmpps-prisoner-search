@@ -312,24 +312,24 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(
         IndexStatus(currentIndexState = COMPLETED),
       )
-      whenever(nomisPrisonerService.getAllPrisonersIds(eq(true), any(), any()))
-        .thenReturn(listOf(5, 7, 10))
+      whenever(nomisPrisonerService.getPrisonNumbers(eq(true), any(), any()))
+        .thenReturn(listOf("ABC123D", "ABC123E", "ABC123F"))
     }
 
     @Test
     internal fun `will get offenders in the supplied page`() {
       refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10))
 
-      verify(nomisPrisonerService).getAllPrisonersIds(active = true, fromRootOffenderId = 5, toRootOffenderId = 10)
+      verify(nomisPrisonerService).getPrisonNumbers(active = true, fromRootOffenderId = 5, toRootOffenderId = 10)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
       refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10))
 
-      verify(indexQueueService).sendRefreshPrisonerMessage(5)
-      verify(indexQueueService).sendRefreshPrisonerMessage(7)
-      verify(indexQueueService).sendRefreshPrisonerMessage(10)
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123E")
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123F")
     }
   }
 
@@ -352,30 +352,6 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
       refreshIndexService.refreshPrisoner("ABC123D")
-
-      verifyNoInteractions(prisonerSynchroniserService)
-    }
-  }
-
-  @Nested
-  inner class RefreshPrisonerById {
-    @Test
-    internal fun `will synchronise offender to all active indices`() {
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any<Long>())).thenReturn(booking)
-
-      refreshIndexService.refreshPrisoner(123)
-
-      verify(prisonerSynchroniserService).refresh(booking)
-      verify(nomisService).getOffender(123)
-    }
-
-    @Test
-    internal fun `will do nothing if prisoner not in NOMIS`() {
-      val indexStatus = IndexStatus(currentIndexState = COMPLETED)
-      whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
-
-      refreshIndexService.refreshPrisoner(123)
 
       verifyNoInteractions(prisonerSynchroniserService)
     }

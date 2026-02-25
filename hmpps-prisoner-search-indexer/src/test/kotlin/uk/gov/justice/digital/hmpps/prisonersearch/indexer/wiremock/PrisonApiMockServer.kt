@@ -51,17 +51,6 @@ class PrisonApiMockServer : WireMockServer(8093) {
     )
   }
 
-  fun stubGetOffenderById(prisonerBuilder: PrisonerBuilder) {
-    stubFor(
-      WireMock.get(urlEqualTo("/api/prisoner-search/root-offender-id/${prisonerBuilder.offenderId}"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(prisonerBuilder.toOffenderBooking()),
-        ),
-    )
-  }
-
   fun stubGetNomsNumberForBooking(bookingId: Long, prisonerNumber: String) {
     stubFor(
       WireMock.get(urlEqualTo("/api/bookings/$bookingId?basicInfo=true"))

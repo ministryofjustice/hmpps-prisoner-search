@@ -25,7 +25,7 @@ class NomisApiMockServer : WireMockServer(8094) {
   }
 
   fun stubActiveOffenders(vararg prisoners: PrisonerBuilder) {
-    val rootOffenderIds = prisoners.map { it.offenderId }
+    val prisonNumbers = prisoners.map { it.prisonerNumber }
     stubFor(
       WireMock.get(urlPathEqualTo("/search/prisoners/id-ranges"))
         .willReturn(
@@ -39,7 +39,7 @@ class NomisApiMockServer : WireMockServer(8094) {
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(Gson().toJson(rootOffenderIds)),
+            .withBody(Gson().toJson(prisonNumbers)),
         ),
     )
   }

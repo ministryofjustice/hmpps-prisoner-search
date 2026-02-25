@@ -28,6 +28,9 @@ generic-service:
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
       schedule: "05 08 * * MON"
+    - name: active-index-refresh
+      type: ACTIVE_INDEX_REFRESH
+      schedule: "05 08 * * WED"
 
 generic-prometheus-alerts:
   businessHoursOnly: true

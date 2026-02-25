@@ -192,23 +192,6 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   }
 
   @Nested
-  inner class RefreshPrisonerById {
-    @Test
-    internal fun `will call service with prisoner number to refresh`() {
-      listener.processIndexRequest(
-        """
-      {
-        "type": "REFRESH_PRISONER_BY_ID",
-        "rootOffenderId": 12345
-      }
-        """.trimIndent(),
-      )
-
-      verify(refreshIndexService).refreshPrisoner(rootOffenderId = 12345)
-    }
-  }
-
-  @Nested
   inner class BadMessages {
     @Test
     internal fun `will fail for bad json`() {
