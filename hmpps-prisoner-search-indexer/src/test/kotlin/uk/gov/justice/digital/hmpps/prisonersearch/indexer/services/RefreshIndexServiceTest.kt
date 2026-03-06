@@ -48,7 +48,7 @@ class RefreshIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      assertThatThrownBy { refreshIndexService.startFullIndexRefresh() }
+      assertThatThrownBy { refreshIndexService.startFullIndexRefresh(true) }
         .isInstanceOf(BuildAlreadyInProgressException::class.java)
         .hasMessageContaining("The build is already BUILDING")
 
@@ -63,7 +63,7 @@ class RefreshIndexServiceTest {
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
-      assertThatThrownBy { refreshIndexService.startFullIndexRefresh() }
+      assertThatThrownBy { refreshIndexService.startFullIndexRefresh(true) }
         .isInstanceOf(ActiveMessagesExistException::class.java)
         .hasMessageContaining("The index has active messages")
     }
@@ -75,9 +75,9 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndexState = COMPLETED))
 
-      refreshIndexService.startFullIndexRefresh()
+      refreshIndexService.startFullIndexRefresh(true)
 
-      verify(indexQueueService).sendIndexMessage(REFRESH_INDEX)
+      verify(indexQueueService).sendIndexMessage(REFRESH_INDEX, true)
     }
   }
 
@@ -88,7 +88,7 @@ class RefreshIndexServiceTest {
       val expectedIndexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(expectedIndexStatus)
 
-      assertThatThrownBy { refreshIndexService.startActiveIndexRefresh() }
+      assertThatThrownBy { refreshIndexService.startActiveIndexRefresh(true) }
         .isInstanceOf(BuildAlreadyInProgressException::class.java)
         .hasMessageContaining("The build is already BUILDING")
 
@@ -103,7 +103,7 @@ class RefreshIndexServiceTest {
       val expectedIndexQueueStatus = IndexQueueStatus(1, 0, 0)
       whenever(indexQueueService.getIndexQueueStatus()).thenReturn(expectedIndexQueueStatus)
 
-      assertThatThrownBy { refreshIndexService.startActiveIndexRefresh() }
+      assertThatThrownBy { refreshIndexService.startActiveIndexRefresh(true) }
         .isInstanceOf(ActiveMessagesExistException::class.java)
         .hasMessageContaining("The index has active messages")
     }
@@ -115,9 +115,9 @@ class RefreshIndexServiceTest {
       whenever(indexStatusService.getIndexStatus())
         .thenReturn(IndexStatus(currentIndexState = COMPLETED))
 
-      refreshIndexService.startActiveIndexRefresh()
+      refreshIndexService.startActiveIndexRefresh(true)
 
-      verify(indexQueueService).sendIndexMessage(REFRESH_ACTIVE_INDEX)
+      verify(indexQueueService).sendIndexMessage(REFRESH_ACTIVE_INDEX, true)
     }
   }
 
@@ -194,7 +194,7 @@ class RefreshIndexServiceTest {
       val indexStatus = IndexStatus(currentIndexState = BUILDING)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      assertThatThrownBy { refreshIndexService.refreshActiveIndex() }
+      assertThatThrownBy { refreshIndexService.refreshActiveIndex(true) }
         .isInstanceOf(BuildAlreadyInProgressException::class.java)
         .hasMessageContaining("The build is already BUILDING")
     }
@@ -209,7 +209,7 @@ class RefreshIndexServiceTest {
         ),
       )
 
-      assertThat(refreshIndexService.refreshActiveIndex()).isEqualTo(3)
+      assertThat(refreshIndexService.refreshActiveIndex(true)).isEqualTo(3)
     }
 
     @Test
@@ -222,7 +222,7 @@ class RefreshIndexServiceTest {
         ),
       )
 
-      refreshIndexService.refreshActiveIndex()
+      refreshIndexService.refreshActiveIndex(true)
 
       verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 3), REFRESH_ACTIVE_PRISONER_PAGE)
       verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(3, 5), REFRESH_ACTIVE_PRISONER_PAGE)
@@ -233,7 +233,7 @@ class RefreshIndexServiceTest {
     internal fun `will create no pages for no prisoners`() {
       whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(true), any())).thenReturn(emptyList())
 
-      refreshIndexService.refreshActiveIndex()
+      refreshIndexService.refreshActiveIndex(true)
       verifyNoMoreInteractions(indexQueueService)
     }
   }
@@ -251,17 +251,17 @@ class RefreshIndexServiceTest {
 
     @Test
     internal fun `will get offenders in the supplied page`() {
-      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000))
+      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000), true)
 
       verify(nomisPrisonerService).getPrisonNumbers(active = false, fromRootOffenderId = 99, toRootOffenderId = 1000)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
-      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000))
+      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000), true)
 
-      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
-      verify(indexQueueService).sendRefreshPrisonerMessage("A12345")
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D", true)
+      verify(indexQueueService).sendRefreshPrisonerMessage("A12345", true)
     }
   }
 
@@ -278,18 +278,18 @@ class RefreshIndexServiceTest {
 
     @Test
     internal fun `will get offenders in the supplied page`() {
-      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10))
+      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10), true)
 
       verify(nomisPrisonerService).getPrisonNumbers(active = true, fromRootOffenderId = 5, toRootOffenderId = 10)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
-      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10))
+      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10), true)
 
-      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D")
-      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123E")
-      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123F")
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D", true)
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123E", true)
+      verify(indexQueueService).sendRefreshPrisonerMessage("ABC123F", true)
     }
   }
 
@@ -300,9 +300,9 @@ class RefreshIndexServiceTest {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
 
-      refreshIndexService.refreshPrisoner("ABC123D")
+      refreshIndexService.refreshPrisoner("ABC123D", true)
 
-      verify(prisonerSynchroniserService).refresh(booking)
+      verify(prisonerSynchroniserService).refresh(booking, true)
       verify(nomisService).getOffender("ABC123D")
     }
 
@@ -311,7 +311,7 @@ class RefreshIndexServiceTest {
       val indexStatus = IndexStatus(currentIndexState = COMPLETED)
       whenever(indexStatusService.getIndexStatus()).thenReturn(indexStatus)
 
-      refreshIndexService.refreshPrisoner("ABC123D")
+      refreshIndexService.refreshPrisoner("ABC123D", true)
 
       verifyNoInteractions(prisonerSynchroniserService)
     }

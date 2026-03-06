@@ -66,7 +66,8 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "POPULATE_INDEX"
+          "type": "POPULATE_INDEX",
+          "domainEvents": false
           }
             """.trimIndent(),
           )
@@ -99,7 +100,8 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "REFRESH_INDEX"
+          "type": "REFRESH_INDEX",
+        "domainEvents": false
           }
             """.trimIndent(),
           )
@@ -132,7 +134,8 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
-          "type": "REFRESH_ACTIVE_INDEX"
+          "type": "REFRESH_ACTIVE_INDEX",
+          "domainEvents": false
           }
             """.trimIndent(),
           )
@@ -166,6 +169,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "POPULATE_PRISONER_PAGE",
+          "domainEvents": true,
           "prisonerPage": {
             "page": 1,
             "pageSize": 1000
@@ -203,6 +207,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "REFRESH_PRISONER_PAGE",
+          "domainEvents": true,
           "prisonerPage": {
             "page": 1,
             "pageSize": 1000
@@ -222,6 +227,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "REFRESH_PRISONER_PAGE",
+          "domainEvents": true,
           "prisonerPage": {
             "page": 1,
             "pageSize": 1000
@@ -253,7 +259,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send populate message with index name`() {
-      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE)
+      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -272,7 +278,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send compare message with index name`() {
-      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE)
+      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
@@ -291,7 +297,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE)
+      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")
@@ -318,6 +324,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
             """
         {
           "type":"POPULATE_PRISONER",
+          "domainEvents": false,
           "prisonerNumber":"X12345"
         }
             """.trimIndent(),
@@ -348,13 +355,14 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send refresh message with prisonerNumber`() {
-      indexQueueService.sendRefreshPrisonerMessage("X12345")
+      indexQueueService.sendRefreshPrisonerMessage("X12345", false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """
         {
           "type":"REFRESH_PRISONER",
+          "domainEvents": false,
           "prisonerNumber":"X12345"
         }
             """.trimIndent(),
@@ -365,7 +373,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendRefreshPrisonerMessage("X12345")
+      indexQueueService.sendRefreshPrisonerMessage("X12345", false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")

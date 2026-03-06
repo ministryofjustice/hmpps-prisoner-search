@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
 
 @JsonTest
-internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
+class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   private val populateIndexService = mock<PopulateIndexService>()
   private val refreshIndexService = mock<RefreshIndexService>()
 
@@ -34,7 +34,7 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   @Nested
   inner class PopulateIndex {
     @Test
-    internal fun `will call service with index name`() {
+    fun `will call service with index name`() {
       whenever(populateIndexService.populateIndex()).thenReturn(1)
 
       listener.processIndexRequest(
@@ -49,7 +49,7 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
     }
 
     @Test
-    internal fun `failed request`() {
+    fun `failed request`() {
       whenever(populateIndexService.populateIndex()).thenThrow(BuildNotInProgressException(IndexStatus()))
 
       listener.processIndexRequest(
@@ -67,23 +67,24 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   @Nested
   inner class RefreshIndex {
     @Test
-    internal fun `will call service with index name`() {
+    fun `will call service with index name`() {
       listener.processIndexRequest(
         """
       {
-        "type": "REFRESH_INDEX"
+        "type": "REFRESH_INDEX",
+        "domainEvents": true
       }
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshIndex()
+      verify(refreshIndexService).refreshIndex(true)
     }
   }
 
   @Nested
   inner class RefreshActiveIndex {
     @Test
-    internal fun `will call service with index name`() {
+    fun `will call service with index name`() {
       listener.processIndexRequest(
         """
       {
@@ -91,14 +92,14 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
       }
         """.trimIndent(),
       )
-      verify(refreshIndexService).refreshActiveIndex()
+      verify(refreshIndexService).refreshActiveIndex(false)
     }
   }
 
   @Nested
   inner class PopulatePrisonerPage {
     @Test
-    internal fun `will call service with page details`() {
+    fun `will call service with page details`() {
       listener.processIndexRequest(
         """
       {
@@ -118,7 +119,7 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
   @Nested
   inner class RefreshPrisonerPage {
     @Test
-    internal fun `will call service with page details`() {
+    fun `will call service with page details`() {
       listener.processIndexRequest(
         """
       {
@@ -131,14 +132,14 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000))
+      verify(refreshIndexService).refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000), false)
     }
   }
 
   @Nested
   inner class RefreshActivePrisonerPage {
     @Test
-    internal fun `will call service with page details`() {
+    fun `will call service with page details`() {
       listener.processIndexRequest(
         """
       {
@@ -151,14 +152,14 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000))
+      verify(refreshIndexService).refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000), false)
     }
   }
 
   @Nested
   inner class PopulatePrisoner {
     @Test
-    internal fun `will call service with prisoner number to populate`() {
+    fun `will call service with prisoner number to populate`() {
       whenever(populateIndexService.populateIndexWithPrisoner(any())).thenReturn(Prisoner())
 
       listener.processIndexRequest(
@@ -187,14 +188,14 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshPrisoner(prisonerNumber = "X12345")
+      verify(refreshIndexService).refreshPrisoner(prisonerNumber = "X12345", domainEvents = true)
     }
   }
 
   @Nested
   inner class BadMessages {
     @Test
-    internal fun `will fail for bad json`() {
+    fun `will fail for bad json`() {
       assertThatThrownBy { listener.processIndexRequest("this is bad json") }
         .isInstanceOf(StreamReadException::class.java)
 
@@ -202,7 +203,7 @@ internal class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
     }
 
     @Test
-    internal fun `will fail for unknown message type`() {
+    fun `will fail for unknown message type`() {
       assertThatThrownBy {
         listener.processIndexRequest(
           """

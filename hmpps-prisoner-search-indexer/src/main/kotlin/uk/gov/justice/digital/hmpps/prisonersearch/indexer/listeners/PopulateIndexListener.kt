@@ -40,11 +40,12 @@ class PopulateIndexListener(
         POPULATE_INDEX -> populateIndexService.populateIndex()
         POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
         POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
-        REFRESH_INDEX -> refreshIndexService.refreshIndex()
-        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!)
-        REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(prisonerNumber = indexRequest.prisonerNumber!!)
-        REFRESH_ACTIVE_INDEX -> refreshIndexService.refreshActiveIndex()
-        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!)
+
+        REFRESH_INDEX -> refreshIndexService.refreshIndex(indexRequest.domainEvents)
+        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!, indexRequest.domainEvents)
+        REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(prisonerNumber = indexRequest.prisonerNumber!!, indexRequest.domainEvents)
+        REFRESH_ACTIVE_INDEX -> refreshIndexService.refreshActiveIndex(indexRequest.domainEvents)
+        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!, indexRequest.domainEvents)
         else -> {
           "Unknown request type for message $requestJson"
             .let {
@@ -69,6 +70,7 @@ data class IndexMessageRequest(
   val rootOffenderIdPage: RootOffenderIdPage? = null,
   val prisonerNumber: String? = null,
   val rootOffenderId: Long? = null,
+  val domainEvents: Boolean = false,
 )
 
 enum class IndexRequestType {

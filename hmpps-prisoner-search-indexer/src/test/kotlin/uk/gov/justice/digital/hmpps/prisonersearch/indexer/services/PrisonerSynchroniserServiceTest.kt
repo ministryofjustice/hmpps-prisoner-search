@@ -983,7 +983,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(false)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, true, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerRepository, never()).save(any())
       verify(prisonerDifferenceService).hasChanged(any(), any())
@@ -995,7 +995,7 @@ internal class PrisonerSynchroniserServiceTest {
       whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
       whenever(prisonerRepository.get(any())).thenReturn(Prisoner())
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, true, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerDifferenceService).reportDiffTelemetry(any(), any())
       verify(prisonerRepository).save(any())
@@ -1007,7 +1007,7 @@ internal class PrisonerSynchroniserServiceTest {
       val existingPrisoner = Prisoner()
       whenever(prisonerRepository.get(any())).thenReturn(existingPrisoner)
 
-      service.compareAndMaybeIndex(booking, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
+      service.compareAndMaybeIndex(booking, true, Result.success(null), Result.success(null), Result.success(null), Result.success(null))
 
       verify(prisonerMovementsEventService).generateAnyEvents(eq(existingPrisoner), any(), eq(booking))
       verify(alertsUpdatedEventService).generateAnyEvents(eq(existingPrisoner), any())
@@ -1021,14 +1021,14 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will get incentive level if booking present`() {
-      service.refresh(booking)
+      service.refresh(booking, true)
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
 
     @Test
     fun `will not get incentive if there is no booking`() {
-      service.refresh(OffenderBookingBuilder().anOffenderBooking(null))
+      service.refresh(OffenderBookingBuilder().anOffenderBooking(null), true)
 
       verifyNoInteractions(incentivesService)
     }
@@ -1044,7 +1044,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.refresh(prisonBooking)
+      service.refresh(prisonBooking, true)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -1055,7 +1055,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.refresh(noLivingUnitBooking)
+      service.refresh(noLivingUnitBooking, true)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -1071,7 +1071,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.refresh(outsidePrisoner)
+      service.refresh(outsidePrisoner, true)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
     }
@@ -1104,7 +1104,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.refresh(femalePrisoner)
+      service.refresh(femalePrisoner, true)
 
       verify(complexityOfNeedService).getComplexityOfNeedForPrisoner("A1234AA")
     }

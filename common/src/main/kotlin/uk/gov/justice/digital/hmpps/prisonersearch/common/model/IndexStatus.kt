@@ -18,7 +18,7 @@ enum class IndexState(val active: Boolean) {
 }
 
 @Document(indexName = "prisoner-index-status")
-@Schema(description = "The status of the two indexes, the current index being actively used for searches and the other index being inactive but available for rebuilding")
+@Schema(description = "The status of the index")
 data class IndexStatus(
   @Id
   @Field(type = FieldType.Keyword)
