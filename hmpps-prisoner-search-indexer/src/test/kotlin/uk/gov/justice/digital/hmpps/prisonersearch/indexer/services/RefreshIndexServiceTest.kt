@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -302,7 +301,7 @@ class RefreshIndexServiceTest {
 
       refreshIndexService.refreshPrisoner("ABC123D", true)
 
-      verify(prisonerSynchroniserService).refresh(booking, true)
+      verify(prisonerSynchroniserService).refreshAndReportDiffs(booking, true)
       verify(nomisService).getOffender("ABC123D")
     }
 

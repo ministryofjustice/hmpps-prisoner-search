@@ -192,14 +192,14 @@ internal class IndexListenerServiceTest {
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
       whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
       whenever(nomisService.getMergedIdentifiersByBookingId(any())).thenReturn(null)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexAfterMerge(any())
+
       indexListenerService.offenderBookNumberChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
-      verify(prisonerSynchroniserService).reindexUpdate(
+      verify(prisonerSynchroniserService).reindexAfterMerge(
         check {
           assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
         },
-        eq("BOOKING_CHANGE"),
       )
     }
 

@@ -51,7 +51,7 @@ class PopulateIndexService(
     log.info("Splitting $totalNumberOfPrisoners in to pages each of size $pageSize")
     return (1..totalNumberOfPrisoners step pageSize.toLong()).toList()
       .map { PrisonerPage((it / pageSize).toInt(), pageSize) }
-      .onEach { indexQueueService.sendPrisonerPageMessage(it, POPULATE_PRISONER_PAGE, false) }
+      .onEach { indexQueueService.sendPrisonerPageMessage(it, POPULATE_PRISONER_PAGE, domainEvents = false) }
       .also {
         telemetryClient.trackEvent(
           TelemetryEvents.POPULATE_PRISONER_PAGES,

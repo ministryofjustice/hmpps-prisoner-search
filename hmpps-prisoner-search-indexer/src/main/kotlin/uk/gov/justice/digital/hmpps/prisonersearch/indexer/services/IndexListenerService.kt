@@ -71,16 +71,21 @@ class IndexListenerService(
 
   fun offenderBookingChange(message: OffenderBookingChangedMessage, eventType: String): Prisoner? = sync(message.bookingId, eventType)
 
-  fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) = message.bookingId.run {
-    log.debug("Check for merged booking for ID {}", this)
+  fun offenderBookNumberChange(message: OffenderBookingChangedMessage, eventType: String) = message
+    .bookingId.let { bookingId ->
+      log.debug("Check for merged booking for ID {}", bookingId)
 
-    // check for merges
-    nomisService.getMergedIdentifiersByBookingId(this)?.forEach {
-      prisonerSynchroniserService.delete(it.value)
+      // check for merges
+      nomisService.getMergedIdentifiersByBookingId(bookingId)?.forEach {
+        prisonerSynchroniserService.delete(it.value)
+      }
+
+      nomisService.getNomsNumberForBooking(bookingId = bookingId)?.let { offenderNo ->
+        nomisService.getOffender(offenderNo)?.let { offenderBooking ->
+          prisonerSynchroniserService.reindexAfterMerge(offenderBooking)
+        }
+      } ?: null.also { log.warn("offenderBookNumberChange() Prisoner not found for booking = {}", bookingId) }
     }
-
-    sync(bookingId = this, eventType)
-  }
 
   fun offenderChange(message: OffenderChangedMessage, eventType: String) = message.offenderIdDisplay?.run {
     sync(prisonerNumber = this, eventType)

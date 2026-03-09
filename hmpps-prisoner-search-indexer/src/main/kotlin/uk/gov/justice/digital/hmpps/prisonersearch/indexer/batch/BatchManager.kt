@@ -47,11 +47,11 @@ class BatchManager(
       COMPARE_INDEX_SIZE -> compareIndexService.doIndexSizeCheck()
       FULL_INDEX_REFRESH -> {
         prisonerDifferencesService.deleteOldData()
-        ignoreFailure<IndexException> { refreshIndexService.startFullIndexRefresh(true) }
+        ignoreFailure<IndexException> { refreshIndexService.startFullIndexRefresh(domainEvents = true) }
       }
       ACTIVE_INDEX_REFRESH -> {
         prisonerDifferencesService.deleteOldData()
-        ignoreFailure<IndexException> { refreshIndexService.startActiveIndexRefresh(true) }
+        ignoreFailure<IndexException> { refreshIndexService.startActiveIndexRefresh(domainEvents = true) }
       }
     }
   }

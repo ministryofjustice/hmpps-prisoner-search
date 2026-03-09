@@ -296,7 +296,7 @@ class PrisonerSynchroniserService(
     }
   }
 
-  fun refresh(ob: OffenderBooking, domainEvents: Boolean) {
+  fun refreshAndReportDiffs(ob: OffenderBooking, domainEvents: Boolean) {
     val restrictedPatient = getRestrictedPatient(ob)
     compareAndMaybeIndex(
       ob,
@@ -306,6 +306,26 @@ class PrisonerSynchroniserService(
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
       Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
     )
+  }
+
+  fun reindexAfterMerge(ob: OffenderBooking) {
+    val existingPrisoner = prisonerRepository.get(ob.offenderNo)
+    val restrictedPatient = getRestrictedPatient(ob)
+
+    val prisoner = Prisoner().translate(
+      existingPrisoner = existingPrisoner,
+      ob = ob,
+      incentiveLevel = Result.success(getIncentive(ob)),
+      restrictedPatientData = Result.success(restrictedPatient),
+      alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
+      complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
+    )
+    prisonerRepository.save(prisoner)
+
+    prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
+
+//    reindexIncentive(ob.offenderNo, eventType)
+//    reindexRestrictedPatient(ob.offenderNo, ob, eventType)
   }
 
   internal fun translate(ob: OffenderBooking): Prisoner {

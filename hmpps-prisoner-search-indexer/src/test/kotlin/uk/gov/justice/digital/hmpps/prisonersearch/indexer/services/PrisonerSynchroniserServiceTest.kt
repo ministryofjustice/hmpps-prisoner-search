@@ -1021,14 +1021,14 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will get incentive level if booking present`() {
-      service.refresh(booking, true)
+      service.refreshAndReportDiffs(booking, true)
 
       verify(incentivesService).getCurrentIncentive(12345L)
     }
 
     @Test
     fun `will not get incentive if there is no booking`() {
-      service.refresh(OffenderBookingBuilder().anOffenderBooking(null), true)
+      service.refreshAndReportDiffs(OffenderBookingBuilder().anOffenderBooking(null), true)
 
       verifyNoInteractions(incentivesService)
     }
@@ -1044,7 +1044,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.refresh(prisonBooking, true)
+      service.refreshAndReportDiffs(prisonBooking, true)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -1055,7 +1055,7 @@ internal class PrisonerSynchroniserServiceTest {
         assignedLivingUnit = null,
       )
 
-      service.refresh(noLivingUnitBooking, true)
+      service.refreshAndReportDiffs(noLivingUnitBooking, true)
 
       verifyNoInteractions(restrictedPatientService)
     }
@@ -1071,7 +1071,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.refresh(outsidePrisoner, true)
+      service.refreshAndReportDiffs(outsidePrisoner, true)
 
       verify(restrictedPatientService).getRestrictedPatient("A1234AA")
     }
@@ -1104,7 +1104,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
 
-      service.refresh(femalePrisoner, true)
+      service.refreshAndReportDiffs(femalePrisoner, true)
 
       verify(complexityOfNeedService).getComplexityOfNeedForPrisoner("A1234AA")
     }
