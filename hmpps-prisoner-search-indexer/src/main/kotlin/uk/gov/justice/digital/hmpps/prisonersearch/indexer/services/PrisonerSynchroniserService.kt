@@ -267,6 +267,7 @@ class PrisonerSynchroniserService(
 
   internal fun compareAndMaybeIndex(
     ob: OffenderBooking,
+    domainEvents: Boolean,
     incentiveLevelData: Result<IncentiveReviewSummary?>,
     restrictedPatientData: Result<RestrictedPatientDto?>,
     alerts: Result<List<Alert>?>,
@@ -286,18 +287,20 @@ class PrisonerSynchroniserService(
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
 
       prisonerRepository.save(prisoner)
-
-      prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
-      alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
-      prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
-      convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner)
+      if (domainEvents) {
+        prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
+        alertsUpdatedEventService.generateAnyEvents(existingPrisoner, prisoner)
+        prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
+        convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner)
+      }
     }
   }
 
-  fun refresh(ob: OffenderBooking) {
+  fun refresh(ob: OffenderBooking, domainEvents: Boolean) {
     val restrictedPatient = getRestrictedPatient(ob)
     compareAndMaybeIndex(
       ob,
+      domainEvents,
       Result.success(getIncentive(ob)),
       Result.success(restrictedPatient),
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),

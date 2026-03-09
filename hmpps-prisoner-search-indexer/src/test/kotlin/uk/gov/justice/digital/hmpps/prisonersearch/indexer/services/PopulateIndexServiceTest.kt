@@ -107,9 +107,9 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE, false)
     }
 
     @Test
@@ -118,9 +118,9 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE, false)
     }
 
     @Test
@@ -129,10 +129,10 @@ class PopulateIndexServiceTest {
 
       populateIndexService.populateIndex()
 
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(3, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(3, 10), POPULATE_PRISONER_PAGE, false)
       verifyNoMoreInteractions(indexQueueService)
     }
 
@@ -141,9 +141,9 @@ class PopulateIndexServiceTest {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(29)
 
       populateIndexService.populateIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE)
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(1, 10), POPULATE_PRISONER_PAGE, false)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(2, 10), POPULATE_PRISONER_PAGE, false)
       verifyNoMoreInteractions(indexQueueService)
     }
 
@@ -152,7 +152,7 @@ class PopulateIndexServiceTest {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(20001)
 
       populateIndexService.populateIndex()
-      verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any(), eq(POPULATE_PRISONER_PAGE))
+      verify(indexQueueService, times(2001)).sendPrisonerPageMessage(any(), eq(POPULATE_PRISONER_PAGE), eq(false))
     }
 
     @Test
@@ -160,7 +160,7 @@ class PopulateIndexServiceTest {
       whenever(nomisService.getTotalNumberOfPrisoners()).thenReturn(1)
 
       populateIndexService.populateIndex()
-      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE)
+      verify(indexQueueService).sendPrisonerPageMessage(PrisonerPage(0, 10), POPULATE_PRISONER_PAGE, false)
       verifyNoMoreInteractions(indexQueueService)
     }
 

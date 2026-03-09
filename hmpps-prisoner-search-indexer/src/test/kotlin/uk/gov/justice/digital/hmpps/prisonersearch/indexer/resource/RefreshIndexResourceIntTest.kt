@@ -6,21 +6,29 @@ import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilAsserted
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyMap
+import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doCallRealMethod
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerSynchroniserService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension.Companion.nomisApi
@@ -31,6 +39,10 @@ import java.time.Instant
 import java.time.LocalDate
 
 class RefreshIndexResourceIntTest : IntegrationTestBase() {
+
+  @MockitoSpyBean
+  protected lateinit var prisonerSynchroniserService: PrisonerSynchroniserService
+
   private val prisoners = listOf(
     PrisonerBuilder("A9999AA"),
     PrisonerBuilder("A7089EY", released = true, heightCentimetres = 200),
@@ -52,6 +64,8 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       nomisApi.stubOffenders(false, *prisoners.toTypedArray())
+      // whenever(prisonerSynchroniserService.refresh(any<OffenderBooking>(), any<Boolean>())).thenCallRealMethod()
+      doCallRealMethod().whenever(prisonerSynchroniserService).refresh(any<OffenderBooking>(), any<Boolean>())
     }
 
     @Test
@@ -78,7 +92,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Reconciliation - differences`() {
+    fun `Reconciliation - differences with events`() {
       val eventCaptor = argumentCaptor<Map<String, String>>()
       val startOfTest = Instant.now()
 
@@ -169,6 +183,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
         }
 
       await untilCallTo { getNumberOfMessagesCurrentlyOnDomainQueue() } matches { it == 4 }
+      verify(prisonerSynchroniserService, times(2)).refresh(any(), eq(true))
 
       assertThat(
         listOf(
@@ -183,6 +198,44 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
         "test.prisoner-offender-search.prisoner.released",
         "test.prisoner-offender-search.prisoner.alerts-updated",
       )
+    }
+
+    @Test
+    fun `Reconciliation - differences but no events`() {
+      // Modify index record A9999AA a little
+      prisonerRepository.get("A9999AA")!!.apply {
+        releaseDate = LocalDate.parse("2023-01-02")
+      }.also {
+        prisonerRepository.save(it)
+      }
+      // Modify index record A7089EY a lot
+      Prisoner().apply {
+        prisonerNumber = "A7089EY"
+        status = "ACTIVE IN"
+        prisonId = "MDI"
+        restrictedPatient = false
+        complexityOfNeedLevel = "medium"
+      }.also {
+        prisonerRepository.save(it)
+      }
+
+      // A7089EY complexityOfNeed is changing from a value to null
+      complexityOfNeedApi.stubNotFound("A7089EY")
+
+      alertsApi.stubSuccess("A9999AA")
+
+      webTestClient.put().uri("/refresh-index?domain-events=false")
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
+        .exchange()
+        .expectStatus().isAccepted
+
+      await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it!! > 0 }
+      await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it == 0 }
+
+      await untilAsserted {
+        verify(prisonerSynchroniserService, times(2)).refresh(any(), eq(false))
+      }
+      verify(telemetryClient, times(2)).trackEvent(eq("DIFFERENCE_REPORTED"), anyMap(), isNull())
     }
   }
 

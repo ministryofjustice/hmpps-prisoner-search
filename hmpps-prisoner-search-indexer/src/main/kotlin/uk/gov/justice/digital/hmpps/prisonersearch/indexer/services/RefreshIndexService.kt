@@ -22,15 +22,15 @@ class RefreshIndexService(
 ) {
   private val pageSize = indexBuildProperties.pageSize
 
-  fun startFullIndexRefresh() {
-    startIndexRefresh(REFRESH_INDEX)
+  fun startFullIndexRefresh(domainEvents: Boolean) {
+    startIndexRefresh(REFRESH_INDEX, domainEvents)
   }
 
-  fun startActiveIndexRefresh() {
-    startIndexRefresh(REFRESH_ACTIVE_INDEX)
+  fun startActiveIndexRefresh(domainEvents: Boolean) {
+    startIndexRefresh(REFRESH_ACTIVE_INDEX, domainEvents)
   }
 
-  private fun startIndexRefresh(type: IndexRequestType) {
+  private fun startIndexRefresh(type: IndexRequestType, domainEvents: Boolean) {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
     return indexStatusService.getIndexStatus()
       // no point refreshing index if we're already building the other one
@@ -41,50 +41,50 @@ class RefreshIndexService(
       }
       .run {
         log.info("Sending {} refresh request", type)
-        indexQueueService.sendIndexMessage(type)
+        indexQueueService.sendIndexMessage(type, domainEvents)
       }
   }
 
-  fun refreshIndex(): Int = indexStatusService.getIndexStatus()
+  fun refreshIndex(domainEvents: Boolean = true): Int = indexStatusService.getIndexStatus()
     // no point refreshing index if we're already building
     .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-    .run { doRefreshIndex() }
+    .run { doRefreshIndex(domainEvents) }
 
-  fun refreshActiveIndex(): Int = indexStatusService.getIndexStatus()
+  fun refreshActiveIndex(domainEvents: Boolean): Int = indexStatusService.getIndexStatus()
     // no point refreshing index if we're already building
     .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-    .run { doRefreshActiveIndex() }
+    .run { doRefreshActiveIndex(domainEvents) }
 
-  private fun doRefreshIndex(): Int {
+  private fun doRefreshIndex(domainEvents: Boolean): Int {
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = false, size = pageSize)
     log.info("Found {} pages each of size {}", ranges.size, pageSize)
     return ranges
       .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
-      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_PRISONER_PAGE) }.size
+      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_PRISONER_PAGE, domainEvents) }.size
   }
-  private fun doRefreshActiveIndex(): Int {
+  private fun doRefreshActiveIndex(domainEvents: Boolean): Int {
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = true, size = pageSize)
     log.info("Found {} pages each of size {}", ranges.size, pageSize)
     return ranges
       .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
-      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_ACTIVE_PRISONER_PAGE) }.size
+      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_ACTIVE_PRISONER_PAGE, domainEvents) }.size
   }
 
-  fun refreshIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getPrisonNumbers(
+  fun refreshIndexWithRootOffenderIdPage(page: RootOffenderIdPage, domainEvents: Boolean): Unit = nomisPrisonerService.getPrisonNumbers(
     active = false,
     fromRootOffenderId = page.fromRootOffenderId,
     toRootOffenderId = page.toRootOffenderId,
-  ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
+  ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it, domainEvents) }
 
-  fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage): Unit = nomisPrisonerService.getPrisonNumbers(
+  fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage, domainEvents: Boolean): Unit = nomisPrisonerService.getPrisonNumbers(
     active = true,
     fromRootOffenderId = page.fromRootOffenderId,
     toRootOffenderId = page.toRootOffenderId,
-  ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it) }
+  ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it, domainEvents) }
 
-  fun refreshPrisoner(prisonerNumber: String) {
+  fun refreshPrisoner(prisonerNumber: String, domainEvents: Boolean) {
     nomisService.getOffender(offenderNo = prisonerNumber)?.let { ob ->
-      prisonerSynchroniserService.refresh(ob)
+      prisonerSynchroniserService.refresh(ob, domainEvents)
     }
   }
 

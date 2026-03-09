@@ -34,8 +34,8 @@ class IndexQueueService(
   private val indexQueueUrl by lazy { indexQueue.queueUrl }
   private val indexDlqUrl by lazy { indexQueue.dlqUrl as String }
 
-  fun sendIndexMessage(type: IndexRequestType) {
-    sendMessage(IndexMessageRequest(type = type)).also {
+  fun sendIndexMessage(type: IndexRequestType, domainEvents: Boolean = false) {
+    sendMessage(IndexMessageRequest(type = type, domainEvents = domainEvents)).also {
       log.info("Sent {} message request {}", type, it.messageId())
     }
   }
@@ -47,21 +47,21 @@ class IndexQueueService(
       .build(),
   ).get()
 
-  fun sendPrisonerPageMessage(prisonerPage: PrisonerPage, type: IndexRequestType) {
-    sendMessage(IndexMessageRequest(type = type, prisonerPage = prisonerPage)).also {
+  fun sendPrisonerPageMessage(prisonerPage: PrisonerPage, type: IndexRequestType, domainEvents: Boolean = true) {
+    sendMessage(IndexMessageRequest(type = type, prisonerPage = prisonerPage, domainEvents = domainEvents)).also {
       log.info("Sent {} prisoner page message request {} for page {}", type, it.messageId(), prisonerPage)
     }
   }
 
-  fun sendRootOffenderIdPageMessage(rootOffenderIdPage: RootOffenderIdPage, type: IndexRequestType) {
-    sendMessage(IndexMessageRequest(type = type, rootOffenderIdPage = rootOffenderIdPage)).also {
+  fun sendRootOffenderIdPageMessage(rootOffenderIdPage: RootOffenderIdPage, type: IndexRequestType, domainEvents: Boolean = true) {
+    sendMessage(IndexMessageRequest(type = type, rootOffenderIdPage = rootOffenderIdPage, domainEvents = domainEvents)).also {
       log.info("Sent {} root prisoner page message request {} for page {}", type, it.messageId(), rootOffenderIdPage)
     }
   }
 
   fun sendPopulatePrisonerMessage(prisonerNumber: String) = sendMessage(IndexMessageRequest(type = POPULATE_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
 
-  fun sendRefreshPrisonerMessage(prisonerNumber: String) = sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber), noTracing = true)
+  fun sendRefreshPrisonerMessage(prisonerNumber: String, domainEvents: Boolean) = sendMessage(IndexMessageRequest(type = REFRESH_PRISONER, prisonerNumber = prisonerNumber, domainEvents = domainEvents), noTracing = true)
 
   fun getNumberOfMessagesCurrentlyOnIndexQueue(): Int = indexSqsClient.countMessagesOnQueue(indexQueueUrl).get()
 
