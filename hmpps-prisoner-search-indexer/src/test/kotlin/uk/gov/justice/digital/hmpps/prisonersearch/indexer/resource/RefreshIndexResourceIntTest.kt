@@ -14,17 +14,20 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doCallRealMethod
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerSynchroniserService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
@@ -61,6 +64,8 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       nomisApi.stubOffenders(false, *prisoners.toTypedArray())
+      // whenever(prisonerSynchroniserService.refresh(any<OffenderBooking>(), any<Boolean>())).thenCallRealMethod()
+      doCallRealMethod().whenever(prisonerSynchroniserService).refresh(any<OffenderBooking>(), any<Boolean>())
     }
 
     @Test
@@ -223,6 +228,9 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
         .expectStatus().isAccepted
+
+      await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it!! > 0 }
+      await untilCallTo { indexSqsClient.countAllMessagesOnQueue(indexQueueUrl).get() } matches { it == 0 }
 
       await untilAsserted {
         verify(prisonerSynchroniserService, times(2)).refresh(any(), eq(false))

@@ -188,7 +188,7 @@ class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshPrisoner(prisonerNumber = "X12345", domainEvents = true)
+      verify(refreshIndexService).refreshPrisoner(prisonerNumber = "X12345", domainEvents = false)
     }
   }
 

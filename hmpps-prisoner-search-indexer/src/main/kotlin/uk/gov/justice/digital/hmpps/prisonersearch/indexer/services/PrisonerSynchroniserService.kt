@@ -306,7 +306,6 @@ class PrisonerSynchroniserService(
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
       Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
     )
-    log.info("***** exiting refresh with domain events = $domainEvents *****")
   }
 
   internal fun translate(ob: OffenderBooking): Prisoner {

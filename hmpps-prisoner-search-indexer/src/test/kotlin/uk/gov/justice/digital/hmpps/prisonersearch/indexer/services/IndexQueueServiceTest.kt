@@ -265,6 +265,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "REFRESH_ACTIVE_PRISONER_PAGE",
+          "domainEvents": false,
           "rootOffenderIdPage": {
             "fromRootOffenderId": 1,
             "toRootOffenderId": 1000
@@ -284,6 +285,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "REFRESH_ACTIVE_PRISONER_PAGE",
+          "domainEvents": false,
           "rootOffenderIdPage": {
             "fromRootOffenderId": 1,
             "toRootOffenderId": 1000
