@@ -290,6 +290,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       assertThat(prisonerRepository.get(oldPrisonerNumber)).isNull()
       assertThat(prisonerRepository.get(prisonerNumber)?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
+      // ^^ expects a PrisonerCreatedDomainEvent then a PrisonerReceivedDomainEvent
     }
   }
 

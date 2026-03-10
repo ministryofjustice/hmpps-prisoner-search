@@ -324,8 +324,8 @@ class PrisonerSynchroniserService(
 
     prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
 
-//    reindexIncentive(ob.offenderNo, eventType)
-//    reindexRestrictedPatient(ob.offenderNo, ob, eventType)
+    prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
+    convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner)
   }
 
   internal fun translate(ob: OffenderBooking): Prisoner {
