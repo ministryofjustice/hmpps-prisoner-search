@@ -84,7 +84,7 @@ class RefreshIndexService(
 
   fun refreshPrisoner(prisonerNumber: String, domainEvents: Boolean) {
     nomisService.getOffender(offenderNo = prisonerNumber)?.let { ob ->
-      prisonerSynchroniserService.refresh(ob, domainEvents)
+      prisonerSynchroniserService.refreshAndReportDiffs(ob, domainEvents)
     }
   }
 
