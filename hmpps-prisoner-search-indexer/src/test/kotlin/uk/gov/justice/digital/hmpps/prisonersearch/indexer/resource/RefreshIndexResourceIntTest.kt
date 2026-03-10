@@ -61,7 +61,6 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       nomisApi.stubOffenders(false, *prisoners.toTypedArray())
-      // doCallRealMethod().whenever(prisonerSynchroniserService).refresh(any<OffenderBooking>(), any<Boolean>())
     }
 
     @Test
