@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
@@ -106,7 +107,7 @@ class PrisonerMovementsEventService(
           .also { eventMap ->
             eventMap.add("this", prisoner)
             eventMap.add("previous", previousPrisonerSnapshot)
-            telemetryClient.trackEvent("EVENTS_UNKNOWN_MOVEMENT", eventMap, null)
+            telemetryClient.trackEvent(TelemetryEvents.EVENTS_UNKNOWN_MOVEMENT.name, eventMap, null)
           }
       }
     } else {

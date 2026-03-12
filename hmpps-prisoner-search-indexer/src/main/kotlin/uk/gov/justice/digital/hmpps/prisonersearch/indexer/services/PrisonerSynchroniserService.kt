@@ -308,7 +308,7 @@ class PrisonerSynchroniserService(
     )
   }
 
-  fun reindexAfterMerge(ob: OffenderBooking) {
+  fun reindexAfterMerge(ob: OffenderBooking, eventType: String) {
     val existingPrisoner = prisonerRepository.get(ob.offenderNo)
     val restrictedPatient = getRestrictedPatient(ob)
 
@@ -321,6 +321,13 @@ class PrisonerSynchroniserService(
       complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
     )
     prisonerRepository.save(prisoner)
+
+    telemetryClient.trackPrisonerEvent(
+      TelemetryEvents.PRISONER_MERGED,
+      prisonerNumber = ob.offenderNo,
+      bookingId = ob.bookingId,
+      eventType = eventType,
+    )
 
     prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
 
