@@ -82,7 +82,7 @@ class IndexListenerService(
 
       nomisService.getNomsNumberForBooking(bookingId = bookingId)?.let { offenderNo ->
         nomisService.getOffender(offenderNo)?.let { offenderBooking ->
-          prisonerSynchroniserService.reindexAfterMerge(offenderBooking)
+          prisonerSynchroniserService.reindexAfterMerge(offenderBooking, eventType)
         }
       } ?: null.also { log.warn("offenderBookNumberChange() Prisoner not found for booking = {}", bookingId) }
     }

@@ -276,11 +276,12 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     prisonerRepository.save(Prisoner().also { it.prisonerNumber = oldPrisonerNumber })
     await untilCallTo { prisonerRepository.count() } matches { it == 1L }
 
-    val bookingId = 12345L
     val prisonerNumber = "O7089FF" // record to be inserted / updated
+    val prisonerBuilder = PrisonerBuilder(prisonerNumber = prisonerNumber)
+    val bookingId = prisonerBuilder.bookingId!!
     prisonApi.stubGetMergedIdentifiersByBookingId(bookingId, oldPrisonerNumber)
     prisonApi.stubGetNomsNumberForBooking(bookingId, prisonerNumber)
-    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber))
+    prisonApi.stubOffenders(prisonerBuilder)
 
     offenderSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validOffenderBookingChangedMessage(bookingId, "BOOKING_NUMBER-CHANGED")).build(),
@@ -292,6 +293,24 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
       // ^^ expects a PrisonerCreatedDomainEvent then a PrisonerReceivedDomainEvent
     }
+
+    verify(telemetryClient).trackEvent(
+      "PRISONER_REMOVED",
+      mapOf(
+        "prisonerNumber" to oldPrisonerNumber,
+      ),
+      null,
+    )
+
+    verify(telemetryClient).trackEvent(
+      "PRISONER_MERGED",
+      mapOf(
+        "prisonerNumber" to prisonerNumber,
+        "bookingId" to bookingId.toString(),
+        "event" to "BOOKING_NUMBER-CHANGED",
+      ),
+      null,
+    )
   }
 
   @Test
