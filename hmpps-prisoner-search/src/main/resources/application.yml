@@ -10,8 +10,6 @@ spring:
       pageable:
         max-page-size: 3000
   http:
-    converters:
-      preferred-json-mapper: jackson2
     codecs:
       max-in-memory-size: 10MB
 
