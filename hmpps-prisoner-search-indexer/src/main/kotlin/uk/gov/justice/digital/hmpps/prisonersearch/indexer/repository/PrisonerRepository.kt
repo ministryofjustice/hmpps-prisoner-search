@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.convertValue
 import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest
 import org.opensearch.action.get.GetRequest
@@ -23,6 +21,9 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.UpdateQuery
 import org.springframework.data.elasticsearch.core.query.UpdateResponse
 import org.springframework.stereotype.Repository
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.convertValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -33,15 +34,15 @@ import java.time.LocalDate
 class PrisonerRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  val objectMapperWithNulls: ObjectMapper = objectMapper.copy().apply {
-    setSerializationInclusion(JsonInclude.Include.ALWAYS)
-  }
+  val objectMapperWithNulls: ObjectMapper = jsonMapper.rebuild()
+    .changeDefaultPropertyInclusion { JsonInclude.Value.ALL_ALWAYS }
+    .build()
 
   fun count() = try {
     client.count(CountRequest(PRISONER_INDEX), RequestOptions.DEFAULT).count
@@ -206,13 +207,13 @@ class PrisonerRepository(
 
   fun doesIndexExist(): Boolean = client.indices().exists(GetIndexRequest(PRISONER_INDEX), RequestOptions.DEFAULT)
 
-  fun copyPrisoner(prisoner: Prisoner): Prisoner = objectMapper
-    .readValue(objectMapper.writeValueAsString(prisoner), Prisoner::class.java)
+  fun copyPrisoner(prisoner: Prisoner): Prisoner = jsonMapper
+    .readValue(jsonMapper.writeValueAsString(prisoner), Prisoner::class.java)
 
   private fun GetResponse.toPrisonerDocumentSummary(prisonerNumber: String): PrisonerDocumentSummary? = source?.let {
     PrisonerDocumentSummary(
       prisonerNumber,
-      objectMapper.convertValue(source, Prisoner::class.java),
+      jsonMapper.convertValue(source, Prisoner::class.java),
       seqNo,
       primaryTerm,
     )
