@@ -4,7 +4,6 @@ generic-service:
 
   ingress:
     host: prisoner-search-dev.prison.service.justice.gov.uk
-  allowlist: null
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
