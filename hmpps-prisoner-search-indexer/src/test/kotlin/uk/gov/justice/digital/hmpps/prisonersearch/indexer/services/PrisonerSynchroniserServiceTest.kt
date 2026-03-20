@@ -50,7 +50,6 @@ import java.util.UUID
 
 internal class PrisonerSynchroniserServiceTest {
   private val incentivesService = mock<IncentivesService>()
-  private val nomisService = mock<NomisService>()
   private val restrictedPatientService = mock<RestrictedPatientService>()
   private val alertsService = mock<AlertsService>()
   private val complexityOfNeedService = mock<ComplexityOfNeedService>()
@@ -66,7 +65,6 @@ internal class PrisonerSynchroniserServiceTest {
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
     telemetryClient,
-    nomisService,
     restrictedPatientService,
     incentivesService,
     alertsService,
@@ -78,45 +76,6 @@ internal class PrisonerSynchroniserServiceTest {
     convictedStatusEventService,
     domainEventEmitter,
   )
-
-  @Nested
-  inner class GetBookingAndReindexUpdate {
-    private val booking = OffenderBookingBuilder().anOffenderBooking()
-    private val prisonerNumber = booking.offenderNo
-    val existingPrisoner = Prisoner().apply { bookingId = booking.bookingId.toString() }
-    private val prisonerDocumentSummary =
-      PrisonerDocumentSummary(
-        prisonerNumber,
-        existingPrisoner,
-        sequenceNumber = 0,
-        primaryTerm = 0,
-      )
-
-    @Test
-    fun `will update prisoner to index`() {
-      whenever(prisonerRepository.getSummary(prisonerNumber)).thenReturn(prisonerDocumentSummary)
-      whenever(nomisService.getOffender(prisonerNumber)).thenReturn(booking)
-
-      service.getBookingAndReindexUpdate(prisonerNumber, "event")
-
-      verify(prisonerRepository, times(1)).updatePrisoner(
-        eq(prisonerNumber),
-        isA(),
-        eq(prisonerDocumentSummary),
-      )
-    }
-
-    @Test
-    fun `will do nothing if prisoner does not exist in Nomis`() {
-      whenever(prisonerRepository.getSummary(prisonerNumber)).thenReturn(prisonerDocumentSummary)
-      whenever(nomisService.getOffender(prisonerNumber)).thenReturn(null)
-
-      service.getBookingAndReindexUpdate(prisonerNumber, "event")
-
-      verify(prisonerRepository).getSummary(prisonerNumber)
-      verifyNoMoreInteractions(prisonerRepository)
-    }
-  }
 
   @Nested
   inner class ReindexUpdate {

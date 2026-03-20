@@ -155,8 +155,10 @@ class IndexListenerService(
     }
   }
 
-  private fun sync(prisonerNumber: String, eventType: String): Prisoner? = prisonerSynchroniserService
-    .getBookingAndReindexUpdate(prisonerNumber, eventType)
+  private fun sync(prisonerNumber: String, eventType: String): Prisoner? = nomisService
+    .getOffender(prisonerNumber)?.run {
+      prisonerSynchroniserService.reindexUpdate(ob = this, eventType = eventType)
+    } ?: null.also { log.warn("sync() Sync requested for prisoner {} not found", prisonerNumber) }
 
   private fun sync(bookingId: Long, eventType: String): Prisoner? = nomisService
     .getNomsNumberForBooking(bookingId)?.run {
