@@ -31,7 +31,6 @@ import kotlin.collections.map
 class PrisonerSynchroniserService(
   private val prisonerRepository: PrisonerRepository,
   private val telemetryClient: TelemetryClient,
-  private val nomisService: NomisService,
   private val restrictedPatientService: RestrictedPatientService,
   private val incentivesService: IncentivesService,
   private val alertsService: AlertsService,
@@ -47,26 +46,9 @@ class PrisonerSynchroniserService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  internal fun getBookingAndReindexUpdate(prisonerNumber: String, eventType: String): Prisoner? {
-    val summary = prisonerRepository.getSummary(prisonerNumber)
-
-    val ob: OffenderBooking? = nomisService.getOffender(prisonerNumber)
-    if (ob == null) {
-      log.warn("sync() Sync requested for prisoner {} not found", prisonerNumber)
-      return null
-    }
-
-    return doReindexUpdate(summary, ob, eventType)
-  }
-
-  internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Prisoner = doReindexUpdate(
-    prisonerRepository.getSummary(ob.offenderNo),
-    ob,
-    eventType,
-  )
-
-  private fun doReindexUpdate(summary: PrisonerDocumentSummary?, ob: OffenderBooking, eventType: String): Prisoner = summary
-    ?.run {
+  internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Prisoner {
+    val summary = prisonerRepository.getSummary(ob.offenderNo)
+    val isChanged = summary?.run {
       assertPrisonerNo(ob.offenderNo)
       val prisoner = Prisoner().translate(
         existingPrisoner = summary.prisoner,
@@ -116,33 +98,37 @@ class PrisonerSynchroniserService(
       }
       prisoner
     } ?: run {
-    // Need to create, which means calling all domain data too.
-    // NOTE if multiple messages are received for the same prisoner at the same time
-    // the create operation could be attempted multiple times
+      // Need to create, which means calling all domain data too.
+      // NOTE if multiple messages are received for the same prisoner at the same time
+      // the create operation could be attempted multiple times
 
-    val restrictedPatient = runCatching { getRestrictedPatient(ob) }
-    val prisoner = Prisoner().translate(
-      existingPrisoner = null,
-      ob = ob,
-      incentiveLevel = runCatching { getIncentive(ob) },
-      restrictedPatientData = restrictedPatient,
-      alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
-      complexityOfNeed = runCatching { getComplexityOfNeed(ob, restrictedPatient.getOrNull() != null) },
-    )
-    prisonerRepository.createPrisoner(prisoner)
-    // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
+      val restrictedPatient = runCatching { getRestrictedPatient(ob) }
+      val prisoner = Prisoner().translate(
+        existingPrisoner = null,
+        ob = ob,
+        incentiveLevel = runCatching { getIncentive(ob) },
+        restrictedPatientData = restrictedPatient,
+        alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
+        complexityOfNeed = runCatching { getComplexityOfNeed(ob, restrictedPatient.getOrNull() != null) },
+      )
+      prisonerRepository.createPrisoner(prisoner)
+      // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
 
-    domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo)
-    prisonerMovementsEventService.generateAnyEvents(null, prisoner, ob)
-    convictedStatusEventService.generateAnyEvents(null, prisoner)
+      domainEventEmitter.emitPrisonerCreatedEvent(ob.offenderNo)
+      prisonerMovementsEventService.generateAnyEvents(null, prisoner, ob)
+      convictedStatusEventService.generateAnyEvents(null, prisoner)
 
-    telemetryClient.trackPrisonerEvent(
-      TelemetryEvents.PRISONER_CREATED,
-      prisonerNumber = ob.offenderNo,
-      bookingId = ob.bookingId,
-      eventType = eventType,
-    )
-    prisoner
+      telemetryClient.trackPrisonerEvent(
+        TelemetryEvents.PRISONER_CREATED,
+        prisonerNumber = ob.offenderNo,
+        bookingId = ob.bookingId,
+        eventType = eventType,
+      )
+
+      prisoner
+    }
+
+    return isChanged
   }
 
   internal fun reindexIncentive(prisonerNo: String, eventType: String) = prisonerRepository.getSummary(prisonerNo)
