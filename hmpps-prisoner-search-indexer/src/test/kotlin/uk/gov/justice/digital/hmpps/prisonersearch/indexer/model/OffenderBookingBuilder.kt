@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.random.Random
 
 class OffenderBookingBuilder {
@@ -20,5 +21,6 @@ class OffenderBookingBuilder {
       description = "Moorland",
       agencyName = "Moorland",
     ),
+    timestamp = LocalDateTime.now(),
   )
 }
