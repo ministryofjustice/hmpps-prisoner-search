@@ -48,22 +48,6 @@ class PrisonerSynchroniserService(
 
   internal fun reindexUpdate(ob: OffenderBooking, eventType: String): Prisoner {
     val summary = prisonerRepository.getSummary(ob.offenderNo)
-
-    if (summary?.prisoner?.timestamp != null && ob.timestamp != null && ob.timestamp.isBefore(summary.prisoner.timestamp)) {
-      telemetryClient.trackEvent(
-        TelemetryEvents.PRISONER_STALE_NO_CHANGE.name,
-        mapOf(
-          "prisonerNumber" to ob.offenderNo,
-          "bookingId" to ob.bookingId?.toString(),
-          "event" to eventType,
-          "timestamp-prison-api" to ob.timestamp.toString(),
-          "timestamp-index" to summary.prisoner.timestamp.toString(),
-        ),
-        null,
-      )
-      return Prisoner()
-    }
-
     val isChanged = summary?.run {
       assertPrisonerNo(ob.offenderNo)
       val prisoner = Prisoner().translate(
@@ -336,8 +320,6 @@ class PrisonerSynchroniserService(
       alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
       complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
     )
-    // Dont think there is need for version control here as the merge event is usually a single event without
-    // other concurrent events
     prisonerRepository.save(prisoner)
 
     telemetryClient.trackPrisonerEvent(

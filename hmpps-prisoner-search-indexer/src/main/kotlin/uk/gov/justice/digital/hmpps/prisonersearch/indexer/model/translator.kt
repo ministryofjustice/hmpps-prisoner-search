@@ -226,7 +226,7 @@ fun Prisoner.translate(
   this.identifiers = ob.allIdentifiers?.toIdentifiers()
 
   this.allConvictedOffences = ob.allConvictedOffences?.toOffences(ob.bookingId)
-  this.timestamp = ob.timestamp
+
   return this
 }
 

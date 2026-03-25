@@ -52,7 +52,6 @@ data class OffenderBooking(
   val personalCareNeeds: List<PersonalCareNeedDto>? = null,
   val imageId: Long? = null,
   val militaryRecord: Boolean? = null,
-  val timestamp: LocalDateTime? = null,
 ) {
   fun latestIdentifier(type: String) = allIdentifiers
     ?.filter { it.type == type }
