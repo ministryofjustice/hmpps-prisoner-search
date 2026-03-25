@@ -132,13 +132,10 @@ internal class IndexListenerServiceTest {
     fun `will reindex on external movement`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
-      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
       indexListenerService.externalMovement(anExternalMovement(), "EXTERNAL_MOVEMENT")
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq("A124BC"),
         eq("EXTERNAL_MOVEMENT"),
       )
     }
@@ -159,15 +156,13 @@ internal class IndexListenerServiceTest {
     @Test
     fun `will reindex on offender booking change`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
-      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
+      val prisonerNumber = booking.offenderNo
+      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn(prisonerNumber)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).getBookingAndReindexUpdate(any(), any())
       indexListenerService.offenderBookingChange(anOffenderBookingChange(), "BOOKING_CHANGE")
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq(prisonerNumber),
         eq("BOOKING_CHANGE"),
       )
     }
@@ -240,15 +235,11 @@ internal class IndexListenerServiceTest {
     @Test
     fun `will reindex on offender change`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
-      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).getBookingAndReindexUpdate(any(), any())
       indexListenerService.offenderChange(anOffenderChanged("A1234BC"), "OFFENDER_CHANGE")
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq("A1234BC"),
         eq("OFFENDER_CHANGE"),
       )
     }
@@ -366,8 +357,7 @@ internal class IndexListenerServiceTest {
         mapOf("eventType" to "OFFENDER_BOOKING-REASSIGNED", "offenderId" to "1234"),
         null,
       )
-      verify(nomisService).getOffender("A1234BC")
-      verifyNoMoreInteractions(nomisService)
+      verifyNoInteractions(nomisService)
     }
 
     @Test
@@ -385,66 +375,55 @@ internal class IndexListenerServiceTest {
         mapOf("eventType" to "OFFENDER_BOOKING-REASSIGNED", "offenderId" to "1234"),
         null,
       )
-      verify(nomisService).getOffender("A1234BC")
-      verifyNoMoreInteractions(nomisService)
+      verifyNoInteractions(nomisService)
     }
 
     @Test
     fun `will reindex on offender booking reassignment`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
-      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
+      val prisonerNumber = booking.offenderNo
+      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn(prisonerNumber)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).getBookingAndReindexUpdate(any(), any())
       indexListenerService.offenderBookingReassigned(
         anOffenderBookingReassignment(
-          prisonerNumber = "A1234BC",
-          previousPrisonerNumber = "A1234BC",
+          prisonerNumber = prisonerNumber,
+          previousPrisonerNumber = "A0000AA",
         ),
         "OFFENDER_BOOKING-REASSIGNED",
       )
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq(prisonerNumber),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq("A0000AA"),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
-      // first booking only sent
-      verifyNoMoreInteractions(prisonerSynchroniserService)
     }
 
     @Test
     fun `will reindex on offender booking reassignment with different previous prison number`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
       val previousBooking = OffenderBookingBuilder().anOffenderBooking(offenderNo = "A2345CD")
-      whenever(nomisService.getOffender("A1234BC")).thenReturn(booking)
+      whenever(nomisService.getOffender(booking.offenderNo)).thenReturn(booking)
       whenever(nomisService.getOffender("A2345CD")).thenReturn(previousBooking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).getBookingAndReindexUpdate(any(), any())
       indexListenerService.offenderBookingReassigned(
         anOffenderBookingReassignment(
-          prisonerNumber = "A1234BC",
+          prisonerNumber = booking.offenderNo,
           previousPrisonerNumber = "A2345CD",
         ),
         "OFFENDER_BOOKING-REASSIGNED",
       )
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq(booking.offenderNo),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(previousBooking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq(previousBooking.offenderNo),
         eq("OFFENDER_BOOKING-REASSIGNED"),
       )
     }
@@ -463,8 +442,7 @@ internal class IndexListenerServiceTest {
     @Test
     fun `will reindex on prisoner location change`() {
       val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexUpdate(any(), any())
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).getBookingAndReindexUpdate(any(), any())
       whenever(prisonerLocationService.findPrisoners(any(), any())).thenReturn(listOf("A124BC"))
 
       indexListenerService.prisonerLocationChange(
@@ -472,16 +450,8 @@ internal class IndexListenerServiceTest {
         "AGENCY_INTERNAL_LOCATIONS-UPDATED",
       )
 
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
-        eq("AGENCY_INTERNAL_LOCATIONS-UPDATED"),
-      )
-      verify(prisonerSynchroniserService).reindexUpdate(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+      verify(prisonerSynchroniserService).getBookingAndReindexUpdate(
+        eq("A124BC"),
         eq("AGENCY_INTERNAL_LOCATIONS-UPDATED"),
       )
       verifyNoMoreInteractions(prisonerSynchroniserService)
