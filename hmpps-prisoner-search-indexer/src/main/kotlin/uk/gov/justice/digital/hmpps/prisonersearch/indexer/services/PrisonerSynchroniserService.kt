@@ -334,6 +334,8 @@ class PrisonerSynchroniserService(
       alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
       complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
     )
+    // Dont think there is need for version control here as the merge event is usually
+    // a single event without other concurrent events
     prisonerRepository.save(prisoner)
 
     telemetryClient.trackPrisonerEvent(
