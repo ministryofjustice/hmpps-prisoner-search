@@ -81,11 +81,7 @@ internal class PrisonerSynchroniserServiceTest {
   inner class ReindexUpdate {
     private val booking = OffenderBookingBuilder().anOffenderBooking()
     private val prisonerNumber = booking.offenderNo
-    private val indexTimestamp: LocalDateTime = LocalDateTime.now().minusSeconds(5)
-    private val existingPrisoner = Prisoner().apply {
-      bookingId = booking.bookingId.toString()
-      timestamp = indexTimestamp
-    }
+    val existingPrisoner = Prisoner().apply { bookingId = booking.bookingId.toString() }
     private val prisonerDocumentSummary =
       PrisonerDocumentSummary(
         prisonerNumber,
@@ -141,29 +137,6 @@ internal class PrisonerSynchroniserServiceTest {
             entry("prisonerNumber", "A1234AA"),
             entry("bookingId", "12345"),
             entry("event", "event"),
-          )
-        },
-        isNull(),
-      )
-    }
-
-    @Test
-    fun `will not save prisoner if prison-api data is stale`() {
-      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      val prisonApiTimestamp = LocalDateTime.now().minusMinutes(1)
-      service.reindexUpdate(booking.copy(timestamp = prisonApiTimestamp), "event")
-
-      verify(prisonerRepository, never()).updatePrisoner(any(), any(), any())
-      verify(prisonerDifferenceService, never()).getDifferencesByCategory<Prisoner>(any(), any())
-      verify(telemetryClient).trackEvent(
-        eq(TelemetryEvents.PRISONER_STALE_NO_CHANGE.name),
-        check {
-          assertThat(it).contains(
-            entry("prisonerNumber", "A1234AA"),
-            entry("bookingId", "12345"),
-            entry("event", "event"),
-            entry("timestamp-prison-api", prisonApiTimestamp.toString()),
-            entry("timestamp-index", indexTimestamp.toString()),
           )
         },
         isNull(),

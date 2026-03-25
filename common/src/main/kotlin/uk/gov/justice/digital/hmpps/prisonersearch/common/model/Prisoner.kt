@@ -12,7 +12,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType
 import org.springframework.data.elasticsearch.annotations.InnerField
 import org.springframework.data.elasticsearch.annotations.MultiField
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Document(indexName = "prisoner-search")
 class Prisoner : Diffable<Prisoner> {
@@ -498,10 +497,6 @@ class Prisoner : Diffable<Prisoner> {
   @get:JsonIgnore
   val active: Boolean
     get() = status?.startsWith("ACTIVE") ?: false
-
-  @Field(type = FieldType.Date, format = [DateFormat.date_hour_minute_second_millis], index = false)
-  @Schema(description = "Timestamp of retrieval of data from Nomis (internal use)", example = "2026-05-01T12:34:56.789")
-  var timestamp: LocalDateTime? = null
 }
 
 data class BodyPartDetail(
