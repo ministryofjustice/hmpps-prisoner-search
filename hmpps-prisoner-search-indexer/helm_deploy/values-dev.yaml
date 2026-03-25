@@ -57,7 +57,6 @@ generic-prometheus-alerts:
   openSearchAlertsFreeStorageSpaceThresholdGB: 5
 
 cron:
-  retry_dlqs_schedule: "*/10 7-20 * * 1-5"
   snapshot_schedule: "49 1 * * *"
 
 indexQueueNames:

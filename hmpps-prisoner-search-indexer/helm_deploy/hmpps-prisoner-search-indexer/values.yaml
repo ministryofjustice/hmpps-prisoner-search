@@ -15,13 +15,6 @@ generic-service:
     enabled: true
     host: app-hostname.local # override per environment
     tlsSecretName: hmpps-prisoner-search-indexer-cert
-    annotations:
-      nginx.ingress.kubernetes.io/server-snippet: |
-        server_tokens off;
-        location /queue-admin/retry-all-dlqs {
-          deny all;
-          return 401;
-        }
   env:
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
@@ -97,7 +90,6 @@ generic-prometheus-alerts:
   sqsAlertsTotalMessagesThreshold: "0"
 
 cron:
-  retry_dlqs_schedule: "*/10 * * * *"
   snapshot_schedule: "42 1 * * *"
 
   # default is to suspend the restore - only want it happening on preprod

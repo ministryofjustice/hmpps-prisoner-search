@@ -119,7 +119,8 @@ aws:
   provider: aws
 
 hmpps.sqs:
-  queueAdminRole: ROLE_PRISONER_INDEX
+  queueAdminRole: ROLE_SYSCON__QUEUE_ADMIN
+  protectRetryAll: true
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
   queues:
     publish:
