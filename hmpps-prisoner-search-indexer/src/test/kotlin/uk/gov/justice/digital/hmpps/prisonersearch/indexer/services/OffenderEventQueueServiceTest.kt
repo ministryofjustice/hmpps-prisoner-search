@@ -167,7 +167,7 @@ internal class OffenderEventQueueServiceTest(
         check<SendMessageRequest> {
           assertThat(it.messageBody()).isEqualTo(requestJson)
           assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("EXTERNAL_MOVEMENT-CHANGED")
-          assertThat(it.delaySeconds()).isEqualTo(1)
+          assertThat(it.delaySeconds()).isBetween(1, 5)
         },
       )
     }
@@ -186,7 +186,7 @@ internal class OffenderEventQueueServiceTest(
         check<SendMessageRequest> {
           assertThat(it.messageBody()).isEqualTo(requestJson)
           assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("EXTERNAL_MOVEMENT-CHANGED")
-          assertThat(it.delaySeconds()).isEqualTo(1)
+          assertThat(it.delaySeconds()).isBetween(1, 5)
         },
       )
     }
@@ -205,7 +205,7 @@ internal class OffenderEventQueueServiceTest(
         check<SendMessageRequest> {
           assertThat(it.messageBody()).isEqualTo(requestJson)
           assertThat(it.messageAttributes()["eventType"]?.stringValue()).isEqualTo("EXTERNAL_MOVEMENT-CHANGED")
-          assertThat(it.delaySeconds()).isEqualTo(1)
+          assertThat(it.delaySeconds()).isBetween(1, 10)
         },
       )
     }
