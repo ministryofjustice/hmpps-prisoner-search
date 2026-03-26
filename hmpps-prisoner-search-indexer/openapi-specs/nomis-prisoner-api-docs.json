@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-25.1123.74397f4"
+    "version" : "2026-03-26.1256.1bf196a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -669,7 +669,7 @@
         "tags" : [ "activities-resource" ],
         "summary" : "Deletes an attendance record",
         "description" : "Deletes an attendance for the course schedule. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAttendance",
+        "operationId" : "deleteAttendanceByCourseScheduleAndBooking",
         "parameters" : [ {
           "name" : "courseScheduleId",
           "in" : "path",
@@ -1162,15 +1162,6 @@
           },
           "example" : 34565
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CourtAppearanceRequest"
-              }
-            }
-          }
-        },
         "responses" : {
           "200" : {
             "description" : "Court Appearance deleted"
@@ -4212,6 +4203,323 @@
         }
       }
     },
+    "/official-visits/{visitId}" : {
+      "get" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Get an official visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOfficialVisit",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The official visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Visit is not an official visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Updates an official visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOfficialVisit",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOfficialVisitRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Visit details update"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Delete an official visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOfficialVisit",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Visit deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visits/{visitId}/official-visitor/{visitorId}" : {
+      "put" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Updates an official visitor from a visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOfficialVisitor",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "visitorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOfficialVisitorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Visitor details updated"
+          },
+          "400" : {
+            "description" : "Visitor is on a different visit or attendance code is incorrect",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit or visitor does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Delete an official visitor from a visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOfficialVisitor",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "visitorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Visitor details deleted"
+          },
+          "400" : {
+            "description" : "Visitor is on a different visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/non-associations/offender/{offenderNo}/ns-offender/{nsOffenderNo}/sequence/{typeSequence}" : {
       "put" : {
         "tags" : [ "non-association-resource" ],
@@ -5306,7 +5614,7 @@
         "tags" : [ "incident-resource" ],
         "summary" : "Delete an incident using the specified id",
         "description" : "Delete an incident. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteIncident",
+        "operationId" : "deleteIncidentByIncidentId",
         "parameters" : [ {
           "name" : "incidentId",
           "in" : "path",
@@ -8866,7 +9174,7 @@
         "tags" : [ "court-sentencing-resource" ],
         "summary" : "get court cases for an offender",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court case by id",
-        "operationId" : "getCourtCasesByOffender",
+        "operationId" : "getCourtCasesByOffenderNo",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -9376,7 +9684,7 @@
         "tags" : [ "Multiple Court case lookup" ],
         "summary" : "Retrieves a specified list of court cases for an offender",
         "description" : "Requires role <b>NOMIS_PRISONER_API__SYNCHRONISATION__RW</b>",
-        "operationId" : "getCourtCasesByOffender_1",
+        "operationId" : "getCourtCasesByOffenderNoAndCaseIds",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -10645,6 +10953,133 @@
         }
       }
     },
+    "/prisoner/{offenderNo}/official-visits" : {
+      "get" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Get official visits for a prisoner optional filtered by scheduled date",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOfficialVisitsForPrisoner",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Filter results by visits that are scheduled on or after the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2024-11-03"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Filter results by visits that are scheduled on or before the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2025-11-03"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of visits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OfficialVisitResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Create an official visit for a prisoner",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOfficialVisit",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOfficialVisitRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Visit details created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/persons" : {
       "post" : {
         "tags" : [ "contact-person-resource" ],
@@ -11465,6 +11900,65 @@
           },
           "404" : {
             "description" : "Person or address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visits/{visitId}/official-visitor" : {
+      "post" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Create an official visit for a visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOfficialVisitor",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOfficialVisitorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Visitor details created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitor"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -14420,7 +14914,7 @@
         "tags" : [ "prisoner-search-resource" ],
         "summary" : "Gets every prison number between range for prisoner search.",
         "description" : "Returns a list of prison numbers for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
-        "operationId" : "getAllPrisonersInRange",
+        "operationId" : "getAllPrisonersInRangeForSearch",
         "parameters" : [ {
           "name" : "active",
           "in" : "query",
@@ -14490,7 +14984,7 @@
         "tags" : [ "prisoner-search-resource" ],
         "summary" : "Gets every size prisoner root offender ids for prisoner search.",
         "description" : "Returns a list of root offender id ranges for prisoners. Each list item has a from and to \n      root offender id, with the number of prisoners between the from and to equal to the specified size. \n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
-        "operationId" : "getAllPrisonersIdRanges",
+        "operationId" : "getAllPrisonersIdRangesForSearch",
         "parameters" : [ {
           "name" : "active",
           "in" : "query",
@@ -14674,7 +15168,7 @@
         "tags" : [ "questionnaire-resource" ],
         "summary" : "get questionnaire IDs by filter",
         "description" : "Retrieves a paged list of incident questionnaire ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getIdsByFilter",
+        "operationId" : "getQuestionnaireIdsByFilter",
         "parameters" : [ {
           "name" : "page",
           "in" : "query",
@@ -16716,6 +17210,122 @@
         }
       }
     },
+    "/prisoners/ids-in-range" : {
+      "get" : {
+        "tags" : [ "prisoners-resource" ],
+        "summary" : "Gets every prison number and root offender id between range for prisoner search.",
+        "description" : "Returns a list of ids for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getAllPrisonersInRange",
+        "parameters" : [ {
+          "name" : "fromRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "toRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of prison numbers and root offender ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonNumberAndRootOffenderId"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/id-ranges" : {
+      "get" : {
+        "tags" : [ "prisoners-resource" ],
+        "summary" : "Gets every size prisoner root offender ids.",
+        "description" : "Returns a list of root offender id ranges for prisoners. Each list item has a from and to \n      root offender id, with the number of prisoners between the from and to equal to the specified size. \n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getAllPrisonersIdRanges",
+        "parameters" : [ {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of prisoners to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1000
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of root offender id ranges",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/booking-id/{bookingId}/sentencing-adjustments" : {
       "get" : {
         "tags" : [ "sentencing-adjustment-resource" ],
@@ -17176,77 +17786,6 @@
         }
       }
     },
-    "/prisoner/{offenderNo}/official-visits" : {
-      "get" : {
-        "tags" : [ "official-visits-resource" ],
-        "summary" : "Get official visits for a prisoner optional filtered by scheduled date",
-        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOfficialVisitsForPrisoner",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "fromDate",
-          "in" : "query",
-          "description" : "Filter results by visits that are scheduled on or after the given date",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "example" : "2024-11-03"
-        }, {
-          "name" : "toDate",
-          "in" : "query",
-          "description" : "Filter results by visits that are scheduled on or before the given date",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "example" : "2025-11-03"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "List of visits",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/OfficialVisitResponse"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/persons/ids" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -17394,75 +17933,6 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/official-visits/{visitId}" : {
-      "get" : {
-        "tags" : [ "official-visits-resource" ],
-        "summary" : "Get an official visit",
-        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOfficialVisit",
-        "parameters" : [ {
-          "name" : "visitId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "The official visit",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/OfficialVisitResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Visit is not an official visit",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Visit not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -18322,6 +18792,71 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Delete a scheduled temporary absence for an offender.",
+        "description" : "Deletes a scheduled temporary absence. This should only be required where we have duplicates! Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteScheduledTemporaryAbsence",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Scheduled TAP movement event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled TAP movement event ID",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Temporary absence application deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Unable to delete the schedule. See error message for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence-return/{eventId}" : {
@@ -18588,6 +19123,69 @@
           },
           "409" : {
             "description" : "Unable to delete the application. See error message for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/booking/{bookingId}/temporary-absences" : {
+      "get" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Get temporary absence applications, schedules and external movements for a booking",
+        "description" : "Get temporary absence applications, schedules and external movements for a booking. This is used to migrate temporary absences to DPS. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTemporaryAbsencesAndMovementsForBooking",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Booking temporary absences returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingTemporaryAbsences"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Booking not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -19061,7 +19659,7 @@
         "tags" : [ "incident-resource" ],
         "summary" : "get incident IDs by filter",
         "description" : "Retrieves a paged list of incident ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getIdsByFilter_1",
+        "operationId" : "getIncidentIdsByFilter",
         "parameters" : [ {
           "name" : "page",
           "in" : "query",
@@ -20555,7 +21153,7 @@
         "tags" : [ "core-person-resource" ],
         "summary" : "Get all the religion information for an offender by prison number",
         "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderReligions",
+        "operationId" : "getOffenderReligionsByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -20567,6 +21165,72 @@
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Core religion information returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OffenderBelief"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/core-person/root-offender-id/{rootOffenderId}/religions" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get all the religion information for an offender by root offender id",
+        "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderReligionsByRootOffenderId",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "path",
+          "description" : "Root offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Root offender id",
+            "example" : 12345
+          },
+          "example" : 12345
         } ],
         "responses" : {
           "200" : {
@@ -22323,7 +22987,7 @@
         "tags" : [ "adjudication-resource" ],
         "summary" : "**** Used to recover from a duplicate incident creation only ***** Deletes an incident by adjudication number.",
         "description" : "Deletes an incident by adjudication number. Supports the removal of a duplicate incident without a DPS mapping. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteIncident_1",
+        "operationId" : "deleteIncidentByAdjudicationNumber",
         "parameters" : [ {
           "name" : "adjudicationNumber",
           "in" : "path",
@@ -22534,7 +23198,7 @@
         "tags" : [ "activities-resource" ],
         "summary" : "Delete a NOMIS attendance (from OFFENDER_COURSE_ATTENDANCES table)",
         "description" : "Deletes an attendance from NOMIS. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAttendance_1",
+        "operationId" : "deleteAttendanceByEventId",
         "parameters" : [ {
           "name" : "eventId",
           "in" : "path",
@@ -22700,7 +23364,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX", "TCA", "TSA" ],
-            "example" : "RX"
+            "example" : "RX",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -22791,7 +23456,7 @@
           "bonusPay" : {
             "type" : "number",
             "description" : "Any bonus pay for the attendance",
-            "example" : 1.5
+            "example" : "1.50"
           }
         },
         "required" : [ "endTime", "eventStatusCode", "scheduleDate", "startTime" ]
@@ -22883,7 +23548,8 @@
           "outcome" : {
             "type" : "string",
             "description" : "The cancellation reason",
-            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ]
+            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ],
+            "minLength" : 1
           }
         },
         "required" : [ "outcome" ]
@@ -22909,18 +23575,31 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "courtEventCharges" : {
+          "courtEventChargesWithOutcomes" : {
             "type" : "array",
             "items" : {
-              "type" : "integer",
-              "format" : "int64"
+              "$ref" : "#/components/schemas/CourtEventChargeRequest"
             }
           },
           "nextCourtId" : {
             "type" : "string"
           }
         },
-        "required" : [ "courtEventCharges", "courtEventType", "courtId", "eventDateTime" ]
+        "required" : [ "courtEventChargesWithOutcomes", "courtEventType", "courtId", "eventDateTime" ]
+      },
+      "CourtEventChargeRequest" : {
+        "type" : "object",
+        "description" : "Court event charge",
+        "properties" : {
+          "offenderChargeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "resultCode1" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "offenderChargeId" ]
       },
       "OffenderChargeIdResponse" : {
         "type" : "object",
@@ -23626,7 +24305,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -23646,7 +24325,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City reference code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -23690,6 +24369,97 @@
           }
         },
         "required" : [ "mailAddress", "primaryAddress" ]
+      },
+      "UpdateOfficialVisitRequest" : {
+        "type" : "object",
+        "description" : "Official Visit information",
+        "properties" : {
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Visit slot that typically matches the location and start and end time"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit start date and time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit end date and time"
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The room where the visit will take place"
+          },
+          "visitStatusCode" : {
+            "type" : "string",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "visitOutcomeCode" : {
+            "type" : "string",
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
+          },
+          "prisonerAttendanceCode" : {
+            "type" : "string",
+            "description" : "The status of prisoner, Attended or Absent"
+          },
+          "prisonerSearchTypeCode" : {
+            "type" : "string",
+            "description" : "The type of search to apply to prisoner"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visitor concerns text"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visit comments"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "A username associated with the staff user who override ban"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
+          }
+        },
+        "required" : [ "endDateTime", "internalLocationId", "overallVisitStatus", "startDateTime", "visitSlotId", "visitStatusCode" ]
+      },
+      "UpdateOfficialVisitorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates lead visitor for the visit"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Indicates visitor requires assistance"
+          },
+          "visitorAttendanceOutcomeCode" : {
+            "type" : "string",
+            "description" : "The status of visitor, Attended or Absent"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visitor comments"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
+          },
+          "visitOutcomeCode" : {
+            "type" : "string",
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
+          }
+        },
+        "required" : [ "overallVisitStatus" ]
       },
       "UpdateNonAssociationRequest" : {
         "type" : "object",
@@ -24166,7 +24936,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA"
+            "example" : "ADA",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -25232,7 +26003,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -25252,7 +26023,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -25657,7 +26428,7 @@
           "compensationAmount" : {
             "type" : "number",
             "description" : "optional compensation amount",
-            "example" : 0.5
+            "example" : "0.50"
           },
           "sanctionDays" : {
             "type" : "integer",
@@ -25753,12 +26524,12 @@
           "payBand" : {
             "type" : "string",
             "description" : "The pay band (1 TO 10)",
-            "example" : 4
+            "example" : "4"
           },
           "rate" : {
             "type" : "number",
             "description" : "The half day rate",
-            "example" : 0.5
+            "example" : "0.50"
           },
           "startDate" : {
             "type" : "string",
@@ -25992,7 +26763,7 @@
           "payBandCode" : {
             "type" : "string",
             "description" : "The prisoner's pay band",
-            "example" : 2
+            "example" : "2"
           },
           "startDate" : {
             "type" : "string",
@@ -27357,7 +28128,7 @@
       },
       "CourtEventChargeRepairRequest" : {
         "type" : "object",
-        "description" : "Court Charge",
+        "description" : "Court event charge repair",
         "properties" : {
           "id" : {
             "type" : "string"
@@ -28476,7 +29247,7 @@
           "cost" : {
             "type" : "number",
             "description" : "Optional cost of repairs",
-            "example" : 62.12
+            "example" : "62.12"
           }
         },
         "required" : [ "typeCode" ]
@@ -28528,7 +29299,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX", "TCA", "TSA" ],
-            "example" : "RX"
+            "example" : "RX",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -28626,7 +29398,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA"
+            "example" : "ADA",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -28655,6 +29428,256 @@
           }
         },
         "required" : [ "adjustmentDays", "adjustmentFromDate", "adjustmentTypeCode" ]
+      },
+      "CreateOfficialVisitRequest" : {
+        "type" : "object",
+        "description" : "Official Visit information",
+        "properties" : {
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Visit slot that typically matches the location and start and end time"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison where the visit is to occur"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit start date and time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit end date and time"
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The room where the visit will take place"
+          },
+          "visitStatusCode" : {
+            "type" : "string",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "visitOutcomeCode" : {
+            "type" : "string",
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
+          },
+          "prisonerAttendanceCode" : {
+            "type" : "string",
+            "description" : "The status of prisoner, Attended or Absent"
+          },
+          "prisonerSearchTypeCode" : {
+            "type" : "string",
+            "description" : "The type of search to apply to prisoner"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visitor concerns text"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visit comments"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "A username associated with the staff user who override ban"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
+          }
+        },
+        "required" : [ "endDateTime", "internalLocationId", "overallVisitStatus", "prisonId", "startDateTime", "visitSlotId", "visitStatusCode" ]
+      },
+      "ContactRelationship" : {
+        "type" : "object",
+        "properties" : {
+          "relationshipType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The relationship type, e.g. police"
+          },
+          "contactType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The contact type, e.g. social or official"
+          }
+        },
+        "required" : [ "contactType", "relationshipType" ]
+      },
+      "OfficialVisitResponse" : {
+        "type" : "object",
+        "description" : "Official Visit information",
+        "properties" : {
+          "visitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit id"
+          },
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit slot id"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison where the visit is to occur"
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The offender number, aka nomsId, prisonerId"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender booking id"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "true if the related booking is current"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit start date and time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit end date and time"
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The room where the visit will take place"
+          },
+          "visitStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "visitOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
+          },
+          "cancellationReason" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The reason of the visit cancellation"
+          },
+          "prisonerAttendanceOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of prisoner, Attended or Absent"
+          },
+          "prisonerSearchType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The type of search to apply to prisoner"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visitor concerns text"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visit comments"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "A username associated with the staff user who override ban"
+          },
+          "visitors" : {
+            "type" : "array",
+            "description" : "Visitors",
+            "items" : {
+              "$ref" : "#/components/schemas/OfficialVisitor"
+            }
+          },
+          "visitOrder" : {
+            "$ref" : "#/components/schemas/VisitOrder",
+            "description" : "Details about any related visitor order"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "audit", "bookingId", "currentTerm", "endDateTime", "internalLocationId", "offenderNo", "prisonId", "startDateTime", "visitId", "visitSlotId", "visitStatus", "visitors" ]
+      },
+      "OfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "ID of the visitor"
+          },
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "visitor NOMIS person Id"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the person"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Surname name of the person"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date of birth name of the person"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates lead visitor for the visit"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Indicates visitor requires assistance"
+          },
+          "visitorAttendanceOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of visitor, Attended or Absent"
+          },
+          "cancellationReason" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The reason of the visit cancellation - typically matches the overall cancellation reason"
+          },
+          "eventStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visitor comments"
+          },
+          "relationships" : {
+            "type" : "array",
+            "description" : "List of visitor contact relationships",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRelationship"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "assistedVisit", "audit", "firstName", "id", "lastName", "leadVisitor", "personId", "relationships" ]
+      },
+      "VisitOrder" : {
+        "type" : "object",
+        "properties" : {
+          "number" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit order number as displayed in NOMIS",
+            "example" : 123456789
+          }
+        },
+        "required" : [ "number" ]
       },
       "CreatePersonResponse" : {
         "type" : "object",
@@ -28964,7 +29987,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -28984,7 +30007,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City reference code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -29024,6 +30047,38 @@
           }
         },
         "required" : [ "mailAddress", "primaryAddress" ]
+      },
+      "CreateOfficialVisitorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "visitor NOMIS person Id"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates lead visitor for the visit"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Indicates visitor requires assistance"
+          },
+          "visitorAttendanceOutcomeCode" : {
+            "type" : "string",
+            "description" : "The status of visitor, Attended or Absent"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visitor comments"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
+          }
+        },
+        "required" : [ "overallVisitStatus", "personId" ]
       },
       "CreateNonAssociationRequest" : {
         "type" : "object",
@@ -29603,7 +30658,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -29623,7 +30678,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -30434,7 +31489,7 @@
           "amount" : {
             "type" : "number",
             "description" : "The transaction amount",
-            "example" : 2.14
+            "example" : "2.14"
           },
           "type" : {
             "type" : "string",
@@ -30466,7 +31521,7 @@
           "reference" : {
             "type" : "string",
             "description" : "The transaction reference",
-            "example" : 1423558449
+            "example" : "1423558449"
           },
           "createdAt" : {
             "type" : "string",
@@ -30532,7 +31587,7 @@
           "amount" : {
             "type" : "number",
             "description" : "The transaction amount",
-            "example" : 2.14
+            "example" : "2.14"
           },
           "type" : {
             "type" : "string",
@@ -30563,7 +31618,7 @@
           "reference" : {
             "type" : "string",
             "description" : "The transaction reference",
-            "example" : 1423558449
+            "example" : "1423558449"
           },
           "subAccountType" : {
             "type" : "string",
@@ -31811,10 +32866,6 @@
             "type" : "string",
             "description" : "The username of the person who recorded the decision"
           },
-          "recordedByDisplayName" : {
-            "type" : "string",
-            "description" : "Real name of who recorded the decision"
-          },
           "recordedDate" : {
             "type" : "string",
             "format" : "date",
@@ -32063,10 +33114,6 @@
             "type" : "string",
             "description" : "Who completed the referral"
           },
-          "referralCompletedByDisplayName" : {
-            "type" : "string",
-            "description" : "Real name of the person who completed the referral"
-          },
           "referralCompletedDate" : {
             "type" : "string",
             "format" : "date",
@@ -32138,10 +33185,6 @@
             "type" : "string",
             "description" : "The username of the person who recorded the review"
           },
-          "recordedByDisplayName" : {
-            "type" : "string",
-            "description" : "Real name of who recorded the review"
-          },
           "createDateTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -32173,10 +33216,6 @@
           "recordedBy" : {
             "type" : "string",
             "description" : "The username of the person who recorded the data"
-          },
-          "recordedByDisplayName" : {
-            "type" : "string",
-            "description" : "Real name of who recorded the data"
           },
           "recordedDate" : {
             "type" : "string",
@@ -32704,7 +33743,7 @@
         "properties" : {
           "offenderNo" : {
             "type" : "string",
-            "description" : "The NOMIS reference AKA prisoner number",
+            "description" : "The NOMIS reference AKA prison number",
             "example" : "A1234AA"
           }
         },
@@ -32725,6 +33764,24 @@
           }
         },
         "required" : [ "lastOffenderId", "prisonerIds" ]
+      },
+      "PrisonNumberAndRootOffenderId" : {
+        "type" : "object",
+        "description" : "Prisoner identifiers",
+        "properties" : {
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Root offender id",
+            "example" : 12345
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS reference AKA prison number",
+            "example" : "A1234AA"
+          }
+        },
+        "required" : [ "prisonNumber", "rootOffenderId" ]
       },
       "KeyDateAdjustmentResponse" : {
         "type" : "object",
@@ -32877,192 +33934,6 @@
           }
         },
         "required" : [ "alerts" ]
-      },
-      "ContactRelationship" : {
-        "type" : "object",
-        "properties" : {
-          "relationshipType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The relationship type, e.g. police"
-          },
-          "contactType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The contact type, e.g. social or official"
-          }
-        },
-        "required" : [ "contactType", "relationshipType" ]
-      },
-      "OfficialVisitResponse" : {
-        "type" : "object",
-        "description" : "Official Visit information",
-        "properties" : {
-          "visitId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit id"
-          },
-          "visitSlotId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit slot id"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "Prison where the visit is to occur"
-          },
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "The offender number, aka nomsId, prisonerId"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender booking id"
-          },
-          "currentTerm" : {
-            "type" : "boolean",
-            "description" : "true if the related booking is current"
-          },
-          "startDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Visit start date and time"
-          },
-          "endDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Visit end date and time"
-          },
-          "internalLocationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The room where the visit will take place"
-          },
-          "visitStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
-          },
-          "visitOutcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
-          },
-          "cancellationReason" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The reason of the visit cancellation"
-          },
-          "prisonerAttendanceOutcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of prisoner, Attended or Absent"
-          },
-          "prisonerSearchType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The type of search to apply to prisoner"
-          },
-          "visitorConcernText" : {
-            "type" : "string",
-            "description" : "Visitor concerns text"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "Visit comments"
-          },
-          "overrideBanStaffUsername" : {
-            "type" : "string",
-            "description" : "A username associated with the staff user who override ban"
-          },
-          "visitors" : {
-            "type" : "array",
-            "description" : "Visitors",
-            "items" : {
-              "$ref" : "#/components/schemas/OfficialVisitor"
-            }
-          },
-          "visitOrder" : {
-            "$ref" : "#/components/schemas/VisitOrder",
-            "description" : "Details about any related visitor order"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "audit", "bookingId", "currentTerm", "endDateTime", "internalLocationId", "offenderNo", "prisonId", "startDateTime", "visitId", "visitSlotId", "visitStatus", "visitors" ]
-      },
-      "OfficialVisitor" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "ID of the visitor"
-          },
-          "personId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "visitor NOMIS person Id"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of the person"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Surname name of the person"
-          },
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date of birth name of the person"
-          },
-          "leadVisitor" : {
-            "type" : "boolean",
-            "description" : "Indicates lead visitor for the visit"
-          },
-          "assistedVisit" : {
-            "type" : "boolean",
-            "description" : "Indicates visitor requires assistance"
-          },
-          "visitorAttendanceOutcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of visitor, Attended or Absent"
-          },
-          "cancellationReason" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The reason of the visit cancellation - typically matches the overall cancellation reason"
-          },
-          "eventStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "Visitor comments"
-          },
-          "relationships" : {
-            "type" : "array",
-            "description" : "List of visitor contact relationships",
-            "items" : {
-              "$ref" : "#/components/schemas/ContactRelationship"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "assistedVisit", "audit", "firstName", "id", "lastName", "leadVisitor", "personId", "relationships" ]
-      },
-      "VisitOrder" : {
-        "type" : "object",
-        "properties" : {
-          "number" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit order number as displayed in NOMIS",
-            "example" : 123456789
-          }
-        },
-        "required" : [ "number" ]
       },
       "ContactForPrisoner" : {
         "type" : "object",
@@ -33232,7 +34103,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -33769,9 +34640,13 @@
           "activeBooking" : {
             "type" : "boolean",
             "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
           }
         },
-        "required" : [ "activeBooking", "bookingId", "temporaryAbsenceApplications", "unscheduledTemporaryAbsenceReturns", "unscheduledTemporaryAbsences" ]
+        "required" : [ "activeBooking", "bookingId", "latestBooking", "temporaryAbsenceApplications", "unscheduledTemporaryAbsenceReturns", "unscheduledTemporaryAbsences" ]
       },
       "OffenderTemporaryAbsencesResponse" : {
         "type" : "object",
@@ -34671,8 +35546,25 @@
               "format" : "int64"
             }
           },
+          "scheduleOutIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement OUT IDs",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "scheduleInIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement IN IDs",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
           "scheduleIds" : {
             "type" : "array",
+            "deprecated" : true,
             "description" : "List of TAP scheduled movement IDs",
             "items" : {
               "type" : "integer",
@@ -34708,7 +35600,7 @@
             }
           }
         },
-        "required" : [ "applicationIds", "scheduleIds", "scheduledMovementInIds", "scheduledMovementOutIds", "unscheduledMovementInIds", "unscheduledMovementOutIds" ]
+        "required" : [ "applicationIds", "scheduleIds", "scheduleInIds", "scheduleOutIds", "scheduledMovementInIds", "scheduledMovementOutIds", "unscheduledMovementInIds", "unscheduledMovementOutIds" ]
       },
       "TemporaryAbsenceApplicationResponse" : {
         "type" : "object",
@@ -34718,6 +35610,10 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Booking ID"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
           },
           "activeBooking" : {
             "type" : "boolean",
@@ -34823,7 +35719,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "movementApplicationId", "prisonId", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "latestBooking", "movementApplicationId", "prisonId", "releaseTime", "returnTime", "toDate" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
@@ -35181,7 +36077,7 @@
             "description" : "Agency where the incident occurred"
           },
           "status" : {
-            "$ref" : "#/components/schemas/IncidentStatus",
+            "$ref" : "#/components/schemas/IncidentStatusResponse",
             "description" : "Status details"
           },
           "type" : {
@@ -35267,24 +36163,29 @@
         },
         "required" : [ "agency", "createDateTime", "createdBy", "history", "incidentDateTime", "incidentId", "lockedResponse", "offenderParties", "questionnaireId", "questions", "reportedDateTime", "reportingStaff", "requirements", "staffParties", "status", "type" ]
       },
-      "IncidentStatus" : {
+      "IncidentStatusResponse" : {
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The code of the status"
           },
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The description of the incident status"
           },
           "listSequence" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "List sequence for the status"
           },
           "standardUser" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Whether this is a standard user status"
           },
           "enhancedUser" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Whether this is an enhanced user status"
           }
         },
         "required" : [ "code", "description", "enhancedUser", "standardUser" ]
@@ -35786,12 +36687,12 @@
           "balance" : {
             "type" : "number",
             "description" : "The account balance",
-            "example" : 12.5
+            "example" : "12.50"
           },
           "holdBalance" : {
             "type" : "number",
             "description" : "The amount on hold",
-            "example" : 12.5
+            "example" : "12.50"
           }
         },
         "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId", "transactionDate" ]
@@ -35865,7 +36766,7 @@
           "balance" : {
             "type" : "number",
             "description" : "The balance for this prison and account code",
-            "example" : 33.12
+            "example" : "33.12"
           },
           "transactionDate" : {
             "type" : "string",
@@ -35984,7 +36885,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -36492,7 +37393,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -36624,16 +37525,12 @@
             "type" : "string",
             "description" : "Comments describing reason for change of belief"
           },
-          "verified" : {
-            "type" : "boolean",
-            "description" : "Verified flag"
-          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "belief", "beliefId", "startDate", "verified" ]
+        "required" : [ "audit", "belief", "beliefId", "startDate" ]
       },
       "OffenderDisability" : {
         "type" : "object",
@@ -37115,7 +38012,7 @@
           "payBand" : {
             "type" : "string",
             "description" : "Pay band",
-            "example" : 1
+            "example" : "1"
           },
           "livingUnitDescription" : {
             "type" : "string",
@@ -37594,12 +38491,12 @@
           "payBand" : {
             "type" : "string",
             "description" : "Pay band",
-            "example" : 1
+            "example" : "1"
           },
           "rate" : {
             "type" : "number",
             "description" : "rate",
-            "example" : 3.2
+            "example" : "3.2"
           }
         },
         "required" : [ "incentiveLevelCode", "payBand", "rate" ]
@@ -37640,7 +38537,7 @@
           "payBandCode" : {
             "type" : "string",
             "description" : "Pay band code",
-            "example" : 5
+            "example" : "5"
           },
           "incentiveLevelCode" : {
             "type" : "string",

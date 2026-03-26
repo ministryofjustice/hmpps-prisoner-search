@@ -15,7 +15,7 @@ class NomisPrisonerService(
   private val prisonerSearchResourceApi = PrisonerSearchResourceApi(nomisApiWebClient)
 
   fun getAllPrisonersIdRanges(active: Boolean, size: Int = 10) = prisonerSearchResourceApi.prepare(
-    prisonerSearchResourceApi.getAllPrisonersIdRangesRequestConfig(active = active, size = size),
+    prisonerSearchResourceApi.getAllPrisonersIdRangesForSearchRequestConfig(active = active, size = size),
   )
     .httpRequest {
       it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
@@ -25,7 +25,7 @@ class NomisPrisonerService(
     .block()!!
 
   fun getPrisonNumbers(active: Boolean, fromRootOffenderId: Long, toRootOffenderId: Long) = prisonerSearchResourceApi.prepare(
-    prisonerSearchResourceApi.getAllPrisonersInRangeRequestConfig(active = active, fromRootOffenderId = fromRootOffenderId, toRootOffenderId = toRootOffenderId),
+    prisonerSearchResourceApi.getAllPrisonersInRangeForSearchRequestConfig(active = active, fromRootOffenderId = fromRootOffenderId, toRootOffenderId = toRootOffenderId),
   )
     .httpRequest {
       it.getNativeRequest<HttpClientRequest>().responseTimeout(Duration.ofMinutes(1))
