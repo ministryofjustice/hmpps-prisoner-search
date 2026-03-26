@@ -76,12 +76,16 @@ class OffenderEventQueueService(
     ) {
       // This is not an error, and so we want to avoid exceptions being logged
       val (message, _, messageAttributes) = jsonMapper.readValue(requestJson, Message::class.java)
-      log.info("Detected a seq_no+primary_term conflict and trying again for $destination message:\n{}", message)
+      val seconds = (1..5).random()
+      val millis = (0L..999L).random()
+      log.info("Detected a seq_no+primary_term conflict and trying again with delay $seconds.${millis}s for $destination message:\n{}", message)
+      // Dither to avoid all the retried messages clashing again
+      Thread.sleep(millis)
       requeueMessageWithDelay(
         requestJson!!,
         messageAttributes.eventType.Value,
         destination,
-        delayInSeconds = 1,
+        delayInSeconds = seconds,
       )
     } else {
       log.error("handleLockingFailure(): Unexpected error", ex)
