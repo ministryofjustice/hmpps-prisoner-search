@@ -39,7 +39,7 @@ class RestrictedPatientSearchResource(
        Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role""",
   )
   @Tag(name = "Specific use case")
-  fun findByCriteria(
+  fun findRestrictedPatientsByCriteria(
     @Parameter(required = true) @RequestBody searchCriteria: RestrictedPatientSearchCriteria,
     @RequestParam(value = "responseFields", required = false)
     @Parameter(
