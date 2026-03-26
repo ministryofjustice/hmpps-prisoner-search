@@ -47,7 +47,7 @@ class PrisonerSearchResource(
     description = "Requires ROLE_GLOBAL_SEARCH or ROLE_PRISONER_SEARCH role",
   )
   @Tag(name = "Deprecated")
-  fun findByCriteria(@Parameter(required = true) @RequestBody prisonSearch: PrisonSearch) = prisonerSearchService.findBySearchCriteria(prisonSearch.toSearchCriteria())
+  fun deprecatedFindByCriteria(@Parameter(required = true) @RequestBody prisonSearch: PrisonSearch) = prisonerSearchService.findBySearchCriteria(prisonSearch.toSearchCriteria())
 
   @PostMapping("/match-prisoners")
   @Operation(

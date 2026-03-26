@@ -77,7 +77,7 @@ class PhysicalDetailResource(private val physicalDetailService: PhysicalDetailSe
   )
   @PostMapping
   @Tag(name = "Physical detail search")
-  fun prisonerDetailSearch(
+  fun physicalDetailSearch(
     @Valid @RequestBody
     physicalDetailRequest: PhysicalDetailRequest,
     @RequestParam(value = "responseFields", required = false)
