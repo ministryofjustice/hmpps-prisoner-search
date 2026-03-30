@@ -15,11 +15,12 @@ import org.opensearch.client.indices.GetIndexRequest
 import org.slf4j.LoggerFactory
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.document.Document
+import org.springframework.data.elasticsearch.core.get
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.IndexQuery
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.UpdateQuery
-import org.springframework.data.elasticsearch.core.query.UpdateResponse
+import org.springframework.data.elasticsearch.core.query.UpdateResponse.Result
 import org.springframework.stereotype.Repository
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndex
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
 import java.time.LocalDate
 
 @Repository
@@ -140,6 +142,16 @@ class PrisonerRepository(
     summary,
   )
 
+  fun updateAll(
+    prisonerNumber: String,
+    prisoner: Prisoner,
+    summary: PrisonerDocumentSummary,
+  ): Boolean {
+    val prisonerMap = objectMapperWithNulls.convertValue<Map<String, *>>(prisoner).toMutableMap()
+
+    return doUpdate(prisonerNumber, prisonerMap, summary)
+  }
+
   private fun doUpdate(
     prisonerNumber: String,
     prisonerMap: Map<String, Any?>,
@@ -155,13 +167,12 @@ class PrisonerRepository(
     )
 
     return when (response.result) {
-      UpdateResponse.Result.NOOP -> false
-      UpdateResponse.Result.UPDATED -> true
+      Result.NOOP -> false
+      Result.UPDATED -> true
 
-      UpdateResponse.Result.CREATED,
-      UpdateResponse.Result.DELETED,
-      UpdateResponse.Result.NOT_FOUND,
-      null,
+      Result.CREATED,
+      Result.DELETED,
+      Result.NOT_FOUND,
       -> throw IllegalStateException("Unexpected result ${response.result} from update of $prisonerNumber")
     }
   }
@@ -181,7 +192,7 @@ class PrisonerRepository(
   }
 
   fun get(prisonerNumber: String): Prisoner? = openSearchRestTemplate
-    .get(prisonerNumber, Prisoner::class.java, IndexCoordinates.of(PRISONER_INDEX))
+    .get<Prisoner>(prisonerNumber, IndexCoordinates.of(PRISONER_INDEX))
 
   fun createIndex() {
     log.info("creating index")

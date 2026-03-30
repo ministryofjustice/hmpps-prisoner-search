@@ -322,33 +322,36 @@ class PrisonerSynchroniserService(
     )
   }
 
-  fun reindexAfterMerge(ob: OffenderBooking, eventType: String) {
-    val existingPrisoner = prisonerRepository.get(ob.offenderNo)
-    val restrictedPatient = getRestrictedPatient(ob)
+  fun reindexAfterMerge(offenderNo: String, eventType: String) {
+    prisonerRepository.getSummary(offenderNo)?. let { summary ->
+      nomisService.getOffender(offenderNo)?.let { ob ->
+        val existingPrisoner = summary.prisoner
+        val restrictedPatient = getRestrictedPatient(ob)
 
-    val prisoner = Prisoner().translate(
-      existingPrisoner = existingPrisoner,
-      ob = ob,
-      incentiveLevel = Result.success(getIncentive(ob)),
-      restrictedPatientData = Result.success(restrictedPatient),
-      alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
-      complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
-    )
-    // Dont think there is need for version control here as the merge event is usually
-    // a single event without other concurrent events
-    prisonerRepository.save(prisoner)
+        val prisoner = Prisoner().translate(
+          existingPrisoner = existingPrisoner,
+          ob = ob,
+          incentiveLevel = Result.success(getIncentive(ob)),
+          restrictedPatientData = Result.success(restrictedPatient),
+          alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
+          complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
+        )
+        val changed = prisonerRepository.updateAll(offenderNo, prisoner, summary)
 
-    telemetryClient.trackPrisonerEvent(
-      TelemetryEvents.PRISONER_MERGED,
-      prisonerNumber = ob.offenderNo,
-      bookingId = ob.bookingId,
-      eventType = eventType,
-    )
+        telemetryClient.trackPrisonerEvent(
+          if (changed) TelemetryEvents.PRISONER_MERGED else TelemetryEvents.PRISONER_MERGE_NO_CHANGE,
+          prisonerNumber = ob.offenderNo,
+          bookingId = ob.bookingId,
+          eventType = eventType,
+        )
+        if (changed) {
+          prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
 
-    prisonerDifferenceService.generateDiffEvent(existingPrisoner, ob.offenderNo, prisoner)
-
-    prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
-    convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner)
+          prisonerMovementsEventService.generateAnyEvents(existingPrisoner, prisoner, ob)
+          convictedStatusEventService.generateAnyEvents(existingPrisoner, prisoner)
+        }
+      } ?: throw PrisonerNotFoundException("$offenderNo in Nomis")
+    } ?: throw PrisonerNotFoundException(offenderNo)
   }
 
   internal fun translate(ob: OffenderBooking): Prisoner {
