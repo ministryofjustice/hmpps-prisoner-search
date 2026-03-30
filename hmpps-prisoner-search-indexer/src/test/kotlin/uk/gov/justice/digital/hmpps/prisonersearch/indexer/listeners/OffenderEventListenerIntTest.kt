@@ -273,10 +273,11 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   @Test
   fun `will delete merge records and insert new prisoner record on booking number change`() {
     val oldPrisonerNumber = "O7089FE" // record to be removed
+    val prisonerNumber = "O7089FF" // record to be updated
     prisonerRepository.save(Prisoner().also { it.prisonerNumber = oldPrisonerNumber })
-    await untilCallTo { prisonerRepository.count() } matches { it == 1L }
+    prisonerRepository.save(Prisoner().also { it.prisonerNumber = prisonerNumber })
+    await untilCallTo { prisonerRepository.count() } matches { it == 2L }
 
-    val prisonerNumber = "O7089FF" // record to be inserted / updated
     val prisonerBuilder = PrisonerBuilder(prisonerNumber = prisonerNumber)
     val bookingId = prisonerBuilder.bookingId!!
     prisonApi.stubGetMergedIdentifiersByBookingId(bookingId, oldPrisonerNumber)
@@ -289,7 +290,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
 
     await untilAsserted {
       assertThat(prisonerRepository.get(oldPrisonerNumber)).isNull()
-      assertThat(prisonerRepository.get(prisonerNumber)?.prisonerNumber).isEqualTo(prisonerNumber)
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
       // ^^ expects a PrisonerCreatedDomainEvent then a PrisonerReceivedDomainEvent
     }
@@ -311,6 +311,23 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       ),
       null,
     )
+
+    // Send another event: this time there is no change
+    offenderSqsClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(validOffenderBookingChangedMessage(bookingId, "BOOKING_NUMBER-CHANGED")).build(),
+    )
+
+    await untilAsserted {
+      verify(telemetryClient).trackEvent(
+        "PRISONER_MERGE_NO_CHANGE",
+        mapOf(
+          "prisonerNumber" to prisonerNumber,
+          "bookingId" to bookingId.toString(),
+          "event" to "BOOKING_NUMBER-CHANGED",
+        ),
+        null,
+      )
+    }
   }
 
   @Test

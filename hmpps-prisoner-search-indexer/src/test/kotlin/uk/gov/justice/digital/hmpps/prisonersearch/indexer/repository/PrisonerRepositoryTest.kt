@@ -1,5 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.assertj.core.api.Assertions.assertThat
@@ -98,6 +103,89 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       assertThatJson(json).node("croNumber").isEqualTo("X12345")
       val prisonerDetail = gson.fromJson(json, Prisoner::class.java)
       assertThat(prisonerDetail.prisonerNumber).isEqualTo("ABC123D")
+    }
+  }
+
+  @Nested
+  inner class UpdateAll {
+    lateinit var summary: PrisonerDocumentSummary
+    val offenderNo = "X12345"
+
+    @BeforeEach
+    fun createDocument() {
+      prisonerRepository.save(Prisoner().apply { prisonerNumber = offenderNo })
+      summary = prisonerRepository.getSummary(offenderNo)!!
+    }
+
+    @Test
+    fun `will save json`() {
+      assertThat(
+        prisonerRepository.updateAll(
+          offenderNo,
+          Prisoner().apply {
+            prisonerNumber = offenderNo
+            complexityOfNeedLevel = "MEDIUM"
+            supportingPrisonId = "SWI"
+          },
+          summary,
+        ),
+      ).isEqualTo(true)
+
+      val json = highLevelClient.get(
+        GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX).id(offenderNo),
+        RequestOptions.DEFAULT,
+      ).sourceAsString
+
+      assertThatJson(json).node("complexityOfNeedLevel").isEqualTo("MEDIUM")
+      assertThatJson(json).node("supportingPrisonId").isEqualTo("SWI")
+      assertThatJson(json).node("prisonerNumber").isEqualTo(offenderNo)
+    }
+
+    @Test
+    fun `will prevent concurrent update`() = runTest {
+      var result1: Result<Boolean> = Result.success(false)
+      var result2: Result<Boolean> = Result.success(false)
+      withContext(Dispatchers.IO) {
+        listOf(
+          launch {
+            result1 = runCatching {
+              prisonerRepository.updateAll(
+                offenderNo,
+                Prisoner().apply {
+                  prisonerNumber = offenderNo
+                  croNumber = "CRO1"
+                },
+                summary,
+              )
+            }
+          },
+          launch {
+            result2 = runCatching {
+              prisonerRepository.updateAll(
+                offenderNo,
+                Prisoner().apply {
+                  prisonerNumber = offenderNo
+                  croNumber = "CRO2"
+                },
+                summary,
+              )
+            }
+          },
+        ).joinAll()
+        val r1 = result1.getOrNull()
+        val r2 = result2.getOrNull()
+
+        // Only one should succeed
+        assertThat((r1 == null) xor (r2 == null)).isTrue
+        r1?.run {
+          assertThat(r1).isTrue
+        }
+          ?: assertThrowsConflict(result1)
+        r2?.run {
+          assertThat(r2).isTrue
+        }
+          ?: assertThrowsConflict(result2)
+      }
     }
   }
 
@@ -747,6 +835,12 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       assertThat(prisonerRepository.copyPrisoner(prisoner).currentIncentive!!.level).isNotSameAs(prisoner.currentIncentive!!.level)
     }
   }
+}
+
+private fun assertThrowsConflict(result: Result<Boolean>) {
+  assertThrows<OptimisticLockingFailureException>(
+    "Cannot index a document due to seq_no+primary_term conflict",
+  ) { result.getOrThrow() }
 }
 
 fun Map<*, *>.value(property: String): String {

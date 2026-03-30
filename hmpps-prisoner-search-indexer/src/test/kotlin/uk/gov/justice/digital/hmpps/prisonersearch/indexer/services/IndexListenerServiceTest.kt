@@ -183,18 +183,15 @@ internal class IndexListenerServiceTest {
   inner class offenderBookNumberChange {
     @Test
     fun `will reindex on book number change`() {
-      val booking = OffenderBookingBuilder().anOffenderBooking()
-      whenever(nomisService.getNomsNumberForBooking(any())).thenReturn("A124BC")
-      whenever(nomisService.getOffender(any<String>())).thenReturn(booking)
-      whenever(nomisService.getMergedIdentifiersByBookingId(any())).thenReturn(null)
-      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexAfterMerge(eq(booking), eq("BOOKING_CHANGE"))
+      val bookingChange = anOffenderBookingChange()
+      whenever(nomisService.getNomsNumberForBooking(bookingChange.bookingId)).thenReturn("A124BC")
+      whenever(nomisService.getMergedIdentifiersByBookingId(bookingChange.bookingId)).thenReturn(null)
+      doReturn(Prisoner()).whenever(prisonerSynchroniserService).reindexAfterMerge(eq("A124BC"), eq("BOOKING_CHANGE"))
 
-      indexListenerService.offenderBookNumberChange(anOffenderBookingChange(), "BOOKING_CHANGE")
+      indexListenerService.offenderBookNumberChange(bookingChange, "BOOKING_CHANGE")
 
       verify(prisonerSynchroniserService).reindexAfterMerge(
-        check {
-          assertThat(it.offenderNo).isEqualTo(booking.offenderNo)
-        },
+        eq("A124BC"),
         eq("BOOKING_CHANGE"),
       )
     }
