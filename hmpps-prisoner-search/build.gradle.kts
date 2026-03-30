@@ -24,7 +24,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.1.0")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.3")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.4")
   implementation("com.google.code.gson:gson:2.13.2")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -34,7 +34,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   // Leaving at version 2.9.0 to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L16
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.26.1")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
