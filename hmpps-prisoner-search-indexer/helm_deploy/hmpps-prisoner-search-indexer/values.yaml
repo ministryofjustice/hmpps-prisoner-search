@@ -80,7 +80,7 @@ generic-service:
     # Start earlier than the active refresh as this must end before midnight otherwise there will be alert mismatches (see SDIT-2995):
     - name: full-index-refresh
       type: FULL_INDEX_REFRESH
-      schedule: "30 20 * * MON,THU"
+      schedule: "0 20 * * MON,THU"
     - name: active-index-refresh
       type: ACTIVE_INDEX_REFRESH
       schedule: "05 21 * * SUN,TUE,WED,FRI,SAT"
