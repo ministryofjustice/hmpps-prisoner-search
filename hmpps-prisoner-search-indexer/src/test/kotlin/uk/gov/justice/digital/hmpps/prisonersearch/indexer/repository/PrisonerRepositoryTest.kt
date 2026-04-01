@@ -113,7 +113,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @BeforeEach
     fun createDocument() {
-      prisonerRepository.save(Prisoner().apply { prisonerNumber = offenderNo })
+      prisonerRepository.save(prisoner(offenderNo))
       summary = prisonerRepository.getSummary(offenderNo)!!
     }
 
@@ -193,18 +193,14 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
   inner class GetSummary {
     @Test
     fun `prisoner does not exist`() {
-      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" })
+      prisonerRepository.save(prisoner("X12345"))
 
       assertThat(prisonerRepository.getSummary("nonexistent")).isNull()
     }
 
     @Test
     fun `prisoner exists but has no bookings`() {
-      prisonerRepository.save(
-        Prisoner().apply {
-          prisonerNumber = "X12345"
-        },
-      )
+      prisonerRepository.save(prisoner("X12345"))
 
       assertThat(prisonerRepository.getSummary("X12345")?.prisonerNumber).isEqualTo("X12345")
       assertThat(prisonerRepository.getSummary("X12345")!!.prisoner!!.bookingId).isNull()
@@ -258,11 +254,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `will not update if already exists`() {
-      prisonerRepository.save(
-        Prisoner().apply {
-          prisonerNumber = "X12345"
-        },
-      )
+      prisonerRepository.save(prisoner("X12345"))
 
       assertThrows<UncategorizedElasticsearchException> {
         prisonerRepository.createPrisoner(
@@ -347,9 +339,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `wrong sequence + 1 throws exception`() {
-      prisonerRepository.save(
-        Prisoner().apply { prisonerNumber = "X12345" },
-      )
+      prisonerRepository.save(prisoner("X12345"))
 
       val summary = prisonerRepository.getSummary("X12345")!!
       assertThrows<OptimisticLockingFailureException> {
@@ -363,9 +353,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `wrong primaryTerm + 1 throws exception`() {
-      prisonerRepository.save(
-        Prisoner().apply { prisonerNumber = "X12345" },
-      )
+      prisonerRepository.save(prisoner("X12345"))
 
       val summary = prisonerRepository.getSummary("X12345")!!
       assertThrows<OptimisticLockingFailureException> {
@@ -415,7 +403,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `will update prisoner with new incentive data`() {
-      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" })
+      prisonerRepository.save(prisoner("X12345"))
 
       prisonerRepository.updateIncentive(
         "X12345",
@@ -743,7 +731,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `will delete prisoner`() {
-      prisonerRepository.save(Prisoner().apply { prisonerNumber = "X12345" })
+      prisonerRepository.save(prisoner("X12345"))
       assertThat(highLevelClient.get(GetRequest(OpenSearchIndexConfiguration.PRISONER_INDEX).id("X12345"), RequestOptions.DEFAULT).isExists).isTrue()
 
       val result = prisonerRepository.delete(prisonerNumber = "X12345")

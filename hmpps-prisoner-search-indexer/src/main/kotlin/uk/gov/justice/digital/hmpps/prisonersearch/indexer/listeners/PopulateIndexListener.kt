@@ -6,25 +6,19 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_INDEX
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
-import java.lang.IllegalArgumentException
 
 @Service
 class PopulateIndexListener(
   private val jsonMapper: JsonMapper,
-  private val populateIndexService: PopulateIndexService,
   private val refreshIndexService: RefreshIndexService,
 ) : EventListener {
   @SqsListener("index", factory = "hmppsQueueContainerFactoryProxy")
@@ -37,10 +31,6 @@ class PopulateIndexListener(
     }
     try {
       when (indexRequest.type) {
-        POPULATE_INDEX -> populateIndexService.populateIndex()
-        POPULATE_PRISONER_PAGE -> populateIndexService.populateIndexWithPrisonerPage(indexRequest.prisonerPage!!)
-        POPULATE_PRISONER -> populateIndexService.populateIndexWithPrisoner(indexRequest.prisonerNumber!!)
-
         REFRESH_INDEX -> refreshIndexService.refreshIndex(indexRequest.domainEvents)
         REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!, indexRequest.domainEvents)
         REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(prisonerNumber = indexRequest.prisonerNumber!!, indexRequest.domainEvents)

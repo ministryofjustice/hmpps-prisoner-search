@@ -74,8 +74,8 @@ class HmppsDomainEventsEmitterIntTest : IntegrationTestBase() {
   fun init() {
     PrisonRegisterApiExtension.prisonRegisterApi.stubGetPrisons()
     purgeDomainEventsQueue()
-    prisonApi.stubOffenders(PrisonerBuilder())
-    buildAndSwitchIndex(1)
+    prisonerRepository.save(Prisoner())
+    await untilCallTo { prisonerRepository.count() } matches { it == 1L }
   }
 
   @Test

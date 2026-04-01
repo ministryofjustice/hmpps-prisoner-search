@@ -5,64 +5,23 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.core.exc.StreamReadException
 import tools.jackson.databind.exc.InvalidFormatException
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PopulateIndexService
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
 
 @JsonTest
 class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
-  private val populateIndexService = mock<PopulateIndexService>()
   private val refreshIndexService = mock<RefreshIndexService>()
 
-  private val listener = PopulateIndexListener(jsonMapper, populateIndexService, refreshIndexService)
+  private val listener = PopulateIndexListener(jsonMapper, refreshIndexService)
   private val logAppender = findLogAppender(PopulateIndexListener::class.java)
-
-  @Nested
-  inner class PopulateIndex {
-    @Test
-    fun `will call service with index name`() {
-      whenever(populateIndexService.populateIndex()).thenReturn(1)
-
-      listener.processIndexRequest(
-        """
-      {
-        "type": "POPULATE_INDEX"
-      }
-        """.trimIndent(),
-      )
-
-      verify(populateIndexService).populateIndex()
-    }
-
-    @Test
-    fun `failed request`() {
-      whenever(populateIndexService.populateIndex()).thenThrow(BuildNotInProgressException(IndexStatus()))
-
-      listener.processIndexRequest(
-        """
-      {
-        "type": "POPULATE_INDEX"
-      }
-        """.trimIndent(),
-      )
-
-      assertThat(logAppender.list).anyMatch { it.message.contains("failed with error") }
-    }
-  }
 
   @Nested
   inner class RefreshIndex {
@@ -93,26 +52,6 @@ class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """.trimIndent(),
       )
       verify(refreshIndexService).refreshActiveIndex(false)
-    }
-  }
-
-  @Nested
-  inner class PopulatePrisonerPage {
-    @Test
-    fun `will call service with page details`() {
-      listener.processIndexRequest(
-        """
-      {
-        "type": "POPULATE_PRISONER_PAGE",
-        "prisonerPage": {
-          "page": 1,
-          "pageSize": 1000
-        }
-      }
-        """.trimIndent(),
-      )
-
-      verify(populateIndexService).populateIndexWithPrisonerPage(PrisonerPage(1, 1000))
     }
   }
 
@@ -153,25 +92,6 @@ class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
       )
 
       verify(refreshIndexService).refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000), false)
-    }
-  }
-
-  @Nested
-  inner class PopulatePrisoner {
-    @Test
-    fun `will call service with prisoner number to populate`() {
-      whenever(populateIndexService.populateIndexWithPrisoner(any())).thenReturn(Prisoner())
-
-      listener.processIndexRequest(
-        """
-      {
-        "type": "POPULATE_PRISONER",
-        "prisonerNumber": "X12345"
-      }
-        """.trimIndent(),
-      )
-
-      verify(populateIndexService).populateIndexWithPrisoner("X12345")
     }
   }
 

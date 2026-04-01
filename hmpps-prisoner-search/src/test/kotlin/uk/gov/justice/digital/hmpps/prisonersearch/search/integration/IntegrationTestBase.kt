@@ -17,7 +17,6 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.services.SearchClient
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.AlertsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.wiremock.HmppsAuthApiExtension
-import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.AlertsApiService
 import uk.gov.justice.digital.hmpps.prisonersearch.search.services.PrisonersInPrisonService
@@ -49,9 +48,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   internal lateinit var prisonerRepository: PrisonerRepository
-
-  @Autowired
-  internal lateinit var indexStatusRepository: IndexStatusRepository
 
   @MockitoSpyBean
   internal lateinit var searchService: PrisonersInPrisonService

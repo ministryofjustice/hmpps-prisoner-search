@@ -14,7 +14,6 @@ import org.springframework.test.json.JsonCompareMode
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.util.UriBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.search.model.PrisonerBuilder
@@ -33,18 +32,12 @@ abstract class AbstractSearchIntegrationTest : IntegrationTestBase() {
     log.info("Initialising search data")
     deletePrisonerIndex()
     createPrisonerIndex()
-    initialiseIndexStatus()
     loadPrisonerData()
   }
 
   fun createPrisonerIndex() = prisonerRepository.createIndex()
 
   fun deletePrisonerIndex() = prisonerRepository.deleteIndex()
-
-  fun initialiseIndexStatus() {
-    indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus())
-  }
 
   fun loadPrisonerData() {
     val prisoners = listOf(

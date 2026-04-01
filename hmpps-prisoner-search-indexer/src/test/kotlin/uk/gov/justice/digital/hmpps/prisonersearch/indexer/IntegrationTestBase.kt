@@ -3,9 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer
 import com.google.gson.Gson
 import com.microsoft.applicationinsights.TelemetryClient
 import org.apache.commons.lang3.RandomStringUtils
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.whenever
@@ -34,7 +31,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.GsonConfig
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Alias
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
@@ -46,7 +43,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalC
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalMark
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.IndexStatusRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
@@ -108,9 +104,6 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var prisonerRepository: PrisonerRepository
 
-  @Autowired
-  lateinit var indexStatusRepository: IndexStatusRepository
-
   @MockitoSpyBean
   protected lateinit var maintainIndexService: MaintainIndexService
 
@@ -159,7 +152,6 @@ abstract class IntegrationTestBase {
     indexSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexQueueUrl).build()).get()
     indexSqsDlqClient?.purgeQueue(PurgeQueueRequest.builder().queueUrl(indexDlqUrl).build())?.get()
     createPrisonerIndices()
-    initialiseIndexStatus()
   }
 
   @BeforeEach
@@ -179,36 +171,17 @@ abstract class IntegrationTestBase {
 
   fun deletePrisonerIndices() = prisonerRepository.deleteIndex()
 
-  fun initialiseIndexStatus() {
-    indexStatusRepository.deleteAll()
-    indexStatusRepository.save(IndexStatus())
-  }
-
-  fun deinitialiseIndexStatus() = indexStatusRepository.deleteAll()
-
-  fun buildAndSwitchIndex(expectedCount: Long) {
-    buildIndex(expectedCount)
-
+  fun indexPrisoner(prisonerNumber: String) {
     webTestClient.put()
-      .uri("/maintain-index/mark-complete")
+      .uri("/maintain-index/index-prisoner/$prisonerNumber")
       .accept(MediaType.APPLICATION_JSON)
       .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
       .exchange()
       .expectStatus().isOk
-
-    await untilCallTo { getIndexCount() } matches { it == expectedCount }
   }
 
-  fun buildIndex(expectedCount: Long) {
-    webTestClient.put()
-      .uri("/maintain-index/build")
-      .accept(MediaType.APPLICATION_JSON)
-      .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-      .exchange()
-      .expectStatus().isOk
-
-    await untilCallTo { indexQueueService.getIndexQueueStatus().active } matches { it == false }
-    await untilCallTo { getIndexCount() } matches { it == expectedCount }
+  fun prisoner(offenderNo: String) = Prisoner().apply {
+    prisonerNumber = offenderNo
   }
 
   fun getIndexCount(): Long = openSearchClient.count(CountRequest(OpenSearchIndexConfiguration.PRISONER_INDEX), RequestOptions.DEFAULT).count
@@ -466,12 +439,12 @@ data class AliasBuilder(
 )
 
 // generate random string starting with a letter, followed by 4 numbers and 2 letters
-fun generatePrisonerNumber(): String = "${letters(1)}${numbers(4)}${letters(2)}"
+fun generatePrisonerNumber(): String = "${letters(1)}${numbers(4)}${letters(2)}".uppercase()
 
 // generate random number 8 digits
 fun generateBookingId(): Long = numbers(8).toLong()
 
-fun letters(length: Int): String = RandomStringUtils.insecure().next(length, true, true)
+fun letters(length: Int): String = RandomStringUtils.insecure().next(length, true, false)
 
 fun numbers(length: Int): String = RandomStringUtils.insecure().next(length, false, true)
 
