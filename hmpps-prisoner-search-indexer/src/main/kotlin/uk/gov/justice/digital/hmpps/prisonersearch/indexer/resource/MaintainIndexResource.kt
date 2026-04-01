@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 
 @RestController
@@ -22,54 +21,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainInde
 @RequestMapping("/maintain-index", produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "OpenSearch index maintenance")
 class MaintainIndexResource(private val maintainIndexService: MaintainIndexService) {
-
-  @PutMapping("/build")
-  @PreAuthorize("hasRole('PRISONER_INDEX')")
-  @Operation(
-    summary = "Start building a new index",
-    description = """The current index will be left untouched and continue to be maintained while the new index is built.
-      The new index must not be currently building.  Requires PRISONER_INDEX role.  Returns the new status of the index.""",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "401", description = "Unauthorised, requires a valid Oauth2 token"),
-      ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
-      ApiResponse(responseCode = "409", description = "Conflict, the index was not in a state to start building"),
-    ],
-  )
-  fun buildIndex(): IndexStatus = maintainIndexService.prepareIndexForRebuild()
-
-  @PutMapping("/cancel")
-  @PreAuthorize("hasRole('PRISONER_INDEX')")
-  @Operation(
-    summary = "Cancel building an index",
-    description = """Cancels the building of the current index if it is currently building.
-      Requires PRISONER_INDEX role.  Returns the new status of the index.""",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "401", description = "Unauthorised, requires a valid Oauth2 token"),
-      ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
-    ],
-  )
-  fun cancelIndex() = maintainIndexService.cancelIndexing()
-
-  @PutMapping("/mark-complete")
-  @PreAuthorize("hasRole('PRISONER_INDEX')")
-  @Operation(
-    summary = "Mark the current index build as complete",
-    description = """Completes the index build if it is currently building.
-      If the index isn't currently building then no action will be taken.
-      Requires PRISONER_INDEX role.  Returns the new status of the index.""",
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "401", description = "Unauthorised, requires a valid Oauth2 token"),
-      ApiResponse(responseCode = "403", description = "Forbidden, requires an authorisation with role PRISONER_INDEX"),
-      ApiResponse(responseCode = "409", description = "Conflict, the index was not currently building"),
-    ],
-  )
-  fun markComplete() = maintainIndexService.markIndexingComplete()
 
   @PutMapping("/index-prisoner/{prisonerNumber}")
   @PreAuthorize("hasRole('PRISONER_INDEX')")

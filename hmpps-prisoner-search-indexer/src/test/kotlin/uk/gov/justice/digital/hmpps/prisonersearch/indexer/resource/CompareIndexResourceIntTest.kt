@@ -3,6 +3,9 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -74,18 +77,16 @@ class CompareIndexResourceIntTest(
   inner class compareTestsWithDifferences {
     @BeforeEach
     fun beforeEach() {
-      prisonApi.stubOffenders(
-        PrisonerBuilder("A9999AA"),
-        PrisonerBuilder("A9999AB"),
-        PrisonerBuilder("A9999AC"),
-        PrisonerBuilder("A9999RA"),
-        PrisonerBuilder("A9999RB"),
-        PrisonerBuilder("A9999RC"),
-        PrisonerBuilder("A7089EY"),
-        PrisonerBuilder("A7089EZ"),
-        PrisonerBuilder("A7089FA"),
-      )
-      buildAndSwitchIndex(9)
+      prisonerRepository.save(prisoner("A9999AA"))
+      prisonerRepository.save(prisoner("A9999AB"))
+      prisonerRepository.save(prisoner("A9999AC"))
+      prisonerRepository.save(prisoner("A9999RA"))
+      prisonerRepository.save(prisoner("A9999RB"))
+      prisonerRepository.save(prisoner("A9999RC"))
+      prisonerRepository.save(prisoner("A7089EY"))
+      prisonerRepository.save(prisoner("A7089EZ"))
+      prisonerRepository.save(prisoner("A7089FA"))
+      await untilCallTo { prisonerRepository.count() } matches { it == 9L }
 
       prisonApi.stubOffenders(
         PrisonerBuilder("A9999AA"),
@@ -154,7 +155,7 @@ class CompareIndexResourceIntTest(
 
       assertThat(details).contains(
         "[alerts: null, [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=true)]",
-        "[aliases: [], [PrisonerAlias(title=Mr, firstName=LUCAS, middleNames=null, lastName=MORALES, dateOfBirth=1965-07-19, gender=F, ethnicity=null, raceCode=null)]]",
+        "[aliases: null, [PrisonerAlias(title=Mr, firstName=LUCAS, middleNames=null, lastName=MORALES, dateOfBirth=1965-07-19, gender=F, ethnicity=null, raceCode=null)]]",
       )
     }
   }

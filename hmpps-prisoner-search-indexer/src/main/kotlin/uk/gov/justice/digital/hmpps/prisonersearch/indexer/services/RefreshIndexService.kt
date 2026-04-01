@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.services
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.IndexBuildProperties
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_INDEX
@@ -13,7 +12,6 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 
 @Service
 class RefreshIndexService(
-  private val indexStatusService: IndexStatusService,
   private val indexQueueService: IndexQueueService,
   private val nomisService: NomisService,
   private val nomisPrisonerService: NomisPrisonerService,
@@ -32,37 +30,23 @@ class RefreshIndexService(
 
   private fun startIndexRefresh(type: IndexRequestType, domainEvents: Boolean) {
     val indexQueueStatus = indexQueueService.getIndexQueueStatus()
-    return indexStatusService.getIndexStatus()
-      // no point refreshing index if we're already building the other one
-      .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-      // don't want to run two refreshes at the same time
-      .failIf({ indexQueueStatus.active }) {
-        ActiveMessagesExistException(indexQueueStatus, "build index")
-      }
-      .run {
-        log.info("Sending {} refresh request", type)
-        indexQueueService.sendIndexMessage(type, domainEvents)
-      }
+    // don't want to run two refreshes at the same time
+    if (indexQueueStatus.active) {
+      throw ActiveMessagesExistException(indexQueueStatus, "build index")
+    }
+    log.info("Sending {} refresh request", type)
+    return indexQueueService.sendIndexMessage(type, domainEvents)
   }
 
-  fun refreshIndex(domainEvents: Boolean = true): Int = indexStatusService.getIndexStatus()
-    // no point refreshing index if we're already building
-    .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-    .run { doRefreshIndex(domainEvents) }
-
-  fun refreshActiveIndex(domainEvents: Boolean): Int = indexStatusService.getIndexStatus()
-    // no point refreshing index if we're already building
-    .failIf(IndexStatus::isBuilding) { BuildAlreadyInProgressException(it) }
-    .run { doRefreshActiveIndex(domainEvents) }
-
-  private fun doRefreshIndex(domainEvents: Boolean): Int {
+  fun refreshIndex(domainEvents: Boolean = true): Int {
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = false, size = pageSize)
     log.info("Found {} pages each of size {}", ranges.size, pageSize)
     return ranges
       .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
       .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_PRISONER_PAGE, domainEvents) }.size
   }
-  private fun doRefreshActiveIndex(domainEvents: Boolean): Int {
+
+  fun refreshActiveIndex(domainEvents: Boolean): Int {
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = true, size = pageSize)
     log.info("Found {} pages each of size {}", ranges.size, pageSize)
     return ranges
@@ -90,13 +74,5 @@ class RefreshIndexService(
 
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
-  private inline fun IndexStatus.failIf(
-    check: (IndexStatus) -> Boolean,
-    onFail: (IndexStatus) -> IndexException,
-  ): IndexStatus = when (check(this)) {
-    false -> this
-    true -> throw onFail(this)
   }
 }

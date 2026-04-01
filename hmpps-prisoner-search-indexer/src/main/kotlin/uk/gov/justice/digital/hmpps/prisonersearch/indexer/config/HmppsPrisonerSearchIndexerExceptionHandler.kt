@@ -17,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexConflictException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotFoundException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.WrongIndexRequestedException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestControllerAdvice
@@ -79,17 +78,6 @@ class HmppsPrisonerSearchIndexerExceptionHandler {
     .status(NOT_FOUND)
     .contentType(MediaType.APPLICATION_JSON)
     .body(ErrorResponse(status = NOT_FOUND, developerMessage = e.message))
-
-  @ExceptionHandler(WrongIndexRequestedException::class)
-  fun handleWrongIndexRequestedException(e: WrongIndexRequestedException): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(BAD_REQUEST)
-    .body(
-      ErrorResponse(
-        status = BAD_REQUEST,
-        userMessage = "Wrong index requested exception: ${e.message}",
-        developerMessage = e.message,
-      ),
-    ).also { log.error("Wrong index requested exception", e) }
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity

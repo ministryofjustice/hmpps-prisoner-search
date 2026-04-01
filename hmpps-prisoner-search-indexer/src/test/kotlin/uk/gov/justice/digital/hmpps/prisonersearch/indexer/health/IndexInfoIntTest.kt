@@ -1,12 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
-import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension
 
 class IndexInfoIntTest : IntegrationTestBase() {
 
@@ -15,7 +16,6 @@ class IndexInfoIntTest : IntegrationTestBase() {
     @BeforeEach
     fun init() {
       deletePrisonerIndices() // required for index-size of -1
-      deinitialiseIndexStatus() // required for no index status
     }
 
     @Test
@@ -26,7 +26,6 @@ class IndexInfoIntTest : IntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .jsonPath("index-status").value<String> { assertThat(it).contains("No status exists yet") }
         .jsonPath("index-size.count").isEqualTo(-1)
         .jsonPath("index-queue-backlog").isEqualTo("0")
     }
@@ -37,8 +36,8 @@ class IndexInfoIntTest : IntegrationTestBase() {
 
     @BeforeEach
     fun init() {
-      PrisonApiExtension.prisonApi.stubOffenders(PrisonerBuilder())
-      buildAndSwitchIndex(1)
+      prisonerRepository.save(Prisoner())
+      await untilCallTo { prisonerRepository.count() } matches { it == 1L }
     }
 
     @Test
@@ -49,8 +48,6 @@ class IndexInfoIntTest : IntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .jsonPath("index-status.currentIndexStartBuildTime").value<String> { assertThat(it).isNotNull() }
-        .jsonPath("index-status.currentIndexEndBuildTime").value<String> { assertThat(it).isNotNull() }
         .jsonPath("index-size.count").isEqualTo(1)
         .jsonPath("index-queue-backlog").isEqualTo("0")
     }

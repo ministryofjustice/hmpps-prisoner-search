@@ -14,14 +14,12 @@ import org.mockito.kotlin.whenever
 import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextRefreshedEvent
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.ACTIVE_INDEX_REFRESH
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.CHECK_INDEX_COMPLETE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.COMPARE_INDEX_SIZE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.batch.BatchType.FULL_INDEX_REFRESH
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildAlreadyInProgressException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.ActiveMessagesExistException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CompareIndexService
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerDifferencesService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
@@ -39,46 +37,6 @@ class BatchManagerTest {
   @BeforeEach
   fun setUp() {
     whenever(event.applicationContext).thenReturn(context)
-  }
-
-  @Nested
-  inner class CheckIndexComplete {
-    @Test
-    fun `should call the check index complete service`() = runTest {
-      val batchManager = batchManager(CHECK_INDEX_COMPLETE)
-
-      batchManager.onApplicationEvent(event)
-
-      verify(maintainIndexService).markIndexingComplete()
-      verify(context).close()
-    }
-
-    @Test
-    fun `should ignore expected errors in the check index complete service`() = runTest {
-      whenever(maintainIndexService.markIndexingComplete())
-        .thenThrow(BuildNotInProgressException(IndexStatus("some-id").toBuildInProgress()))
-      val batchManager = batchManager(CHECK_INDEX_COMPLETE)
-
-      assertDoesNotThrow {
-        batchManager.onApplicationEvent(event)
-      }
-
-      verify(maintainIndexService).markIndexingComplete()
-      verify(context).close()
-    }
-
-    @Test
-    fun `should not ignore unexpected error in the check index complete service`() = runTest {
-      whenever(maintainIndexService.markIndexingComplete()).thenThrow(RuntimeException("error"))
-      val batchManager = batchManager(CHECK_INDEX_COMPLETE)
-
-      assertThrows<RuntimeException> {
-        batchManager.onApplicationEvent(event)
-      }
-
-      verify(maintainIndexService).markIndexingComplete()
-      verify(context, never()).close()
-    }
   }
 
   @Nested
@@ -124,7 +82,7 @@ class BatchManagerTest {
     @Test
     fun `should ignore expected errors in the refresh index service`() = runTest {
       whenever(refreshIndexService.startFullIndexRefresh(true))
-        .thenThrow(BuildAlreadyInProgressException(IndexStatus("some-id").toBuildInProgress()))
+        .thenThrow(ActiveMessagesExistException(IndexQueueStatus(0, 0, 1), "action"))
       val batchManager = batchManager(FULL_INDEX_REFRESH)
 
       assertDoesNotThrow {
@@ -167,7 +125,7 @@ class BatchManagerTest {
     @Test
     fun `should ignore expected errors in the refresh index service`() = runTest {
       whenever(refreshIndexService.startActiveIndexRefresh(true))
-        .thenThrow(BuildAlreadyInProgressException(IndexStatus("some-id").toBuildInProgress()))
+        .thenThrow(ActiveMessagesExistException(IndexQueueStatus(0, 0, 1), "action"))
       val batchManager = batchManager(ACTIVE_INDEX_REFRESH)
 
       assertDoesNotThrow {

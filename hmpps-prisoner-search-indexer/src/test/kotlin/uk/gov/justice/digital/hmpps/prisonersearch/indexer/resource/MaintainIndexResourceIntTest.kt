@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.resource
 
-import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
@@ -11,10 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.mockito.Mockito.CALLS_REAL_METHODS
-import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.reset
-import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -22,20 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.BUILDING
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.CANCELLED
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexState.COMPLETED
-import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IndexStatus
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.readResourceAsText
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildAlreadyInProgressException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.BuildNotInProgressException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.NoActiveIndexesException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerNotFoundException
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class MaintainIndexResourceIntTest : IntegrationTestBase() {
 
@@ -50,9 +34,6 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
   @TestInstance(PER_CLASS)
   inner class SecureEndpoints {
     private fun secureEndpoints() = listOf(
-      "/maintain-index/build",
-      "/maintain-index/mark-complete",
-      "/maintain-index/cancel",
       "/maintain-index/index-prisoner/SOME_NOMIS",
     )
 
@@ -79,152 +60,11 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class BuildIndex {
-    @Test
-    fun `Request build index is successful and calls service`() {
-      doReturn(IndexStatus(currentIndexState = BUILDING)).whenever(maintainIndexService).prepareIndexForRebuild()
-
-      webTestClient.put()
-        .uri("/maintain-index/build")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("$.currentIndexState").isEqualTo("BUILDING")
-
-      verify(maintainIndexService).prepareIndexForRebuild()
-    }
-
-    @Test
-    fun `Test that messages received during index rebuild don't get added to the index before the mapping is added`() {
-      prisonApi.stubOffenders(PrisonerBuilder("A5678FB"))
-      incentivesApi.stubCurrentIncentive()
-
-      doAnswer {
-        val message = "/messages/offenderDetailsChanged.json".readResourceAsText().replace("A7089FD", "A5678FB")
-        offenderQueueSqsClient.sendMessage(
-          SendMessageRequest.builder().queueUrl(offenderQueueUrl).messageBody(message).build(),
-        ).get()
-
-        Thread.sleep(1000)
-
-        // now call the real method to add the mapping
-        prisonerSpyBeanRepository.addMapping()
-        CALLS_REAL_METHODS
-      }.doCallRealMethod().whenever(prisonerSpyBeanRepository).addMapping()
-
-      webTestClient.put()
-        .uri("/maintain-index/build")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isOk
-        .expectBody()
-        .jsonPath("$.currentIndexState").isEqualTo("BUILDING")
-
-      verify(maintainIndexService).prepareIndexForRebuild()
-      await untilCallTo { indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue() } matches { it!! == 0 }
-    }
-
-    @Test
-    fun `Request build index already building returns conflict`() {
-      val expectedIndexStatus = IndexStatus(currentIndexState = BUILDING)
-      doThrow(BuildAlreadyInProgressException(expectedIndexStatus)).whenever(maintainIndexService).prepareIndexForRebuild()
-
-      webTestClient.put()
-        .uri("/maintain-index/build")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isEqualTo(409)
-        .expectBody()
-        .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.currentIndexState.name)
-        }
-
-      verify(maintainIndexService).prepareIndexForRebuild()
-    }
-  }
-
-  @Nested
-  inner class MarkIndexComplete {
-    @Test
-    fun `Request to mark index complete is successful and calls service`() {
-      doReturn(IndexStatus()).whenever(maintainIndexService).markIndexingComplete()
-
-      webTestClient.put()
-        .uri("/maintain-index/mark-complete")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isOk
-
-      verify(maintainIndexService).markIndexingComplete()
-    }
-
-    @Test
-    fun `Request to mark index complete when index not building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndexState = COMPLETED)
-      doThrow(BuildNotInProgressException(expectedIndexStatus)).whenever(maintainIndexService).markIndexingComplete()
-
-      webTestClient.put()
-        .uri("/maintain-index/mark-complete")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isEqualTo(409)
-        .expectBody()
-        .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.currentIndexState.name)
-        }
-
-      verify(maintainIndexService).markIndexingComplete()
-    }
-  }
-
-  @Nested
-  inner class CancelIndexing {
-    @Test
-    fun `Request to cancel indexing is successful and calls service`() {
-      doReturn(IndexStatus()).whenever(maintainIndexService).cancelIndexing()
-
-      webTestClient.put()
-        .uri("/maintain-index/cancel")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isOk
-
-      verify(maintainIndexService).cancelIndexing()
-    }
-
-    @Test
-    fun `Request to mark index cancelled when index not building returns error`() {
-      val expectedIndexStatus = IndexStatus(currentIndexState = CANCELLED)
-      doThrow(BuildNotInProgressException(expectedIndexStatus)).whenever(maintainIndexService).cancelIndexing()
-
-      webTestClient.put()
-        .uri("/maintain-index/cancel")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isEqualTo(409)
-        .expectBody()
-        .jsonPath("$.userMessage").value<String> { message ->
-          assertThat(message).contains(expectedIndexStatus.currentIndexState.name)
-        }
-
-      verify(maintainIndexService).cancelIndexing()
-    }
-  }
-
-  @Nested
   inner class IndexPrisoner {
     @Test
     fun `Request to index prisoner is successful and calls service`() {
-      prisonApi.stubOffenders(PrisonerBuilder("A1234BC"))
-      buildAndSwitchIndex(1)
+      prisonerRepository.save(prisoner("A1234BC"))
+      await untilCallTo { prisonerRepository.count() } matches { it == 1L }
 
       // wait for the index to be built
       await untilCallTo { indexQueueService.getNumberOfMessagesCurrentlyOnIndexQueue() } matches { it!! == 0 }
@@ -235,21 +75,6 @@ class MaintainIndexResourceIntTest : IntegrationTestBase() {
         .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
         .exchange()
         .expectStatus().isOk
-
-      verify(maintainIndexService).indexPrisoner("A1234BC")
-    }
-
-    @Test
-    fun `Request to index prisoner without active indexes returns conflict`() {
-      val expectedIndexStatus = IndexStatus()
-      doThrow(NoActiveIndexesException(expectedIndexStatus)).whenever(maintainIndexService).indexPrisoner("A1234BC")
-
-      webTestClient.put()
-        .uri("/maintain-index/index-prisoner/A1234BC")
-        .accept(MediaType.APPLICATION_JSON)
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_INDEX")))
-        .exchange()
-        .expectStatus().isEqualTo(409)
 
       verify(maintainIndexService).indexPrisoner("A1234BC")
     }
