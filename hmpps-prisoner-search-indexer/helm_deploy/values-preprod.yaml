@@ -19,9 +19,6 @@ generic-service:
     DIFF_PREFIX: ""
 
   batchjobs:
-    - name: check-index-complete
-      type: CHECK_INDEX_COMPLETE
-      schedule: "*/15 7-20 * * 1-5"
     - name: compare-index-size
       type: COMPARE_INDEX_SIZE
       schedule: "*/10 7-20 * * 1-5"
