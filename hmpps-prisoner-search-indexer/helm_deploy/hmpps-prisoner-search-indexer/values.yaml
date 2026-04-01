@@ -71,9 +71,6 @@ generic-service:
   # The name has max length of 22 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-search-indexer-")
   # The type must exist in enum BatchType
   batchjobs:
-    - name: check-index-complete
-      type: CHECK_INDEX_COMPLETE
-      schedule: "*/15 * * * *"
     - name: compare-index-size
       type: COMPARE_INDEX_SIZE
       schedule: "*/10 * * * *"
