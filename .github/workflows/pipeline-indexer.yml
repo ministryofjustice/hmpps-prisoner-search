@@ -107,10 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
-        with:
-          jobs: ${{ toJSON(needs) }}
-          allowed-skips: 'helm_lint,gradle_verify,gradle_common_verify'
+        run: if [[ ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }} == true ]]; then exit 1; else exit 0; fi
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
