@@ -27,7 +27,7 @@ To start up localstack and other dependencies with prisoner search running in Do
 ```shell
 docker compose up localstack hmpps-auth prison-api restricted-patients hmpps-incentives-api ??? hpsi-db
 ```
-
+random change
 Once localstack has started then, in another terminal, run the following command to start prisoner search too:
 ```shell
 docker compose up hmpps-prisoner-search --detach
