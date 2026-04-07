@@ -2,8 +2,7 @@ name: Process API docs PRs
 
 on:
   schedule:
-    - cron: "10 8 * * MON-FRI" # Every weekday at 08:10
-      timezone: "Europe/London"
+    - cron: "10 8 * * MON-FRI" # Every weekday at 08:10 UTC
   workflow_dispatch:
 
 jobs:
