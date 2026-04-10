@@ -88,7 +88,7 @@ jobs:
       - changes
   gradle_common_verify:
     name: Gradle verify common for indexer
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    uses: ./.github/workflows/gradle_verify.yml
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:

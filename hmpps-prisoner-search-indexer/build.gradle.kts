@@ -1,17 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import tools.jackson.databind.json.JsonMapper
 import java.net.URI
-import java.nio.file.Files
-import java.nio.file.Paths
-import kotlin.apply
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
 import kotlin.io.path.Path as KotlinPath
@@ -98,6 +92,49 @@ tasks {
   }
 }
 
+@CacheableTask
+abstract class WriteJsonTask : DefaultTask() {
+  private companion object {
+    private val mapper = JsonMapper()
+  }
+
+  @get:Input
+  abstract val url: Property<String>
+
+  @get:OutputFile
+  abstract val outputFile: RegularFileProperty
+
+  @TaskAction
+  fun run() {
+    val json = URI.create(url.get()).toURL().readText()
+    val formattedJson = mapper.let { mapper ->
+      mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(json))
+    }
+    outputFile.get().asFile.writeText(formattedJson)
+    logger.lifecycle("Written ${outputFile.get()} from ${url.get()}")
+  }
+}
+
+@CacheableTask
+abstract class ReadProductionVersionTask : DefaultTask() {
+  private companion object {
+    private val mapper = JsonMapper()
+  }
+
+  @get:Input
+  abstract val url: Property<String>
+
+  @TaskAction
+  fun run() {
+    val productionUrl = url.get().replace("-dev".toRegex(), "")
+      .replace("dev.".toRegex(), "")
+      .replace("/v3/api-docs".toRegex(), "/info")
+    val json = URI.create(productionUrl).toURL().readText()
+    val version = mapper.readTree(json).at("/build/version").asString()
+    println(version)
+  }
+}
+
 data class ModelConfiguration(val name: String, val packageName: String, val url: String, val models: String = "") {
   fun toBuildModelTaskName(): String = "build${nameToCamel()}ApiModel"
   fun toWriteJsonTaskName(): String = "write${nameToCamel()}Json"
@@ -106,6 +143,7 @@ data class ModelConfiguration(val name: String, val packageName: String, val url
   private fun nameToCamel(): String = snakeRegex.replace(name) {
     it.value.replace("-", "").uppercase()
   }.replaceFirstChar { it.uppercase() }
+
   val input: String
     get() = "$projectDir/openapi-specs/$name-api-docs.json"
   val output: String
@@ -161,23 +199,22 @@ tasks {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
   withType<KtLintCheckTask> {
-    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
     mustRunAfter(models.map { it.toBuildModelTaskName() })
   }
   withType<KtLintFormatTask> {
-    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
     mustRunAfter(models.map { it.toBuildModelTaskName() })
   }
 }
 models.forEach {
-  tasks.register(it.toBuildModelTaskName(), GenerateTask::class) {
+  tasks.register<GenerateTask>(it.toBuildModelTaskName()) {
+    val buildDirectory: DirectoryProperty = project.layout.buildDirectory
     group = "Generate model from API JSON definition"
     description = "Generate model from API JSON definition for ${it.name}"
     generatorName.set("kotlin")
     library.set("jvm-spring-webclient")
     skipValidateSpec.set(true)
     inputSpec.set(it.input)
-    outputDir.set("$buildDirectory/generated/${it.output}")
+    outputDir.set(buildDirectory.dir("generated/${it.output}").get().asFile.path)
     modelPackage.set("uk.gov.justice.digital.hmpps.prisonersearch.indexer.${it.packageName}.model")
     apiPackage.set("uk.gov.justice.digital.hmpps.prisonersearch.indexer.${it.packageName}.api")
     configOptions.set(configValues)
@@ -186,33 +223,22 @@ models.forEach {
       ?: globalProperties.set(mapOf("models" to it.models))
     generateModelTests.set(false)
     generateModelDocumentation.set(false)
+    mustRunAfter(it.toWriteJsonTaskName())
   }
-  tasks.register(it.toWriteJsonTaskName()) {
+  tasks.register<WriteJsonTask>(it.toWriteJsonTaskName()) {
+    val buildDirectory: DirectoryProperty = project.layout.buildDirectory
     group = "Write JSON"
     description = "Write JSON for ${it.name}"
-    doLast {
-      val json = URI.create(it.url).toURL().readText()
-      val formattedJson = JsonMapper().let { mapper ->
-        mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(json))
-      }
-      Files.write(Paths.get(it.input), formattedJson.toByteArray())
-    }
+    url.set(it.url)
+    outputFile.set(buildDirectory.file(it.input))
   }
-  tasks.register(it.toReadProductionVersionTaskName()) {
+  tasks.register<ReadProductionVersionTask>(it.toReadProductionVersionTaskName()) {
     group = "Read current production version"
     description = "Read current production version for ${it.name}"
-    doLast {
-      val productionUrl = it.url.replace("-dev".toRegex(), "")
-        .replace("dev.".toRegex(), "")
-        .replace("/v3/api-docs".toRegex(), "/info")
-      val json = URI.create(productionUrl).toURL().readText()
-      val version = JsonMapper().readTree(json).at("/build/version").asString()
-      println(version)
-    }
+    url.set(it.url)
   }
 }
 
-val buildDirectory: Directory = layout.buildDirectory.get()
 val configValues = mapOf(
   "dateLibrary" to "java8-localdatetime",
   "serializationLibrary" to "jackson",
@@ -221,18 +247,20 @@ val configValues = mapOf(
 )
 
 kotlin {
-  models.map { it.output }.forEach { generatedProject ->
-    sourceSets["main"].apply {
-      kotlin.srcDir("$buildDirectory/generated/$generatedProject/src/main/kotlin")
+  val buildDirectory: DirectoryProperty = project.layout.buildDirectory
+  sourceSets["main"].apply {
+    models.map { it.output }.forEach { generatedProject ->
+      kotlin.srcDir(buildDirectory.dir("generated/$generatedProject/src/main/kotlin").get().toString())
     }
   }
 }
 
-configure<KtlintExtension> {
+ktlint {
+  val buildDirectory: DirectoryProperty = project.layout.buildDirectory
   models.map { it.output }.forEach { generatedProject ->
     filter {
       exclude {
-        it.file.path.contains("$buildDirectory/generated/$generatedProject/src/main/")
+        it.file.path.contains(buildDirectory.dir("generated/$generatedProject/src/main/").get().toString())
       }
     }
   }
