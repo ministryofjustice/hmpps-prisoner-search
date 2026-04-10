@@ -150,6 +150,7 @@ data class ModelConfiguration(val name: String, val packageName: String, val url
     get() = name
 }
 
+val packagePrefix = "uk.gov.justice.digital.hmpps.prisonersearch.indexer"
 val models = listOf(
   ModelConfiguration(
     name = "alerts",
@@ -205,37 +206,39 @@ tasks {
     mustRunAfter(models.map { it.toBuildModelTaskName() })
   }
 }
-models.forEach {
-  tasks.register<GenerateTask>(it.toBuildModelTaskName()) {
+models.forEachIndexed { i, model ->
+  tasks.register<GenerateTask>(model.toBuildModelTaskName()) {
     val buildDirectory: DirectoryProperty = project.layout.buildDirectory
     group = "Generate model from API JSON definition"
-    description = "Generate model from API JSON definition for ${it.name}"
+    description = "Generate model from API JSON definition for ${model.name}"
     generatorName.set("kotlin")
     library.set("jvm-spring-webclient")
     skipValidateSpec.set(true)
-    inputSpec.set(it.input)
-    outputDir.set(buildDirectory.dir("generated/${it.output}").get().asFile.path)
-    modelPackage.set("uk.gov.justice.digital.hmpps.prisonersearch.indexer.${it.packageName}.model")
-    apiPackage.set("uk.gov.justice.digital.hmpps.prisonersearch.indexer.${it.packageName}.api")
+    inputSpec.set(model.input)
+    outputDir.set(buildDirectory.dir("generated/${model.output}").get().asFile.path)
+    modelPackage.set("$packagePrefix.${model.packageName}.model")
+    apiPackage.set("$packagePrefix.${model.packageName}.api")
     configOptions.set(configValues)
-    KotlinPath("$projectDir/openapi-generator-ignore-${it.name}")
+    KotlinPath("$projectDir/openapi-generator-ignore-${model.name}")
       .takeIf { p -> p.exists() }?.apply { ignoreFileOverride.set(this.pathString) }
-      ?: globalProperties.set(mapOf("models" to it.models))
+      ?: globalProperties.set(mapOf("models" to model.models))
     generateModelTests.set(false)
     generateModelDocumentation.set(false)
-    mustRunAfter(it.toWriteJsonTaskName())
+    mustRunAfter(model.toWriteJsonTaskName())
+    // GenerateTask is not safe to run in parallel so need to ensure that only one runs at once
+    if (i != 0) mustRunAfter(models[i - 1].toBuildModelTaskName())
   }
-  tasks.register<WriteJsonTask>(it.toWriteJsonTaskName()) {
+  tasks.register<WriteJsonTask>(model.toWriteJsonTaskName()) {
     val buildDirectory: DirectoryProperty = project.layout.buildDirectory
     group = "Write JSON"
-    description = "Write JSON for ${it.name}"
-    url.set(it.url)
-    outputFile.set(buildDirectory.file(it.input))
+    description = "Write JSON for ${model.name}"
+    url.set(model.url)
+    outputFile.set(buildDirectory.file(model.input))
   }
-  tasks.register<ReadProductionVersionTask>(it.toReadProductionVersionTaskName()) {
+  tasks.register<ReadProductionVersionTask>(model.toReadProductionVersionTaskName()) {
     group = "Read current production version"
-    description = "Read current production version for ${it.name}"
-    url.set(it.url)
+    description = "Read current production version for ${model.name}"
+    url.set(model.url)
   }
 }
 

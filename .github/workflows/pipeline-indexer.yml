@@ -68,11 +68,15 @@ jobs:
     needs: changes
   gradle_verify:
     name: Gradle verify with localstack and postgres for indexer
-    uses: ./.github/workflows/gradle_localstack_postgres_verify.yml # LOCAL_VERSION - for additional opensearch
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
-      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew :hmpps-prisoner-search-indexer:assemble :hmpps-prisoner-search-indexer:check'
+      gradle-command: >-
+        ./localstack/setup-opensearch.sh &&
+        curl -4 --connect-timeout 30 --retry-connrefused --retry 20 --retry-delay 5 http://os01.eu-west-2.opensearch.localhost.localstack.cloud:4566 &&
+        BUILD_NUMBER=${{ needs.app_version.outputs.version}}
+        ./gradlew :hmpps-prisoner-search-indexer:assemble :hmpps-prisoner-search-indexer:check
       localstack-services: 'opensearch,sqs,sns'
       localstack-tag: '3'
       postgres-tag: "18"
@@ -88,7 +92,7 @@ jobs:
       - changes
   gradle_common_verify:
     name: Gradle verify common for indexer
-    uses: ./.github/workflows/gradle_verify.yml
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     if: needs.changes.outputs.changes == 'true'
     secrets: inherit
     with:
