@@ -159,10 +159,10 @@ class PrisonerSearchResource(
     @RequestParam(value = "size", defaultValue = "10")
     @Parameter(description = "The size of the page to be returned. Will default to 10 if not supplied or invalid.", schema = Schema(defaultValue = "10", minimum = "1", type = "integer"))
     size: Int,
-    @RequestParam(
-      value = "includeSupportedByPrisons",
-      required = false,
-      defaultValue = "false",
+    @RequestParam(value = "includeSupportedByPrisons", required = false, defaultValue = "false")
+    @Parameter(
+      description = "Whether to include results from supporting prisons as well",
+      example = "false",
     )
     includeSupportedByPrisons: Boolean,
   ) = prisonerSearchService.findByReleaseDate(criteria, PaginationRequest(page = page, size = size), responseFields, includeSupportedByPrisons)
