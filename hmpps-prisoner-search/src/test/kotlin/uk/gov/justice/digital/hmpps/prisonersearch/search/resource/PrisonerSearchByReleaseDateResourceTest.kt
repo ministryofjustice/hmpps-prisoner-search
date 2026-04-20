@@ -203,6 +203,63 @@ class PrisonerSearchByReleaseDateResourceTest : AbstractSearchDataIntegrationTes
       .jsonPath("content[0].firstName").doesNotExist()
   }
 
+  @Nested
+  inner class IncludeSupportedByPrisons {
+
+    @Test
+    fun `should only return prisoners by prisonId when includeSupportedByPrisons is false`() {
+      searchByReleaseDate(
+        ReleaseDateSearch(
+          earliestReleaseDate = LocalDate.parse("2020-02-03"),
+          latestReleaseDate = LocalDate.parse("2023-05-16"),
+          prisonIds = setOf("MDI"),
+        ),
+      ).expectBody()
+        .jsonPath("content.length()").isEqualTo(1)
+        .jsonPath("content[0].prisonerNumber").isEqualTo("A7089EY")
+        .jsonPath("content[0].prisonId").isEqualTo("MDI")
+    }
+
+    @Test
+    fun `should return prisoners by prisonId and supportingPrisonId when includeSupportedByPrisons is true`() {
+      searchByReleaseDate(
+        ReleaseDateSearch(
+          earliestReleaseDate = LocalDate.parse("2020-02-03"),
+          latestReleaseDate = LocalDate.parse("2023-05-16"),
+          prisonIds = setOf("MDI"),
+        ),
+        queryParams = "?includeSupportedByPrisons=true",
+        fileAssert = "/results/releaseDateSearch/search_date_range_including_supported_by_prison_id_1.json",
+      )
+    }
+
+    @Test
+    fun `should return multiple prisoners with supportingPrisonId when includeSupportedByPrisons is true`() {
+      searchByReleaseDate(
+        ReleaseDateSearch(
+          earliestReleaseDate = LocalDate.parse("2020-02-03"),
+          latestReleaseDate = LocalDate.parse("2020-02-03"),
+          prisonIds = setOf("DNI"),
+        ),
+        queryParams = "?includeSupportedByPrisons=true",
+        fileAssert = "/results/releaseDateSearch/search_date_range_including_supported_by_prison_id_2.json",
+      )
+    }
+
+    @Test
+    fun `should work with multiple prison IDs when includeSupportedByPrisons is true`() {
+      searchByReleaseDate(
+        ReleaseDateSearch(
+          earliestReleaseDate = LocalDate.parse("2020-02-03"),
+          latestReleaseDate = LocalDate.parse("2023-05-16"),
+          prisonIds = setOf("MDI", "DNI"),
+        ),
+        queryParams = "?includeSupportedByPrisons=true",
+        fileAssert = "/results/releaseDateSearch/search_date_range_including_supported_by_prison_id_3.json",
+      )
+    }
+  }
+
   fun searchByReleaseDate(
     searchCriteria: ReleaseDateSearch = ReleaseDateSearch(
       earliestReleaseDate = LocalDate.parse("2011-01-05"),
