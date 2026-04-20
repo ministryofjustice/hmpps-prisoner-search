@@ -161,7 +161,7 @@ class PrisonerSearchResource(
     size: Int,
     @RequestParam(value = "includeSupportedByPrisons", required = false, defaultValue = "false")
     @Parameter(
-      description = "Whether to include results from supporting prisons as well",
+      description = "Whether to include results from supporting prisons",
       example = "false",
     )
     includeSupportedByPrisons: Boolean,
