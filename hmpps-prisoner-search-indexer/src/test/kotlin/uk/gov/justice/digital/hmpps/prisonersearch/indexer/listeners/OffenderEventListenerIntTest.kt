@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.entry
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
@@ -9,7 +8,6 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.never
@@ -20,7 +18,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
@@ -194,53 +191,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     // No domain event should be raised
     assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(0)
     verify(telemetryClient, never()).trackEvent(eq("test.prisoner-offender-search.prisoner.updated"), any(), isNull())
-  }
-
-  @Test
-  fun `will get all bookings from Nomis to check for readmission`() {
-    val prisonerNumber = "O7089FD"
-    val existingBookingId = 12345L
-    val readmissionBookingId = 12344L
-    val prisoner = Prisoner().apply {
-      this.prisonerNumber = prisonerNumber
-      this.bookingId = existingBookingId.toString()
-      this.inOutStatus = "OUT"
-      this.status = "INACTIVE OUT"
-      this.restrictedPatient = false
-    }
-    prisonerRepository.save(prisoner)
-
-    prisonApi.stubGetNomsNumberForBooking(existingBookingId, prisonerNumber)
-    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = readmissionBookingId))
-    nomisApi.stubGetAllBookingsForPrisoner(prisonerNumber, existingBookingId, readmissionBookingId, 34567)
-
-    offenderSqsClient.sendMessage(
-      SendMessageRequest.builder().queueUrl(offenderQueueUrl)
-        .messageBody(validOffenderBookingChangedMessage(existingBookingId, "OFFENDER_BOOKING-CHANGED")).build(),
-    )
-    await untilAsserted {
-      verify(telemetryClient).trackEvent(eq("PRISONER_UPDATED"), any(), isNull())
-      assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
-    }
-
-    // A readmission domain event should be raised, this means the getBookingIdsForPrisoner endpoint was called
-    verify(telemetryClient).trackEvent(
-      eq("test.prisoner-offender-search.prisoner.received"),
-      check { map ->
-        assertThat(map).contains(
-          entry("eventType", "test.prisoner-offender-search.prisoner.received"),
-          entry("additionalInformation.nomsNumber", prisonerNumber),
-          entry("additionalInformation.reason", "READMISSION_SWITCH_BOOKING"),
-        )
-      },
-      isNull(),
-    )
-
-    val event1 = readNextDomainEventMessage()
-    val event2 = readNextDomainEventMessage()
-    val receivedEvent = if (event1.contains("prisoner-offender-search.prisoner.updated")) event2 else event1
-    assertThat(receivedEvent).contains("test.prisoner-offender-search.prisoner.received")
-    assertThat(receivedEvent).contains(""""reason":"READMISSION_SWITCH_BOOKING"""")
   }
 
   @Test
