@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.NomisPrisonerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
@@ -35,7 +34,6 @@ import java.time.LocalDateTime
 @Service
 class PrisonerMovementsEventService(
   private val domainEventEmitter: HmppsDomainEventEmitter,
-  private val nomisPrisonerService: NomisPrisonerService,
   private val telemetryClient: TelemetryClient,
 ) {
   fun generateAnyEvents(
@@ -67,11 +65,6 @@ class PrisonerMovementsEventService(
     offenderBooking: OffenderBooking,
   ): PossibleMovementChange {
     val prisonerNumber = prisoner.prisonerNumber!!
-    val bookings = if (prisoner.isMaybeReadmissionSwitchBooking(previousPrisonerSnapshot)) {
-      nomisPrisonerService.getBookingIdsForPrisoner(prisonerNumber)
-    } else {
-      null
-    }
     return previousPrisonerSnapshot.let {
       if (prisoner.isTransferIn(previousPrisonerSnapshot)) {
         TransferIn(prisonerNumber, prisoner.prisonId!!)
@@ -79,7 +72,7 @@ class PrisonerMovementsEventService(
         CourtReturn(prisonerNumber, prisoner.prisonId!!)
       } else if (prisoner.isAdmissionAssociatedWithAMerge(previousPrisonerSnapshot, offenderBooking)) {
         MergeAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot, bookings)) {
+      } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot, offenderBooking.bookingIds)) {
         ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
       } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
         NewAdmission(prisonerNumber, prisoner.prisonId!!)
@@ -170,16 +163,14 @@ private fun Prisoner.isAdmissionAssociatedWithAMerge(
     ?.any { it.whenCreated > maxOf(offenderBooking.lastMovementTime ?: LocalDateTime.MIN, LocalDateTime.now().minusMinutes(90)) }
     ?: false
 
-private fun Prisoner.isMaybeReadmissionSwitchBooking(previousPrisonerSnapshot: Prisoner?) = lastMovementTypeCode == "ADM" &&
-  previousPrisonerSnapshot?.bookingId != null &&
-  this.bookingId != previousPrisonerSnapshot.bookingId &&
-  this.status == "ACTIVE IN" &&
-  previousPrisonerSnapshot.status == "INACTIVE OUT"
-
 private fun Prisoner.isReadmissionSwitchBooking(
   previousPrisonerSnapshot: Prisoner?,
   allBookings: List<Long>?,
-) = isMaybeReadmissionSwitchBooking(previousPrisonerSnapshot) &&
+) = lastMovementTypeCode == "ADM" &&
+  previousPrisonerSnapshot?.bookingId != null &&
+  bookingId != previousPrisonerSnapshot.bookingId &&
+  status == "ACTIVE IN" &&
+  previousPrisonerSnapshot.status == "INACTIVE OUT" &&
   this.bookingId.isNotLatestOf(allBookings)
 
 private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&

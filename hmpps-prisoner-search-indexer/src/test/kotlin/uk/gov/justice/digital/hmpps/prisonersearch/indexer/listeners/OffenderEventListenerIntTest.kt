@@ -20,7 +20,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.PrisonApiExtension.Companion.prisonApi
 
 class OffenderEventListenerIntTest : IntegrationTestBase() {
@@ -201,6 +200,8 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     val prisonerNumber = "O7089FD"
     val existingBookingId = 12345L
     val readmissionBookingId = 12344L
+    val laterBooking = 34567L
+
     val prisoner = Prisoner().apply {
       this.prisonerNumber = prisonerNumber
       this.bookingId = existingBookingId.toString()
@@ -211,8 +212,13 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
     prisonerRepository.save(prisoner)
 
     prisonApi.stubGetNomsNumberForBooking(existingBookingId, prisonerNumber)
-    prisonApi.stubOffenders(PrisonerBuilder(prisonerNumber = prisonerNumber, bookingId = readmissionBookingId))
-    nomisApi.stubGetAllBookingsForPrisoner(prisonerNumber, existingBookingId, readmissionBookingId, 34567)
+    prisonApi.stubOffenders(
+      PrisonerBuilder(
+        prisonerNumber = prisonerNumber,
+        bookingId = readmissionBookingId,
+        bookingIds = listOf(existingBookingId, readmissionBookingId, laterBooking),
+      ),
+    )
 
     offenderSqsClient.sendMessage(
       SendMessageRequest.builder().queueUrl(offenderQueueUrl)
@@ -223,7 +229,6 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
       assertThat(getNumberOfMessagesCurrentlyOnDomainQueue()).isEqualTo(2)
     }
 
-    // A readmission domain event should be raised, this means the getBookingIdsForPrisoner endpoint was called
     verify(telemetryClient).trackEvent(
       eq("test.prisoner-offender-search.prisoner.received"),
       check { map ->

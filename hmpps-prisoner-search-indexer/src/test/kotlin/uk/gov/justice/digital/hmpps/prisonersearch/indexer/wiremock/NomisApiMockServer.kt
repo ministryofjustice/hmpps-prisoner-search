@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import com.google.gson.Gson
@@ -45,13 +44,6 @@ class NomisApiMockServer : WireMockServer(8094) {
             .withHeader("Content-Type", "application/json")
             .withBody(Gson().toJson(prisonNumbers)),
         ),
-    )
-  }
-
-  fun stubGetAllBookingsForPrisoner(prisonerNumber: String, vararg bookings: Long) {
-    stubFor(
-      WireMock.get(urlPathEqualTo("/search/prisoners/$prisonerNumber/bookings"))
-        .willReturn(okJson(Gson().toJson(bookings))),
     )
   }
 }

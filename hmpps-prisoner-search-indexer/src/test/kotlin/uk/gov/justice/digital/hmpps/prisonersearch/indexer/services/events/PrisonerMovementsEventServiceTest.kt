@@ -6,14 +6,12 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.NomisPrisonerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
@@ -34,10 +32,9 @@ private const val OFFENDER_NO = "A9460DY"
 @JsonTest
 internal class PrisonerMovementsEventServiceTest(@param:Autowired private val jsonMapper: JsonMapper) {
   private val domainEventsEmitter = mock<HmppsDomainEventEmitter>()
-  private val nomisPrisonerService = mock<NomisPrisonerService>()
   private val telemetryClient = mock<TelemetryClient>()
 
-  private val prisonerMovementsEventService = PrisonerMovementsEventService(domainEventsEmitter, nomisPrisonerService, telemetryClient)
+  private val prisonerMovementsEventService = PrisonerMovementsEventService(domainEventsEmitter, telemetryClient)
 
   @Test
   fun `will not emit anything if changes are not related to movements`() {
@@ -273,11 +270,9 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
       val prisoner = recalledPrisoner("BXI", bookingId = "99")
       val readmissionBooking = prisoner.bookingId!!.toLong()
       val latestBooking = readmissionBooking + 1000
-      whenever(nomisPrisonerService.getBookingIdsForPrisoner(prisoner.prisonerNumber!!)).thenReturn(
-        listOf(readmissionBooking, latestBooking),
-      )
+      val offenderBookingFromPrisonApi = offenderBooking(bookingIds = listOf(readmissionBooking, latestBooking))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBookingFromPrisonApi)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -291,11 +286,9 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
       val prisoner = recalledPrisoner("BXI", bookingId = "99")
       val readmissionBooking = prisoner.bookingId!!.toLong()
       val oldBooking = readmissionBooking - 1000
-      whenever(nomisPrisonerService.getBookingIdsForPrisoner(prisoner.prisonerNumber!!)).thenReturn(
-        listOf(oldBooking, readmissionBooking),
-      )
+      val offenderBookingFromPrisonApi = offenderBooking(bookingIds = listOf(oldBooking, readmissionBooking))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBookingFromPrisonApi)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -309,9 +302,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
       val prisoner = recalledPrisoner("BXI", bookingId = "99")
       val readmissionBooking = prisoner.bookingId!!.toLong()
       val latestBooking = readmissionBooking + 1000
-      whenever(nomisPrisonerService.getBookingIdsForPrisoner(prisoner.prisonerNumber!!)).thenReturn(
-        listOf(readmissionBooking, latestBooking),
-      )
+
       val identifiers = listOf(
         OffenderIdentifier(
           whenCreated = LocalDateTime.now().minusMinutes(2),
@@ -330,7 +321,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
-      val offenderBooking = offenderBooking(identifiers).apply {
+      val offenderBooking = offenderBooking(identifiers, listOf(readmissionBooking, latestBooking)).apply {
         // The admission movement happened after the merge
         this.lastMovementTime = LocalDateTime.now().minusMinutes(69)
       }
@@ -621,13 +612,17 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
 
   private fun prisoner(resource: String): Prisoner = jsonMapper.readValue(resource.readResourceAsText(), Prisoner::class.java)
 
-  private fun offenderBooking(identifiers: List<OffenderIdentifier>? = null) = OffenderBooking(
+  private fun offenderBooking(
+    identifiers: List<OffenderIdentifier>? = null,
+    bookingIds: List<Long> = listOf(123456L),
+  ) = OffenderBooking(
     "A9460DY",
     1L,
     "BOATENG",
     "AKUSEA",
     LocalDate.of(1976, 5, 15),
-    bookingId = 123456L,
+    bookingId = bookingIds.last(),
+    bookingIds = bookingIds,
     allIdentifiers = identifiers,
   )
 

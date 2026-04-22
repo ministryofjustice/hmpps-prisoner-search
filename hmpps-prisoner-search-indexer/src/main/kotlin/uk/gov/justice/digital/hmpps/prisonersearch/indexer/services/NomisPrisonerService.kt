@@ -33,8 +33,4 @@ class NomisPrisonerService(
     .retrieve()
     .bodyToMono(object : ParameterizedTypeReference<List<String>>() {})
     .block()!!
-
-  fun getBookingIdsForPrisoner(prisonerNumber: String) = prisonerSearchResourceApi
-    .getAllBookingsForPrisoner(prisonerNumber)
-    .block()!!
 }
