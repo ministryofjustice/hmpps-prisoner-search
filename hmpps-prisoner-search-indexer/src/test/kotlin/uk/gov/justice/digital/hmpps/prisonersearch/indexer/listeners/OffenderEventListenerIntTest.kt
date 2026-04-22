@@ -196,7 +196,7 @@ class OffenderEventListenerIntTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `will get all bookings from Nomis to check for readmission`() {
+  fun `will use all bookings from Nomis to check for readmission`() {
     val prisonerNumber = "O7089FD"
     val existingBookingId = 12345L
     val readmissionBookingId = 12344L

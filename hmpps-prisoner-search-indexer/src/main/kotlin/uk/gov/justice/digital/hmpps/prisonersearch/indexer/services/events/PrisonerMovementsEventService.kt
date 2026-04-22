@@ -63,57 +63,55 @@ class PrisonerMovementsEventService(
     previousPrisonerSnapshot: Prisoner?,
     prisoner: Prisoner,
     offenderBooking: OffenderBooking,
-  ): PossibleMovementChange {
+  ): PossibleMovementChange = previousPrisonerSnapshot.let {
     val prisonerNumber = prisoner.prisonerNumber!!
-    return previousPrisonerSnapshot.let {
-      if (prisoner.isTransferIn(previousPrisonerSnapshot)) {
-        TransferIn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isCourtReturn(previousPrisonerSnapshot)) {
-        CourtReturn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isAdmissionAssociatedWithAMerge(previousPrisonerSnapshot, offenderBooking)) {
-        MergeAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot, offenderBooking.bookingIds)) {
-        ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
-        NewAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isReadmission(previousPrisonerSnapshot)) {
-        Readmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTransferViaCourt(previousPrisonerSnapshot)) {
-        TransferIn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTAPReturn(previousPrisonerSnapshot)) {
-        TAPReturn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTransferViaTAP(previousPrisonerSnapshot)) {
-        TransferIn(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isTransferOut(previousPrisonerSnapshot)) {
-        TransferOut(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isCourtOutMovement(previousPrisonerSnapshot)) {
-        SentToCourt(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isTAPOutMovement(previousPrisonerSnapshot)) {
-        TAPRelease(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isReleaseToHospital(previousPrisonerSnapshot)) {
-        ReleasedToHospital(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isRelease(previousPrisonerSnapshot)) {
-        Released(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
-      } else if (prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
-        NewAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (prisoner.isAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
-        NewAdmission(prisonerNumber, prisoner.prisonId!!)
-      } else if (
-        prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot) ||
-        prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot)
-      ) {
-        PossibleMovementChange.None.also {
-          // This can happen, so log details as we are not dealing with all scenarios correctly
-          mutableMapOf("prisonerNumber" to prisonerNumber)
-            .also { eventMap ->
-              eventMap.add("this", prisoner)
-              eventMap.add("previous", previousPrisonerSnapshot)
-              telemetryClient.trackEvent(TelemetryEvents.EVENTS_UNKNOWN_MOVEMENT.name, eventMap, null)
-            }
-        }
-      } else {
-        PossibleMovementChange.None
+    if (prisoner.isTransferIn(previousPrisonerSnapshot)) {
+      TransferIn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isCourtReturn(previousPrisonerSnapshot)) {
+      CourtReturn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isAdmissionAssociatedWithAMerge(previousPrisonerSnapshot, offenderBooking)) {
+      MergeAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot, offenderBooking.bookingIds)) {
+      ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
+      NewAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isReadmission(previousPrisonerSnapshot)) {
+      Readmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTransferViaCourt(previousPrisonerSnapshot)) {
+      TransferIn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTAPReturn(previousPrisonerSnapshot)) {
+      TAPReturn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTransferViaTAP(previousPrisonerSnapshot)) {
+      TransferIn(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isTransferOut(previousPrisonerSnapshot)) {
+      TransferOut(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isCourtOutMovement(previousPrisonerSnapshot)) {
+      SentToCourt(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isTAPOutMovement(previousPrisonerSnapshot)) {
+      TAPRelease(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isReleaseToHospital(previousPrisonerSnapshot)) {
+      ReleasedToHospital(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isRelease(previousPrisonerSnapshot)) {
+      Released(prisonerNumber, previousPrisonerSnapshot?.prisonId!!)
+    } else if (prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
+      NewAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isAdmissionDueToMoveBooking(previousPrisonerSnapshot)) {
+      NewAdmission(prisonerNumber, prisoner.prisonId!!)
+    } else if (
+      prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot) ||
+      prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot)
+    ) {
+      PossibleMovementChange.None.also {
+        // This can happen, so log details as we are not dealing with all scenarios correctly
+        mutableMapOf("prisonerNumber" to prisonerNumber)
+          .also { eventMap ->
+            eventMap.add("this", prisoner)
+            eventMap.add("previous", previousPrisonerSnapshot)
+            telemetryClient.trackEvent(TelemetryEvents.EVENTS_UNKNOWN_MOVEMENT.name, eventMap, null)
+          }
       }
+    } else {
+      PossibleMovementChange.None
     }
   }
 }
