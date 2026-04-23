@@ -20,7 +20,7 @@ data class OffenderBooking(
   var lastMovementTypeCode: String? = null,
   var lastMovementReasonCode: String? = null,
   var lastMovementTime: LocalDateTime? = null,
-  // val lastMovementCreationTime: LocalDateTime? = null,
+  var lastMovementCreationTime: LocalDateTime? = null,
   var lastAdmissionTime: LocalDateTime? = null,
   val religion: String? = null,
   val assignedLivingUnit: AssignedLivingUnit? = null,
