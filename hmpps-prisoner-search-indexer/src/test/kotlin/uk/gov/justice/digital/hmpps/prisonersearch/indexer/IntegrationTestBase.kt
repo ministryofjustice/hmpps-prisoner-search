@@ -261,6 +261,7 @@ abstract class IntegrationTestBase {
 data class PrisonerBuilder(
   val prisonerNumber: String = generatePrisonerNumber(),
   val bookingId: Long? = generateBookingId(),
+  val bookingIds: List<Long> = bookingId?.let { listOf(bookingId) } ?: emptyList(),
   val title: String = "Mr",
   val firstName: String = "LUCAS",
   val lastName: String = "MORALES",
@@ -285,7 +286,8 @@ data class PrisonerBuilder(
     OffenderBooking(
       offenderNo = this.prisonerNumber,
       bookingNo = "V61587",
-      bookingId = this.bookingId,
+      bookingId = bookingId,
+      bookingIds = bookingIds,
       offenderId = offenderId,
       firstName = this.firstName,
       lastName = this.lastName,

@@ -5,23 +5,23 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.NEW_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.POST_MERGE_ADMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.READMISSION_SWITCH_BOOKING
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.RETURN_FROM_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TEMPORARY_ABSENCE_RETURN
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReceiveReason.TRANSFERRED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.RELEASED_TO_HOSPITAL
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.SENT_TO_COURT
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter.PrisonerReleaseReason.TEMPORARY_ABSENCE_RELEASE
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.CourtReturn
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.MergeAdmission
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.NewAdmission
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.Readmission
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.ReadmissionSwitchBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.TAPReturn
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementInChange.TransferIn
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.PossibleMovementChange.MovementOutChange.Released
@@ -43,7 +43,7 @@ class PrisonerMovementsEventService(
   ) {
     when (val movementChange = calculateMovementChange(previousPrisonerSnapshot, prisoner, offenderBooking)) {
       PossibleMovementChange.None -> {}
-      is MovementInChange ->
+      is PossibleMovementChange.MovementInChange ->
         domainEventEmitter.emitPrisonerReceiveEvent(
           offenderNo = movementChange.offenderNo,
           reason = movementChange.reason,
@@ -71,8 +71,8 @@ class PrisonerMovementsEventService(
       CourtReturn(prisonerNumber, prisoner.prisonId!!)
     } else if (prisoner.isAdmissionAssociatedWithAMerge(previousPrisonerSnapshot, offenderBooking)) {
       MergeAdmission(prisonerNumber, prisoner.prisonId!!)
-    } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot)) {
-      MovementInChange.ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
+    } else if (prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot, offenderBooking.bookingIds)) {
+      ReadmissionSwitchBooking(prisonerNumber, prisoner.prisonId!!)
     } else if (prisoner.isNewAdmission(previousPrisonerSnapshot)) {
       NewAdmission(prisonerNumber, prisoner.prisonId!!)
     } else if (prisoner.isReadmission(previousPrisonerSnapshot)) {
@@ -145,75 +145,10 @@ data class UnknownEventData(
 
 private fun Prisoner.isTransferIn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "TRN" && inOutStatus == "IN"
 
-private fun Prisoner.isTransferOut(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" && inOutStatus == "TRN"
-
 private fun Prisoner.isCourtReturn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
   previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
   this.inOutStatus == "IN" &&
   this.lastMovementTypeCode == "CRT"
-
-private fun Prisoner.isCourtOutMovement(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" &&
-  this.inOutStatus == "OUT" &&
-  this.lastMovementTypeCode == "CRT"
-
-private fun Prisoner.isTAPReturn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-  previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
-  this.inOutStatus == "IN" &&
-  this.lastMovementTypeCode == "TAP"
-
-private fun Prisoner.isTAPOutMovement(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" &&
-  this.inOutStatus == "OUT" &&
-  this.lastMovementTypeCode == "TAP"
-
-private fun Prisoner.isTransferViaCourt(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-  previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
-  this.inOutStatus == "IN" &&
-  this.lastMovementTypeCode == "ADM" &&
-  this.lastMovementReasonCode == "TRNCRT"
-
-private fun Prisoner.isTransferViaTAP(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
-  previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
-  this.inOutStatus == "IN" &&
-  this.lastMovementTypeCode == "ADM" &&
-  this.lastMovementReasonCode == "TRNTAP"
-
-private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
-  this.status == "ACTIVE IN" &&
-  this.bookingId != previousPrisonerSnapshot?.bookingId
-
-private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.bookingId == null &&
-  this.status == "ACTIVE IN"
-
-private fun Prisoner.isAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.status == "INACTIVE OUT" &&
-  this.status == "ACTIVE IN"
-
-private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
-  this.bookingId == previousPrisonerSnapshot?.bookingId &&
-  this.status == "ACTIVE IN" &&
-  previousPrisonerSnapshot?.status == "INACTIVE OUT"
-
-private fun Prisoner.isReadmissionSwitchBooking(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
-  previousPrisonerSnapshot?.bookingId != null &&
-  this.bookingId != previousPrisonerSnapshot.bookingId &&
-  // TODO SDIT-3065 Comparing booking numbers is not good enough to tell us if this is a readmission. See JIRA ticket for edge case details.
-  this.bookingId.isBookingBefore(previousPrisonerSnapshot.bookingId) &&
-  this.status == "ACTIVE IN" &&
-  previousPrisonerSnapshot.status == "INACTIVE OUT"
-
-private fun Prisoner.isRelease(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "REL" &&
-  this.status == "INACTIVE OUT" &&
-  previousPrisonerSnapshot?.active == true
-
-private fun Prisoner.isReleaseToHospital(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "REL" &&
-  this.lastMovementReasonCode == "HP" &&
-  this.status == "INACTIVE OUT" &&
-  previousPrisonerSnapshot?.active == true
-
-private fun Prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot: Prisoner?) = this.inOutStatus == "IN" &&
-  this.status != previousPrisonerSnapshot?.status
-
-private fun Prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot: Prisoner?) = this.inOutStatus == "OUT" &&
-  this.status != previousPrisonerSnapshot?.status
 
 private fun Prisoner.isAdmissionAssociatedWithAMerge(
   previousPrisonerSnapshot: Prisoner?,
@@ -226,15 +161,85 @@ private fun Prisoner.isAdmissionAssociatedWithAMerge(
     ?.any { it.whenCreated > maxOf(offenderBooking.lastMovementTime ?: LocalDateTime.MIN, LocalDateTime.now().minusMinutes(90)) }
     ?: false
 
-private fun String?.isBookingBefore(previousSnapshotBookingId: String?): Boolean = (this?.toLong() ?: Long.MAX_VALUE) < (previousSnapshotBookingId?.toLong() ?: 0)
+private fun Prisoner.isReadmissionSwitchBooking(
+  previousPrisonerSnapshot: Prisoner?,
+  allBookings: List<Long>?,
+) = lastMovementTypeCode == "ADM" &&
+  previousPrisonerSnapshot?.bookingId != null &&
+  bookingId != previousPrisonerSnapshot.bookingId &&
+  status == "ACTIVE IN" &&
+  previousPrisonerSnapshot.status == "INACTIVE OUT" &&
+  this.bookingId.isNotLatestOf(allBookings)
+
+private fun Prisoner.isNewAdmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
+  this.status == "ACTIVE IN" &&
+  this.bookingId != previousPrisonerSnapshot?.bookingId
+
+private fun Prisoner.isReadmission(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "ADM" &&
+  this.bookingId == previousPrisonerSnapshot?.bookingId &&
+  this.status == "ACTIVE IN" &&
+  previousPrisonerSnapshot?.status == "INACTIVE OUT"
+
+private fun Prisoner.isTransferViaCourt(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "CRT" &&
+  this.inOutStatus == "IN" &&
+  this.lastMovementTypeCode == "ADM" &&
+  this.lastMovementReasonCode == "TRNCRT"
+
+private fun Prisoner.isTAPReturn(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
+  this.inOutStatus == "IN" &&
+  this.lastMovementTypeCode == "TAP"
+
+private fun Prisoner.isTransferViaTAP(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "OUT" &&
+  previousPrisonerSnapshot.lastMovementTypeCode == "TAP" &&
+  this.inOutStatus == "IN" &&
+  this.lastMovementTypeCode == "ADM" &&
+  this.lastMovementReasonCode == "TRNTAP"
+
+private fun Prisoner.isTransferOut(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" && inOutStatus == "TRN"
+
+private fun Prisoner.isCourtOutMovement(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" &&
+  this.inOutStatus == "OUT" &&
+  this.lastMovementTypeCode == "CRT"
+
+private fun Prisoner.isTAPOutMovement(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.inOutStatus == "IN" &&
+  this.inOutStatus == "OUT" &&
+  this.lastMovementTypeCode == "TAP"
+
+private fun Prisoner.isReleaseToHospital(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "REL" &&
+  this.lastMovementReasonCode == "HP" &&
+  this.status == "INACTIVE OUT" &&
+  previousPrisonerSnapshot?.active == true
+
+private fun Prisoner.isRelease(previousPrisonerSnapshot: Prisoner?) = this.lastMovementTypeCode == "REL" &&
+  this.status == "INACTIVE OUT" &&
+  previousPrisonerSnapshot?.active == true
+
+private fun Prisoner.isNewAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.bookingId == null &&
+  this.status == "ACTIVE IN"
+
+private fun Prisoner.isAdmissionDueToMoveBooking(previousPrisonerSnapshot: Prisoner?) = previousPrisonerSnapshot?.status == "INACTIVE OUT" &&
+  this.status == "ACTIVE IN"
+
+private fun Prisoner.isSomeOtherMovementIn(previousPrisonerSnapshot: Prisoner?) = this.inOutStatus == "IN" &&
+  this.status != previousPrisonerSnapshot?.status
+
+private fun Prisoner.isSomeOtherMovementOut(previousPrisonerSnapshot: Prisoner?) = this.inOutStatus == "OUT" &&
+  this.status != previousPrisonerSnapshot?.status
+
+private fun String?.isNotLatestOf(allBookings: List<Long>?): Boolean = allBookings != null &&
+  this != null &&
+  allBookings.size > 1 &&
+  this.toLong() < allBookings.max()
 
 sealed class PossibleMovementChange {
   sealed class MovementInChange(
     val offenderNo: String,
     val prisonId: String,
-    val reason: HmppsDomainEventEmitter.PrisonerReceiveReason,
+    val reason: PrisonerReceiveReason,
   ) : PossibleMovementChange() {
-    class TransferIn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, TRANSFERRED)
+    class TransferIn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, PrisonerReceiveReason.TRANSFERRED)
     class CourtReturn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, RETURN_FROM_COURT)
     class TAPReturn(offenderNo: String, prisonId: String) : MovementInChange(offenderNo, prisonId, TEMPORARY_ABSENCE_RETURN)
 

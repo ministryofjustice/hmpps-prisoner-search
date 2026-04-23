@@ -37,7 +37,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
   private val prisonerMovementsEventService = PrisonerMovementsEventService(domainEventsEmitter, telemetryClient)
 
   @Test
-  internal fun `will not emit anything if changes are not related to movements`() {
+  fun `will not emit anything if changes are not related to movements`() {
     val previousPrisonerSnapshot = prisonerInWithBooking()
     val prisoner = prisonerInWithBooking().apply {
       this.firstName = "BOBBY"
@@ -49,7 +49,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
   }
 
   @Test
-  internal fun `will not emit anything for a new prisoner `() {
+  fun `will not emit anything for a new prisoner `() {
     val prisoner = newPrisoner()
 
     prisonerMovementsEventService.generateAnyEvents(null, prisoner, offenderBooking())
@@ -62,7 +62,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = prisonerBeingTransferred()
 
     @Test
-    internal fun `will emit receive event with reason of transfer`() {
+    fun `will emit receive event with reason of transfer`() {
       val prisoner = prisonerTransferredIn("WWI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -80,7 +80,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = prisonerOutAtCourt()
 
     @Test
-    internal fun `will emit receive event with reason of court return for return to same prison`() {
+    fun `will emit receive event with reason of court return for return to same prison`() {
       val prisoner = prisonerReturnFromCourtSamePrison()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -93,7 +93,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit receive event with reason of transfer for return to different prison`() {
+    fun `will emit receive event with reason of transfer for return to different prison`() {
       val prisoner = prisonerReturnFromCourtDifferentPrison("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -106,7 +106,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit release event with reason of released when released from court`() {
+    fun `will emit release event with reason of released when released from court`() {
       val prisoner = releasedPrisoner()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -124,7 +124,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = prisonerOutOnTAP()
 
     @Test
-    internal fun `will emit receive event with reason of TAP return for return to same prison`() {
+    fun `will emit receive event with reason of TAP return for return to same prison`() {
       val prisoner = prisonerReturnFromTAPSamePrison()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -137,7 +137,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit receive event with reason of transfer for return to different prison`() {
+    fun `will emit receive event with reason of transfer for return to different prison`() {
       val prisoner = prisonerReturnFromTAPDifferentPrison("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -150,7 +150,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit release event with reason of released when released from TAP`() {
+    fun `will emit release event with reason of released when released from TAP`() {
       val prisoner = releasedPrisoner()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -168,7 +168,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = newPrisoner()
 
     @Test
-    internal fun `will emit receive event with reason of new admission for new booking`() {
+    fun `will emit receive event with reason of new admission for new booking`() {
       val prisoner = prisonerInWithBooking("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -186,7 +186,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = newPrisoner()
 
     @Test
-    internal fun `will emit receive event with reason of new admission for new booking`() {
+    fun `will emit receive event with reason of new admission for new booking`() {
       val prisoner = prisonerInWithMovedBooking("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -204,7 +204,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = releasedPrisoner()
 
     @Test
-    internal fun `will emit receive event with reason of new admission for new booking`() {
+    fun `will emit receive event with reason of new admission for new booking`() {
       val prisoner = prisonerInWithMovedBooking("BXI").apply { this.lastMovementTypeCode = "CRT" }
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -222,7 +222,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = releasedPrisoner()
 
     @Test
-    internal fun `will emit receive event with reason of new admission for new booking`() {
+    fun `will emit receive event with reason of new admission for new booking`() {
       val prisoner = prisonerInWithMovedBooking("BXI").apply { this.lastMovementTypeCode = "TAP" }
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -240,7 +240,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = releasedPrisoner()
 
     @Test
-    internal fun `will emit receive event with reason of new admission for new booking`() {
+    fun `will emit receive event with reason of new admission for new booking`() {
       val prisoner = prisonerInWithNewBooking("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -253,7 +253,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit receive event with reason of readmission for existing booking`() {
+    fun `will emit receive event with reason of readmission for existing booking`() {
       val prisoner = recalledPrisoner("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -266,10 +266,13 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit receive event with reason of readmission with switch booking to existing old booking`() {
+    fun `will emit receive event with reason of readmission with switch booking to existing old booking`() {
       val prisoner = recalledPrisoner("BXI", bookingId = "99")
+      val readmissionBooking = prisoner.bookingId!!.toLong()
+      val latestBooking = readmissionBooking + 1000
+      val offenderBookingFromPrisonApi = offenderBooking(bookingIds = listOf(readmissionBooking, latestBooking))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBookingFromPrisonApi)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -279,8 +282,27 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit reason of readmission with switch booking even if there was a recent merge`() {
+    fun `will emit receive event with reason of new admission with switch booking to existing latest booking`() {
       val prisoner = recalledPrisoner("BXI", bookingId = "99")
+      val readmissionBooking = prisoner.bookingId!!.toLong()
+      val oldBooking = readmissionBooking - 1000
+      val offenderBookingFromPrisonApi = offenderBooking(bookingIds = listOf(oldBooking, readmissionBooking))
+
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBookingFromPrisonApi)
+
+      verify(domainEventsEmitter).emitPrisonerReceiveEvent(
+        offenderNo = OFFENDER_NO,
+        reason = NEW_ADMISSION,
+        prisonId = "BXI",
+      )
+    }
+
+    @Test
+    fun `will emit reason of readmission with switch booking even if there was a recent merge`() {
+      val prisoner = recalledPrisoner("BXI", bookingId = "99")
+      val readmissionBooking = prisoner.bookingId!!.toLong()
+      val latestBooking = readmissionBooking + 1000
+
       val identifiers = listOf(
         OffenderIdentifier(
           whenCreated = LocalDateTime.now().minusMinutes(2),
@@ -299,7 +321,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
-      val offenderBooking = offenderBooking(identifiers).apply {
+      val offenderBooking = offenderBooking(identifiers, listOf(readmissionBooking, latestBooking)).apply {
         // The admission movement happened after the merge
         this.lastMovementTime = LocalDateTime.now().minusMinutes(69)
       }
@@ -319,7 +341,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = newPrisoner()
 
     @Test
-    internal fun `will emit receive event with reason of merge admission for a merged offender record  - merge took place within last 90mins`() {
+    fun `will emit receive event with reason of merge admission for a merged offender record  - merge took place within last 90mins`() {
       val prisoner = prisonerInWithBooking("BXI")
       val identifiers = listOf(
         OffenderIdentifier(
@@ -350,7 +372,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will ignore merge if merge took place over 90 mins ago`() {
+    fun `will ignore merge if merge took place over 90 mins ago`() {
       val prisoner = prisonerInWithBooking("BXI")
       val identifiers = listOf(
         OffenderIdentifier(
@@ -381,7 +403,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will ignore merge if admission took place since the merge`() {
+    fun `will ignore merge if admission took place since the merge`() {
       val prisoner = prisonerInWithBooking("BXI")
       val identifiers = listOf(
         OffenderIdentifier(
@@ -416,7 +438,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will identify merge if merge not the latest identifier type`() {
+    fun `will identify merge if merge not the latest identifier type`() {
       val prisoner = prisonerInWithBooking("BXI")
       val identifiers = listOf(
         OffenderIdentifier(
@@ -447,7 +469,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will identify merge if last movement was a TAP`() {
+    fun `will identify merge if last movement was a TAP`() {
       val prisoner = prisonerInWithBooking("BXI").apply {
         lastMovementTypeCode = "TAP"
       }
@@ -472,7 +494,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will handle no identifiers provided`() {
+    fun `will handle no identifiers provided`() {
       val prisoner = prisonerInWithBooking("BXI")
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -490,7 +512,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     private val previousPrisonerSnapshot = prisonerInWithBooking("BXI")
 
     @Test
-    internal fun `will emit release event with reason of transferred when released to different prison`() {
+    fun `will emit release event with reason of transferred when released to different prison`() {
       val prisoner = prisonerBeingTransferred()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -503,7 +525,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit release event with reason of sent to court when moved to court`() {
+    fun `will emit release event with reason of sent to court when moved to court`() {
       val prisoner = prisonerOutAtCourt()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -516,7 +538,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit release event with reason of TAP when released on TAP`() {
+    fun `will emit release event with reason of TAP when released on TAP`() {
       val prisoner = prisonerOutOnTAP()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -529,7 +551,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit release event with reason of released when released from prison`() {
+    fun `will emit release event with reason of released when released from prison`() {
       val prisoner = releasedPrisoner()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -542,7 +564,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     }
 
     @Test
-    internal fun `will emit release event with reason of released to hospital when released to hospital`() {
+    fun `will emit release event with reason of released to hospital when released to hospital`() {
       val prisoner = releasedPrisonerToHospital()
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
@@ -590,13 +612,17 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
 
   private fun prisoner(resource: String): Prisoner = jsonMapper.readValue(resource.readResourceAsText(), Prisoner::class.java)
 
-  private fun offenderBooking(identifiers: List<OffenderIdentifier>? = null) = OffenderBooking(
+  private fun offenderBooking(
+    identifiers: List<OffenderIdentifier>? = null,
+    bookingIds: List<Long> = listOf(123456L),
+  ) = OffenderBooking(
     "A9460DY",
     1L,
     "BOATENG",
     "AKUSEA",
     LocalDate.of(1976, 5, 15),
-    bookingId = 123456L,
+    bookingId = bookingIds.last(),
+    bookingIds = bookingIds,
     allIdentifiers = identifiers,
   )
 
