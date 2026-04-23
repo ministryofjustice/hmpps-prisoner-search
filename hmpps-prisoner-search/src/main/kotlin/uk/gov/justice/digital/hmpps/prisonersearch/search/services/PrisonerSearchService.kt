@@ -84,7 +84,7 @@ class PrisonerSearchService(
     return result.distinctBy { it.prisonerNumber }
   }
 
-  fun findByReleaseDate(searchCriteria: ReleaseDateSearch, paginationRequest: PaginationRequest, responseFields: List<String>? = null): Page<Prisoner> {
+  fun findByReleaseDate(searchCriteria: ReleaseDateSearch, paginationRequest: PaginationRequest, responseFields: List<String>? = null, includeSupportedByPrisons: Boolean = false): Page<Prisoner> {
     searchCriteria.validate()
     responseFields?.run { responseFieldsValidator.validate(responseFields) }
     val pageable = paginationRequest.toPageable()
@@ -94,7 +94,7 @@ class PrisonerSearchService(
       pageSize = pageable.pageSize,
       pageOffset = pageable.offset.toInt(),
       responseFields = responseFields,
-    ) { releaseDateMatch(it) } onMatch {
+    ) { releaseDateMatch(it, includeSupportedByPrisons) } onMatch {
       customEventForFindByReleaseDate(searchCriteria, it.matches.size)
       return PageImpl(it.matches, pageable, it.totalHits)
     }
@@ -253,9 +253,9 @@ class PrisonerSearchService(
       "pncNumberCanonicalLong",
     )
 
-  private fun releaseDateMatch(searchCriteria: ReleaseDateSearch): BoolQueryBuilder {
+  private fun releaseDateMatch(searchCriteria: ReleaseDateSearch, includeSupportedByPrisons: Boolean = false): BoolQueryBuilder {
     with(searchCriteria) {
-      return QueryBuilders.boolQuery()
+      val searchQuery = QueryBuilders.boolQuery()
         .matchesDateRange(
           earliestReleaseDate,
           latestReleaseDate,
@@ -263,7 +263,19 @@ class PrisonerSearchService(
           "confirmedReleaseDate",
           "postRecallReleaseDate",
         )
-        .filterWhenPresent("prisonId", searchCriteria.prisonIds?.toList())
+
+      return if (includeSupportedByPrisons) {
+        val prisonOrSupportingPrisonMatchQuery = QueryBuilders.boolQuery()
+        searchCriteria.prisonIds?.forEach { prisonId ->
+          prisonOrSupportingPrisonMatchQuery.should(
+            QueryBuilders.boolQuery()
+              .mustMultiMatch(prisonId, "prisonId", "supportingPrisonId"),
+          )
+        }
+        searchQuery.must(prisonOrSupportingPrisonMatchQuery)
+      } else {
+        searchQuery.filterWhenPresent("prisonId", searchCriteria.prisonIds?.toList())
+      }
     }
   }
 
