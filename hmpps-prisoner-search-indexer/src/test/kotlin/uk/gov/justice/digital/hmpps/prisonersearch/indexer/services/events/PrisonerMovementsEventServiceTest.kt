@@ -321,10 +321,13 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
-      val offenderBooking = offenderBooking(identifiers, listOf(readmissionBooking, latestBooking)).apply {
-        // The admission movement happened after the merge
-        this.lastMovementTime = LocalDateTime.now().minusMinutes(69)
-      }
+      // The admission movement was created after the merge (even though it may have happened earlier)
+      val offenderBooking = offenderBooking(
+        identifiers,
+        listOf(readmissionBooking, latestBooking),
+        lastMovementTime = LocalDateTime.now().minusHours(12),
+        lastMovementCreationTime = LocalDateTime.now().minusMinutes(69),
+      )
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
@@ -361,8 +364,10 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
+      // last movement was recorded slightly earlier
+      val offenderBooking = offenderBooking(identifiers, lastMovementCreationTime = LocalDateTime.now().minusMinutes(80))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking(identifiers))
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -392,8 +397,10 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
+      // last movement was recorded yesterday
+      val offenderBooking = offenderBooking(identifiers, lastMovementCreationTime = LocalDateTime.now().minusDays(1))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking(identifiers))
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -423,10 +430,12 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
-      val offenderBooking = offenderBooking(identifiers).apply {
-        // The admission movement happened after the merge
-        this.lastMovementTime = LocalDateTime.now().minusMinutes(69)
-      }
+      // The admission movement was created after the merge
+      val offenderBooking = offenderBooking(
+        identifiers,
+        lastMovementTime = LocalDateTime.now().minusDays(1),
+        lastMovementCreationTime = LocalDateTime.now().minusMinutes(69),
+      )
 
       prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
@@ -458,8 +467,10 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
+      // last movement was recorded slightly earlier
+      val offenderBooking = offenderBooking(identifiers, lastMovementCreationTime = LocalDateTime.now().minusMinutes(80))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking(identifiers))
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -483,8 +494,10 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
           offenderId = 1L,
         ),
       )
+      // last movement was recorded slightly earlier
+      val offenderBooking = offenderBooking(identifiers, lastMovementCreationTime = LocalDateTime.now().minusMinutes(80))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking(identifiers))
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -496,8 +509,9 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     @Test
     fun `will handle no identifiers provided`() {
       val prisoner = prisonerInWithBooking("BXI")
+      val offenderBooking = offenderBooking(lastMovementCreationTime = LocalDateTime.now().minusDays(1))
 
-      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking())
+      prisonerMovementsEventService.generateAnyEvents(previousPrisonerSnapshot, prisoner, offenderBooking)
 
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
@@ -615,6 +629,8 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
   private fun offenderBooking(
     identifiers: List<OffenderIdentifier>? = null,
     bookingIds: List<Long> = listOf(123456L),
+    lastMovementTime: LocalDateTime = LocalDateTime.now(),
+    lastMovementCreationTime: LocalDateTime = lastMovementTime,
   ) = OffenderBooking(
     "A9460DY",
     1L,
@@ -624,6 +640,8 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
     bookingId = bookingIds.last(),
     bookingIds = bookingIds,
     allIdentifiers = identifiers,
+    lastMovementTime = lastMovementTime,
+    lastMovementCreationTime = lastMovementCreationTime,
   )
 
   private fun String.readResourceAsText(): String = PrisonerMovementsEventServiceTest::class.java.getResource(this)!!.readText()
