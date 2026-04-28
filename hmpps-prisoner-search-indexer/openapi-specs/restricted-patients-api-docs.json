@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-19.140.55ae6f9"
+    "version" : "2026-04-22.213.b54d5ba"
   },
   "servers" : [ {
     "url" : "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/",
@@ -421,16 +421,16 @@
             "example" : "MDI"
           },
           "description" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "longDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "agencyType" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "active" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           }
         },
         "required" : [ "agencyId" ]
@@ -445,36 +445,44 @@
             "example" : "G1072GT"
           },
           "fromLocation" : {
-            "$ref" : "#/components/schemas/Agency",
-            "description" : "Previous location id",
-            "example" : "MDI"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Agency"
+            }, {
+              "type" : "null"
+            } ]
           },
           "hospitalLocation" : {
-            "$ref" : "#/components/schemas/Agency",
-            "description" : "Hospital location code, this indicates the current location of a prisoner",
-            "example" : "HAZLWD"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Agency"
+            }, {
+              "type" : "null"
+            } ]
           },
           "supportingPrison" : {
-            "$ref" : "#/components/schemas/Agency",
-            "description" : "Prison where the offender is supported by POM",
-            "example" : "LEI"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Agency"
+            }, {
+              "type" : "null"
+            } ]
           },
           "dischargeTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "Date and time the prisoner was discharged to hospital"
+            "description" : "Date and time the prisoner was discharged to hospital",
+            "example" : "2021-07-16T12:34:56"
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Useful comments"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
-            "description" : "Date time the record was created"
+            "description" : "Date time the record was created",
+            "example" : "2020-04-20T17:00:00"
           },
           "createUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user id of the person who created the record"
           }
         },
@@ -489,7 +497,7 @@
             "example" : "A1234AA"
           },
           "commentText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "fromLocationId" : {
             "type" : "string",
@@ -502,10 +510,10 @@
             "example" : "HAZLWD"
           },
           "supportingPrisonId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "dischargeTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           }
         },
@@ -566,7 +574,7 @@
             "description" : "The content of the subject access request response"
           },
           "attachments" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The details of any attachments for the subject access request response",
             "items" : {
               "$ref" : "#/components/schemas/Attachment"
@@ -583,16 +591,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -659,14 +667,14 @@
             "description" : "Date and time the prisoner was discharged to hospital"
           },
           "commentText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "createUserId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "dischargeTime", "fromLocationId", "hospitalLocationCode", "prisonerNumber", "supportingPrisonId" ]
@@ -675,6 +683,7 @@
     "securitySchemes" : {
       "bearer-jwt" : {
         "type" : "http",
+        "description" : "An HMPPS Auth access token.",
         "name" : "Authorization",
         "in" : "header",
         "scheme" : "bearer",
