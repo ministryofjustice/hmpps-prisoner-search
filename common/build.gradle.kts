@@ -18,6 +18,10 @@ dependencies {
   }
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
+
+  val appinsightsCore = "core:2.6.4"
+  implementation("io.micrometer:micrometer-registry-azure-monitor:1.16.5")
+  implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 }
 
 kotlin {
