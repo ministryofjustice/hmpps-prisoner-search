@@ -49,6 +49,9 @@ dependencies {
 
   implementation(project(":common"))
 
+  val appinsightsCore = "core:2.6.4"
+  implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
+
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.1.1")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-elasticsearch-test")

@@ -61,6 +61,9 @@ dependencies {
 
   implementation(project(":common"))
 
+  val appinsightsCore = "core:2.6.4"
+  implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
+
   runtimeOnly("org.postgresql:postgresql:42.7.10")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
