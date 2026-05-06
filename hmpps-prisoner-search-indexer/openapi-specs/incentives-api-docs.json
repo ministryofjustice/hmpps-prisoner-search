@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-28.343.fbe308b"
+    "version" : "2026-05-05.361.13cdf75"
   },
   "servers" : [ {
     "url" : "/",
@@ -2001,12 +2001,6 @@
             "description" : "Prison ID",
             "example" : "MDI"
           },
-          "locationId" : {
-            "type" : [ "string", "null" ],
-            "deprecated" : true,
-            "description" : "DEPRECATED - Location of prisoner at the time when review was created in Incentives service (i.e. their cell)",
-            "example" : "1-2-003"
-          },
           "userId" : {
             "type" : [ "string", "null" ],
             "description" : "Username of the reviewer",
@@ -2136,9 +2130,30 @@
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
           }
         },
         "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+      },
+      "AttachmentHeader" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
@@ -2353,12 +2368,6 @@
             "format" : "date-time",
             "description" : "Date and time when last review took place",
             "example" : "2021-12-31T12:34:56.789012"
-          },
-          "locationId" : {
-            "type" : [ "string", "null" ],
-            "deprecated" : true,
-            "description" : "DEPRECATED - Location of prisoner at the time when review was created in Incentives service (i.e. their cell)",
-            "example" : "1-2-003"
           },
           "iepDetails" : {
             "type" : "array",
