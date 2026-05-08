@@ -11,8 +11,10 @@ dependencyCheck {
 
 dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:6.0.5")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
-  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
+  // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade
+  val springDocVersion = ":3.0.2"
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui$springDocVersion")
+  implementation("org.springdoc:springdoc-openapi-starter-common$springDocVersion")
   constraints {
     implementation("org.webjars:swagger-ui:5.32.2")
   }

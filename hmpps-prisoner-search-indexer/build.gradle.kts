@@ -35,7 +35,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 dependencies {
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.1.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.2.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -43,13 +43,15 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.data:spring-data-elasticsearch")
   implementation("org.springframework.boot:spring-boot-jackson2")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
-  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
+  // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade
+  val springDocVersion = ":3.0.2"
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui$springDocVersion")
+  implementation("org.springdoc:springdoc-openapi-starter-common$springDocVersion")
   constraints {
     implementation("org.webjars:swagger-ui:5.32.2")
   }
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
   // Leaving at version 2.9.0 to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L16
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.26.1")
 
@@ -57,17 +59,17 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
   implementation("org.awaitility:awaitility-kotlin:4.3.0")
-  implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+  implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
 
   implementation(project(":common"))
 
   val appinsightsCore = "core:2.6.4"
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
-  runtimeOnly("org.postgresql:postgresql:42.7.10")
+  runtimeOnly("org.postgresql:postgresql:42.7.11")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.1.1")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.35") {
