@@ -196,7 +196,7 @@ val models = listOf(
   ModelConfiguration(
     name = "restricted-patients",
     packageName = "restrictedpatients",
-    url = "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    url = "https://restricted-patients-api-dev.prison.service.justice.gov.uk/v3/api-docs",
     models = "Agency,RestrictedPatientDto",
   ),
 )

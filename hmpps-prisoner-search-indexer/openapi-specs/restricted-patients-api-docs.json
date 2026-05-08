@@ -10,7 +10,7 @@
     "version" : "2026-04-28.215.726f908"
   },
   "servers" : [ {
-    "url" : "https://restricted-patients-api-dev.hmpps.service.justice.gov.uk/",
+    "url" : "https://restricted-patients-api-dev.prison.service.justice.gov.uk/",
     "description" : "Development"
   }, {
     "url" : "https://restricted-patients-api-preprod.hmpps.service.justice.gov.uk/",
