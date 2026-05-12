@@ -1,6 +1,7 @@
 generic-service:
   nameOverride: hmpps-prisoner-search-indexer
   productId: DPS072
+  cronPrefixName: indexer
 
   serviceAccountName: hmpps-prisoner-search-indexer
 
