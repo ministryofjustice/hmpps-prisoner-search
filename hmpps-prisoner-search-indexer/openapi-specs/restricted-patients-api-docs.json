@@ -16,7 +16,7 @@
     "url" : "https://restricted-patients-api-preprod.prison.service.justice.gov.uk/",
     "description" : "Pre-Production"
   }, {
-    "url" : "https://restricted-patients-api.hmpps.service.justice.gov.uk/",
+    "url" : "https://restricted-patients-api.prison.service.justice.gov.uk/",
     "description" : "Production"
   }, {
     "url" : "http://localhost:8080",
