@@ -13,7 +13,7 @@ data:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "app.fullname" . }}-opensearch-snapshot
+  name: indexer-opensearch-snapshot
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
