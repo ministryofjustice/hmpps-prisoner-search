@@ -7,7 +7,7 @@ generic-service:
     API_BASE_URL_NOMIS_API: "https://nomis-prisoner-api.prison.service.justice.gov.uk"
     API_BASE_URL_OAUTH: "https://sign-in.hmpps.service.justice.gov.uk/auth"
     API_BASE_URL_PRISON_API: "https://prison-api.prison.service.justice.gov.uk"
-    API_BASE_URL_RESTRICTED_PATIENTS: "https://restricted-patients-api.hmpps.service.justice.gov.uk"
+    API_BASE_URL_RESTRICTED_PATIENTS: "https://restricted-patients-api.prison.service.justice.gov.uk"
     API_BASE_URL_INCENTIVES: "https://incentives-api.hmpps.service.justice.gov.uk"
     API_BASE_URL_ALERTS: "https://alerts-api.hmpps.service.justice.gov.uk"
     API_BASE_URL_COMPLEXITY_OF_NEED: "https://complexity-of-need.hmpps.service.justice.gov.uk"
