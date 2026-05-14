@@ -154,7 +154,7 @@ class CompareIndexResourceIntTest(
         .returnResult().responseBody
 
       assertThat(details).contains(
-        "[alerts: null, [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=true)]",
+        "[alerts: [], [PrisonerAlert(alertType=P, alertCode=PL1, active=true, expired=true)]",
         "[aliases: null, [PrisonerAlias(title=Mr, firstName=LUCAS, middleNames=null, lastName=MORALES, dateOfBirth=1965-07-19, gender=F, ethnicity=null, raceCode=null)]]",
       )
     }

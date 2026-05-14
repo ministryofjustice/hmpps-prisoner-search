@@ -169,7 +169,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
           assertThat(it.toList()).hasSize(1)
           assertThat(it.toList()[0].toString()).contains(
             "[releaseDate: 2023-01-02, null]",
-            "[alerts: null, [PrisonerAlert(alertType=A, alertCode=ABC, active=true, expired=true)]]",
+            "[alerts: [], [PrisonerAlert(alertType=A, alertCode=ABC, active=true, expired=true)]]",
           )
         }
         .jsonPath("$.[?(@.nomsNumber=='A7089EY')].differences").value<JSONArray> {
@@ -347,7 +347,7 @@ class RefreshIndexResourceIntTest : IntegrationTestBase() {
           assertThat(it.toList()).hasSize(1)
           assertThat(it.toList()[0].toString()).contains(
             "[releaseDate: 2023-01-02, null]",
-            "[alerts: null, [PrisonerAlert(alertType=A, alertCode=ABC, active=true, expired=true)]]",
+            "[alerts: [], [PrisonerAlert(alertType=A, alertCode=ABC, active=true, expired=true)]]",
           )
         }
         .jsonPath("$.[?(@.nomsNumber=='A7089EY')].differences").value<JSONArray> {

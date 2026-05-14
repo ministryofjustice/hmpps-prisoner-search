@@ -666,7 +666,7 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
         null,
         prisonerRepository.getSummary("X12345")!!,
       )
-      assertThat(prisonerRepository.get("X12345")!!.alerts).isNull()
+      assertThat(prisonerRepository.get("X12345")!!.alerts).isEqualTo(emptyList<PrisonerAlert>())
     }
 
     @Test

@@ -738,11 +738,28 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `Updates ok when no alerts data`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(null)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(emptyList())
 
       service.reindexAlerts(prisonerNumber, "event")
 
-      verify(prisonerRepository).updateAlerts(eq("A1234AA"), isNull(), eq(prisonerDocumentSummary))
+      verify(prisonerRepository).updateAlerts("A1234AA", emptyList(), prisonerDocumentSummary)
+    }
+
+    @Test
+    fun `Updates ok when for new prisoner`() {
+      val newPrisonerSummary = PrisonerDocumentSummary(
+        prisonerNumber,
+        prisoner = Prisoner(),
+        sequenceNumber = 1,
+        primaryTerm = 1,
+      )
+      whenever(prisonerRepository.getSummary(any())).thenReturn(newPrisonerSummary)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenReturn(emptyList())
+
+      service.reindexAlerts(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateAlerts("A1234AA", emptyList(), newPrisonerSummary)
+      assertThat(newPrisonerSummary.prisoner?.alerts).hasSize(0)
     }
   }
 
