@@ -131,6 +131,7 @@ class DomainEventListenerIntTest : IntegrationTestBase() {
       await untilAsserted {
         prisonerRepository.get(prisonerNumber)!!.apply {
           assertThat(this.prisonerNumber).isEqualTo(prisonerNumber)
+          assertThat(alerts).hasSize(1)
           val alert = alerts?.first()
           assertThat(alert?.alertCode).isEqualTo("ABC")
           assertThat(alert?.alertType).isEqualTo("A")

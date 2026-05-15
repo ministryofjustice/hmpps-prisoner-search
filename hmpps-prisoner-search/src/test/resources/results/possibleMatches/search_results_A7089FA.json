@@ -25,6 +25,7 @@
     "cellLocation": "A-1-002",
     "legalStatus": "REMAND",
     "restrictedPatient": false,
-    "shoeSize": 8
+    "shoeSize": 8,
+    "alerts": []
   }
 ]

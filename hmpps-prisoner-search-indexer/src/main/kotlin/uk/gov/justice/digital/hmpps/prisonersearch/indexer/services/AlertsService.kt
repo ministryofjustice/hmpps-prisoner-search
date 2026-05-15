@@ -20,7 +20,7 @@ class AlertsService(
   private val alertsWebClient: WebClient,
 ) {
   @Retryable(maxAttempts = 3, backoff = Backoff(delay = 100))
-  fun getActiveAlertsForPrisoner(offenderNo: String): List<Alert>? = alertsWebClient
+  fun getActiveAlertsForPrisoner(offenderNo: String): List<Alert> = alertsWebClient
     .get()
     .uri {
       it.path("/prisoners/{offenderNo}/alerts")
@@ -46,7 +46,7 @@ class AlertsService(
         compareByDescending<Alert> { it.activeFrom }
           .thenBy { it.createdAt }, // Note this is Ascending
       )
-    }
+    } ?: emptyList()
 }
 
 class RestResponsePage<T : Any> : PageImpl<T> {

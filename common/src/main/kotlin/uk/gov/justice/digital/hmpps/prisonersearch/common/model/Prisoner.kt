@@ -181,7 +181,7 @@ class Prisoner : Diffable<Prisoner> {
   @Field(type = FieldType.Nested, includeInParent = true)
   @Schema(description = "Alerts")
   @DiffableProperty(DiffCategory.ALERTS)
-  var alerts: List<PrisonerAlert>? = null
+  var alerts: List<PrisonerAlert>? = emptyList()
 
   @Schema(description = "Cell Sharing Risk Assessment", example = "HIGH")
   @DiffableProperty(DiffCategory.STATUS)

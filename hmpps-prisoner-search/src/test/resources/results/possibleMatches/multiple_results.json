@@ -27,7 +27,8 @@
     "recall": true,
     "indeterminateSentence": false,
     "restrictedPatient": false,
-    "shoeSize": 9
+    "shoeSize": 9,
+    "alerts": []
   },
   {
     "prisonerNumber": "A9999AA",
@@ -60,7 +61,8 @@
     "conditionalReleaseDate": "2020-02-03",
     "actualParoleDate": "2020-02-03",
     "locationDescription": "Wormwood Scrubs",
-    "restrictedPatient": false
+    "restrictedPatient": false,
+    "alerts": []
   },
   {
     "prisonerNumber": "A7089FA",
@@ -88,6 +90,7 @@
     "cellLocation": "A-1-002",
     "legalStatus": "REMAND",
     "restrictedPatient": false,
-    "shoeSize": 8
+    "shoeSize": 8,
+    "alerts": []
   }
 ]

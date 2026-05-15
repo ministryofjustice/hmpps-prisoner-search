@@ -125,9 +125,7 @@ class PrisonerRepository(
     summary: PrisonerDocumentSummary,
   ): Boolean = doUpdate(
     prisonerNumber,
-    alerts?.let {
-      mapOf("alerts" to objectMapperWithNulls.convertValue(alerts))
-    } ?: mapOf("alerts" to null),
+    mapOf("alerts" to objectMapperWithNulls.convertValue(alerts)),
     summary,
   )
 

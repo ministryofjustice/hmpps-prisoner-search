@@ -216,7 +216,7 @@ class PrisonerSynchroniserService(
       assertPrisonerNo(prisonerNo)
       val bookingId = this.prisoner!!.bookingId?.toLong()
       val now = LocalDate.now()
-      val alerts = alertsService.getActiveAlertsForPrisoner(prisonerNo)?.map {
+      val alerts = alertsService.getActiveAlertsForPrisoner(prisonerNo).map {
         PrisonerAlert(
           alertCode = it.alertCode.code,
           alertType = it.alertCode.alertTypeCode,

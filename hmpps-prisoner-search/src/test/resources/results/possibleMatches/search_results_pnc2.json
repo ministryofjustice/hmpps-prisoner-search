@@ -30,6 +30,7 @@
     "conditionalReleaseDate": "2020-02-03",
     "actualParoleDate": "2020-02-03",
     "locationDescription": "Wormwood Scrubs",
-    "restrictedPatient": false
+    "restrictedPatient": false,
+    "alerts": []
   }
 ]
