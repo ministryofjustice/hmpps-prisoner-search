@@ -89,7 +89,7 @@ fun Prisoner.translate(
         active = it.isActive,
       )
     }
-  }.getOrElse { existingPrisoner?.alerts }
+  }.getOrElse { existingPrisoner?.alerts ?: emptyList() }
 
   this.gender = ob.physicalAttributes?.gender
   this.ethnicity = ob.physicalAttributes?.ethnicity
