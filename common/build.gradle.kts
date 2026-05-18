@@ -9,6 +9,10 @@ dependencyCheck {
   suppressionFiles.add("dependency-check-suppress-json.xml")
 }
 
+dependencyCheck {
+  suppressionFiles.add("azure-dependency-check-suppress.xml")
+}
+
 dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:6.0.5")
   // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade

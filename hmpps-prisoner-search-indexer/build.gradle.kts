@@ -24,6 +24,10 @@ dependencyCheck {
 testing {
   suites {
     register<JvmTestSuite>("testSmoke") {
+      dependencyCheck {
+        suppressionFiles.add("azure-dependency-check-suppress.xml")
+      }
+
       dependencies {
         implementation(project())
       }
@@ -31,6 +35,10 @@ testing {
   }
 }
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
+
+dependencyCheck {
+  suppressionFiles.add("azure-dependency-check-suppress.xml")
+}
 
 dependencies {
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
