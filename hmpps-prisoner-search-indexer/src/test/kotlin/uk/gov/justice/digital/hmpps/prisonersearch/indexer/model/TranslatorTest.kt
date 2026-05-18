@@ -387,6 +387,17 @@ class TranslatorTest {
   }
 
   @Test
+  fun `alerts data is set to empty list on failure with no existing prisoner`() {
+    val newPrisoner = Prisoner()
+      .translate(
+        null,
+        ob = aBooking(),
+        alerts = Result.failure(RuntimeException("It has gone badly wrong")),
+      )
+    assertThat(newPrisoner.alerts).isEmpty()
+  }
+
+  @Test
   fun `should map last and previous prisons`() {
     val prisoner = Prisoner().translate(
       ob = aBooking().copy(

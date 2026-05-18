@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isA
@@ -151,6 +152,17 @@ internal class PrisonerSynchroniserServiceTest {
       verify(prisonerRepository, times(1)).createPrisoner(isA())
       verify(prisonerMovementsEventService).generateAnyEvents(isNull(), any(), eq(booking))
       verify(convictedStatusEventService).generateAnyEvents(isNull(), any())
+    }
+
+    @Test
+    fun `will set alerts to empty list if prisoner if not present and alerts call fails`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
+      whenever(alertsService.getActiveAlertsForPrisoner(prisonerNumber)).thenThrow(RuntimeException("Something went wrong"))
+      service.reindexUpdate(booking, "event")
+
+      val capture = argumentCaptor<Prisoner>()
+      verify(prisonerRepository).createPrisoner(capture.capture())
+      assertThat(capture.firstValue.alerts).isEmpty()
     }
 
     @Test
