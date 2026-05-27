@@ -1,9 +1,9 @@
-package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
+package uk.gov.justice.digital.hmpps.prisonersearch.search.integration.health
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.info.BuildProperties
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonersearch.search.integration.IntegrationTestBase
 
 class InfoIntTest(
   @Autowired private val buildProperties: BuildProperties,
@@ -16,7 +16,7 @@ class InfoIntTest(
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("build.name").isEqualTo("hmpps-prisoner-search-indexer")
+      .jsonPath("build.name").isEqualTo("hmpps-prisoner-search")
   }
 
   @Test
