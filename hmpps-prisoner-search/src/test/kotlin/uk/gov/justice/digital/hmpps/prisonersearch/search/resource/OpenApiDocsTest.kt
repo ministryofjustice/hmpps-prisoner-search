@@ -17,9 +17,8 @@ import kotlin.text.contains
 @AutoConfigureWebTestClient(timeout = "PT60S")
 class OpenApiDocsTest(
   @Autowired private val buildProperties: BuildProperties,
+  @LocalServerPort private val port: Int = 0,
 ) : IntegrationTestBase() {
-  @LocalServerPort
-  private val port: Int = 0
 
   @Test
   fun `open api docs are available`() {
