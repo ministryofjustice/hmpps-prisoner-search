@@ -155,9 +155,9 @@ private fun Prisoner.isAdmissionAssociatedWithAMerge(
   offenderBooking: OffenderBooking,
 ): Boolean = bookingId != previousPrisonerSnapshot?.bookingId &&
   lastMovementTypeCode in listOf("ADM", "TAP", "CRT") &&
-  status == "ACTIVE IN" &&
+  active &&
   offenderBooking.identifiersForActiveOffender("MERGED")
-    // check the merge is after the admission movement - or if there is no movement then check the merge happened in the last 90 minutes
+    // Check the merge was less than 90m ago, or was after the last movement was created if that was later
     ?.any { it.whenCreated > maxOf(offenderBooking.lastMovementCreationTime ?: LocalDateTime.MIN, LocalDateTime.now().minusMinutes(90)) }
     ?: false
 

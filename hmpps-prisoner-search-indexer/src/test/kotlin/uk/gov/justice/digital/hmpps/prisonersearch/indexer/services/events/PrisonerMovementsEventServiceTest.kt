@@ -481,9 +481,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
 
     @Test
     fun `will identify merge if last movement was a TAP`() {
-      val prisoner = prisonerInWithBooking("BXI").apply {
-        lastMovementTypeCode = "TAP"
-      }
+      val prisoner = prisonerOutOnTAP()
       val identifiers = listOf(
         OffenderIdentifier(
           whenCreated = LocalDateTime.now().minusMinutes(45),
@@ -502,7 +500,7 @@ internal class PrisonerMovementsEventServiceTest(@param:Autowired private val js
       verify(domainEventsEmitter).emitPrisonerReceiveEvent(
         offenderNo = OFFENDER_NO,
         reason = POST_MERGE_ADMISSION,
-        prisonId = "BXI",
+        prisonId = "WWI",
       )
     }
 
