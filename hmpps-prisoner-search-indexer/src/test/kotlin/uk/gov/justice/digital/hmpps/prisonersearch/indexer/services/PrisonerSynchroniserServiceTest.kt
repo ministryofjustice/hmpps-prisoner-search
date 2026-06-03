@@ -228,7 +228,7 @@ internal class PrisonerSynchroniserServiceTest {
         ),
       )
         .thenReturn(true)
-      whenever(incentivesService.getCurrentIncentive(changedBookingId)).thenReturn(newIncentive)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(newIncentive)
 
       service.reindexUpdate(booking.copy(bookingId = changedBookingId), "event")
 
@@ -237,6 +237,8 @@ internal class PrisonerSynchroniserServiceTest {
         eq(newIncentive.toCurrentIncentive()),
         eq(prisonerDocumentSummaryAfterUpdate),
       )
+
+      verify(incentivesService).getCurrentIncentive(prisonerNumber)
     }
 
     @Test
@@ -316,7 +318,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will save incentive to current index`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(newIncentive)
       service.reindexIncentive(prisonerNumber, "event")
 
       verify(prisonerRepository).updateIncentive(
@@ -329,7 +331,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will create telemetry`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(newIncentive)
       whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any())).thenReturn(true)
       service.reindexIncentive(prisonerNumber, "event")
 
@@ -349,7 +351,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will generate domain events`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(newIncentive)
       whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any())).thenReturn(true)
       service.reindexIncentive(prisonerNumber, "event")
 
@@ -359,7 +361,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will not save prisoner if no changes`() {
       whenever(prisonerRepository.getSummary(eq(prisonerNumber))).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(newIncentive)
       whenever(prisonerRepository.updateIncentive(eq(prisonerNumber), any(), any())).thenReturn(false)
       service.reindexIncentive(prisonerNumber, "event")
 
@@ -389,7 +391,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `Updates ok when no incentive data`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(null)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(null)
 
       service.reindexIncentive(prisonerNumber, "event")
 
@@ -399,7 +401,7 @@ internal class PrisonerSynchroniserServiceTest {
     @Test
     fun `will NOT call prisoner difference to handle differences`() {
       whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
-      whenever(incentivesService.getCurrentIncentive(bookingId)).thenReturn(newIncentive)
+      whenever(incentivesService.getCurrentIncentive(any())).thenReturn(newIncentive)
       whenever(prisonerRepository.updateIncentive(eq("A1234AA"), any(), any())).thenReturn(true)
       service.reindexIncentive(prisonerNumber, "event")
 
@@ -1020,13 +1022,11 @@ internal class PrisonerSynchroniserServiceTest {
 
     @Test
     fun `will call incentives service if there is a booking`() {
-      val bookingIdBooking = OffenderBookingBuilder().anOffenderBooking().copy(
-        bookingId = 12345L,
-      )
+      val bookingIdBooking = OffenderBookingBuilder().anOffenderBooking()
 
       service.index(bookingIdBooking)
 
-      verify(incentivesService).getCurrentIncentive(12345L)
+      verify(incentivesService).getCurrentIncentive(bookingIdBooking.offenderNo)
     }
 
     @Test
@@ -1093,7 +1093,7 @@ internal class PrisonerSynchroniserServiceTest {
     fun `will get incentive level if booking present`() {
       service.refreshAndReportDiffs(booking, true)
 
-      verify(incentivesService).getCurrentIncentive(12345L)
+      verify(incentivesService).getCurrentIncentive(booking.offenderNo)
     }
 
     @Test

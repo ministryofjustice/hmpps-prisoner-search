@@ -148,7 +148,7 @@ class PrisonerSynchroniserService(
   internal fun reindexIncentive(prisonerNo: String, eventType: String) = prisonerRepository.getSummary(prisonerNo)
     ?.run {
       val bookingId = this.prisoner?.bookingId?.toLong() ?: throw PrisonerNotFoundException(prisonerNo)
-      val incentiveLevel = incentivesService.getCurrentIncentive(bookingId)
+      val incentiveLevel = incentivesService.getCurrentIncentive(prisonerNo)
       val newLevel: CurrentIncentive? = incentiveLevel.toCurrentIncentive()
 
       prisonerRepository.updateIncentive(prisonerNo, newLevel, this)
@@ -382,7 +382,9 @@ class PrisonerSynchroniserService(
     restrictedPatientService.getRestrictedPatient(it.offenderNo)
   }
 
-  private fun getIncentive(ob: OffenderBooking) = ob.bookingId?.let { b -> incentivesService.getCurrentIncentive(b) }
+  private fun getIncentive(ob: OffenderBooking) = ob.takeIf { ob.bookingId != null }?.let {
+    incentivesService.getCurrentIncentive(ob.offenderNo)
+  }
 
   private fun getComplexityOfNeed(ob: OffenderBooking, isRestrictedPatient: Boolean): ComplexityOfNeed? = if (
     isRestrictedPatient || isInFemalePrison(ob)
