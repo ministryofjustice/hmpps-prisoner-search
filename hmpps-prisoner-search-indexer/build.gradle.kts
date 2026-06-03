@@ -185,7 +185,6 @@ val models = listOf(
     name = "incentives",
     packageName = "incentives",
     url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-    models = "IncentiveReviewSummary,IncentiveReviewDetail",
   ),
   ModelConfiguration(
     name = "nomis-prisoner",

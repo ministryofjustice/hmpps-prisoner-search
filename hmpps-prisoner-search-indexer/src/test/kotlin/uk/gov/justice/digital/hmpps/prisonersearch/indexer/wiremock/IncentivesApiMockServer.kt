@@ -26,7 +26,7 @@ class IncentivesMockServer : WireMockServer(8096) {
 
   fun stubNotFound() {
     stubFor(
-      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/prisoner/\\w+"))
         .willReturn(
           aResponse()
             .withStatus(404),
@@ -36,7 +36,7 @@ class IncentivesMockServer : WireMockServer(8096) {
 
   fun stubErrorFollowedByNotFound() {
     stubFor(
-      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/prisoner/\\w+"))
         .inScenario("Retry Scenario")
         .whenScenarioStateIs(Scenario.STARTED)
         .willReturn(
@@ -45,7 +45,7 @@ class IncentivesMockServer : WireMockServer(8096) {
         ).willSetStateTo("404"),
     )
     stubFor(
-      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/prisoner/\\w+"))
         .inScenario("Retry Scenario")
         .whenScenarioStateIs("404")
         .willReturn(
@@ -57,7 +57,7 @@ class IncentivesMockServer : WireMockServer(8096) {
 
   fun stubError() {
     stubFor(
-      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/prisoner/\\w+"))
         .willReturn(
           aResponse()
             .withStatus(503),
@@ -72,7 +72,7 @@ class IncentivesMockServer : WireMockServer(8096) {
     nextReviewDate: String = "2023-11-18",
   ) {
     stubFor(
-      get(urlPathMatching("/incentive-reviews/booking/\\d+"))
+      get(urlPathMatching("/incentive-reviews/prisoner/\\w+"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -98,10 +98,10 @@ class IncentivesMockServer : WireMockServer(8096) {
     )
   }
 
-  fun verifyGetCurrentIncentiveRequest(bookingId: Long, count: Int = 1) {
+  fun verifyGetCurrentIncentiveRequest(prisonNumber: String, count: Int = 1) {
     verify(
       count,
-      getRequestedFor(urlEqualTo("/incentive-reviews/booking/$bookingId?with-details=false")),
+      getRequestedFor(urlEqualTo("/incentive-reviews/prisoner/$prisonNumber")),
     )
   }
 }

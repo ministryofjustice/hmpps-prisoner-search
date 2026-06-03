@@ -33,10 +33,10 @@ internal class IncentivesServiceTest {
 
     @Test
     internal fun `will supply authentication token`() {
-      incentivesService.getCurrentIncentive(123456L)
+      incentivesService.getCurrentIncentive("A1234BC")
 
       incentivesApi.verify(
-        getRequestedFor(urlEqualTo("/incentive-reviews/booking/123456?with-details=false"))
+        getRequestedFor(urlEqualTo("/incentive-reviews/prisoner/A1234BC"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
 
       )
@@ -51,8 +51,8 @@ internal class IncentivesServiceTest {
         nextReviewDate = "2023-11-18",
       )
 
-      val incentive = incentivesService.getCurrentIncentive(123456L)!!
-      incentivesApi.verifyGetCurrentIncentiveRequest(123456L)
+      val incentive = incentivesService.getCurrentIncentive("A1234BC")!!
+      incentivesApi.verifyGetCurrentIncentiveRequest("A1234BC")
 
       assertThat(incentive.iepCode).isEqualTo("STD")
       assertThat(incentive.iepLevel).isEqualTo("Standard")
@@ -64,7 +64,7 @@ internal class IncentivesServiceTest {
     internal fun `will return null if incentive level not found`() {
       incentivesApi.stubNotFound()
 
-      val incentive = incentivesService.getCurrentIncentive(123456L)
+      val incentive = incentivesService.getCurrentIncentive("A1234BC")
       assertThat(incentive).isNull()
     }
 
@@ -72,19 +72,19 @@ internal class IncentivesServiceTest {
     internal fun `will retry for any other error`() {
       incentivesApi.stubErrorFollowedByNotFound()
 
-      val incentive = incentivesService.getCurrentIncentive(123456L)
+      val incentive = incentivesService.getCurrentIncentive("A1234BC")
       assertThat(incentive).isNull()
 
-      incentivesApi.verifyGetCurrentIncentiveRequest(123456L, 2)
+      incentivesApi.verifyGetCurrentIncentiveRequest("A1234BC", 2)
     }
 
     @Test
     internal fun `will eventually throw exception if fails 3 times`() {
       incentivesApi.stubError()
 
-      assertThrows<WebClientResponseException.ServiceUnavailable> { incentivesService.getCurrentIncentive(123456L) }
+      assertThrows<WebClientResponseException.ServiceUnavailable> { incentivesService.getCurrentIncentive("A1234BC") }
 
-      incentivesApi.verifyGetCurrentIncentiveRequest(123456L, 3)
+      incentivesApi.verifyGetCurrentIncentiveRequest("A1234BC", 3)
     }
   }
 }
