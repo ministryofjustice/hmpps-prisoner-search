@@ -12,9 +12,9 @@ import kotlin.io.path.Path as KotlinPath
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
-  id("org.openapi.generator") version "7.22.0"
+  id("org.openapi.generator") version "7.23.0"
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "2.3.21"
+  kotlin("plugin.jpa") version "2.4.0"
 }
 
 dependencyCheck {
@@ -43,7 +43,7 @@ dependencyCheck {
 dependencies {
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.2.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -77,7 +77,7 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:42.7.11")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.35") {

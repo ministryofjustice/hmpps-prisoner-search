@@ -14,7 +14,7 @@ dependencyCheck {
 }
 
 dependencies {
-  implementation("org.springframework.data:spring-data-elasticsearch:6.0.5")
+  implementation("org.springframework.data:spring-data-elasticsearch:6.1.0")
   // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade
   val springDocVersion = ":3.0.2"
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui$springDocVersion")
@@ -26,7 +26,7 @@ dependencies {
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
 
   val appinsightsCore = "core:2.6.4"
-  implementation("io.micrometer:micrometer-registry-azure-monitor:1.16.5")
+  implementation("io.micrometer:micrometer-registry-azure-monitor:1.17.0")
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 }
 

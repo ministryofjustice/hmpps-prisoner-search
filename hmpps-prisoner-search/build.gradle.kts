@@ -31,7 +31,7 @@ dependencyCheck {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.2.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -62,7 +62,7 @@ dependencies {
   val appinsightsCore = "core:2.6.4"
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-elasticsearch-test")
 
