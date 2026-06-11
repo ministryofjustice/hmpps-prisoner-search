@@ -138,7 +138,7 @@ republish:
   delayInSeconds: 5
 
 publish:
-  delayInSeconds: 4
+  delayInSeconds: 5
 
 springdoc:
   api-docs:
