@@ -66,21 +66,18 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-elasticsearch-test")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.42") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.41")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.49")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:5.1.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:5.1.2")
 }
 
 kotlin {
   jvmToolchain(25)
-  compilerOptions {
-    freeCompilerArgs.addAll("-Xannotation-default-target=param-property")
-  }
 }
 
 configure<com.gorylenko.GitPropertiesPluginExtension> {
