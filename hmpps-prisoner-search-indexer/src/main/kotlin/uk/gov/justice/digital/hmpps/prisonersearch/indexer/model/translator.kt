@@ -55,6 +55,7 @@ fun Prisoner.translate(
   this.inOutStatus = ob.inOutStatus
   this.lastMovementTypeCode = ob.lastMovementTypeCode
   this.lastMovementReasonCode = ob.lastMovementReasonCode
+  this.lastMovementDate = ob.lastMovementTime?.toLocalDate()
 
   this.category = ob.categoryCode
   this.csra = ob.csra
