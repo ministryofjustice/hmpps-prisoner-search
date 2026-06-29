@@ -142,6 +142,10 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.LOCATION)
   var lastMovementReasonCode: String? = null
 
+  @Field(type = FieldType.Date, format = [DateFormat.date])
+  @Schema(description = "Date of the last movement of the prisoner", example = "2023-05-01")
+  var lastMovementDate: LocalDate? = null
+
   @Schema(description = "In/Out Status", example = "IN", allowableValues = ["IN", "OUT", "TRN"])
   @DiffableProperty(DiffCategory.STATUS)
   var inOutStatus: String? = null

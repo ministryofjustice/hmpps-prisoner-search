@@ -193,6 +193,18 @@ class TranslatorTest {
   }
 
   @Test
+  fun `last movement date is mapped from last movement time`() {
+    val prisoner = Prisoner().translate(
+      ob = OffenderBooking(
+        offenderNo = "A1234AA",
+        offenderId = 1L,
+        lastMovementTime = LocalDateTime.parse("2025-04-23T15:20:26"),
+      ),
+    )
+    assertThat(prisoner.lastMovementDate).isEqualTo("2025-04-23")
+  }
+
+  @Test
   internal fun `current incentive is mapped`() {
     val prisoner = Prisoner().translate(
       ob = aBooking(),
