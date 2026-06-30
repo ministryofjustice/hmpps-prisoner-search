@@ -34,7 +34,9 @@ class OffenderEventListener(
       "SENTENCING-CHANGED",
     )
     private val offenderEvent = setOf(
+      "ASSESSMENT-INSERTED_$REPUBLISH_SUFFIX",
       "ASSESSMENT-UPDATED_$REPUBLISH_SUFFIX",
+      "ASSESSMENT-DELETED_$REPUBLISH_SUFFIX",
       "KEY_DATE_ADJUSTMENT_UPSERTED",
       "KEY_DATE_ADJUSTMENT_DELETED",
       "OFFENDER-INSERTED",
@@ -89,7 +91,7 @@ class OffenderEventListener(
       log.debug("Received message {} type {}", messageId, eventType)
 
       when (eventType) {
-        "ASSESSMENT-UPDATED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
+        "ASSESSMENT-INSERTED", "ASSESSMENT-UPDATED", "ASSESSMENT-DELETED" -> offenderEventQueueService.republishMessageWithDelay(requestJson!!, eventType)
         in movementEvent -> indexListenerService.externalMovement(fromJson(message), eventType)
         in bookingEvent -> indexListenerService.offenderBookingChange(fromJson(message), eventType)
         "BOOKING_NUMBER-CHANGED" -> indexListenerService.offenderBookNumberChange(fromJson(message), eventType)
