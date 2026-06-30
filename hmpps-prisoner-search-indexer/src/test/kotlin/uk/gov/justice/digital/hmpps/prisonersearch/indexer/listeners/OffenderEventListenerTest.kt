@@ -130,7 +130,7 @@ internal class OffenderEventListenerTest(@Autowired jsonMapper: JsonMapper) {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["ASSESSMENT-UPDATED"])
+    @ValueSource(strings = ["ASSESSMENT-INSERTED", "ASSESSMENT-UPDATED", "ASSESSMENT-DELETED"])
     fun `will call republish message for assessment updated`(eventType: String) {
       val requestJson = validOffenderChangedMessage(eventType)
       listener.processOffenderEvent(requestJson)
