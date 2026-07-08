@@ -9,10 +9,6 @@ dependencyCheck {
   suppressionFiles.add("dependency-check-suppress-json.xml")
 }
 
-dependencyCheck {
-  suppressionFiles.add("azure-dependency-check-suppress.xml")
-}
-
 dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:6.1.0")
   // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade
@@ -23,11 +19,7 @@ dependencies {
     implementation("org.webjars:swagger-ui:5.32.2")
   }
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.5")
-
-  val appinsightsCore = "core:2.6.4"
-  implementation("io.micrometer:micrometer-registry-azure-monitor:1.17.0")
-  implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.6")
 }
 
 kotlin {
