@@ -27,7 +27,7 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.0-beta")
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.6")
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -55,7 +55,7 @@ dependencies {
 
   implementation(project(":common"))
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.0-beta")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-elasticsearch-test")
 
