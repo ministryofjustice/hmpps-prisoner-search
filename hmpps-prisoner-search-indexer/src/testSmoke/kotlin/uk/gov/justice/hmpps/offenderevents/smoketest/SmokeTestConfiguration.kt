@@ -8,9 +8,14 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClient.Builder
+import uk.gov.justice.hmpps.kotlin.auth.HmppsWebClientConfiguration
 import uk.gov.justice.hmpps.kotlin.auth.authorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.oAuth2AuthorizedClientProvider
+import java.time.Duration
 
 @ConditionalOnProperty(name = ["smoketest.enabled"], havingValue = "true")
 @EnableWebSecurity
@@ -20,4 +25,13 @@ class SmokeTestConfiguration(@Value("\${smoketest.endpoint.url}") private val sm
 
   @Bean
   fun smokeTestWebClient(authorizedClientManager: OAuth2AuthorizedClientManager): WebClient = webClientBuilder.authorisedWebClient(authorizedClientManager, registrationId = "smoketest-service", url = smokeTestUrl)
+
+  @Bean
+  fun authorizedClientManager(
+    clientRegistrationRepository: ClientRegistrationRepository,
+    oAuth2AuthorizedClientProvider: OAuth2AuthorizedClientProvider,
+  ): OAuth2AuthorizedClientManager = HmppsWebClientConfiguration().authorizedClientManager(clientRegistrationRepository, oAuth2AuthorizedClientProvider)
+
+  @Bean
+  fun authorizedClientProvider(): OAuth2AuthorizedClientProvider = oAuth2AuthorizedClientProvider(Duration.ofSeconds(30))
 }
