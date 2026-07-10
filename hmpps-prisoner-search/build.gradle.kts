@@ -14,10 +14,6 @@ dependencyCheck {
 testing {
   suites {
     register<JvmTestSuite>("testSmoke") {
-      dependencyCheck {
-        suppressionFiles.add("azure-dependency-check-suppress.xml")
-      }
-
       dependencies {
         implementation(project())
       }
