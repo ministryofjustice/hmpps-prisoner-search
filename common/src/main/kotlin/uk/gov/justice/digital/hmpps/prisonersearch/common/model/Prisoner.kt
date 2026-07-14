@@ -58,7 +58,7 @@ class Prisoner : Diffable<Prisoner> {
       InnerField(type = FieldType.Keyword, suffix = "keyword"),
     ],
   )
-  @Schema(required = true, description = "First Name", example = "Robert")
+  @Schema(description = "First Name", example = "Robert")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var firstName: String? = null
 
@@ -72,40 +72,40 @@ class Prisoner : Diffable<Prisoner> {
       InnerField(type = FieldType.Keyword, suffix = "keyword"),
     ],
   )
-  @Schema(required = true, description = "Last name", example = "Larsen")
+  @Schema(description = "Last name", example = "Larsen")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var lastName: String? = null
 
   @Field(type = FieldType.Date, format = [DateFormat.date])
-  @Schema(required = true, description = "Date of Birth", example = "1975-04-02")
+  @Schema(description = "Date of Birth", example = "1975-04-02")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var dateOfBirth: LocalDate? = null
 
-  @Schema(required = true, description = "Gender", example = "Female")
+  @Schema(description = "Gender", example = "Female")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var gender: String? = null
 
-  @Schema(required = true, description = "Ethnicity", example = "White: Eng./Welsh/Scot./N.Irish/British")
+  @Schema(description = "Ethnicity", example = "White: Eng./Welsh/Scot./N.Irish/British")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var ethnicity: String? = null
 
-  @Schema(required = true, description = "Ethnicity code", example = "W1")
+  @Schema(description = "Ethnicity code", example = "W1")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var raceCode: String? = null
 
-  @Schema(required = true, description = "Youth Offender?", example = "true")
+  @Schema(description = "Youth Offender?", example = "true")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var youthOffender: Boolean? = null
 
-  @Schema(required = true, description = "Marital Status", example = "Widowed")
+  @Schema(description = "Marital Status", example = "Widowed")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var maritalStatus: String? = null
 
-  @Schema(required = true, description = "Religion", example = "Church of England (Anglican)")
+  @Schema(description = "Religion", example = "Church of England (Anglican)")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var religion: String? = null
 
-  @Schema(required = true, description = "Nationality", example = "Egyptian")
+  @Schema(description = "Nationality", example = "Egyptian")
   @DiffableProperty(DiffCategory.PERSONAL_DETAILS)
   var nationality: String? = null
 
@@ -130,7 +130,7 @@ class Prisoner : Diffable<Prisoner> {
   var militaryRecord: Boolean? = null
 
   @Field(type = FieldType.Keyword)
-  @Schema(required = true, description = "Status of the prisoner", example = "ACTIVE IN")
+  @Schema(description = "Status of the prisoner", example = "ACTIVE IN")
   @DiffableProperty(DiffCategory.STATUS)
   var status: String? = null
 
@@ -219,7 +219,7 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.STATUS)
   var convictedStatus: String? = null
 
-  @Schema(required = true, description = "Most serious offence for this sentence", example = "Robbery")
+  @Schema(description = "Most serious offence for this sentence", example = "Robbery")
   @DiffableProperty(DiffCategory.SENTENCE)
   var mostSeriousOffence: String? = null
 
@@ -358,7 +358,7 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.LOCATION)
   var locationDescription: String? = null
 
-  @Schema(required = true, description = "Indicates a restricted patient. Will never be null.", example = "true")
+  @Schema(description = "Indicates a restricted patient. Will never be null.", example = "true")
   @DiffableProperty(DiffCategory.RESTRICTED_PATIENT)
   var restrictedPatient: Boolean? = null
 
