@@ -19,7 +19,7 @@ dependencies {
     implementation("org.webjars:swagger-ui:5.32.2")
   }
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.0.6")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.0")
 }
 
 kotlin {
