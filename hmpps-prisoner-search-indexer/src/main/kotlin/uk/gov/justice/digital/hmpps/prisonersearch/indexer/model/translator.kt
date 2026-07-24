@@ -124,7 +124,7 @@ fun Prisoner.translate(
   }
 
   this.nationality = ob.profileInformation?.firstOrNull { p -> p.type == "NAT" }?.resultValue
-  this.religion = ob.profileInformation?.firstOrNull { p -> p.type == "RELF" }?.resultValue
+  this.religion = ob.religion
   this.maritalStatus = ob.profileInformation?.firstOrNull { p -> p.type == "MARITAL" }?.resultValue
   this.smoker = ob.profileInformation?.firstOrNull { p -> p.type == "SMOKE" }?.resultValue
   this.youthOffender = ob.profileInformation?.firstOrNull { p -> p.type == "YOUTH" }?.resultValue?.uppercase() == "YES"

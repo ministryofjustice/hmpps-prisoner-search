@@ -362,9 +362,10 @@ data class PrisonerBuilder(
           pms.add(PhysicalMark("Scar", null, it.bodyPart, null, it.comment, null))
         }
       },
+      religion = "Christian",
       profileInformation = listOf(
         ProfileInformation("YOUTH", "Youth Offender?", "NO"),
-        ProfileInformation("RELF", "Religion", "Christian"),
+        ProfileInformation("RELF", "Religion", "Agnostic"),
         ProfileInformation("NAT", "Nationality?", "British"),
         ProfileInformation("SMOKE", "Smoker?", "V"),
       ),
