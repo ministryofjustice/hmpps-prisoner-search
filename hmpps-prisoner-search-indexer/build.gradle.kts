@@ -47,9 +47,6 @@ dependencies {
   val springDocVersion = ":3.0.2"
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-starter-common$springDocVersion")
-  constraints {
-    implementation("org.webjars:swagger-ui:5.32.2")
-  }
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")
   // Leaving at version to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/<version>/dependencyManagement/build.gradle.kts#L16
