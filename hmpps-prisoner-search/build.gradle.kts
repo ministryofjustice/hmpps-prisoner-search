@@ -1,7 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   kotlin("plugin.spring")
@@ -64,14 +62,12 @@ dependencies {
 
 kotlin {
   jvmToolchain(25)
+  compilerOptions {
+    freeCompilerArgs.add("-Xcollection-literals")
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+  }
 }
 
 configure<com.gorylenko.GitPropertiesPluginExtension> {
   dotGitDirectory.set(File("${project.rootDir}/.git"))
-}
-
-tasks {
-  withType<KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
-  }
 }

@@ -79,16 +79,14 @@ dependencies {
 
 kotlin {
   jvmToolchain(25)
+  compilerOptions {
+    freeCompilerArgs.add("-Xcollection-literals")
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+  }
 }
 
 configure<com.gorylenko.GitPropertiesPluginExtension> {
   dotGitDirectory.set(File("${project.rootDir}/.git"))
-}
-
-tasks {
-  withType<KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
-  }
 }
 
 @CacheableTask
@@ -195,7 +193,6 @@ val models = listOf(
 tasks {
   withType<KotlinCompile> {
     dependsOn(models.map { it.toBuildModelTaskName() })
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
   withType<KtLintCheckTask> {
     mustRunAfter(models.map { it.toBuildModelTaskName() })
