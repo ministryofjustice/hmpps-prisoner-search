@@ -11,6 +11,7 @@
 **/api/*
 **/model/*
 !**/ErrorResponse.kt
+!**/BookingSwitchRepairResult.kt
 !**/CreateIncentiveReviewRequest.kt
 !**/IncentiveReviewDetail.kt
 !**/IncentiveReviewSummary.kt
