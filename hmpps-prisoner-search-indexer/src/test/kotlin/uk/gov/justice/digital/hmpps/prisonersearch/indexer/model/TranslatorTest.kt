@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Language
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.MainOffence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -35,6 +36,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.MainOffence as NomisMainOffence
 
 class TranslatorTest {
 
@@ -762,6 +764,26 @@ class TranslatorTest {
             endDate = LocalDate.parse("2199-04-05"),
           ),
         )
+    }
+  }
+
+  @Nested
+  inner class MainOffenceMapping {
+    @Test
+    internal fun `main offence is mapped`() {
+      val prisoner = Prisoner().translate(
+        ob = aBooking().copy(
+          mainOffence = NomisMainOffence(offenceCode = "M1", offenceDescription = "Actual bodily harm"),
+        ),
+      )
+      assertThat(prisoner.mainOffence)
+        .isEqualTo(MainOffence(offenceCode = "M1", offenceDescription = "Actual bodily harm"))
+    }
+
+    @Test
+    internal fun `main offence is null when the booking has none`() {
+      val prisoner = Prisoner().translate(ob = aBooking().copy(mainOffence = null))
+      assertThat(prisoner.mainOffence).isNull()
     }
   }
 

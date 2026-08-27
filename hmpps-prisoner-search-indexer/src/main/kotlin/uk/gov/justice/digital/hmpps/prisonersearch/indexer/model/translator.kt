@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Language
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.MainOffence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PersonalCareNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
@@ -184,6 +185,7 @@ fun Prisoner.translate(
   this.actualParoleDate = ob.sentenceDetail?.actualParoleDate
 
   this.mostSeriousOffence = ob.mostSeriousOffence
+  this.mainOffence = ob.mainOffence?.let { MainOffence(it.offenceCode, it.offenceDescription) }
   this.recall = ob.recall
   this.legalStatus = ob.legalStatus
   this.imprisonmentStatus = ob.imprisonmentStatus

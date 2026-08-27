@@ -223,6 +223,14 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.SENTENCE)
   var mostSeriousOffence: String? = null
 
+  // @DiffableProperty is deliberately omitted for now - see AddingNewField.md. Adding it in the same
+  // release that starts populating the field would make the nightly refresh see every prisoner as
+  // changed and emit a prisoner.updated event for each one. It is added in a follow-up release, once
+  // a refresh has silently backfilled the estate.
+  @Field(type = FieldType.Nested, includeInParent = true)
+  @Schema(description = "The main offence: the most serious active charge, whether or not it has resulted in a conviction. Unlike mostSeriousOffence this is populated for a prisoner without a conviction, such as someone on remand.")
+  var mainOffence: MainOffence? = null
+
   @Schema(description = "Indicates that the prisoner has been recalled", example = "false")
   @DiffableProperty(DiffCategory.STATUS)
   var recall: Boolean? = null

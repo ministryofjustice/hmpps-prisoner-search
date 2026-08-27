@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.MainOffence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Offence
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PhoneNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -81,6 +82,7 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     imprisonmentStatusDescription = "Serving Life Imprisonment"
     convictedStatus = "Remand"
     mostSeriousOffence = "Robbery"
+    mainOffence = MainOffence(offenceCode = "RR84070", offenceDescription = "Robbery")
     nonDtoReleaseDateType = "ARD"
     locationDescription = "HMP Moorland"
     supportingPrisonId = "MDI"
@@ -222,6 +224,8 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     "imprisonmentStatusDescription,Serving Life Imprisonment",
     "convictedStatus,Remand",
     "mostSeriousOffence,Robbery",
+    "mainOffence.offenceCode,RR84070",
+    "mainOffence.offenceDescription,Robbery",
     "nonDtoReleaseDateType,ARD",
     "locationDescription,HMP Moorland",
     "supportingPrisonId,MDI",
@@ -387,10 +391,14 @@ class AttributeSearchFieldsIntegrationTest : AbstractSearchIntegrationTest() {
     .exchange()
     .expectStatus().isOk
 
+  // A nested attribute is addressed as a list unless it hangs off a single object rather than a
+  // list of them, in which case it is addressed directly.
+  private val singleObjectAttributes = listOf("currentIncentive", "mainOffence")
+
   private fun WebTestClient.ResponseSpec.expectSingleResult(field: String, value: Any) {
     val attribute =
       field.takeIf { it.contains(".") }
-        ?.takeIf { !it.contains("currentIncentive") }
+        ?.takeIf { f -> singleObjectAttributes.none { f.startsWith("$it.") } }
         ?.replace(".", "[0].")
         ?: field
     expectBody()
