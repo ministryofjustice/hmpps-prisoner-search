@@ -12,7 +12,7 @@ import kotlin.io.path.Path as KotlinPath
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
-  id("org.openapi.generator") version "7.23.0"
+  id("org.openapi.generator") version "7.25.0"
   kotlin("plugin.spring")
   kotlin("plugin.jpa") version "2.4.10"
 }
@@ -33,9 +33,9 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.1")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.1")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -48,7 +48,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-starter-common$springDocVersion")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
   // Leaving at version to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/<version>/dependencyManagement/build.gradle.kts#L16
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.28.1")
 

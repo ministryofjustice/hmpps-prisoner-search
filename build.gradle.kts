@@ -1,4 +1,4 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.5" apply false
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.6" apply false
   kotlin("plugin.spring") version "2.4.10" apply false
 }

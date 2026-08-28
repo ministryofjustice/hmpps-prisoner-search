@@ -8,13 +8,13 @@ dependencyCheck {
 }
 
 dependencies {
-  implementation("org.springframework.data:spring-data-elasticsearch:6.1.0")
+  implementation("org.springframework.data:spring-data-elasticsearch:6.1.1")
   // Temporarily pin spring doc at 3.0.2 whilst waiting for 3.0.4 upgrade
   val springDocVersion = ":3.0.2"
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-starter-common$springDocVersion")
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.0")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.1")
 }
 
 kotlin {
