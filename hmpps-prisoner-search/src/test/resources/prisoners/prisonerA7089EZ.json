@@ -21,6 +21,7 @@
   "lastMovementReasonCode": "24",
   "inOutStatus": "IN",
   "prisonId": "LEI",
+  "previousPrisonId": "SWI",
   "prisonName": "HMP Leeds",
   "cellLocation": "B-C1-010",
   "aliases": [

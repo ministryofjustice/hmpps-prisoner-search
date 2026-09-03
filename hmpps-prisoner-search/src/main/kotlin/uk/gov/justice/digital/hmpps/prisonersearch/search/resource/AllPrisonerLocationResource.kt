@@ -68,8 +68,10 @@ data class PrisonerLocation(
   val prisonerNumber: String,
   @Schema(description = "Prison id. Current prison or OUT if outside. Will not be returned if no bookings.", example = "MDI")
   val prisonId: String?,
-  @Schema(description = "Last prison id. If prisonId is OUT then will contain last prison, otherwise will be the same as prisonId. Will not be returned if no bookings.", example = "MDI")
+  @Schema(description = "Last i.e. final prison id. If prisonId is OUT then will contain last prison, otherwise will be the same as prisonId. Will not be returned if no bookings.", example = "MDI")
   val lastPrisonId: String?,
+  @Schema(description = "The previous prison for the prisoner within the current term", example = "MDI")
+  var previousPrisonId: String?,
   @Schema(description = "First Name", example = "Robert")
   var firstName: String,
   @Schema(description = "Last name", example = "Larsen")
