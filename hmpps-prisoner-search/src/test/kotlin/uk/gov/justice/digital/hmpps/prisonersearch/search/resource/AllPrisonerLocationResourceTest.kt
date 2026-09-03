@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.verify
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.prisonersearch.search.AbstractSearchDataIntegrationTest
 
 class AllPrisonerLocationResourceTest : AbstractSearchDataIntegrationTest() {
@@ -53,7 +54,8 @@ class AllPrisonerLocationResourceTest : AbstractSearchDataIntegrationTest() {
           .header("Content-Type", "application/json")
           .exchange()
           .expectStatus().isOk
-          .returnResult(PrisonerLocationResponse::class.java).responseBody.blockFirst()!!
+          .returnResult<PrisonerLocationResponse>()
+          .responseBody.blockFirst()!!
 
         assertThat(response.scrollId).isNotBlank()
         assertThat(response.locations).hasSize(10)
@@ -67,15 +69,16 @@ class AllPrisonerLocationResourceTest : AbstractSearchDataIntegrationTest() {
             .header("Content-Type", "application/json")
             .exchange()
             .expectStatus().isOk
-            .returnResult(PrisonerLocationResponse::class.java).responseBody.blockFirst()!!
+            .returnResult<PrisonerLocationResponse>()
+            .responseBody.blockFirst()!!
 
           scrollId = nextResponse.scrollId
           hits += nextResponse.locations ?: emptyList()
         }
 
         assertThat(hits).contains(
-          PrisonerLocation("A7089EZ", "LEI", null, "JOHN", "SMYTH"),
-          PrisonerLocation("A9999RB", "OUT", "DNI", "HOSP", "PATIENTONE"),
+          PrisonerLocation("A7089EZ", "LEI", null, "SWI", "JOHN", "SMYTH"),
+          PrisonerLocation("A9999RB", "OUT", "DNI", null, "HOSP", "PATIENTONE"),
         ).hasSizeGreaterThan(20)
 
         // check that we have actually scrolled

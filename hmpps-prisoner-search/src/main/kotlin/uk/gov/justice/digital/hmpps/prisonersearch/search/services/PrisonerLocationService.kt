@@ -35,8 +35,8 @@ class PrisonerLocationService(
 
   fun getAllPrisonerLocations(): PrisonerLocationResponse {
     val searchSourceBuilder = SearchSourceBuilder().apply {
-      // restrict to just fetching the three required fields
-      fetchSource(arrayOf("prisonerNumber", "prisonId", "lastPrisonId", "firstName", "lastName"), null)
+      // restrict to just fetching the required fields
+      fetchSource(arrayOf("prisonerNumber", "prisonId", "lastPrisonId", "previousPrisonId", "firstName", "lastName"), null)
       size(results)
     }
     val request = SearchRequest(searchClient.getAlias(), searchSourceBuilder).apply {
