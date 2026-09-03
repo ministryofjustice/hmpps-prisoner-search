@@ -40,7 +40,7 @@ class AlertsServiceTest {
     alertsApi.stubSuccess()
 
     val alerts = alertsService.getActiveAlertsForPrisoner("A1234AA")
-    alerts!!.first().also { alert ->
+    alerts.first().also { alert ->
       assertThat(alert.alertCode.code).isEqualTo("ABC")
       assertThat(alert.alertCode.alertTypeCode).isEqualTo("A")
       assertThat(alert.isActive).isTrue()
@@ -80,7 +80,7 @@ class AlertsServiceTest {
     )
 
     val alerts = alertsService.getActiveAlertsForPrisoner("A1234AA")
-    assertThat(alerts!!).extracting("alertCode.code", "alertCode.alertTypeCode", "createdAt", "activeFrom")
+    assertThat(alerts).extracting("alertCode.code", "alertCode.alertTypeCode", "createdAt", "activeFrom")
       .containsExactly(
         tuple("GGG", "G", LocalDateTime.parse("2023-01-01T00:00:00"), LocalDate.parse("2023-02-12")),
         tuple("FFF", "F", LocalDateTime.parse("2023-01-02T00:00:00"), LocalDate.parse("2023-02-12")),
