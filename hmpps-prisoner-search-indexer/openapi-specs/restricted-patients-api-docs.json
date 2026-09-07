@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-28.215.726f908"
+    "version" : "2026-09-04.313.3e8928a"
   },
   "servers" : [ {
     "url" : "https://restricted-patients-api-dev.prison.service.justice.gov.uk/",
@@ -288,6 +288,54 @@
         }
       }
     },
+    "/subject-access-request/template" : {
+      "get" : {
+        "tags" : [ "Subject Access Request" ],
+        "operationId" : "getServiceTemplate",
+        "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - return template file content",
+            "content" : {
+              "plain/text" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "The client does not have authorisation to make this request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/restricted-patient/prison-number/{prison-number}" : {
       "get" : {
         "tags" : [ "restricted-patients-controller" ],
@@ -445,6 +493,8 @@
             "example" : "G1072GT"
           },
           "fromLocation" : {
+            "description" : "Previous location id",
+            "example" : "MDI",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Agency"
             }, {
@@ -452,6 +502,8 @@
             } ]
           },
           "hospitalLocation" : {
+            "description" : "Hospital location code, this indicates the current location of a prisoner",
+            "example" : "HAZLWD",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Agency"
             }, {
@@ -459,6 +511,8 @@
             } ]
           },
           "supportingPrison" : {
+            "description" : "Prison where the offender is supported by POM",
+            "example" : "LEI",
             "oneOf" : [ {
               "$ref" : "#/components/schemas/Agency"
             }, {
@@ -556,16 +610,37 @@
             "description" : "The url to be used to download the attachment file"
           },
           "filesize" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The size of the attachment file in bytes"
           },
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
+          },
+          "headers" : {
+            "type" : [ "array", "null" ],
+            "description" : "The additional headers to use when calling the url for fetching this attachment",
+            "items" : {
+              "$ref" : "#/components/schemas/AttachmentHeader"
+            }
           }
         },
-        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+        "required" : [ "attachmentNumber", "contentType", "filename", "name", "url" ]
+      },
+      "AttachmentHeader" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the header"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "The value of the header"
+          }
+        },
+        "required" : [ "name", "value" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
@@ -674,6 +749,13 @@
             "format" : "date-time"
           },
           "createUserId" : {
+            "type" : [ "string", "null" ]
+          },
+          "modifyDateTime" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "modifyUserId" : {
             "type" : [ "string", "null" ]
           }
         },
