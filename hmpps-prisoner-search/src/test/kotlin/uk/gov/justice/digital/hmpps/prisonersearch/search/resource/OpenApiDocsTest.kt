@@ -77,7 +77,7 @@ class OpenApiDocsTest(
       .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.example").isEqualTo("2020-07-17T12:34:56.833Z")
       .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.description")
       .isEqualTo("The date/time the identifier was created in the system. Will never be null.")
-      .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.type").isEqualTo("string")
+      .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.type").isEqualTo(["string", "null"])
       .jsonPath("$.components.schemas.Identifier.properties.createdDateTime.format").isEqualTo("date-time")
   }
 
