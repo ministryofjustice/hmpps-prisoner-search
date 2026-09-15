@@ -41,4 +41,3 @@ class MaintainIndexService(
 }
 
 data class PrisonerPage(val page: Int, val pageSize: Int)
-data class RootOffenderIdPage(val fromRootOffenderId: Long, val toRootOffenderId: Long)

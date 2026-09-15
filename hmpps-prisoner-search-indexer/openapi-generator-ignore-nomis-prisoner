@@ -10,6 +10,6 @@
 **/api/*
 **/model/*
 !**/ErrorResponse.kt
-!**/RootOffenderIdRange.kt
+!**/IdRange.kt
 !**/PrisonerSearchResourceApi.kt
 **/client/infrastructure/

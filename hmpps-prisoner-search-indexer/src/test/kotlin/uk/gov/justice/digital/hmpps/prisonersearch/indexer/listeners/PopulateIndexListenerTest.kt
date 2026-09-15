@@ -13,8 +13,8 @@ import tools.jackson.core.exc.StreamReadException
 import tools.jackson.databind.exc.InvalidFormatException
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
 
 @JsonTest
 class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
@@ -63,15 +63,15 @@ class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """
       {
         "type": "REFRESH_PRISONER_PAGE",
-        "rootOffenderIdPage": {
-          "fromRootOffenderId": 1,
-          "toRootOffenderId": 1000
+        "idRange": {
+          "fromId": 1,
+          "toId": 1000
         }
       }
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000), false)
+      verify(refreshIndexService).refreshIndexWithIdRange(IdRange(1, 1000), false)
     }
   }
 
@@ -83,15 +83,15 @@ class PopulateIndexListenerTest(@Autowired jsonMapper: JsonMapper) {
         """
       {
         "type": "REFRESH_ACTIVE_PRISONER_PAGE",
-        "rootOffenderIdPage": {
-          "fromRootOffenderId": 1,
-          "toRootOffenderId": 1000
+        "idRange": {
+          "fromId": 1,
+          "toId": 1000
         }
       }
         """.trimIndent(),
       )
 
-      verify(refreshIndexService).refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(1, 1000), false)
+      verify(refreshIndexService).refreshActiveIndexWithIdRange(IdRange(1, 1000), false)
     }
   }
 
