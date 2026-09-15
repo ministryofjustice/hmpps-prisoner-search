@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexMessag
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.POPULATE_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -53,9 +54,9 @@ class IndexQueueService(
     }
   }
 
-  fun sendRootOffenderIdPageMessage(rootOffenderIdPage: RootOffenderIdPage, type: IndexRequestType, domainEvents: Boolean = true) {
-    sendMessage(IndexMessageRequest(type = type, rootOffenderIdPage = rootOffenderIdPage, domainEvents = domainEvents)).also {
-      log.info("Sent {} root prisoner page message request {} for page {}", type, it.messageId(), rootOffenderIdPage)
+  fun sendIdRangeMessage(IdRange: IdRange, type: IndexRequestType, domainEvents: Boolean = true) {
+    sendMessage(IndexMessageRequest(type = type, idRange = IdRange, domainEvents = domainEvents)).also {
+      log.info("Sent {} root prisoner page message request {} for page {}", type, it.messageId(), IdRange)
     }
   }
 

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 
 @Service
 class RefreshIndexService(
@@ -42,28 +43,28 @@ class RefreshIndexService(
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = false, size = pageSize)
     log.info("Found {} pages each of size {}", ranges.size, pageSize)
     return ranges
-      .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
-      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_PRISONER_PAGE, domainEvents) }.size
+      .map { IdRange(it.fromId, it.toId) }
+      .onEach { indexQueueService.sendIdRangeMessage(it, REFRESH_PRISONER_PAGE, domainEvents) }.size
   }
 
   fun refreshActiveIndex(domainEvents: Boolean): Int {
     val ranges = nomisPrisonerService.getAllPrisonersIdRanges(active = true, size = pageSize)
     log.info("Found {} pages each of size {}", ranges.size, pageSize)
     return ranges
-      .map { RootOffenderIdPage(it.fromRootOffenderId, it.toRootOffenderId) }
-      .onEach { indexQueueService.sendRootOffenderIdPageMessage(it, REFRESH_ACTIVE_PRISONER_PAGE, domainEvents) }.size
+      .map { IdRange(it.fromId, it.toId) }
+      .onEach { indexQueueService.sendIdRangeMessage(it, REFRESH_ACTIVE_PRISONER_PAGE, domainEvents) }.size
   }
 
-  fun refreshIndexWithRootOffenderIdPage(page: RootOffenderIdPage, domainEvents: Boolean): Unit = nomisPrisonerService.getPrisonNumbers(
+  fun refreshIndexWithIdRange(page: IdRange, domainEvents: Boolean): Unit = nomisPrisonerService.getPrisonNumbers(
     active = false,
-    fromRootOffenderId = page.fromRootOffenderId,
-    toRootOffenderId = page.toRootOffenderId,
+    fromRootOffenderId = page.fromId,
+    toRootOffenderId = page.toId,
   ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it, domainEvents) }
 
-  fun refreshActiveIndexWithRootOffenderIdPage(page: RootOffenderIdPage, domainEvents: Boolean): Unit = nomisPrisonerService.getPrisonNumbers(
+  fun refreshActiveIndexWithIdRange(page: IdRange, domainEvents: Boolean): Unit = nomisPrisonerService.getPrisonNumbers(
     active = true,
-    fromRootOffenderId = page.fromRootOffenderId,
-    toRootOffenderId = page.toRootOffenderId,
+    fromRootOffenderId = page.fromId,
+    toRootOffenderId = page.toId,
   ).forEach { indexQueueService.sendRefreshPrisonerMessage(prisonerNumber = it, domainEvents) }
 
   fun refreshPrisoner(prisonerNumber: String, domainEvents: Boolean) {

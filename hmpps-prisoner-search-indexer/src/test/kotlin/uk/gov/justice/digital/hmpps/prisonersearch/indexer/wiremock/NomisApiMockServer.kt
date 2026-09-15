@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.PrisonerBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 
 class NomisApiMockServer : WireMockServer(8094) {
   fun stubHealthPing(status: Int) {
@@ -33,7 +33,7 @@ class NomisApiMockServer : WireMockServer(8094) {
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(Gson().toJson(listOf(RootOffenderIdPage(0, 1000)))),
+            .withBody(Gson().toJson(listOf(IdRange(0, 1000)))),
         ),
     )
     stubFor(

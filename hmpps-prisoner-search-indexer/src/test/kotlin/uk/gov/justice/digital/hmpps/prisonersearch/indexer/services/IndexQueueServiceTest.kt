@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_ACTIVE_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.util.concurrent.CompletableFuture
@@ -251,7 +252,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
   }
 
   @Nested
-  inner class SendRootOffenderIdPageMessage {
+  inner class SendIdRangeMessage {
     @BeforeEach
     internal fun setUp() {
       whenever(indexSqsClient.sendMessage(any<SendMessageRequest>())).thenReturn(CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("abc").build()))
@@ -259,16 +260,16 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send populate message with index name`() {
-      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
+      indexQueueService.sendIdRangeMessage(IdRange(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "REFRESH_ACTIVE_PRISONER_PAGE",
           "domainEvents": false,
-          "rootOffenderIdPage": {
-            "fromRootOffenderId": 1,
-            "toRootOffenderId": 1000
+          "idRange": {
+            "fromId": 1,
+            "toId": 1000
           }
         }
             """.trimIndent(),
@@ -279,16 +280,16 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send compare message with index name`() {
-      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
+      indexQueueService.sendIdRangeMessage(IdRange(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThatJson(it.messageBody()).isEqualTo(
             """{
           "type": "REFRESH_ACTIVE_PRISONER_PAGE",
           "domainEvents": false,
-          "rootOffenderIdPage": {
-            "fromRootOffenderId": 1,
-            "toRootOffenderId": 1000
+          "idRange": {
+            "fromId": 1,
+            "toId": 1000
           }
         }
             """.trimIndent(),
@@ -299,7 +300,7 @@ internal class IndexQueueServiceTest(@Autowired private val jsonMapper: JsonMapp
 
     @Test
     fun `will send message to index queue`() {
-      indexQueueService.sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
+      indexQueueService.sendIdRangeMessage(IdRange(1, 1000), REFRESH_ACTIVE_PRISONER_PAGE, false)
       verify(indexSqsClient).sendMessage(
         check<SendMessageRequest> {
           assertThat(it.queueUrl()).isEqualTo("arn:eu-west-1:index-queue")

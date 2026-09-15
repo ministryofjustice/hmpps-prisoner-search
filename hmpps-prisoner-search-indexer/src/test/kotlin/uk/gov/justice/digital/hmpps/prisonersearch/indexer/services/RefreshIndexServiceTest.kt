@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.RootOffenderIdRange
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 
 class RefreshIndexServiceTest {
 
@@ -86,9 +86,9 @@ class RefreshIndexServiceTest {
     internal fun `will return the number of chunks sent for processing`() {
       whenever(nomisPrisonerService.getAllPrisonersIdRanges(active = eq(false), size = any())).thenReturn(
         listOf(
-          RootOffenderIdRange(1, 3),
-          RootOffenderIdRange(3, 5),
-          RootOffenderIdRange(5, 7),
+          IdRange(1, 3),
+          IdRange(3, 5),
+          IdRange(5, 7),
         ),
       )
 
@@ -99,17 +99,17 @@ class RefreshIndexServiceTest {
     internal fun `For each chunk should send a process chunk message`() {
       whenever(nomisPrisonerService.getAllPrisonersIdRanges(active = eq(false), size = any())).thenReturn(
         listOf(
-          RootOffenderIdRange(1, 3),
-          RootOffenderIdRange(3, 5),
-          RootOffenderIdRange(5, 7),
+          IdRange(1, 3),
+          IdRange(3, 5),
+          IdRange(5, 7),
         ),
       )
 
       refreshIndexService.refreshIndex()
 
-      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 3), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(3, 5), REFRESH_PRISONER_PAGE)
-      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(5, 7), REFRESH_PRISONER_PAGE)
+      verify(indexQueueService).sendIdRangeMessage(IdRange(1, 3), REFRESH_PRISONER_PAGE)
+      verify(indexQueueService).sendIdRangeMessage(IdRange(3, 5), REFRESH_PRISONER_PAGE)
+      verify(indexQueueService).sendIdRangeMessage(IdRange(5, 7), REFRESH_PRISONER_PAGE)
     }
 
     @Test
@@ -127,9 +127,9 @@ class RefreshIndexServiceTest {
     internal fun `will return the number of chunks sent for processing`() {
       whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(true), any())).thenReturn(
         listOf(
-          RootOffenderIdRange(1, 3),
-          RootOffenderIdRange(3, 5),
-          RootOffenderIdRange(5, 7),
+          IdRange(1, 3),
+          IdRange(3, 5),
+          IdRange(5, 7),
         ),
       )
 
@@ -140,17 +140,17 @@ class RefreshIndexServiceTest {
     internal fun `For each chunk should send a process chunk message`() {
       whenever(nomisPrisonerService.getAllPrisonersIdRanges(eq(true), any())).thenReturn(
         listOf(
-          RootOffenderIdRange(1, 3),
-          RootOffenderIdRange(3, 5),
-          RootOffenderIdRange(5, 7),
+          IdRange(1, 3),
+          IdRange(3, 5),
+          IdRange(5, 7),
         ),
       )
 
       refreshIndexService.refreshActiveIndex(true)
 
-      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(1, 3), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(3, 5), REFRESH_ACTIVE_PRISONER_PAGE)
-      verify(indexQueueService).sendRootOffenderIdPageMessage(RootOffenderIdPage(5, 7), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexQueueService).sendIdRangeMessage(IdRange(1, 3), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexQueueService).sendIdRangeMessage(IdRange(3, 5), REFRESH_ACTIVE_PRISONER_PAGE)
+      verify(indexQueueService).sendIdRangeMessage(IdRange(5, 7), REFRESH_ACTIVE_PRISONER_PAGE)
     }
 
     @Test
@@ -172,14 +172,14 @@ class RefreshIndexServiceTest {
 
     @Test
     internal fun `will get offenders in the supplied page`() {
-      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000), true)
+      refreshIndexService.refreshIndexWithIdRange(IdRange(99, 1000), true)
 
       verify(nomisPrisonerService).getPrisonNumbers(active = false, fromRootOffenderId = 99, toRootOffenderId = 1000)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
-      refreshIndexService.refreshIndexWithRootOffenderIdPage(RootOffenderIdPage(99, 1000), true)
+      refreshIndexService.refreshIndexWithIdRange(IdRange(99, 1000), true)
 
       verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D", true)
       verify(indexQueueService).sendRefreshPrisonerMessage("A12345", true)
@@ -187,7 +187,7 @@ class RefreshIndexServiceTest {
   }
 
   @Nested
-  inner class RefreshActiveIndexWithRootOffenderIdPage {
+  inner class RefreshActiveIndexWithIdRange {
     @BeforeEach
     internal fun setUp() {
       whenever(nomisPrisonerService.getPrisonNumbers(eq(true), any(), any()))
@@ -196,14 +196,14 @@ class RefreshIndexServiceTest {
 
     @Test
     internal fun `will get offenders in the supplied page`() {
-      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10), true)
+      refreshIndexService.refreshActiveIndexWithIdRange(IdRange(fromId = 5, toId = 10), true)
 
       verify(nomisPrisonerService).getPrisonNumbers(active = true, fromRootOffenderId = 5, toRootOffenderId = 10)
     }
 
     @Test
     internal fun `for each offender will send populate offender message`() {
-      refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(RootOffenderIdPage(fromRootOffenderId = 5, toRootOffenderId = 10), true)
+      refreshIndexService.refreshActiveIndexWithIdRange(IdRange(fromId = 5, toId = 10), true)
 
       verify(indexQueueService).sendRefreshPrisonerMessage("ABC123D", true)
       verify(indexQueueService).sendRefreshPrisonerMessage("ABC123E", true)

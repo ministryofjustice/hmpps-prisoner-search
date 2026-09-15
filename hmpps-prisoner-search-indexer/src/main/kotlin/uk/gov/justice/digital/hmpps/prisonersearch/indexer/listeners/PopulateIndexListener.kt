@@ -11,10 +11,10 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexReques
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_INDEX
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IndexRequestType.REFRESH_PRISONER_PAGE
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.nomisprisoner.model.IdRange
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexException
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.PrisonerPage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RefreshIndexService
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.RootOffenderIdPage
 
 @Service
 class PopulateIndexListener(
@@ -32,10 +32,10 @@ class PopulateIndexListener(
     try {
       when (indexRequest.type) {
         REFRESH_INDEX -> refreshIndexService.refreshIndex(indexRequest.domainEvents)
-        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!, indexRequest.domainEvents)
+        REFRESH_PRISONER_PAGE -> refreshIndexService.refreshIndexWithIdRange(indexRequest.idRange!!, indexRequest.domainEvents)
         REFRESH_PRISONER -> refreshIndexService.refreshPrisoner(prisonerNumber = indexRequest.prisonerNumber!!, indexRequest.domainEvents)
         REFRESH_ACTIVE_INDEX -> refreshIndexService.refreshActiveIndex(indexRequest.domainEvents)
-        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithRootOffenderIdPage(indexRequest.rootOffenderIdPage!!, indexRequest.domainEvents)
+        REFRESH_ACTIVE_PRISONER_PAGE -> refreshIndexService.refreshActiveIndexWithIdRange(indexRequest.idRange!!, indexRequest.domainEvents)
         else -> {
           "Unknown request type for message $requestJson"
             .let {
@@ -57,7 +57,7 @@ class PopulateIndexListener(
 data class IndexMessageRequest(
   val type: IndexRequestType?,
   val prisonerPage: PrisonerPage? = null,
-  val rootOffenderIdPage: RootOffenderIdPage? = null,
+  val idRange: IdRange? = null,
   val prisonerNumber: String? = null,
   val rootOffenderId: Long? = null,
   val domainEvents: Boolean = false,
