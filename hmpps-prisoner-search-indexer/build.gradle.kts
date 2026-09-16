@@ -14,7 +14,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   id("org.openapi.generator") version "7.25.0"
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "2.4.10"
+  kotlin("plugin.jpa") version "2.4.20"
 }
 
 dependencyCheck {
@@ -33,7 +33,7 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.2")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.3")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.1")
   implementation("org.springframework.boot:spring-boot-starter-webflux")

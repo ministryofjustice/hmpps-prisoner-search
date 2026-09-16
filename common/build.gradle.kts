@@ -11,7 +11,7 @@ dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:6.1.1")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.2")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.3")
 }
 
 kotlin {
