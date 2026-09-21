@@ -1,0 +1,21 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.1
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JAVA-COMTDUNNING-19659413:
+    - '*':
+        reason: Only used within depths of opensearch
+        created: 2026-09-18T06:44:14.778Z
+  SNYK-JAVA-COMTDUNNING-19778375:
+    - '*':
+        reason: Only used within depths of opensearch
+        created: 2026-09-18T07:25:12.114Z
+  SNYK-JAVA-COMGITHUBJAVAJSONTOOLS-19644208:
+    - '*':
+        reason: Only used within depths of opensearch
+        created: 2026-09-18T07:31:37.825Z
+  SNYK-JAVA-COMGITHUBJAVAJSONTOOLS-19644209:
+    - '*':
+        reason: Only used within depths of opensearch
+        created: 2026-09-18T07:31:45.806Z
+patch: {}
