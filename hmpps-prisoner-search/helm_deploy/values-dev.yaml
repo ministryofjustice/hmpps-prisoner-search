@@ -17,6 +17,21 @@ generic-service:
     startup: '23 6 * * 1-5' # Start at 6.20am UTC Monday-Friday
     shutdown: '47 21 * * 1-5' # Stop at 9.50pm UTC Monday-Friday
 
+  allowlist:
+    analyticplatform-1: 34.250.17.221/32
+    analyticplatform-2: 34.251.212.33/32
+    analyticplatform-3: 34.252.4.39/32
+    hmp-fosseway-1: 35.177.153.88/32
+    hmp-fosseway-2: 52.56.95.43/32
+    hmp-fosseway-3: 52.56.57.70/32
+    hmp-fosseway-4: 18.135.112.100/32
+    hmp-fosseway-5: 18.135.112.128/32
+    hmp-fosseway-6: 18.135.112.181/32
+    serco-pecs-dev-1: 52.7.210.133/32
+    serco-pecs-dev-2: 52.23.29.131/32
+    groups:
+      - internal
+
 generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
