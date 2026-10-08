@@ -12,7 +12,7 @@ import kotlin.io.path.Path as KotlinPath
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
-  id("org.openapi.generator") version "7.25.0"
+  id("org.openapi.generator") version "7.26.0"
   kotlin("plugin.spring")
   kotlin("plugin.jpa") version "2.4.20"
 }
@@ -33,7 +33,7 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.3")
 
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.4")
   constraints {
@@ -63,10 +63,10 @@ dependencies {
 
   implementation(project(":common"))
 
-  runtimeOnly("org.postgresql:postgresql:42.7.13")
+  runtimeOnly("org.postgresql:postgresql:42.7.14")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.2")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.3")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
@@ -76,7 +76,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.2.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.3.0")
   testImplementation("com.google.code.gson:gson:2.14.0")
 }
 
