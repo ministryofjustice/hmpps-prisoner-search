@@ -58,6 +58,8 @@ class AlertsServiceTest {
         "E" to "EEE",
         "F" to "FFF",
         "G" to "GGG",
+        "F" to "FFF",
+        "E" to "EEE",
       ),
       createdDates = listOf(
         "2023-11-01T00:00:00",
@@ -67,6 +69,8 @@ class AlertsServiceTest {
         "2023-01-03T00:00:00",
         "2023-01-02T00:00:00",
         "2023-01-01T00:00:00",
+        "2023-01-01T00:00:00",
+        "2023-01-01T00:00:00",
       ),
       activeFromDates = listOf(
         "2023-02-10",
@@ -75,6 +79,8 @@ class AlertsServiceTest {
         "2023-02-11",
         "2023-02-12",
         "2023-02-12",
+        "2023-02-12", // last 3 sorted by code
+        "2023-02-12",
         "2023-02-12",
       ),
     )
@@ -82,6 +88,8 @@ class AlertsServiceTest {
     val alerts = alertsService.getActiveAlertsForPrisoner("A1234AA")
     assertThat(alerts).extracting("alertCode.code", "alertCode.alertTypeCode", "createdAt", "activeFrom")
       .containsExactly(
+        tuple("EEE", "E", LocalDateTime.parse("2023-01-01T00:00:00"), LocalDate.parse("2023-02-12")),
+        tuple("FFF", "F", LocalDateTime.parse("2023-01-01T00:00:00"), LocalDate.parse("2023-02-12")),
         tuple("GGG", "G", LocalDateTime.parse("2023-01-01T00:00:00"), LocalDate.parse("2023-02-12")),
         tuple("FFF", "F", LocalDateTime.parse("2023-01-02T00:00:00"), LocalDate.parse("2023-02-12")),
         tuple("EEE", "E", LocalDateTime.parse("2023-01-03T00:00:00"), LocalDate.parse("2023-02-12")),
