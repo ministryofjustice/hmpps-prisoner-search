@@ -44,7 +44,8 @@ class AlertsService(
       // Ensure order is fixed. This is important as any change will result in the refresh firing a lot of diff events
       result.content.sortedWith(
         compareByDescending<Alert> { it.activeFrom }
-          .thenBy { it.createdAt }, // Note this is Ascending
+          .thenBy { it.createdAt } // Note this is Ascending
+          .thenBy { it.alertCode.code },
       )
     } ?: emptyList()
 }
