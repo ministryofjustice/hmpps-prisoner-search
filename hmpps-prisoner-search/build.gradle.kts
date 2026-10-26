@@ -29,12 +29,12 @@ dependencies {
       because("OpenSearch 3.1.4 depends on zstd-jni 1.5.6-1 which has CVE-2026-87823 and other CVEs")
     }
   }
-  implementation("com.google.code.gson:gson:2.14.0")
+  implementation("com.google.code.gson:gson:2.15.0")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   // Leaving at version to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/<version>/dependencyManagement/build.gradle.kts#L16
@@ -45,7 +45,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
   implementation("org.awaitility:awaitility-kotlin:4.3.0")
 
-  implementation("com.github.ben-manes.caffeine:caffeine:3.3.0")
+  implementation("com.github.ben-manes.caffeine:caffeine:3.3.1")
 
   implementation(project(":common"))
 
@@ -60,7 +60,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.3.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.4.0")
 }
 
 kotlin {

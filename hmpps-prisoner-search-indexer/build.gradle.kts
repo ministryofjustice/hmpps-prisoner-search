@@ -14,7 +14,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot")
   id("org.openapi.generator") version "7.26.0"
   kotlin("plugin.spring")
-  kotlin("plugin.jpa") version "2.4.20"
+  kotlin("plugin.jpa") version "2.4.21"
 }
 
 dependencyCheck {
@@ -49,7 +49,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.springframework.data:spring-data-elasticsearch")
   implementation("org.springframework.boot:spring-boot-jackson2")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
   // Leaving at version to match App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/<version>/dependencyManagement/build.gradle.kts#L16
@@ -59,7 +59,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
   implementation("org.awaitility:awaitility-kotlin:4.3.0")
-  implementation("com.github.ben-manes.caffeine:caffeine:3.3.0")
+  implementation("com.github.ben-manes.caffeine:caffeine:3.3.1")
 
   implementation(project(":common"))
 
@@ -76,8 +76,8 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.3.0")
-  testImplementation("com.google.code.gson:gson:2.14.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.4.0")
+  testImplementation("com.google.code.gson:gson:2.15.0")
 }
 
 kotlin {
