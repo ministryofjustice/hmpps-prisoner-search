@@ -145,3 +145,4 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+    filter: true
