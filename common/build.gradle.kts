@@ -10,6 +10,10 @@ dependencyCheck {
 dependencies {
   implementation("org.springframework.data:spring-data-elasticsearch:6.1.2")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
+  // Temporarily pin swagger-ui for dompurify issues CVE-2026-11680(2-4)
+  constraints {
+    implementation("org.webjars:swagger-ui:5.34.1")
+  }
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.4")
   constraints {
