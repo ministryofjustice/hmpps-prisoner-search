@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderB
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraRatingSummary
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
@@ -37,6 +38,9 @@ fun Prisoner.translate(
   restrictedPatientData: Result<RestrictedPatientDto?> = Result.success(null),
   alerts: Result<List<Alert>?> = Result.success(null),
   complexityOfNeed: Result<ComplexityOfNeed?> = Result.success(null),
+  // Null when the CSRA is taken from NOMIS (Prison API). Otherwise the CSRA service's current rating; a failure
+  // keeps the CSRA already held, as for the other fields owned by other services.
+  csraRating: Result<CsraRatingSummary?>? = null,
 ): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
@@ -59,7 +63,20 @@ fun Prisoner.translate(
   this.lastMovementDate = ob.lastMovementTime?.toLocalDate()
 
   this.category = ob.categoryCode
-  this.csra = ob.csra
+  if (csraRating == null) {
+    this.csra = ob.csra
+    this.currentCsra = null
+  } else {
+    csraRating
+      .onSuccess { rating ->
+        this.currentCsra = rating?.toCurrentCsra()
+        this.csra = rating?.ratingShortDescription
+      }
+      .onFailure {
+        this.currentCsra = existingPrisoner?.currentCsra
+        this.csra = existingPrisoner?.csra
+      }
+  }
 
   this.dateOfBirth = ob.dateOfBirth
   this.title = ob.title

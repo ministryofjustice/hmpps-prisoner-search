@@ -23,6 +23,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -63,6 +64,8 @@ internal class PrisonerSynchroniserServiceTest {
   private val convictedStatusEventService = mock<ConvictedStatusEventService>()
   private val prisonRegisterService = mock<PrisonRegisterService>()
   private val domainEventEmitter = mock<HmppsDomainEventEmitter>()
+  private val csraService = mock<CsraService>()
+  private val csraSource = mock<CsraSource>()
 
   private val service = PrisonerSynchroniserService(
     prisonerRepository,
@@ -78,6 +81,8 @@ internal class PrisonerSynchroniserServiceTest {
     alertsUpdatedEventService,
     convictedStatusEventService,
     domainEventEmitter,
+    csraService,
+    csraSource,
   )
 
   @Nested
@@ -411,6 +416,158 @@ internal class PrisonerSynchroniserServiceTest {
         eq(prisonerDocumentSummary.prisoner!!),
       )
       verifyNoMoreInteractions(prisonerDifferenceService)
+    }
+  }
+
+  @Nested
+  inner class CsraFromNomisOrCsraService {
+    private val booking = OffenderBookingBuilder().anOffenderBooking().copy(csra = "High")
+    private val prisonerNumber = booking.offenderNo
+    private val heldCsra = CurrentCsra(rating = "HIGH_GENERAL", status = "COMPLETE", description = "High risk – general", shortDescription = "High – general")
+    private val existingPrisoner = Prisoner().apply {
+      bookingId = booking.bookingId.toString()
+      csra = "High – general"
+      currentCsra = heldCsra
+    }
+    private val prisonerDocumentSummary = PrisonerDocumentSummary(prisonerNumber, existingPrisoner, sequenceNumber = 0, primaryTerm = 0)
+    private val csraServiceRating = CsraRatingSummary(
+      prisonerNumber = prisonerNumber,
+      status = "COMPLETE",
+      rating = "HIGH_SPECIFIC",
+      ratingStage = "FINAL",
+      ratingDate = LocalDate.parse("2026-11-03"),
+      ratingDescription = "High risk – specific",
+      ratingShortDescription = "High – specific",
+      reviewDueDate = LocalDate.parse("2027-05-03"),
+    )
+
+    @Test
+    fun `a NOMIS update takes the CSRA from NOMIS when the switch is off`() {
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+
+      service.reindexUpdate(booking, "event")
+
+      val capture = argumentCaptor<Prisoner>()
+      verify(prisonerRepository).updatePrisoner(eq(prisonerNumber), capture.capture(), any())
+      assertThat(capture.firstValue.csra).isEqualTo("High")
+      assertThat(capture.firstValue.currentCsra).isNull()
+      verifyNoInteractions(csraService)
+    }
+
+    @Test
+    fun `a NOMIS update keeps the CSRA already held when it comes from the CSRA service`() {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+
+      service.reindexUpdate(booking, "event")
+
+      val capture = argumentCaptor<Prisoner>()
+      verify(prisonerRepository).updatePrisoner(eq(prisonerNumber), capture.capture(), any())
+      assertThat(capture.firstValue.csra).isEqualTo("High – general")
+      assertThat(capture.firstValue.currentCsra).isEqualTo(heldCsra)
+      verifyNoInteractions(csraService)
+    }
+
+    @Test
+    fun `a new prisoner gets the CSRA from the CSRA service when the switch is on`() {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+      whenever(prisonerRepository.getSummary(any())).thenReturn(null)
+      whenever(csraService.getCurrentCsra(prisonerNumber)).thenReturn(csraServiceRating)
+
+      service.reindexUpdate(booking, "event")
+
+      val capture = argumentCaptor<Prisoner>()
+      verify(prisonerRepository).createPrisoner(capture.capture())
+      assertThat(capture.firstValue.csra).isEqualTo("High – specific")
+      assertThat(capture.firstValue.currentCsra).isEqualTo(csraServiceRating.toCurrentCsra())
+    }
+
+    @Test
+    fun `a full refresh gets the CSRA from the CSRA service when the switch is on`() {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+      whenever(prisonerRepository.get(prisonerNumber)).thenReturn(existingPrisoner)
+      whenever(prisonerDifferenceService.hasChanged(any(), any())).thenReturn(true)
+      whenever(csraService.getCurrentCsra(prisonerNumber)).thenReturn(csraServiceRating)
+
+      service.refreshAndReportDiffs(booking, domainEvents = false)
+
+      val capture = argumentCaptor<Prisoner>()
+      verify(prisonerRepository).save(capture.capture())
+      assertThat(capture.firstValue.csra).isEqualTo("High – specific")
+    }
+  }
+
+  @Nested
+  inner class ReindexCsra {
+    private val prisonerNumber = "A1234AA"
+    private val prisoner = Prisoner().apply {
+      bookingId = "2"
+      csra = "High"
+    }
+    private val prisonerDocumentSummary = PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
+    private val rating = CsraRatingSummary(
+      prisonerNumber = prisonerNumber,
+      status = "PROVISIONAL",
+      rating = "HIGH_GENERAL",
+      ratingStage = "INTERIM",
+      ratingDescription = "High risk – general (interim)",
+      ratingShortDescription = "High – general",
+    )
+
+    @BeforeEach
+    fun setup() {
+      whenever(prisonerRepository.copyPrisoner(any())).thenAnswer { it.getArgument(0) }
+      whenever(prisonerRepository.getSummary(any())).thenReturn(prisonerDocumentSummary)
+      whenever(csraService.getCurrentCsra(any())).thenReturn(rating)
+    }
+
+    @Test
+    fun `does nothing when the CSRA is taken from NOMIS`() {
+      service.reindexCsra(prisonerNumber, "event")
+
+      verifyNoInteractions(csraService)
+      verify(prisonerRepository, never()).updateCsra(any(), any(), any(), any())
+    }
+
+    @Test
+    fun `saves the CSRA service rating and its short description`() {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+
+      service.reindexCsra(prisonerNumber, "event")
+
+      verify(prisonerRepository).updateCsra(eq(prisonerNumber), eq("High – general"), eq(rating.toCurrentCsra()), eq(prisonerDocumentSummary))
+    }
+
+    @Test
+    fun `creates telemetry and a diff event when changed`() {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+      whenever(prisonerRepository.updateCsra(any(), any(), any(), any())).thenReturn(true)
+
+      service.reindexCsra(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(
+        eq(TelemetryEvents.CSRA_UPDATED.name),
+        check {
+          assertThat(it).containsOnly(
+            entry("prisonerNumber", "A1234AA"),
+            entry("bookingId", "2"),
+            entry("event", "event"),
+          )
+        },
+        isNull(),
+      )
+      verify(prisonerDifferenceService).generateDiffEvent(any<Prisoner>(), eq(prisonerNumber), any<Prisoner>())
+    }
+
+    @Test
+    fun `no diff event when nothing changed`() {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+      whenever(prisonerRepository.updateCsra(any(), any(), any(), any())).thenReturn(false)
+
+      service.reindexCsra(prisonerNumber, "event")
+
+      verify(telemetryClient).trackEvent(eq(TelemetryEvents.CSRA_OPENSEARCH_NO_CHANGE.name), any(), isNull())
+      verify(prisonerDifferenceService, never()).generateDiffEvent(any<Prisoner>(), any(), any<Prisoner>())
     }
   }
 

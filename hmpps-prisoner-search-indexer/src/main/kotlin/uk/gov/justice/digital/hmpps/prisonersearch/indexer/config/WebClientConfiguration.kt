@@ -22,6 +22,7 @@ class WebClientConfiguration(
   @Value("\${api.base.url.alerts}") val alertsBaseUri: String,
   @Value("\${api.base.url.complexity-of-need}") val complexityOfNeedBaseUri: String,
   @Value("\${api.base.url.prison-register}") private val prisonRegisterUri: String,
+  @Value("\${api.base.url.csra:http://localhost:8100}") val csraBaseUri: String,
   @Value("\${api.base.url.oauth}") val hmppsAuthBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
   @Value("\${api.timeout:20s}") val timeout: Duration,
@@ -52,6 +53,9 @@ class WebClientConfiguration(
 
   @Bean
   fun incentivesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "incentives-api", url = incentivesBaseUri, timeout)
+
+  @Bean
+  fun csraWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "csra-api", url = csraBaseUri, timeout)
 
   @Bean
   fun alertsHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(alertsBaseUri, healthTimeout)

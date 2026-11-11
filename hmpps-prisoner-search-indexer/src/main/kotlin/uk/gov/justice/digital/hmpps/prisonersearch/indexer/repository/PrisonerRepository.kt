@@ -26,6 +26,7 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.convertValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
@@ -94,6 +95,19 @@ class PrisonerRepository(
       "currentIncentive" to (incentive?.let { objectMapperWithNulls.convertValue<Map<String, *>>(incentive) }),
     )
     return doUpdate(prisonerNumber, incentiveMap, summary)
+  }
+
+  fun updateCsra(
+    prisonerNumber: String,
+    csra: String?,
+    currentCsra: CurrentCsra?,
+    summary: PrisonerDocumentSummary,
+  ): Boolean {
+    val csraMap = mapOf(
+      "csra" to csra,
+      "currentCsra" to (currentCsra?.let { objectMapperWithNulls.convertValue<Map<String, *>>(currentCsra) }),
+    )
+    return doUpdate(prisonerNumber, csraMap, summary)
   }
 
   fun updateRestrictedPatient(

@@ -42,6 +42,8 @@ class PrisonerSynchroniserService(
   private val alertsUpdatedEventService: AlertsUpdatedEventService,
   private val convictedStatusEventService: ConvictedStatusEventService,
   private val domainEventEmitter: HmppsDomainEventEmitter,
+  private val csraService: CsraService,
+  private val csraSource: CsraSource,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -75,6 +77,7 @@ class PrisonerSynchroniserService(
         restrictedPatientData = Result.failure(Exception()),
         alerts = Result.failure(Exception()),
         complexityOfNeed = Result.failure(Exception()),
+        csraRating = keepExistingCsra(),
       )
       // opensearch reports if there are any differences
       val isUpdated = prisonerRepository.updatePrisoner(ob.offenderNo, prisoner, summary)
@@ -128,6 +131,7 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatient,
       alerts = runCatching { alertsService.getActiveAlertsForPrisoner(ob.offenderNo) },
       complexityOfNeed = runCatching { getComplexityOfNeed(ob, restrictedPatient.getOrNull() != null) },
+      csraRating = csraFromCsraService(ob)?.let { runCatching { it() } },
     )
     prisonerRepository.createPrisoner(prisoner)
     // If prisoner already exists in opensearch, an exception is thrown (same as for version conflict with update)
@@ -170,6 +174,44 @@ class PrisonerSynchroniserService(
           }
         }
     }
+
+  /**
+   * Updates the CSRA from the CSRA service, on a CSRA event or on maintain. Does nothing where the CSRA is still
+   * taken from NOMIS.
+   */
+  internal fun reindexCsra(prisonerNo: String, eventType: String) = prisonerRepository.getSummary(prisonerNo)
+    ?.takeIf { csraSource.fromCsraApi() }
+    ?.run {
+      val bookingId = this.prisoner?.bookingId?.toLong()
+      val newCsra = csraService.getCurrentCsra(prisonerNo)?.toCurrentCsra()
+      val newCsraText = newCsra?.shortDescription
+
+      prisonerRepository.updateCsra(prisonerNo, newCsraText, newCsra, this)
+        .also { updated ->
+          telemetryClient.trackPrisonerEvent(
+            if (updated) TelemetryEvents.CSRA_UPDATED else TelemetryEvents.CSRA_OPENSEARCH_NO_CHANGE,
+            prisonerNumber = prisonerNo,
+            bookingId = bookingId,
+            eventType = eventType,
+          )
+          if (updated) {
+            val newPrisoner = prisonerRepository.copyPrisoner(this.prisoner!!)
+            newPrisoner.csra = newCsraText
+            newPrisoner.currentCsra = newCsra
+            prisonerDifferenceService.generateDiffEvent(this.prisoner, prisonerNo, newPrisoner)
+          }
+        }
+    }
+
+  // Where the CSRA comes from the CSRA service, a NOMIS change must not overwrite it, so keep what is held.
+  private fun keepExistingCsra(): Result<CsraRatingSummary?>? = if (csraSource.fromCsraApi()) Result.failure(Exception()) else null
+
+  // Null where the CSRA is still taken from NOMIS; otherwise a call for the CSRA service's current rating.
+  private fun csraFromCsraService(ob: OffenderBooking): (() -> CsraRatingSummary?)? = if (csraSource.fromCsraApi()) {
+    { csraService.getCurrentCsra(ob.offenderNo) }
+  } else {
+    null
+  }
 
   internal fun reindexRestrictedPatient(prisonerNo: String, ob: OffenderBooking, eventType: String): Boolean? {
     val restrictedPatient = getRestrictedPatient(ob)
@@ -286,6 +328,7 @@ class PrisonerSynchroniserService(
     restrictedPatientData: Result<RestrictedPatientDto?>,
     alerts: Result<List<Alert>?>,
     complexityOfNeed: Result<ComplexityOfNeed?>,
+    csraRating: Result<CsraRatingSummary?>? = null,
   ) {
     val existingPrisoner = prisonerRepository.get(ob.offenderNo)
 
@@ -296,6 +339,7 @@ class PrisonerSynchroniserService(
       restrictedPatientData = restrictedPatientData,
       alerts = alerts,
       complexityOfNeed = complexityOfNeed,
+      csraRating = csraRating,
     )
     if (prisonerDifferenceService.hasChanged(existingPrisoner, prisoner)) {
       prisonerDifferenceService.reportDiffTelemetry(existingPrisoner, prisoner)
@@ -319,6 +363,7 @@ class PrisonerSynchroniserService(
       Result.success(restrictedPatient),
       Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
       Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
+      csraFromCsraService(ob)?.let { Result.success(it()) },
     )
   }
 
@@ -335,6 +380,7 @@ class PrisonerSynchroniserService(
           restrictedPatientData = Result.success(restrictedPatient),
           alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
           complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
+          csraRating = csraFromCsraService(ob)?.let { Result.success(it()) },
         )
         val changed = prisonerRepository.updateAll(offenderNo, prisoner, summary)
 
@@ -362,6 +408,7 @@ class PrisonerSynchroniserService(
       restrictedPatientData = Result.success(restrictedPatient),
       alerts = Result.success(alertsService.getActiveAlertsForPrisoner(ob.offenderNo)),
       complexityOfNeed = Result.success(getComplexityOfNeed(ob, restrictedPatient != null)),
+      csraRating = csraFromCsraService(ob)?.let { Result.success(it()) },
     )
   }
 

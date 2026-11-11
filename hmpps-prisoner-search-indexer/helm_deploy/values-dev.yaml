@@ -16,11 +16,22 @@ generic-service:
     API_BASE_URL_ALERTS: "https://alerts-api-dev.hmpps.service.justice.gov.uk"
     API_BASE_URL_COMPLEXITY_OF_NEED: "https://complexity-of-need-staging.hmpps.service.justice.gov.uk"
     API_BASE_URL_PRISON_REGISTER: https://prison-register-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_CSRA: https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk
+    # Take the CSRA from the CSRA service rather than Prison API (MAPA-517). Off elsewhere for now.
+    CSRA_FROM_CSRA_API: "true"
     INDEX_BUILD_COMPLETE_THRESHOLD: 500000
     DIFF_HOST: "https://prisoner-search-dev.prison.service.justice.gov.uk"
     DIFF_PREFIX: ""
     SPRINGDOC_API-DOCS_ENABLED: "true"
     SPRINGDOC_SWAGGER-UI_ENABLED: "true"
+
+
+  # Dev only until the CSRA client exists in the other environments. Elsewhere the csra-api registration falls back
+  # to the Prison API client and is never used, because csra.from-csra-api is off.
+  namespace_secrets:
+    hmpps-prisoner-search-indexer-client-creds:
+      CSRA_CLIENT_ID: "CSRA_CLIENT_ID"
+      CSRA_CLIENT_SECRET: "CSRA_CLIENT_SECRET"
 
   scheduledDowntime:
     enabled: true

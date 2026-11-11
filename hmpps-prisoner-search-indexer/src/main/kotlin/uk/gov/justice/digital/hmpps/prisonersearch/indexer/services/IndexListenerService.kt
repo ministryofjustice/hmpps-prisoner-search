@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.AlertEvent
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.ComplexityOfNeedEvent
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.CsraChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.IncentiveChangedMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.listeners.RestrictedPatientMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.HmppsDomainEventEmitter
@@ -29,6 +30,16 @@ class IndexListenerService(
       message.additionalInformation.id,
     )
     prisonerSynchroniserService.reindexIncentive(message.additionalInformation.nomsNumber, eventType)
+  }
+
+  fun csraChange(message: CsraChangedMessage, eventType: String) {
+    log.info(
+      "CSRA change: {} for prisoner {} with review id {}",
+      message.description,
+      message.additionalInformation.nomsNumber,
+      message.additionalInformation.id,
+    )
+    prisonerSynchroniserService.reindexCsra(message.additionalInformation.nomsNumber, eventType)
   }
 
   fun restrictedPatientChange(message: RestrictedPatientMessage, eventType: String) {

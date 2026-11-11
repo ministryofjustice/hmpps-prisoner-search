@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraSource
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService.RequeueDestination
@@ -18,6 +19,7 @@ class DomainEventListener(
   private val jsonMapper: JsonMapper,
   private val indexListenerService: IndexListenerService,
   private val offenderEventQueueService: OffenderEventQueueService,
+  private val csraSource: CsraSource,
 ) : EventListener {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -27,6 +29,10 @@ class DomainEventListener(
       "incentives.iep-review.updated",
       "incentives.iep-review.deleted",
       "incentives.prisoner.next-review-date-changed",
+    )
+    private val csraEvent = setOf(
+      "cell.sharing.risk.assessment.created",
+      "cell.sharing.risk.assessment.amended",
     )
     private val restrictedPatientEvent = setOf(
       "restricted-patients.patient.added",
@@ -44,6 +50,11 @@ class DomainEventListener(
 
       when (eventType) {
         in incentiveEvent -> indexListenerService.incentiveChange(fromJson(message), eventType)
+        in csraEvent -> if (csraSource.fromCsraApi()) {
+          indexListenerService.csraChange(fromJson(message), eventType)
+        } else {
+          log.debug("Ignoring {}: the CSRA is taken from NOMIS in this environment", eventType)
+        }
         in restrictedPatientEvent -> indexListenerService.restrictedPatientChange(fromJson(message), eventType)
         "person.alerts.changed" -> indexListenerService.alertChange(fromJson(message), eventType)
         "complexity-of-need.level.changed" -> indexListenerService.complexityOfNeedChange(fromJson(message), eventType)
@@ -67,6 +78,17 @@ data class IncentiveChangedMessage(
 data class IncentiveChangeAdditionalInformation(
   val nomsNumber: String,
   val id: Long,
+)
+
+data class CsraChangedMessage(
+  val additionalInformation: CsraChangeAdditionalInformation,
+  val eventType: String,
+  val description: String,
+)
+
+data class CsraChangeAdditionalInformation(
+  val nomsNumber: String,
+  val id: String? = null,
 )
 
 data class RestrictedPatientMessage(

@@ -12,12 +12,14 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isA
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.helpers.findLogAppender
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraSource
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexListenerService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.OffenderEventQueueService
 
@@ -26,9 +28,54 @@ internal class DomainEventListenerTest(@Autowired jsonMapper: JsonMapper) {
   private val indexListenerService = mock<IndexListenerService>()
   private val offenderEventQueueService: OffenderEventQueueService = mock()
 
-  private val listener = DomainEventListener(jsonMapper, indexListenerService, offenderEventQueueService)
+  private val csraSource = mock<CsraSource>()
+
+  private val listener = DomainEventListener(jsonMapper, indexListenerService, offenderEventQueueService, csraSource)
 
   private val logAppender = findLogAppender(DomainEventListener::class.java)
+
+  @Nested
+  inner class ProcessCsraDomainEvent {
+    private fun csraEvent(eventType: String) = """
+      {
+        "MessageId": "20e13002-d1be-56e7-be8c-66cdd7e23341",
+        "Message": "{\"eventType\":\"$eventType\", \"description\": \"A cell sharing risk assessment has been amended\", \"version\": \"1.0\", \"occurredAt\": \"2026-11-11T10:00:00Z\", \"additionalInformation\": {\"id\":\"01a1c9e0-2f85-7618-b8c9-7ae0edac59c6\", \"nomsNumber\":\"A7089FD\", \"source\":\"DPS\"}}",
+        "MessageAttributes": {
+          "eventType": {
+            "Type": "String",
+            "Value": "$eventType"
+          }
+        }
+      }
+    """.trimIndent()
+
+    @ParameterizedTest
+    @ValueSource(strings = ["cell.sharing.risk.assessment.created", "cell.sharing.risk.assessment.amended"])
+    internal fun `will call service when the CSRA is taken from the CSRA service`(eventType: String) {
+      whenever(csraSource.fromCsraApi()).thenReturn(true)
+
+      listener.processDomainEvent(csraEvent(eventType))
+
+      verify(indexListenerService).csraChange(
+        CsraChangedMessage(
+          additionalInformation = CsraChangeAdditionalInformation(nomsNumber = "A7089FD", id = "01a1c9e0-2f85-7618-b8c9-7ae0edac59c6"),
+          eventType = eventType,
+          description = "A cell sharing risk assessment has been amended",
+        ),
+        eventType,
+      )
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["cell.sharing.risk.assessment.created", "cell.sharing.risk.assessment.amended"])
+    internal fun `will ignore the event when the CSRA is taken from NOMIS`(eventType: String) {
+      whenever(csraSource.fromCsraApi()).thenReturn(false)
+
+      listener.processDomainEvent(csraEvent(eventType))
+
+      verifyNoInteractions(indexListenerService)
+    }
+  }
 
   @Nested
   inner class ProcessIncentiveDomainEvent {

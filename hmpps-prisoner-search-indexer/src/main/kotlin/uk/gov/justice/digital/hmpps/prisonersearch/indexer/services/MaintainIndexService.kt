@@ -20,6 +20,7 @@ class MaintainIndexService(
       ?.also {
         val restrictedPatient = prisonerSynchroniserService.getRestrictedPatient(offenderBooking)
         prisonerSynchroniserService.reindexIncentive(prisonerNumber, "MAINTAIN")
+        prisonerSynchroniserService.reindexCsra(prisonerNumber, "MAINTAIN")
         prisonerSynchroniserService.reindexRestrictedPatient(prisonerNumber, offenderBooking, restrictedPatient, "MAINTAIN")
         prisonerSynchroniserService.reindexAlerts(prisonerNumber, "MAINTAIN")
         prisonerSynchroniserService.reindexComplexityOfNeedWithGet(offenderBooking, restrictedPatient, "MAINTAIN")
