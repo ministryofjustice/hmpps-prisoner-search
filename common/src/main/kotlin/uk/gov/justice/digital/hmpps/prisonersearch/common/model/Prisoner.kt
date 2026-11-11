@@ -187,9 +187,19 @@ class Prisoner : Diffable<Prisoner> {
   @DiffableProperty(DiffCategory.ALERTS)
   var alerts: List<PrisonerAlert>? = emptyList()
 
-  @Schema(description = "Cell Sharing Risk Assessment", example = "HIGH")
+  @Schema(
+    description = "Cell Sharing Risk Assessment, as text to show. Where the CSRA is taken from the CSRA service this is " +
+      "currentCsra.shortDescription (for example \"High – general\" or \"No rating\"); otherwise the NOMIS description.",
+    example = "High",
+  )
   @DiffableProperty(DiffCategory.STATUS)
   var csra: String? = null
+
+  // Deliberately not yet a @DiffableProperty: see AddingNewField.md. Add DiffableProperty(DiffCategory.STATUS) in a
+  // later release, once every environment that takes the CSRA from the CSRA service has been refreshed.
+  @Field(type = FieldType.Nested, includeInParent = true)
+  @Schema(description = "The current CSRA rating from the CSRA service, with the text to show for it. Only populated where the CSRA is taken from the CSRA service.")
+  var currentCsra: CurrentCsra? = null
 
   @Schema(description = "Prisoner Category", example = "C")
   @DiffableProperty(DiffCategory.STATUS)

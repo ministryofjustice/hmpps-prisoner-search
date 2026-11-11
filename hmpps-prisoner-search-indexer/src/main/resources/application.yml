@@ -56,6 +56,15 @@ spring:
             client-secret: ${alerts.client.secret}
             authorization-grant-type: client_credentials
             scope: read
+          csra-api:
+            provider: hmpps-auth
+            # Falls back to the Prison API client so environments that still take the CSRA from NOMIS need no new
+            # secret. Set CSRA_CLIENT_ID / CSRA_CLIENT_SECRET (a client with ROLE_CSRA_REVIEW__R) before turning on
+            # csra.from-csra-api.
+            client-id: ${csra.client.id:${prison-api.client.id}}
+            client-secret: ${csra.client.secret:${prison-api.client.secret}}
+            authorization-grant-type: client_credentials
+            scope: read
           complexity-of-need-api:
             provider: hmpps-auth
             client-id: ${complexity-of-need.client.id}
@@ -128,6 +137,10 @@ hmpps.sqs:
 
 index-build:
   page-size: 1000
+
+csra:
+  # Take the CSRA from the CSRA service (cell-sharing-risk-assessment-api) instead of Prison API. Set per environment.
+  from-csra-api: false
 
 diff:
   events: true

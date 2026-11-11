@@ -22,6 +22,7 @@ api:
       alerts: http://localhost:8097
       complexity-of-need: http://localhost:8098
       prison-register: http://localhost:8099
+      csra: http://localhost:8100
 
 restricted-patients:
   client:
@@ -46,6 +47,11 @@ alerts:
 complexity-of-need:
   client:
     id: complexity-of-need-api
+    secret: clientsecret
+
+csra:
+  client:
+    id: csra-api
     secret: clientsecret
 
 opensearch:

@@ -4,6 +4,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.isPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.csra.model.CsraRatingSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
@@ -37,6 +39,9 @@ fun Prisoner.translate(
   restrictedPatientData: Result<RestrictedPatientDto?> = Result.success(null),
   alerts: Result<List<Alert>?> = Result.success(null),
   complexityOfNeed: Result<ComplexityOfNeed?> = Result.success(null),
+  // Null when the CSRA is taken from NOMIS (Prison API). Otherwise the CSRA service's current rating; a failure
+  // keeps the CSRA already held, as for the other fields owned by other services.
+  csraRating: Result<CsraRatingSummary?>? = null,
 ): Prisoner {
   this.prisonerNumber = ob.offenderNo
   this.bookNumber = ob.bookingNo
@@ -59,7 +64,20 @@ fun Prisoner.translate(
   this.lastMovementDate = ob.lastMovementTime?.toLocalDate()
 
   this.category = ob.categoryCode
-  this.csra = ob.csra
+  if (csraRating == null) {
+    this.csra = ob.csra
+    this.currentCsra = null
+  } else {
+    csraRating
+      .onSuccess { rating ->
+        this.currentCsra = rating?.toCurrentCsra()
+        this.csra = rating?.ratingShortDescription
+      }
+      .onFailure {
+        this.currentCsra = existingPrisoner?.currentCsra
+        this.csra = existingPrisoner?.csra
+      }
+  }
 
   this.dateOfBirth = ob.dateOfBirth
   this.title = ob.title
@@ -231,6 +249,18 @@ fun Prisoner.translate(
   this.allConvictedOffences = ob.allConvictedOffences?.toOffences(ob.bookingId)
 
   return this
+}
+
+fun CsraRatingSummary?.toCurrentCsra(): CurrentCsra? = this?.let {
+  CurrentCsra(
+    rating = it.rating?.value,
+    ratingStage = it.ratingStage?.value,
+    status = it.status.value,
+    description = it.ratingDescription,
+    shortDescription = it.ratingShortDescription,
+    ratingDate = it.ratingDate,
+    reviewDueDate = it.reviewDueDate,
+  )
 }
 
 fun IncentiveReviewSummary?.toCurrentIncentive(): CurrentIncentive? = this?.let {

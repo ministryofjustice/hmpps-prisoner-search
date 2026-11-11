@@ -44,12 +44,14 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalM
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraSource
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.EventMessage
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.MsgBody
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.CsraApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension
@@ -73,6 +75,7 @@ import kotlin.random.Random
 
 @ExtendWith(
   IncentivesApiExtension::class,
+  CsraApiExtension::class,
   NomisApiExtension::class,
   PrisonApiExtension::class,
   RestrictedPatientsApiExtension::class,
@@ -112,6 +115,9 @@ abstract class IntegrationTestBase {
 
   @MockitoSpyBean
   lateinit var telemetryClient: TelemetryClient
+
+  @MockitoSpyBean
+  lateinit var csraSource: CsraSource
 
   @Autowired
   internal lateinit var gson: Gson

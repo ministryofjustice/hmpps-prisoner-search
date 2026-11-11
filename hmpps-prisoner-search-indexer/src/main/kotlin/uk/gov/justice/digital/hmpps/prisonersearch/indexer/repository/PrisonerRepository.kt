@@ -26,9 +26,11 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.convertValue
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration.Companion.PRISONER_INDEX
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraSource
 import java.time.LocalDate
 
 @Repository
@@ -36,6 +38,7 @@ class PrisonerRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
   private val jsonMapper: JsonMapper,
+  private val csraSource: CsraSource,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -80,7 +83,7 @@ class PrisonerRepository(
   ): Boolean {
     val prisonerMap = objectMapperWithNulls.convertValue<Map<String, *>>(prisoner).toMutableMap()
 
-    removeDomainFields(prisonerMap, summary)
+    removeDomainFields(prisonerMap, summary, csraFromCsraApi = csraSource.fromCsraApi())
 
     return doUpdate(prisonerNumber, prisonerMap, summary)
   }
@@ -94,6 +97,19 @@ class PrisonerRepository(
       "currentIncentive" to (incentive?.let { objectMapperWithNulls.convertValue<Map<String, *>>(incentive) }),
     )
     return doUpdate(prisonerNumber, incentiveMap, summary)
+  }
+
+  fun updateCsra(
+    prisonerNumber: String,
+    csra: String?,
+    currentCsra: CurrentCsra?,
+    summary: PrisonerDocumentSummary,
+  ): Boolean {
+    val csraMap = mapOf(
+      "csra" to csra,
+      "currentCsra" to (currentCsra?.let { objectMapperWithNulls.convertValue<Map<String, *>>(currentCsra) }),
+    )
+    return doUpdate(prisonerNumber, csraMap, summary)
   }
 
   fun updateRestrictedPatient(
@@ -231,8 +247,15 @@ class PrisonerRepository(
 private fun removeDomainFields(
   prisonerMap: MutableMap<String, Any?>,
   summary: PrisonerDocumentSummary,
+  csraFromCsraApi: Boolean,
 ) {
   prisonerMap.remove("currentIncentive")
+
+  // currentCsra only ever comes from the CSRA service; csra too, where the CSRA is taken from the CSRA service
+  prisonerMap.remove("currentCsra")
+  if (csraFromCsraApi) {
+    prisonerMap.remove("csra")
+  }
 
   prisonerMap.remove("restrictedPatient")
   prisonerMap.remove("supportingPrisonId")

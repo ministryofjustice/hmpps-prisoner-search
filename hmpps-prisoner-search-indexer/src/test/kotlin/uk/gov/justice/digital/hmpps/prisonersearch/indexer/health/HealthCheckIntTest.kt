@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.AlertsApiExtension.Companion.alertsApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.ComplexityOfNeedApiExtension.Companion.complexityOfNeedApi
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.CsraApiExtension.Companion.csraApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.IncentivesApiExtension.Companion.incentivesApi
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.wiremock.NomisApiExtension.Companion.nomisApi
@@ -24,6 +25,32 @@ class HealthCheckIntTest : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("status").isEqualTo("UP")
+  }
+
+  @Test
+  fun `Health page reports the CSRA API when it is configured`() {
+    stubPingWithResponse(200)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("components.csraApi.status").isEqualTo("UP")
+  }
+
+  @Test
+  fun `Health page reports down when the CSRA API is down`() {
+    stubPingWithResponse(200)
+    csraApi.stubHealthPing(500)
+
+    webTestClient.get()
+      .uri("/health")
+      .exchange()
+      .expectStatus().is5xxServerError
+      .expectBody()
+      .jsonPath("components.csraApi.status").isEqualTo("DOWN")
   }
 
   @Test
@@ -159,6 +186,7 @@ class HealthCheckIntTest : IntegrationTestBase() {
     nomisApi.stubHealthPing(status)
     prisonApi.stubHealthPing(status)
     incentivesApi.stubHealthPing(status)
+    csraApi.stubHealthPing(status)
     alertsApi.stubHealthPing(status)
     complexityOfNeedApi.stubHealthPing(status)
     prisonRegisterApi.stubHealthPing(status)

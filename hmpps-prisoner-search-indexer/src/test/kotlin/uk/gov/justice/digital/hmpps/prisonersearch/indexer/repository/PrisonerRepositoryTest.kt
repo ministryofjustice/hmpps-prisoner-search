@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.whenever
 import org.opensearch.action.get.GetRequest
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.RestHighLevelClient
@@ -25,6 +27,7 @@ import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException
 import uk.gov.justice.digital.hmpps.prisonersearch.common.config.OpenSearchIndexConfiguration
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.IncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
@@ -335,6 +338,58 @@ internal class PrisonerRepositoryTest : IntegrationTestBase() {
       val data = prisonerRepository.get("X12345")!!
       assertThat(data.currentIncentive?.level?.code).isEqualTo("code-original")
       assertThat(data.supportingPrisonId).isEqualTo("OLD")
+    }
+
+    @Test
+    fun `will not update the CSRA held from the CSRA service`() {
+      val held = CurrentCsra(rating = "HIGH_GENERAL", status = "COMPLETE", shortDescription = "High – general")
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          csra = "High – general"
+          currentCsra = held
+        },
+      )
+      doReturn(true).whenever(csraSource).fromCsraApi()
+
+      prisonerRepository.updatePrisoner(
+        "X12345",
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          csra = "High"
+          currentCsra = null
+          pncNumber = "new-PNC"
+        },
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      val data = prisonerRepository.get("X12345")!!
+      assertThat(data.pncNumber).isEqualTo("new-PNC")
+      assertThat(data.csra).isEqualTo("High – general")
+      assertThat(data.currentCsra).isEqualTo(held)
+    }
+
+    @Test
+    fun `will update the CSRA from NOMIS when it is not taken from the CSRA service`() {
+      prisonerRepository.save(
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          csra = "Standard"
+        },
+      )
+
+      prisonerRepository.updatePrisoner(
+        "X12345",
+        Prisoner().apply {
+          prisonerNumber = "X12345"
+          csra = "High"
+          currentCsra = CurrentCsra(rating = "HIGH", status = "COMPLETE")
+        },
+        prisonerRepository.getSummary("X12345")!!,
+      )
+      val data = prisonerRepository.get("X12345")!!
+      assertThat(data.csra).isEqualTo("High")
+      // currentCsra only ever comes from the CSRA service, never from a NOMIS update
+      assertThat(data.currentCsra).isNull()
     }
 
     @Test
