@@ -21,7 +21,7 @@ testing {
 configurations["testSmokeImplementation"].extendsFrom(configurations["testImplementation"])
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.1.0")
 
   implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.4")
   constraints {
@@ -53,7 +53,7 @@ dependencies {
 
   implementation(project(":common"))
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.3")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.1.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-elasticsearch-test")
 
