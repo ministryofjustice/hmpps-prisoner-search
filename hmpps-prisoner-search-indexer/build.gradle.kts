@@ -169,6 +169,11 @@ val models = listOf(
     models = "ComplexityOfNeed,Level",
   ),
   ModelConfiguration(
+    name = "csra",
+    packageName = "csra",
+    url = "https://cell-sharing-risk-assessment-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "incentives",
     packageName = "incentives",
     url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",

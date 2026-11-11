@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonersearch.indexer.health
 
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.hmpps.kotlin.health.HealthPingCheck
@@ -28,3 +29,8 @@ class ComplexityOfNeedApiHealth(@Qualifier("complexityOfNeedHealthWebClient") we
 
 @Component("prisonRegisterApi")
 class PrisonRegisterApiHealth(@Qualifier("prisonRegisterWebClient") webClient: WebClient) : HealthPingCheck(webClient)
+
+// Only where the CSRA service is configured: it is not set in environments that still take the CSRA from NOMIS.
+@Component("csraApi")
+@ConditionalOnProperty(name = ["api.base.url.csra"])
+class CsraApiHealth(@Qualifier("csraHealthWebClient") webClient: WebClient) : HealthPingCheck(webClient)

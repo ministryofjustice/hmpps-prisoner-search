@@ -55,6 +55,9 @@ class WebClientConfiguration(
   fun incentivesWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "incentives-api", url = incentivesBaseUri, timeout)
 
   @Bean
+  fun csraHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(csraBaseUri, healthTimeout)
+
+  @Bean
   fun csraWebClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "csra-api", url = csraBaseUri, timeout)
 
   @Bean

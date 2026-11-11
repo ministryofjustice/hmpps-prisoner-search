@@ -4,6 +4,7 @@ package uk.gov.justice.digital.hmpps.prisonersearch.indexer.model
 
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Address
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.BodyPartDetail
+import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.EmailAddress
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Identifier
@@ -21,13 +22,13 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.canonicalPNCNumb
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.isPNCNumber
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.csra.model.CsraRatingSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenceHistoryDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderBooking
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.OffenderIdentifier
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Telephone
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.restrictedpatients.model.RestrictedPatientDto
-import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraRatingSummary
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.Address as NomisAddress
 
@@ -248,6 +249,18 @@ fun Prisoner.translate(
   this.allConvictedOffences = ob.allConvictedOffences?.toOffences(ob.bookingId)
 
   return this
+}
+
+fun CsraRatingSummary?.toCurrentCsra(): CurrentCsra? = this?.let {
+  CurrentCsra(
+    rating = it.rating?.value,
+    ratingStage = it.ratingStage?.value,
+    status = it.status.value,
+    description = it.ratingDescription,
+    shortDescription = it.ratingShortDescription,
+    ratingDate = it.ratingDate,
+    reviewDueDate = it.reviewDueDate,
+  )
 }
 
 fun IncentiveReviewSummary?.toCurrentIncentive(): CurrentIncentive? = this?.let {

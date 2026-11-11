@@ -33,9 +33,11 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.alerts.model.AlertCod
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.ComplexityOfNeed
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.complexityofneed.model.Level
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.config.TelemetryEvents
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.csra.model.CsraRatingSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.incentives.model.IncentiveReviewSummary
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.OffenderBookingBuilder
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.toCurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.prisonregister.model.PrisonDto
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerDocumentSummary
@@ -432,9 +434,9 @@ internal class PrisonerSynchroniserServiceTest {
     private val prisonerDocumentSummary = PrisonerDocumentSummary(prisonerNumber, existingPrisoner, sequenceNumber = 0, primaryTerm = 0)
     private val csraServiceRating = CsraRatingSummary(
       prisonerNumber = prisonerNumber,
-      status = "COMPLETE",
-      rating = "HIGH_SPECIFIC",
-      ratingStage = "FINAL",
+      status = CsraRatingSummary.Status.COMPLETE,
+      rating = CsraRatingSummary.Rating.HIGH_SPECIFIC,
+      ratingStage = CsraRatingSummary.RatingStage.FINAL,
       ratingDate = LocalDate.parse("2026-11-03"),
       ratingDescription = "High risk – specific",
       ratingShortDescription = "High – specific",
@@ -507,9 +509,9 @@ internal class PrisonerSynchroniserServiceTest {
     private val prisonerDocumentSummary = PrisonerDocumentSummary(prisonerNumber, prisoner, sequenceNumber = 0, primaryTerm = 0)
     private val rating = CsraRatingSummary(
       prisonerNumber = prisonerNumber,
-      status = "PROVISIONAL",
-      rating = "HIGH_GENERAL",
-      ratingStage = "INTERIM",
+      status = CsraRatingSummary.Status.PROVISIONAL,
+      rating = CsraRatingSummary.Rating.HIGH_GENERAL,
+      ratingStage = CsraRatingSummary.RatingStage.INTERIM,
       ratingDescription = "High risk – general (interim)",
       ratingShortDescription = "High – general",
     )
