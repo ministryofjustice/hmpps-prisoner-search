@@ -181,8 +181,9 @@ class PrisonerSynchroniserService(
    * Updates the CSRA from the CSRA service, on a CSRA event or on maintain. Does nothing where the CSRA is still
    * taken from NOMIS.
    */
-  internal fun reindexCsra(prisonerNo: String, eventType: String) = prisonerRepository.getSummary(prisonerNo)
-    ?.takeIf { csraSource.fromCsraApi() }
+  internal fun reindexCsra(prisonerNo: String, eventType: String) = prisonerNo
+    .takeIf { csraSource.fromCsraApi() }
+    ?.let { prisonerRepository.getSummary(it) }
     ?.run {
       val bookingId = this.prisoner?.bookingId?.toLong()
       val newCsra = csraService.getCurrentCsra(prisonerNo)?.toCurrentCsra()
@@ -205,7 +206,9 @@ class PrisonerSynchroniserService(
         }
     }
 
-  // Where the CSRA comes from the CSRA service, a NOMIS change must not overwrite it, so keep what is held.
+  // Where the CSRA comes from the CSRA service, a NOMIS change must not change it. As for currentIncentive, the
+  // translated prisoner keeps the CSRA already held (so the diff against the old document shows no change and no
+  // false prisoner.updated event is sent), and removeDomainFields stops the update writing it.
   private fun keepExistingCsra(): Result<CsraRatingSummary?>? = if (csraSource.fromCsraApi()) Result.failure(Exception()) else null
 
   // Null where the CSRA is still taken from NOMIS; otherwise a call for the CSRA service's current rating.

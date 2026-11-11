@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.PhysicalM
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.ProfileInformation
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.model.nomis.SentenceDetail
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.repository.PrisonerRepository
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraSource
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.IndexQueueService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.MaintainIndexService
 import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.events.EventMessage
@@ -114,6 +115,9 @@ abstract class IntegrationTestBase {
 
   @MockitoSpyBean
   lateinit var telemetryClient: TelemetryClient
+
+  @MockitoSpyBean
+  lateinit var csraSource: CsraSource
 
   @Autowired
   internal lateinit var gson: Gson

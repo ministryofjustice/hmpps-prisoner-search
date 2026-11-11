@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentCsra
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.CurrentIncentive
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonersearch.common.model.PrisonerAlert
+import uk.gov.justice.digital.hmpps.prisonersearch.indexer.services.CsraSource
 import java.time.LocalDate
 
 @Repository
@@ -37,6 +38,7 @@ class PrisonerRepository(
   private val client: RestHighLevelClient,
   private val openSearchRestTemplate: ElasticsearchOperations,
   private val jsonMapper: JsonMapper,
+  private val csraSource: CsraSource,
 ) {
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -81,7 +83,7 @@ class PrisonerRepository(
   ): Boolean {
     val prisonerMap = objectMapperWithNulls.convertValue<Map<String, *>>(prisoner).toMutableMap()
 
-    removeDomainFields(prisonerMap, summary)
+    removeDomainFields(prisonerMap, summary, csraFromCsraApi = csraSource.fromCsraApi())
 
     return doUpdate(prisonerNumber, prisonerMap, summary)
   }
@@ -245,8 +247,15 @@ class PrisonerRepository(
 private fun removeDomainFields(
   prisonerMap: MutableMap<String, Any?>,
   summary: PrisonerDocumentSummary,
+  csraFromCsraApi: Boolean,
 ) {
   prisonerMap.remove("currentIncentive")
+
+  // currentCsra only ever comes from the CSRA service; csra too, where the CSRA is taken from the CSRA service
+  prisonerMap.remove("currentCsra")
+  if (csraFromCsraApi) {
+    prisonerMap.remove("csra")
+  }
 
   prisonerMap.remove("restrictedPatient")
   prisonerMap.remove("supportingPrisonId")
