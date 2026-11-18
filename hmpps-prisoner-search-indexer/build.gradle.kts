@@ -192,7 +192,7 @@ val models = listOf(
     name = "prison-register",
     packageName = "prisonregister",
     url = "https://prison-register-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-    models = "AddressDto,PrisonDto,PrisonOperatorDto,PrisonTypeDto",
+    models = "AddressDto,PrisonDto,PrisonOperatorDto,PrisonTypeDto,PrisonOperator",
   ),
   ModelConfiguration(
     name = "restricted-patients",
