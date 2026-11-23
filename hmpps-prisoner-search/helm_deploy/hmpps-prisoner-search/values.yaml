@@ -18,7 +18,6 @@ generic-service:
       nginx.ingress.kubernetes.io/server-snippet: |
         server_tokens off;
   env:
-    JAVA_TOOL_OPTIONS: "-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=50.0 -XX:-UseBASE64Intrinsics"
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
