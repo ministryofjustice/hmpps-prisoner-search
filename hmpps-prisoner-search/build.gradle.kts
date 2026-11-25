@@ -23,7 +23,7 @@ configurations["testSmokeImplementation"].extendsFrom(configurations["testImplem
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.1.0")
 
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.4")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.5")
   constraints {
     implementation("com.github.luben:zstd-jni:1.5.7-14") {
       because("OpenSearch 3.1.4 depends on zstd-jni 1.5.6-1 which has CVE-2026-87823 and other CVEs")
@@ -64,7 +64,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.4.0")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.4.1")
 }
 
 kotlin {

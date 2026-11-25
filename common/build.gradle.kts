@@ -15,7 +15,7 @@ dependencies {
     implementation("org.webjars:swagger-ui:5.34.1")
   }
   implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
-  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.4")
+  implementation("org.opensearch.client:spring-data-opensearch-starter:3.1.5")
   constraints {
     implementation("com.github.luben:zstd-jni:1.5.7-14") {
       because("OpenSearch 3.1.4 depends on zstd-jni 1.5.6-1 which has CVE-2026-87823 and other CVEs")
